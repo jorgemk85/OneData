@@ -3,6 +3,7 @@
     [System.AttributeUsage(System.AttributeTargets.Property)]
     public class UnlinkedProperty : System.Attribute
     {
-        public UnlinkedProperty() { }
+        public UnlinkedProperty()
+        { }
     }
 }
