@@ -22,3 +22,6 @@ C:\Users\Usuario\Dropbox\Projects\DataAccess\TestDataAccess\TDA\obj\Debug\TDA.cs
 C:\Users\Usuario\Dropbox\Projects\DataAccess\TestDataAccess\TDA\obj\Debug\TDA.frmMain.resources
 C:\Users\Usuario\Dropbox\Projects\DataAccess\TestDataAccess\TDA\obj\Debug\TDA.Properties.Resources.resources
 C:\Users\Usuario\Dropbox\Projects\DataAccess\TestDataAccess\TDA\obj\Debug\TDA.csproj.GenerateResource.Cache
+C:\Users\Usuario\Documents\DataAccess\TestDataAccess\TDA\bin\Debug\TDA.exe.config
+C:\Users\Usuario\Documents\DataAccess\TestDataAccess\TDA\obj\Debug\TDA.exe
+C:\Users\Usuario\Documents\DataAccess\TestDataAccess\TDA\obj\Debug\TDA.pdb
