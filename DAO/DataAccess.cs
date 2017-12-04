@@ -99,7 +99,6 @@ namespace DataAccess.DAO
             }
         }
 
-
         public static Result Insert(T obj)
         {
             return Command(obj, StoredProcedures.TransactionTypes.Insert);
@@ -150,12 +149,12 @@ namespace DataAccess.DAO
             return resultado.TuvoExito ? Tools.ConvertDataTableToDictionaryOfType<T>(resultado.Data) : new Dictionary<Guid, T>();
         }
 
-        public static DataTable SelectOther(string dataBaseTableName, string storedProcedure, params Parameter[] parameters)
+        public static Result SelectOther(string dataBaseTableName, string storedProcedure, params Parameter[] parameters)
         {
             resultado = StoredProcedures.EjecutarProcedimiento(dataBaseTableName, storedProcedure, parameters);
             if (!resultado.TuvoExito) MessageBox.Show(resultado.Mensaje, resultado.TituloMensaje, MessageBoxButtons.OK, MessageBoxIcon.Error);
 
-            return resultado.Data;
+            return resultado;
         }
 
         private static T SetValuesInObject(Parameter[] parameters)

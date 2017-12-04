@@ -20,12 +20,12 @@ namespace TDA
         }
 
         private void btnTest_Click(object sender, EventArgs e)
-        { 
-            DataTable dt = DataAccess<Object>.SelectOther("usuarios", "sp_usuarios_selectall");
-
-            //DataTable dt = DataAccess<Object>.SelectOther("usuarios", "sp_usuarios_selectall", new Parameter("_id", null),
-                                                                                               //new Parameter("_nombre", "Mochila"),
-                                                                                               //new Parameter("_cantidadTotal", null);
+        {
+            Result resultado = DataAccess<Object>.SelectOther("usuarios", "sp_usuarios_selectall");
+            DataTable dt = resultado.Data;
+            //Result resultado = DataAccess<Object>.SelectOther("usuarios", "sp_usuarios_selectall", new Parameter("_id", null),
+            //new Parameter("_nombre", "Mochila"),
+            //new Parameter("_cantidadTotal", null);
         }
     }
 }
