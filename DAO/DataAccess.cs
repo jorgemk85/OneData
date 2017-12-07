@@ -2,6 +2,8 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Linq;
+using System.Linq.Dynamic;
 using System.Reflection;
 using System.Windows.Forms;
 
@@ -29,7 +31,7 @@ namespace DataAccess.DAO
             switch (transactionType)
             {
                 case StoredProcedures.TransactionTypes.Select:
-                    resultado = StoredProcedures.EjecutarProcedimiento<T>(obj, main.DataBaseTableName, transactionType);
+                    resultado = isCached == true ? SelectInCache(obj) : StoredProcedures.EjecutarProcedimiento<T>(obj, main.DataBaseTableName, transactionType);
                     break;
                 case StoredProcedures.TransactionTypes.SelectAll:
                     resultado = isCached == true ? cache : StoredProcedures.EjecutarProcedimiento<T>(obj, main.DataBaseTableName, transactionType);
@@ -53,6 +55,28 @@ namespace DataAccess.DAO
                 default:
                     break;
             }
+        }
+
+        private static Result SelectInCache(T obj)
+        {
+            int valueIndex = 0;
+            List<object> values = new List<object>();
+            string predicate = string.Empty;
+
+            foreach (PropertyInfo prop in typeof(T).GetProperties())
+            {
+                if (Attribute.GetCustomAttribute(prop, typeof(UnlinkedProperty)) == null)
+                {
+                    if (prop.GetValue(obj) != null)
+                    {
+                        predicate += prop.Name + "== @" + valueIndex;
+                        values.Add(prop.GetValue(obj));
+                        valueIndex++;
+                    }
+                }
+            }
+
+            return new Result(exito: true, data: Tools.ConvertListToDataTableOfType<T>(Tools.ConvertDataTableToListOfType<T>(cache.Data).Where<T>(predicate, values.ToArray()).ToList()));
         }
 
         private static DataRow SetRowData(DataRow row, T obj, bool isInsert)

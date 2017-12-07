@@ -10,7 +10,7 @@ namespace DataAccess.DAO
 
         static Connection()
         {
-            ConnectionString = ConfigurationManager.ConnectionStrings["main"].ConnectionString;
+            ConnectionString = ConfigurationManager.ConnectionStrings[ConfigurationManager.AppSettings["ConnectionToUse"]].ConnectionString;
         }
 
         public static MySqlConnection OpenConnection()

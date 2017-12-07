@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MySql.Data.MySqlClient;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -15,16 +16,9 @@ namespace DataAccess.BO
             newObject = new T();
             foreach (PropertyInfo propertyInfo in typeof(T).GetProperties())
             {
-                try
+                if (dataTable.Columns.Contains(propertyInfo.Name))
                 {
-                    if (propertyInfo.Name != "DataBaseTableName")
-                    {
-                        propertyInfo.SetValue(newObject, dataTable.Rows[0].Field<object>(propertyInfo.Name));
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine(ex.Message);
+                    propertyInfo.SetValue(newObject, dataTable.Rows[0].Field<object>(propertyInfo.Name));
                 }
             }
 
@@ -33,7 +27,7 @@ namespace DataAccess.BO
 
         public static List<T> ConvertDataTableToListOfType<T>(DataTable dataTable) where T : new()
         {
-            List<T> newObjectList = new List<T>();
+            List<T> newList = new List<T>();
             T newObject;
 
             foreach (DataRow row in dataTable.Rows)
@@ -41,27 +35,20 @@ namespace DataAccess.BO
                 newObject = new T();
                 foreach (PropertyInfo propertyInfo in typeof(T).GetProperties())
                 {
-                    try
+                    if (dataTable.Columns.Contains(propertyInfo.Name))
                     {
-                        if (propertyInfo.Name != "DataBaseTableName")
-                        {
-                            propertyInfo.SetValue(newObject, row.Field<object>(propertyInfo.Name));
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine(ex.Message);
+                        propertyInfo.SetValue(newObject, row.Field<object>(propertyInfo.Name));
                     }
                 }
-                newObjectList.Add(newObject);
+                newList.Add(newObject);
             }
 
-            return newObjectList;
+            return newList;
         }
 
         public static Dictionary<Guid, T> ConvertDataTableToDictionaryOfType<T>(DataTable dataTable) where T : new()
         {
-            Dictionary<Guid, T> newObjectDictionary = new Dictionary<Guid, T>();
+            Dictionary<Guid, T> newDictionary = new Dictionary<Guid, T>();
             T newObject;
 
             foreach (DataRow row in dataTable.Rows)
@@ -69,20 +56,56 @@ namespace DataAccess.BO
                 newObject = new T();
                 foreach (PropertyInfo propertyInfo in typeof(T).GetProperties())
                 {
-                    try
+                    if (dataTable.Columns.Contains(propertyInfo.Name))
                     {
-                        // Si la propiedad de la Clase no aparece como Columna en la base de datos, marca error, pero continua por que hay propiedades que son de uso interno exclusivamente.
                         propertyInfo.SetValue(newObject, row.Field<object>(propertyInfo.Name));
                     }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine(ex.ToString());
-                    }
                 }
-                newObjectDictionary.Add((newObject as Main).Id.GetValueOrDefault(), newObject);
+                newDictionary.Add((newObject as Main).Id.GetValueOrDefault(), newObject);
             }
 
-            return newObjectDictionary;
+            return newDictionary;
+        }
+
+        public static DataTable ConvertListToDataTableOfType<T>(List<T> list)
+        {
+            DataTable dataTable = new DataTable(typeof(T).Name);
+
+            PropertyInfo[] Props = typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance);
+            foreach (PropertyInfo prop in Props)
+            {
+                Type type = (prop.PropertyType.IsGenericType && prop.PropertyType.GetGenericTypeDefinition() == typeof(Nullable<>) ? Nullable.GetUnderlyingType(prop.PropertyType) : prop.PropertyType);
+                dataTable.Columns.Add(prop.Name, type);
+            }
+            foreach (T item in list)
+            {
+                var values = new object[Props.Length];
+                for (int i = 0; i < Props.Length; i++)
+                {
+                    values[i] = Props[i].GetValue(item, null);
+                }
+                dataTable.Rows.Add(values);
+            }
+            return dataTable;
+        }
+
+        public static DataTable FillDataTable(MySqlDataReader dr)
+        {
+            DataTable dataTable = new DataTable();
+            object[] values = new object[dr.FieldCount];
+            for (int i = 0; i < dr.FieldCount; i++)
+            {
+                dataTable.Columns.Add(dr.GetName(i));
+            }
+            while (dr.Read())
+            {
+                for (int i = 0; i < dr.FieldCount; i++)
+                {
+                    values[i] = dr[i];
+                }
+                dataTable.Rows.Add(values);
+            }
+            return dataTable;
         }
 
         public static int? StringToInteger(string value, bool nullable)

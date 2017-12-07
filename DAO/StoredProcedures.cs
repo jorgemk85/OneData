@@ -33,7 +33,8 @@ namespace DataAccess.DAO
         {
             foreach (PropertyInfo propertyInfo in typeof(T).GetProperties())
             {
-                if (propertyInfo.Name == "DataBaseTableName") continue;
+                // Si encontramos el atributo entonces se brinca la propiedad.
+                if (Attribute.GetCustomAttribute(propertyInfo, typeof(UnlinkedProperty)) != null) continue;
 
                 if (transactionType == TransactionTypes.Delete)
                 {
