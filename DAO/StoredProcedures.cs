@@ -1,11 +1,8 @@
 ﻿using DataAccess.BO;
-using DataAccess.DAO;
 using MySql.Data.MySqlClient;
 using System;
 using System.Data;
-using System.Data.SqlClient;
 using System.Diagnostics;
-using System.Linq;
 using System.Reflection;
 
 namespace DataAccess.DAO
@@ -80,8 +77,9 @@ namespace DataAccess.DAO
                     {
                         SetParameters<T>(obj, transactionType);
                     }
-                    dataTable = new DataTable();
+                    dataTable = new DataTable();                   
                     dataTable.Load(command.ExecuteReader());
+                    dataTable.TableName = String.IsNullOrEmpty(dataTable.TableName) ? dataBaseTableName : dataTable.TableName;
                 }
             }
             catch (MySqlException mse)
@@ -117,6 +115,7 @@ namespace DataAccess.DAO
                 if (parameters != null) SetParameters(parameters);
                 dataTable = new DataTable();
                 dataTable.Load(command.ExecuteReader());
+                dataTable.TableName = String.IsNullOrEmpty(dataTable.TableName) ? dataBaseTableName : dataTable.TableName;
             }
             catch (MySqlException mse)
             {
