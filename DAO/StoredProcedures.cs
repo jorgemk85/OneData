@@ -25,6 +25,7 @@ namespace DataAccess.DAO
 
         private static MySqlConnection connection;
         private static MySqlCommand command;
+        private static MySqlDataAdapter adapter;
 
         private static void SetParameters<T>(T obj, TransactionTypes transactionType)
         {
@@ -77,8 +78,9 @@ namespace DataAccess.DAO
                     {
                         SetParameters<T>(obj, transactionType);
                     }
-                    dataTable = new DataTable();                   
-                    dataTable.Load(command.ExecuteReader());
+                    dataTable = new DataTable();
+                    adapter = new MySqlDataAdapter(command);
+                    adapter.Fill(dataTable);
                     dataTable.TableName = String.IsNullOrEmpty(dataTable.TableName) ? dataBaseTableName : dataTable.TableName;
                 }
             }
@@ -114,7 +116,8 @@ namespace DataAccess.DAO
             {
                 if (parameters != null) SetParameters(parameters);
                 dataTable = new DataTable();
-                dataTable.Load(command.ExecuteReader());
+                adapter = new MySqlDataAdapter(command);
+                adapter.Fill(dataTable);
                 dataTable.TableName = String.IsNullOrEmpty(dataTable.TableName) ? dataBaseTableName : dataTable.TableName;
             }
             catch (MySqlException mse)
