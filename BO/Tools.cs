@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Linq;
 using System.Reflection;
 
 namespace DataAccess.BO
@@ -18,7 +17,7 @@ namespace DataAccess.BO
                 {
                     if (dataTable.Columns.Contains(propertyInfo.Name))
                     {
-                        propertyInfo.SetValue(newObject, dataTable.Rows[0].Field<object>(propertyInfo.Name));
+                        propertyInfo.SetValue(newObject, dataTable.Rows[0][propertyInfo.Name]);
                     }
                 }
             }
@@ -41,7 +40,7 @@ namespace DataAccess.BO
                 {
                     if (dataTable.Columns.Contains(propertyInfo.Name))
                     {
-                        propertyInfo.SetValue(newObject, row.Field<object>(propertyInfo.Name));
+                        propertyInfo.SetValue(newObject, row[propertyInfo.Name]);
                     }
                 }
                 newList.Add(newObject);
@@ -60,7 +59,7 @@ namespace DataAccess.BO
                 {
                     if (dataTable.Columns.Contains(propertyInfo.Name))
                     {
-                        propertyInfo.SetValue(newObject, row.Field<object>(propertyInfo.Name));
+                        propertyInfo.SetValue(newObject, row[propertyInfo.Name]);
                     }
                 }
                 newDictionary.Add((newObject as Main).Id.GetValueOrDefault(), newObject);
