@@ -5,8 +5,6 @@ using System.Data;
 using System.Linq;
 using System.Linq.Dynamic;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DataAccess.DAO
 {
@@ -61,14 +59,22 @@ namespace DataAccess.DAO
                 {
                     if (prop.GetValue(obj) != null)
                     {
-                        predicate += prop.Name + "== @" + valueIndex;
+                        predicate += prop.Name + "== @" + valueIndex + " and ";
                         values.Add(prop.GetValue(obj));
                         valueIndex++;
                     }
                 }
             }
 
-            return new Result(exito: true, data: Tools.ConvertListToDataTableOfType<T>(Tools.ConvertDataTableToListOfType<T>(cache.Data).Where<T>(predicate, values.ToArray()).ToList()));
+            if (string.IsNullOrEmpty(predicate))
+            {
+                return new Result(exito: false, titulo: "Error en los parametros.", mensaje: "Al parecer no se establecieron paramentros para la busqueda o no se obtuvieron resultados previos a la consulta. Por favor asegurece de por lo menos colocar uno valido y volver a intentar.");
+            }
+            else
+            {
+                predicate = predicate.Substring(0, predicate.Length - 5);
+                return new Result(exito: true, data: Tools.ConvertListToDataTableOfType(Tools.ConvertDataTableToListOfType<T>(cache.Data).Where(predicate, values.ToArray()).ToList()));
+            }
         }
 
         private static DataRow SetRowData<T>(DataRow row, T obj, bool isInsert)
@@ -101,11 +107,9 @@ namespace DataAccess.DAO
 
         private static void DeleteInCache<T>(T obj, Result cache)
         {
-            DataRow row;
-
             for (int i = 0; i < cache.Data.Rows.Count; i++)
             {
-                row = cache.Data.Rows[i];
+                DataRow row = cache.Data.Rows[i];
                 if (row["Id"].Equals((obj as Main).Id.GetValueOrDefault()))
                 {
                     row.Delete();

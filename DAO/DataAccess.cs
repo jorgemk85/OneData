@@ -1,9 +1,6 @@
 ﻿using DataAccess.BO;
 using System;
 using System.Collections.Generic;
-using System.Data;
-using System.Linq;
-using System.Linq.Dynamic;
 using System.Reflection;
 using System.Windows.Forms;
 
@@ -17,7 +14,7 @@ namespace DataAccess.DAO
 
         private static Result Command(T obj, StoredProcedures.TransactionTypes transactionType)
         {
-            resultado = CacheEvaluation.Evaluate<T>(obj, transactionType, cache);
+            resultado = CacheEvaluation.Evaluate(obj, transactionType, cache);
             if (cache == null && transactionType == StoredProcedures.TransactionTypes.SelectAll)
             {
                 cache = resultado;
@@ -26,20 +23,12 @@ namespace DataAccess.DAO
             if (!resultado.TuvoExito) MessageBox.Show(resultado.Mensaje, resultado.TituloMensaje, MessageBoxButtons.OK, MessageBoxIcon.Error);
             return resultado;
         }
-        public static Result Insert(T obj)
-        {
-            return Command(obj, StoredProcedures.TransactionTypes.Insert);
-        }
 
-        public static Result Update(T obj)
-        {
-            return Command(obj, StoredProcedures.TransactionTypes.Update);
-        }
+        public static Result Insert(T obj) => Command(obj, StoredProcedures.TransactionTypes.Insert);
 
-        public static Result Delete(T obj)
-        {
-            return Command(obj, StoredProcedures.TransactionTypes.Delete);
-        }
+        public static Result Update(T obj) => Command(obj, StoredProcedures.TransactionTypes.Update);
+
+        public static Result Delete(T obj) => Command(obj, StoredProcedures.TransactionTypes.Delete);
 
         public static List<T> SelectAllList()
         {

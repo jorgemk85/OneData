@@ -11,15 +11,20 @@ namespace DataAccess.BO
     {
         public static T ConvertDataTableToObjectOfType<T>(DataTable dataTable) where T : new()
         {
-            T newObject;
-
-            newObject = new T();
-            foreach (PropertyInfo propertyInfo in typeof(T).GetProperties())
+            T newObject = new T();
+            if (dataTable.Rows.Count > 0)
             {
-                if (dataTable.Columns.Contains(propertyInfo.Name))
+                foreach (PropertyInfo propertyInfo in typeof(T).GetProperties())
                 {
-                    propertyInfo.SetValue(newObject, dataTable.Rows[0].Field<object>(propertyInfo.Name));
+                    if (dataTable.Columns.Contains(propertyInfo.Name))
+                    {
+                        propertyInfo.SetValue(newObject, dataTable.Rows[0].Field<object>(propertyInfo.Name));
+                    }
                 }
+            }
+            else
+            {
+                return default(T);
             }
 
             return newObject;
@@ -28,11 +33,10 @@ namespace DataAccess.BO
         public static List<T> ConvertDataTableToListOfType<T>(DataTable dataTable) where T : new()
         {
             List<T> newList = new List<T>();
-            T newObject;
 
             foreach (DataRow row in dataTable.Rows)
             {
-                newObject = new T();
+                T newObject = new T();
                 foreach (PropertyInfo propertyInfo in typeof(T).GetProperties())
                 {
                     if (dataTable.Columns.Contains(propertyInfo.Name))
@@ -49,11 +53,9 @@ namespace DataAccess.BO
         public static Dictionary<Guid, T> ConvertDataTableToDictionaryOfType<T>(DataTable dataTable) where T : new()
         {
             Dictionary<Guid, T> newDictionary = new Dictionary<Guid, T>();
-            T newObject;
-
             foreach (DataRow row in dataTable.Rows)
             {
-                newObject = new T();
+                T newObject = new T();
                 foreach (PropertyInfo propertyInfo in typeof(T).GetProperties())
                 {
                     if (dataTable.Columns.Contains(propertyInfo.Name))
@@ -110,9 +112,7 @@ namespace DataAccess.BO
 
         public static int? StringToInteger(string value, bool nullable)
         {
-            int newValue;
-
-            if (!int.TryParse(value, out newValue))
+            if (!int.TryParse(value, out int newValue))
             {
                 if (!nullable)
                 {
@@ -129,9 +129,7 @@ namespace DataAccess.BO
 
         public static int StringToInteger(string value)
         {
-            int newValue;
-
-            if (!int.TryParse(value, out newValue))
+            if (!int.TryParse(value, out int newValue))
             {
                 newValue = 0;
             }
@@ -141,9 +139,7 @@ namespace DataAccess.BO
 
         public static Int64? StringToInt64(string value, bool nullable)
         {
-            Int64 newValue;
-
-            if (!Int64.TryParse(value, out newValue))
+            if (!Int64.TryParse(value, out long newValue))
             {
                 if (!nullable)
                 {
@@ -160,9 +156,7 @@ namespace DataAccess.BO
 
         public static Int64 StringToInt64(string value)
         {
-            Int64 newValue;
-
-            if (!Int64.TryParse(value, out newValue))
+            if (!Int64.TryParse(value, out long newValue))
             {
                 newValue = 0;
             }
@@ -172,9 +166,7 @@ namespace DataAccess.BO
 
         public static decimal? StringToDecimal(string value, bool nullable)
         {
-            decimal newValue;
-
-            if (!Decimal.TryParse(value, out newValue))
+            if (!Decimal.TryParse(value, out decimal newValue))
             {
                 if (!nullable)
                 {
@@ -191,9 +183,7 @@ namespace DataAccess.BO
 
         public static decimal StringToDecimal(string value)
         {
-            decimal newValue;
-
-            if (!Decimal.TryParse(value, out newValue))
+            if (!Decimal.TryParse(value, out decimal newValue))
             {
                 newValue = 0;
             }
@@ -203,21 +193,12 @@ namespace DataAccess.BO
 
         public static Guid StringToGuid(string value)
         {
-            Guid newValue;
-
-            if (!Guid.TryParse(value, out newValue))
+            if (!Guid.TryParse(value, out Guid newValue))
             {
                 newValue = new Guid();
             }
 
             return newValue;
-        }
-
-        public static List<T> AgruparLista<T>(List<T> fullList, Func<T, object> groupBy)
-        {
-            List<T> groupList = fullList.GroupBy(groupBy).ToDictionary(groupo => groupo.Key, groupo => groupo.First()).Values.ToList();
-
-            return groupList;
         }
     }
 }

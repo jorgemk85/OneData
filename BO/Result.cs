@@ -12,10 +12,12 @@ namespace DataAccess.BO
         public string Mensaje { get; set; }
         public DataTable Data { get; set; }
 
-        public Result(bool exito = false, DataTable data = null, MySqlException mse = null, ArgumentException ae = null)
+        public Result(bool exito = false, DataTable data = null, MySqlException mse = null, ArgumentException ae = null, string titulo = "", string mensaje = "")
         {
             TuvoExito = exito;
             Data = data;
+            TituloMensaje = titulo;
+            Mensaje = mensaje;
             ObtenerMensajeError(mse, ae);
         }
 
