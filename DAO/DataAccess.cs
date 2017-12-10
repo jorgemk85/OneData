@@ -1,7 +1,6 @@
 ﻿using DataAccess.BO;
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 using System.Windows.Forms;
 
 namespace DataAccess.DAO
@@ -15,12 +14,10 @@ namespace DataAccess.DAO
         private static Result Command(T obj, StoredProcedures.TransactionTypes transactionType)
         {
             resultado = CacheEvaluation.Evaluate(obj, transactionType, cache);
-            if (cache == null && transactionType == StoredProcedures.TransactionTypes.SelectAll)
-            {
-                cache = resultado;
-            }
 
+            if (cache == null && transactionType == StoredProcedures.TransactionTypes.SelectAll) cache = resultado;
             if (!resultado.TuvoExito) MessageBox.Show(resultado.Mensaje, resultado.TituloMensaje, MessageBoxButtons.OK, MessageBoxIcon.Error);
+
             return resultado;
         }
 
@@ -46,50 +43,31 @@ namespace DataAccess.DAO
 
         public static T Select(params Parameter[] parameters)
         {
-            Command(SetValuesInObject(parameters), StoredProcedures.TransactionTypes.Select);
+            Command(Tools.SetParametersInObject<T>(parameters), StoredProcedures.TransactionTypes.Select);
 
             return resultado.TuvoExito ? Tools.ConvertDataTableToObjectOfType<T>(resultado.Data) : new T();
         }
 
         public static List<T> SelectList(params Parameter[] parameters)
         {
-            Command(SetValuesInObject(parameters), StoredProcedures.TransactionTypes.Select);
+            Command(Tools.SetParametersInObject<T>(parameters), StoredProcedures.TransactionTypes.Select);
 
             return resultado.TuvoExito ? Tools.ConvertDataTableToListOfType<T>(resultado.Data) : new List<T>();
         }
 
         public static Dictionary<Guid, T> SelectDictionary(params Parameter[] parameters)
         {
-            Command(SetValuesInObject(parameters), StoredProcedures.TransactionTypes.Select);
+            Command(Tools.SetParametersInObject<T>(parameters), StoredProcedures.TransactionTypes.Select);
 
             return resultado.TuvoExito ? Tools.ConvertDataTableToDictionaryOfType<T>(resultado.Data) : new Dictionary<Guid, T>();
         }
 
-        public static Result SelectOther(string dataBaseTableName, string storedProcedure, params Parameter[] parameters)
+        public static Result SelectOther(string tableName, string storedProcedure, params Parameter[] parameters)
         {
-            resultado = StoredProcedures.EjecutarProcedimiento(dataBaseTableName, storedProcedure, parameters);
+            resultado = StoredProcedures.EjecutarProcedimiento(tableName, storedProcedure, parameters);
             if (!resultado.TuvoExito) MessageBox.Show(resultado.Mensaje, resultado.TituloMensaje, MessageBoxButtons.OK, MessageBoxIcon.Error);
 
             return resultado;
-        }
-
-        private static T SetValuesInObject(Parameter[] parameters)
-        {
-            PropertyInfo propertyInfo;
-            T newObj = new T();
-
-            (newObj as Main).Id = null;
-
-            foreach (Parameter data in parameters)
-            {
-                propertyInfo = typeof(T).GetProperty(data.PropertyName);
-                if (propertyInfo != null)
-                {
-                    propertyInfo.SetValue(newObj, data.PropertyValue);
-                }
-            }
-
-            return newObj;
         }
     }
 }

@@ -61,6 +61,7 @@ namespace DataAccess.DAO
             DataTable dataTable = null;
 
             connection = Connection.OpenConnection();
+            if (connection.State != ConnectionState.Open) return new Result(exito: false, mensaje: "No se puede abrir la conexion con la base de datos.", titulo: "Error al intentar conectar.");
             command = new MySqlCommand("sp_" + tableName + GetFriendlyTransactionType(transactionType), connection);
             command.CommandType = CommandType.StoredProcedure;
 
@@ -105,6 +106,7 @@ namespace DataAccess.DAO
             DataTable dataTable = null;
 
             connection = Connection.OpenConnection();
+            if (connection.State != ConnectionState.Open) return new Result(exito: false, mensaje: "No se puede abrir la conexion con la base de datos.", titulo: "Error al intentar conectar.");
             command = new MySqlCommand(storedProcedure, connection);
             command.CommandType = CommandType.StoredProcedure;
 

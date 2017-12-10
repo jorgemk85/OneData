@@ -1,6 +1,7 @@
 ﻿using DataAccess.BO;
 using DataAccess.DAO;
 using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Windows.Forms;
 
@@ -15,11 +16,9 @@ namespace TDA
 
         private void btnTest_Click(object sender, EventArgs e)
         {
-            Result resultado = DataAccess<Object>.SelectOther("productos-recetas", "sp_productos-recetas_selectall");
-            DataTable dt = resultado.Data;
-            //Result resultado = DataAccess<Object>.SelectOther("usuarios", "sp_usuarios_selectall", new Parameter("_id", null),
-            //new Parameter("_nombre", "Mochila"),
-            //new Parameter("_cantidadTotal", null);
+           // DataTable dt = DataAccess<Object>.SelectOther("productos", "sp_productos_selectall").Data;
+
+            List<Log> list = DataAccess<Log>.SelectAllList();
         }
     }
 }

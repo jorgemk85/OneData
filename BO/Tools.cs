@@ -17,7 +17,7 @@ namespace DataAccess.BO
                 {
                     if (dataTable.Columns.Contains(propertyInfo.Name))
                     {
-                        propertyInfo.SetValue(newObject, dataTable.Rows[0][propertyInfo.Name]);
+                        propertyInfo.SetValue(newObject, ConvertStringToType(dataTable.Rows[0][propertyInfo.Name].ToString(), propertyInfo.PropertyType));
                     }
                 }
             }
@@ -40,7 +40,7 @@ namespace DataAccess.BO
                 {
                     if (dataTable.Columns.Contains(propertyInfo.Name))
                     {
-                        propertyInfo.SetValue(newObject, row[propertyInfo.Name]);
+                        propertyInfo.SetValue(newObject, ConvertStringToType(row[propertyInfo.Name].ToString(), propertyInfo.PropertyType));
                     }
                 }
                 newList.Add(newObject);
@@ -59,7 +59,7 @@ namespace DataAccess.BO
                 {
                     if (dataTable.Columns.Contains(propertyInfo.Name))
                     {
-                        propertyInfo.SetValue(newObject, row[propertyInfo.Name]);
+                        propertyInfo.SetValue(newObject, ConvertStringToType(row[propertyInfo.Name].ToString(), propertyInfo.PropertyType));
                     }
                 }
                 newDictionary.Add((newObject as Main).Id.GetValueOrDefault(), newObject);
@@ -72,22 +72,48 @@ namespace DataAccess.BO
         {
             DataTable dataTable = new DataTable(typeof(T).Name);
 
-            PropertyInfo[] Props = typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance);
-            foreach (PropertyInfo prop in Props)
+            PropertyInfo[] properties = typeof(T).GetProperties(); //BindingFlags.Public | BindingFlags.Instance
+            foreach (PropertyInfo prop in properties)
             {
                 Type type = (prop.PropertyType.IsGenericType && prop.PropertyType.GetGenericTypeDefinition() == typeof(Nullable<>) ? Nullable.GetUnderlyingType(prop.PropertyType) : prop.PropertyType);
                 dataTable.Columns.Add(prop.Name, type);
             }
             foreach (T item in list)
             {
-                var values = new object[Props.Length];
-                for (int i = 0; i < Props.Length; i++)
+                var values = new object[properties.Length];
+                for (int i = 0; i < properties.Length; i++)
                 {
-                    values[i] = Props[i].GetValue(item, null);
+                    values[i] = properties[i].GetValue(item, null);
                 }
                 dataTable.Rows.Add(values);
             }
             return dataTable;
+        }
+
+        public static object ConvertStringToType(string value, Type targetType)
+        {
+            Type underlyingType = Nullable.GetUnderlyingType(targetType);
+
+            if (underlyingType != null)
+            {
+                if (string.IsNullOrEmpty(value))
+                {
+                    return null;
+                }
+            }
+            else
+            {
+                underlyingType = targetType;
+            }
+            switch (underlyingType.Name)
+            {
+                case "Guid":
+                    return Guid.Parse(value);
+                case "String":
+                    return value;
+                default:
+                    return Convert.ChangeType(value, underlyingType);
+            }
         }
 
         public static DataTable FillDataTable(MySqlDataReader reader, string tableName)
@@ -107,6 +133,24 @@ namespace DataAccess.BO
                 dataTable.Rows.Add(values);
             }
             return dataTable;
+        }
+
+        public static T SetParametersInObject<T>(Parameter[] parameters) where T : new()
+        {
+            T newObj = new T();
+
+            (newObj as Main).Id = null;
+
+            foreach (Parameter data in parameters)
+            {
+                PropertyInfo propertyInfo = typeof(T).GetProperty(data.PropertyName);
+                if (propertyInfo != null)
+                {
+                    propertyInfo.SetValue(newObj, data.PropertyValue);
+                }
+            }
+
+            return newObj;
         }
 
         public static int? StringToInteger(string value, bool nullable)
