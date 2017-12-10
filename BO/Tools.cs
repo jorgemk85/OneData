@@ -90,19 +90,19 @@ namespace DataAccess.BO
             return dataTable;
         }
 
-        public static DataTable FillDataTable(MySqlDataReader dr)
+        public static DataTable FillDataTable(MySqlDataReader reader, string tableName)
         {
-            DataTable dataTable = new DataTable();
-            object[] values = new object[dr.FieldCount];
-            for (int i = 0; i < dr.FieldCount; i++)
+            DataTable dataTable = new DataTable(tableName);
+            object[] values = new object[reader.FieldCount];
+            for (int i = 0; i < reader.FieldCount; i++)
             {
-                dataTable.Columns.Add(dr.GetName(i));
+                dataTable.Columns.Add(reader.GetName(i));
             }
-            while (dr.Read())
+            while (reader.Read())
             {
-                for (int i = 0; i < dr.FieldCount; i++)
+                for (int i = 0; i < reader.FieldCount; i++)
                 {
-                    values[i] = dr[i];
+                    values[i] = reader[i];
                 }
                 dataTable.Rows.Add(values);
             }

@@ -56,12 +56,12 @@ namespace DataAccess.DAO
             }
         }
 
-        public static Result EjecutarProcedimiento<T>(T obj, string dataBaseTableName, TransactionTypes transactionType, bool logTransaction = true)
+        public static Result EjecutarProcedimiento<T>(T obj, string tableName, TransactionTypes transactionType, bool logTransaction = true)
         {
             DataTable dataTable = null;
 
             connection = Connection.OpenConnection();
-            command = new MySqlCommand("sp_" + dataBaseTableName + GetFriendlyTransactionType(transactionType), connection);
+            command = new MySqlCommand("sp_" + tableName + GetFriendlyTransactionType(transactionType), connection);
             command.CommandType = CommandType.StoredProcedure;
 
             try
@@ -77,9 +77,7 @@ namespace DataAccess.DAO
                     {
                         SetParameters<T>(obj, transactionType);
                     }
-                    dataTable = new DataTable();
-                    dataTable.Load(command.ExecuteReader());
-                    dataTable.TableName = String.IsNullOrEmpty(dataTable.TableName) ? dataBaseTableName : dataTable.TableName;
+                    dataTable = Tools.FillDataTable(command.ExecuteReader(), tableName);
                 }
             }
             catch (MySqlException mse)
@@ -97,12 +95,12 @@ namespace DataAccess.DAO
 
             Connection.CloseConnection(connection);
 
-            if (logTransaction) LogTransaction(dataBaseTableName, transactionType);
+            if (logTransaction) LogTransaction(tableName, transactionType);
 
             return new Result(true, dataTable);
         }
 
-        public static Result EjecutarProcedimiento(string dataBaseTableName, string storedProcedure, Parameter[] parameters, bool logTransaction = true)
+        public static Result EjecutarProcedimiento(string tableName, string storedProcedure, Parameter[] parameters, bool logTransaction = true)
         {
             DataTable dataTable = null;
 
@@ -113,9 +111,7 @@ namespace DataAccess.DAO
             try
             {
                 if (parameters != null) SetParameters(parameters);
-                dataTable = new DataTable();
-                dataTable.Load(command.ExecuteReader());
-                dataTable.TableName = String.IsNullOrEmpty(dataTable.TableName) ? dataBaseTableName : dataTable.TableName;
+                dataTable = Tools.FillDataTable(command.ExecuteReader(), tableName);
             }
             catch (MySqlException mse)
             {
@@ -132,7 +128,7 @@ namespace DataAccess.DAO
 
             Connection.CloseConnection(connection);
 
-            if (logTransaction) LogTransaction(dataBaseTableName, TransactionTypes.SelectOther);
+            if (logTransaction) LogTransaction(tableName, TransactionTypes.SelectOther);
 
             return new Result(true, dataTable);
         }
