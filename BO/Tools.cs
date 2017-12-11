@@ -116,25 +116,6 @@ namespace DataAccess.BO
             }
         }
 
-        public static DataTable FillDataTable(MySqlDataReader reader, string tableName)
-        {
-            DataTable dataTable = new DataTable(tableName);
-            object[] values = new object[reader.FieldCount];
-            for (int i = 0; i < reader.FieldCount; i++)
-            {
-                dataTable.Columns.Add(reader.GetName(i));
-            }
-            while (reader.Read())
-            {
-                for (int i = 0; i < reader.FieldCount; i++)
-                {
-                    values[i] = reader[i];
-                }
-                dataTable.Rows.Add(values);
-            }
-            return dataTable;
-        }
-
         public static T SetParametersInObject<T>(Parameter[] parameters) where T : new()
         {
             T newObj = new T();

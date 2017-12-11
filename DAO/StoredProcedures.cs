@@ -78,7 +78,8 @@ namespace DataAccess.DAO
                     {
                         SetParameters<T>(obj, transactionType);
                     }
-                    dataTable = Tools.FillDataTable(command.ExecuteReader(), tableName);
+                    dataTable = new DataTable();
+                    dataTable.Load(command.ExecuteReader());
                 }
             }
             catch (MySqlException mse)
@@ -113,7 +114,8 @@ namespace DataAccess.DAO
             try
             {
                 if (parameters != null) SetParameters(parameters);
-                dataTable = Tools.FillDataTable(command.ExecuteReader(), tableName);
+                dataTable = new DataTable();
+                dataTable.Load(command.ExecuteReader());
             }
             catch (MySqlException mse)
             {
