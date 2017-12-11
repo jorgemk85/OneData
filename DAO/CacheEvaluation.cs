@@ -103,6 +103,7 @@ namespace DataAccess.DAO
             (obj as Main).FechaModificacion = DateTime.Now;
 
             cache.Data.Rows.Add(SetRowData(cache.Data.NewRow(), obj, true));
+            cache.Data.AcceptChanges();
         }
 
         private static void DeleteInCache<T>(T obj, Result cache)

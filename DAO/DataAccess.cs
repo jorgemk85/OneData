@@ -8,8 +8,7 @@ namespace DataAccess.DAO
     public abstract class DataAccess<T> where T : new()
     {
         static Main main = new T() as Main;
-        static Result resultado;
-        static Result cache;
+        static Result resultado, cache;
 
         private static Result Command(T obj, StoredProcedures.TransactionTypes transactionType)
         {
@@ -29,37 +28,27 @@ namespace DataAccess.DAO
 
         public static List<T> SelectAllList()
         {
-            Command(new T(), StoredProcedures.TransactionTypes.SelectAll);
-
-            return resultado.TuvoExito ? Tools.ConvertDataTableToListOfType<T>(resultado.Data) : new List<T>();
+            return resultado.TuvoExito ? Tools.ConvertDataTableToListOfType<T>(Command(new T(), StoredProcedures.TransactionTypes.SelectAll).Data) : new List<T>();
         }
 
         public static Dictionary<Guid, T> SelectAllDictionary()
         {
-            Command(new T(), StoredProcedures.TransactionTypes.SelectAll);
-
-            return resultado.TuvoExito ? Tools.ConvertDataTableToDictionaryOfType<T>(resultado.Data) : new Dictionary<Guid, T>();
+            return resultado.TuvoExito ? Tools.ConvertDataTableToDictionaryOfType<T>(Command(new T(), StoredProcedures.TransactionTypes.SelectAll).Data) : new Dictionary<Guid, T>();
         }
 
         public static T Select(params Parameter[] parameters)
         {
-            Command(Tools.SetParametersInObject<T>(parameters), StoredProcedures.TransactionTypes.Select);
-
-            return resultado.TuvoExito ? Tools.ConvertDataTableToObjectOfType<T>(resultado.Data) : new T();
+            return resultado.TuvoExito ? Tools.ConvertDataTableToObjectOfType<T>(Command(Tools.SetParametersInObject<T>(parameters), StoredProcedures.TransactionTypes.Select).Data) : new T();
         }
 
         public static List<T> SelectList(params Parameter[] parameters)
         {
-            Command(Tools.SetParametersInObject<T>(parameters), StoredProcedures.TransactionTypes.Select);
-
-            return resultado.TuvoExito ? Tools.ConvertDataTableToListOfType<T>(resultado.Data) : new List<T>();
+            return resultado.TuvoExito ? Tools.ConvertDataTableToListOfType<T>(Command(Tools.SetParametersInObject<T>(parameters), StoredProcedures.TransactionTypes.Select).Data) : new List<T>();
         }
 
         public static Dictionary<Guid, T> SelectDictionary(params Parameter[] parameters)
         {
-            Command(Tools.SetParametersInObject<T>(parameters), StoredProcedures.TransactionTypes.Select);
-
-            return resultado.TuvoExito ? Tools.ConvertDataTableToDictionaryOfType<T>(resultado.Data) : new Dictionary<Guid, T>();
+           return resultado.TuvoExito ? Tools.ConvertDataTableToDictionaryOfType<T>(Command(Tools.SetParametersInObject<T>(parameters), StoredProcedures.TransactionTypes.Select).Data) : new Dictionary<Guid, T>();
         }
 
         public static Result SelectOther(string tableName, string storedProcedure, params Parameter[] parameters)
