@@ -63,6 +63,7 @@
     <Compile Include="BO\Log.cs" />
     <Compile Include="BO\Main.cs" />
     <Compile Include="DAO\DataAccess.cs" />
+    <Compile Include="IConnectable.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="BO\Parameter.cs" />
     <Compile Include="BO\Result.cs" />

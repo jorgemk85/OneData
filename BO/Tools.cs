@@ -32,11 +32,12 @@ namespace DataAccess.BO
         public static List<T> ConvertDataTableToListOfType<T>(DataTable dataTable) where T : new()
         {
             List<T> newList = new List<T>();
+            PropertyInfo[] properties = typeof(T).GetProperties();
 
             foreach (DataRow row in dataTable.Rows)
             {
                 T newObject = new T();
-                foreach (PropertyInfo propertyInfo in typeof(T).GetProperties())
+                foreach (PropertyInfo propertyInfo in properties)
                 {
                     if (dataTable.Columns.Contains(propertyInfo.Name))
                     {
@@ -52,10 +53,11 @@ namespace DataAccess.BO
         public static Dictionary<Guid, T> ConvertDataTableToDictionaryOfType<T>(DataTable dataTable) where T : new()
         {
             Dictionary<Guid, T> newDictionary = new Dictionary<Guid, T>();
+            PropertyInfo[] properties = typeof(T).GetProperties();
             foreach (DataRow row in dataTable.Rows)
             {
                 T newObject = new T();
-                foreach (PropertyInfo propertyInfo in typeof(T).GetProperties())
+                foreach (PropertyInfo propertyInfo in properties)
                 {
                     if (dataTable.Columns.Contains(propertyInfo.Name))
                     {
@@ -71,8 +73,7 @@ namespace DataAccess.BO
         public static DataTable ConvertListToDataTableOfType<T>(List<T> list)
         {
             DataTable dataTable = new DataTable(typeof(T).Name);
-
-            PropertyInfo[] properties = typeof(T).GetProperties(); //BindingFlags.Public | BindingFlags.Instance
+            PropertyInfo[] properties = typeof(T).GetProperties();
             foreach (PropertyInfo prop in properties)
             {
                 Type type = (prop.PropertyType.IsGenericType && prop.PropertyType.GetGenericTypeDefinition() == typeof(Nullable<>) ? Nullable.GetUnderlyingType(prop.PropertyType) : prop.PropertyType);
@@ -87,6 +88,7 @@ namespace DataAccess.BO
                 }
                 dataTable.Rows.Add(values);
             }
+            dataTable.PrimaryKey = new DataColumn[] { dataTable.Columns["id"] };
             return dataTable;
         }
 
