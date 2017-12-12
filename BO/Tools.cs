@@ -32,10 +32,10 @@ namespace DataAccess.BO
         public static List<T> ConvertDataTableToListOfType<T>(DataTable dataTable) where T : new()
         {
             List<T> newList = new List<T>();
-            PropertyInfo[] properties = typeof(T).GetProperties();
 
             foreach (DataRow row in dataTable.Rows)
             {
+                PropertyInfo[] properties = typeof(T).GetProperties();
                 T newObject = new T();
                 foreach (PropertyInfo propertyInfo in properties)
                 {
@@ -53,9 +53,9 @@ namespace DataAccess.BO
         public static Dictionary<Guid, T> ConvertDataTableToDictionaryOfType<T>(DataTable dataTable) where T : new()
         {
             Dictionary<Guid, T> newDictionary = new Dictionary<Guid, T>();
-            PropertyInfo[] properties = typeof(T).GetProperties();
             foreach (DataRow row in dataTable.Rows)
             {
+                PropertyInfo[] properties = typeof(T).GetProperties();
                 T newObject = new T();
                 foreach (PropertyInfo propertyInfo in properties)
                 {

@@ -1,6 +1,5 @@
 ﻿using MySql.Data.MySqlClient;
 using System;
-using System.Collections.Generic;
 using System.Data;
 
 namespace DataAccess.BO
@@ -15,7 +14,7 @@ namespace DataAccess.BO
         public Result(bool exito = false, DataTable data = null, MySqlException mse = null, ArgumentException ae = null, string titulo = "", string mensaje = "")
         {
             TuvoExito = exito;
-            Data = data;
+            Data = data == null ? new DataTable() : data;
             TituloMensaje = titulo;
             Mensaje = mensaje;
             ObtenerMensajeError(mse, ae);
@@ -23,7 +22,7 @@ namespace DataAccess.BO
 
         private void ObtenerMensajeError(MySqlException mse, ArgumentException ae)
         {
-            if (mse != null) 
+            if (mse != null)
             {
                 switch (mse.Number)
                 {
