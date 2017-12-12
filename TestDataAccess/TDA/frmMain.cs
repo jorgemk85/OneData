@@ -1,6 +1,7 @@
 ﻿using DataAccess.BO;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Windows.Forms;
 
 namespace TDA
@@ -16,6 +17,7 @@ namespace TDA
         private void btnTest_Click(object sender, EventArgs e)
         {
             List<Log> list = connector.SelectAllList<Log>();
+            Debug.Write("Hola");
         }
     }
 }

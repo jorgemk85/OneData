@@ -7,40 +7,40 @@ using System.Windows.Forms;
 
 namespace TDA
 {
-    public class Connector : DataAccess<Connector>, IConnectable
+    public class Connector : DataAccess<Connector>
     {
-        public Result Delete<T>(T obj) where T : new() => Execute(StoredProcedures.TransactionTypes.Delete, obj);
+        public override Result Delete<T>(T obj) => Execute(StoredProcedures.TransactionTypes.Delete, obj);
 
-        public Result Insert<T>(T obj) where T : new() => Execute(StoredProcedures.TransactionTypes.Insert, obj);
+        public override Result Insert<T>(T obj) => Execute(StoredProcedures.TransactionTypes.Insert, obj);
 
-        public Result Update<T>(T obj) where T : new() => Execute(StoredProcedures.TransactionTypes.Update, obj);
+        public override Result Update<T>(T obj) => Execute(StoredProcedures.TransactionTypes.Update, obj);
 
-        public Result SelectOther(string tableName, string storedProcedure, params Parameter[] parameters)
+        public override Result SelectOther(string tableName, string storedProcedure, params Parameter[] parameters)
         {
             return Execute<Object>(StoredProcedures.TransactionTypes.SelectOther, tableName: tableName, storedProcedure: storedProcedure, parameters: parameters);
         }
 
-        public T Select<T>(params Parameter[] parameters) where T : new()
+        public override T Select<T>(params Parameter[] parameters)
         {
             return DataAccess.BO.Tools.ConvertDataTableToObjectOfType<T>(Execute<T>(StoredProcedures.TransactionTypes.Select, parameters: parameters).Data);
         }
 
-        public Dictionary<Guid, T> SelectDictionary<T>(params Parameter[] parameters) where T : new()
+        public override Dictionary<Guid, T> SelectDictionary<T>(params Parameter[] parameters)
         {
             return DataAccess.BO.Tools.ConvertDataTableToDictionaryOfType<T>(Execute<T>(StoredProcedures.TransactionTypes.Select, parameters: parameters).Data);
         }
 
-        public List<T> SelectList<T>(params Parameter[] parameters) where T : new()
+        public override List<T> SelectList<T>(params Parameter[] parameters)
         {
             return DataAccess.BO.Tools.ConvertDataTableToListOfType<T>(Execute<T>(StoredProcedures.TransactionTypes.Select, parameters: parameters).Data);
         }
 
-        public Dictionary<Guid, T> SelectAllDictionary<T>() where T : new()
+        public override Dictionary<Guid, T> SelectAllDictionary<T>()
         {
             return DataAccess.BO.Tools.ConvertDataTableToDictionaryOfType<T>(Execute<T>(StoredProcedures.TransactionTypes.SelectAll).Data);
         }
 
-        public List<T> SelectAllList<T>() where T : new()
+        public override List<T> SelectAllList<T>()
         {
             return DataAccess.BO.Tools.ConvertDataTableToListOfType<T>(Execute<T>(StoredProcedures.TransactionTypes.SelectAll).Data);
         }

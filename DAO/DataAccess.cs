@@ -1,8 +1,10 @@
-﻿using DataAccess.BO;
+﻿using System;
+using System.Collections.Generic;
+using DataAccess.BO;
 
 namespace DataAccess.DAO
 {
-    public abstract class DataAccess<T> where T : new()
+    public abstract class DataAccess<T> : IConnectable where T : new()
     {
         static Main main = new T() as Main;
         static Result resultado, cache;
@@ -25,5 +27,17 @@ namespace DataAccess.DAO
             if (cache == null && transactionType == StoredProcedures.TransactionTypes.SelectAll) cache = resultado;
             return resultado;
         }
+
+        #region Abstraction for Interface
+        public abstract Result Insert<I>(I obj) where I : new();
+        public abstract Result Update<I>(I obj) where I : new();
+        public abstract Result Delete<I>(I obj) where I : new();
+        public abstract I Select<I>(params Parameter[] parameters) where I : new();
+        public abstract List<I> SelectList<I>(params Parameter[] parameters) where I : new();
+        public abstract Dictionary<Guid, I> SelectDictionary<I>(params Parameter[] parameters) where I : new();
+        public abstract Result SelectOther(string tableName, string storedProcedure, params Parameter[] parameters);
+        public abstract List<I> SelectAllList<I>() where I : new();
+        public abstract Dictionary<Guid, I> SelectAllDictionary<I>() where I : new();
+        #endregion
     }
 }
