@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace TDA
@@ -16,8 +17,15 @@ namespace TDA
 
         private void btnTest_Click(object sender, EventArgs e)
         {
-            List<Log> list = connector.SelectAllList<Log>();
+            RunAsync();
             Debug.Write("Hola");
+        }
+
+        private async void RunAsync()
+        {
+            Task<List<Log>> task = new Task<List<Log>>(() => connector.SelectAllList<Log>());
+            task.Start();
+            await task;
         }
     }
 }

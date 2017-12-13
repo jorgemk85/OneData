@@ -23,7 +23,6 @@ namespace DataAccess.DAO
                     break;
                 case StoredProcedures.TransactionTypes.SelectAll:
                     resultado = isCached == true ? cache : StoredProcedures.EjecutarProcedimiento(obj, tableName, transactionType);
-                    if (!isCached) cache = resultado;
                     break;
                 case StoredProcedures.TransactionTypes.Delete:
                     resultado = StoredProcedures.EjecutarProcedimiento(obj, tableName, transactionType);
