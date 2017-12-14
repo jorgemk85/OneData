@@ -10,7 +10,7 @@ namespace DataAccess.DAO
 {
     public static class CacheEvaluation
     {
-        public static Result Evaluate<T>(T obj, StoredProcedures.TransactionTypes transactionType, Result cache) where T : new()
+        public static Result Evaluate<T>(T obj, StoredProcedures.TransactionTypes transactionType, Result cache, bool isPartialCache, bool forceQueryDataBase) where T : new()
         {
             string tableName = (obj as Main).DataBaseTableName;
             Result resultado = new Result();
@@ -20,6 +20,10 @@ namespace DataAccess.DAO
             {
                 case StoredProcedures.TransactionTypes.Select:
                     resultado = isCached == true ? SelectInCache(obj, cache) : StoredProcedures.EjecutarProcedimiento(obj, tableName, transactionType);
+                    if ((isCached && isPartialCache && resultado.TuvoExito && resultado.Data.Rows.Count == 0) || forceQueryDataBase)
+                    {
+                        resultado = StoredProcedures.EjecutarProcedimiento(obj, tableName, transactionType);
+                    }
                     break;
                 case StoredProcedures.TransactionTypes.SelectAll:
                     resultado = isCached == true ? cache : StoredProcedures.EjecutarProcedimiento(obj, tableName, transactionType);
@@ -78,14 +82,30 @@ namespace DataAccess.DAO
 
         private static DataRow SetRowData<T>(DataRow row, T obj, bool isInsert)
         {
+            object value = null;
+            Type type;
+
             foreach (PropertyInfo prop in typeof(T).GetProperties())
             {
-                if (Attribute.GetCustomAttribute(prop, typeof(UnlinkedProperty)) == null)
+                if (row.Table.Columns.Contains(prop.Name))
                 {
-                    if ((prop.Name != "FechaCreacion" && prop.Name != "FechaModificacion") || isInsert)
+                    value = prop.GetValue(obj);
+                    // La base de datos no acepta nulls, entonces verifica si es para asignarle un valor
+                    if (value == null)
                     {
-                        row[prop.Name] = prop.GetValue(obj);
+                        type = Nullable.GetUnderlyingType(prop.PropertyType) != null ? type = Nullable.GetUnderlyingType(prop.PropertyType) : type = prop.PropertyType;
+
+                        switch (type.Name)
+                        {
+                            case "String":
+                                value = string.Empty;
+                                break;
+                            default:
+                                value = Activator.CreateInstance(type);
+                                break;
+                        }
                     }
+                    row[prop.Name] = value;
                 }
             }
             return row;
@@ -105,12 +125,35 @@ namespace DataAccess.DAO
             cache.Data.AcceptChanges();
         }
 
+        public static void AlterCache(DataRow row, Result cache)
+        {
+            DataRow cacheRow = cache.Data.Rows.Find(row[row.Table.PrimaryKey[0]]);
+            string columnName = string.Empty;
+
+            if (cacheRow == null)
+            {
+                // NO existe la fila: la agrega.
+                cache.Data.Rows.Add(row.ItemArray);
+                cache.Data.AcceptChanges();
+            }
+            else
+            {
+                // SI existe la fila: la actualiza.
+                for (int i = 0; i < cacheRow.ItemArray.Length; i++)
+                {
+                    columnName = cacheRow.Table.Columns[i].ColumnName;
+                    cacheRow[columnName] = row[columnName];
+                }
+            }
+            cache.Data.AcceptChanges();
+        }
+
         private static void DeleteInCache<T>(T obj, Result cache)
         {
             for (int i = 0; i < cache.Data.Rows.Count; i++)
             {
                 DataRow row = cache.Data.Rows[i];
-                if (row["Id"].Equals((obj as Main).Id.GetValueOrDefault()))
+                if (row[row.Table.PrimaryKey[0]].Equals((obj as Main).Id.GetValueOrDefault()))
                 {
                     row.Delete();
                     cache.Data.AcceptChanges();

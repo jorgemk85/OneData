@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using DataAccess.BO;
 
 namespace DataAccess.DAO
@@ -8,6 +9,8 @@ namespace DataAccess.DAO
     {
         static Main main = new T() as Main;
         static Result resultado, cache;
+        static bool isPartialCache = false;
+        static bool forceQueryDataBase = false;
 
         protected static Result Insert(T obj) => Command(obj, StoredProcedures.TransactionTypes.Insert);
 
@@ -23,9 +26,42 @@ namespace DataAccess.DAO
 
         private static Result Command(T obj, StoredProcedures.TransactionTypes transactionType)
         {
-            resultado = CacheEvaluation.Evaluate(obj, transactionType, cache);
-            if (cache == null && transactionType == StoredProcedures.TransactionTypes.SelectAll) cache = resultado;
+            resultado = CacheEvaluation.Evaluate(obj, transactionType, cache, isPartialCache, forceQueryDataBase);
+            SaveCache(transactionType);
             return resultado;
+        }
+
+        private static void SaveCache(StoredProcedures.TransactionTypes transactionType)
+        {
+            if (cache == null || isPartialCache)
+            {
+                forceQueryDataBase = false;
+                if (transactionType == StoredProcedures.TransactionTypes.SelectAll)
+                {
+                    cache = resultado;
+                    isPartialCache = false;
+                }
+                else if (resultado.Data.Rows.Count > 0 && transactionType == StoredProcedures.TransactionTypes.Select)
+                {
+                    if (cache == null)
+                    {
+                        cache = resultado;
+                    }
+                    else
+                    {
+                        foreach (DataRow row in resultado.Data.Rows)
+                        {
+                            CacheEvaluation.AlterCache(row, cache);
+                        }
+                    }
+
+                    isPartialCache = true;
+                }
+                else if (transactionType == StoredProcedures.TransactionTypes.Insert)
+                {
+                    forceQueryDataBase = true;
+                }
+            }
         }
 
         #region Abstraction for Interface

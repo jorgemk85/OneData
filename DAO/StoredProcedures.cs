@@ -80,6 +80,7 @@ namespace DataAccess.DAO
                     }
                     dataTable = new DataTable();
                     dataTable.Load(command.ExecuteReader());
+                    dataTable.TableName = tableName;
                 }
             }
             catch (MySqlException mse)
@@ -116,6 +117,7 @@ namespace DataAccess.DAO
                 if (parameters != null) SetParameters(parameters);
                 dataTable = new DataTable();
                 dataTable.Load(command.ExecuteReader());
+                dataTable.TableName = tableName;
             }
             catch (MySqlException mse)
             {
