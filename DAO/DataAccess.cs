@@ -49,9 +49,12 @@ namespace DataAccess.DAO
                     }
                     else
                     {
-                        foreach (DataRow row in resultado.Data.Rows)
+                        if (!resultado.IsFromCache)
                         {
-                            CacheEvaluation.AlterCache(row, cache);
+                            foreach (DataRow row in resultado.Data.Rows)
+                            {
+                                CacheEvaluation.AlterCache(row, cache);
+                            }
                         }
                     }
 

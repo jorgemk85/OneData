@@ -11,12 +11,15 @@ namespace DataAccess.BO
         public string Mensaje { get; set; }
         public DataTable Data { get; set; }
 
-        public Result(bool exito = false, DataTable data = null, MySqlException mse = null, ArgumentException ae = null, string titulo = "", string mensaje = "")
+        public bool IsFromCache { get; set; }
+
+        public Result(bool exito = false, DataTable data = null, MySqlException mse = null, ArgumentException ae = null, string titulo = "", string mensaje = "", bool isFromCache = false)
         {
             TuvoExito = exito;
             Data = data == null ? new DataTable() : data;
             TituloMensaje = titulo;
             Mensaje = mensaje;
+            IsFromCache = isFromCache;
             ObtenerMensajeError(mse, ae);
         }
 

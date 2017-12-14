@@ -20,6 +20,7 @@ namespace DataAccess.DAO
             {
                 case StoredProcedures.TransactionTypes.Select:
                     resultado = isCached == true ? SelectInCache(obj, cache) : StoredProcedures.EjecutarProcedimiento(obj, tableName, transactionType);
+                    resultado.IsFromCache = isCached == true ? true : false;
                     if ((isCached && isPartialCache && resultado.TuvoExito && resultado.Data.Rows.Count == 0) || forceQueryDataBase)
                     {
                         resultado = StoredProcedures.EjecutarProcedimiento(obj, tableName, transactionType);
@@ -27,6 +28,7 @@ namespace DataAccess.DAO
                     break;
                 case StoredProcedures.TransactionTypes.SelectAll:
                     resultado = isCached == true ? cache : StoredProcedures.EjecutarProcedimiento(obj, tableName, transactionType);
+                    resultado.IsFromCache = isCached == true ? true : false;
                     break;
                 case StoredProcedures.TransactionTypes.Delete:
                     resultado = StoredProcedures.EjecutarProcedimiento(obj, tableName, transactionType);
