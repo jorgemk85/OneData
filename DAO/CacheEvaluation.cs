@@ -19,16 +19,10 @@ namespace DataAccess.DAO
             switch (transactionType)
             {
                 case StoredProcedures.TransactionTypes.Select:
-                    resultado = isCached == true ? SelectInCache(obj, cache) : StoredProcedures.EjecutarProcedimiento(obj, tableName, transactionType);
-                    resultado.IsFromCache = isCached == true ? true : false;
-                    if ((isCached && isPartialCache && resultado.TuvoExito && resultado.Data.Rows.Count == 0) || forceQueryDataBase)
-                    {
-                        resultado = StoredProcedures.EjecutarProcedimiento(obj, tableName, transactionType);
-                    }
+                    EvaluateSelect(obj, out resultado, isCached, tableName, cache, isPartialCache, forceQueryDataBase);
                     break;
                 case StoredProcedures.TransactionTypes.SelectAll:
-                    resultado = isCached == true ? cache : StoredProcedures.EjecutarProcedimiento(obj, tableName, transactionType);
-                    resultado.IsFromCache = isCached == true ? true : false;
+                    EvaluateSelectAll(obj, out resultado, isCached, tableName, cache, forceQueryDataBase);
                     break;
                 case StoredProcedures.TransactionTypes.Delete:
                     resultado = StoredProcedures.EjecutarProcedimiento(obj, tableName, transactionType);
@@ -50,6 +44,36 @@ namespace DataAccess.DAO
             }
 
             return resultado;
+        }
+
+        private static void EvaluateSelect<T>(T obj, out Result resultado, bool isCached, string tableName, Result cache, bool isPartialCache, bool forceQueryDataBase) where T : new()
+        {
+            if (forceQueryDataBase)
+            {
+                resultado = StoredProcedures.EjecutarProcedimiento(obj, tableName, StoredProcedures.TransactionTypes.Select);
+            }
+            else
+            {
+                resultado = isCached == true ? SelectInCache(obj, cache) : StoredProcedures.EjecutarProcedimiento(obj, tableName, StoredProcedures.TransactionTypes.Select);
+                resultado.IsFromCache = isCached == true ? true : false;
+                if (isCached && isPartialCache && resultado.TuvoExito && resultado.Data.Rows.Count == 0)
+                {
+                    resultado = StoredProcedures.EjecutarProcedimiento(obj, tableName, StoredProcedures.TransactionTypes.Select);
+                }
+            }
+        }
+
+        private static void EvaluateSelectAll<T>(T obj, out Result resultado, bool isCached, string tableName, Result cache, bool forceQueryDataBase)
+        {
+            if (forceQueryDataBase)
+            {
+                resultado = StoredProcedures.EjecutarProcedimiento(obj, tableName, StoredProcedures.TransactionTypes.SelectAll);
+            }
+            else
+            {
+                resultado = isCached == true ? cache : StoredProcedures.EjecutarProcedimiento(obj, tableName, StoredProcedures.TransactionTypes.SelectAll);
+                resultado.IsFromCache = isCached == true ? true : false;
+            }
         }
 
         private static Result SelectInCache<T>(T obj, Result cache) where T : new()
