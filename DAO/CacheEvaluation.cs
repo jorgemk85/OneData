@@ -56,7 +56,7 @@ namespace DataAccess.DAO
             {
                 resultado = isCached == true ? SelectInCache(obj, cache) : StoredProcedures.EjecutarProcedimiento(obj, tableName, StoredProcedures.TransactionTypes.Select);
                 resultado.IsFromCache = isCached == true ? true : false;
-                if (!forceQueryDataBase && isCached && isPartialCache && resultado.TuvoExito && resultado.Data.Rows.Count == 0)
+                if (isCached && isPartialCache && resultado.TuvoExito && resultado.Data.Rows.Count == 0)
                 {
                     resultado = StoredProcedures.EjecutarProcedimiento(obj, tableName, StoredProcedures.TransactionTypes.Select);
                 }
