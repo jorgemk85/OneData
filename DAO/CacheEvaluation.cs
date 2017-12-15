@@ -22,7 +22,7 @@ namespace DataAccess.DAO
                     EvaluateSelect(obj, out resultado, isCached, tableName, cache, isPartialCache, forceQueryDataBase);
                     break;
                 case StoredProcedures.TransactionTypes.SelectAll:
-                    EvaluateSelectAll(obj, out resultado,isCached, tableName, cache, forceQueryDataBase);
+                    EvaluateSelectAll(obj, out resultado, isCached, tableName, cache, forceQueryDataBase);
                     break;
                 case StoredProcedures.TransactionTypes.Delete:
                     resultado = StoredProcedures.EjecutarProcedimiento(obj, tableName, transactionType);
@@ -56,10 +56,10 @@ namespace DataAccess.DAO
             {
                 resultado = isCached == true ? SelectInCache(obj, cache) : StoredProcedures.EjecutarProcedimiento(obj, tableName, StoredProcedures.TransactionTypes.Select);
                 resultado.IsFromCache = isCached == true ? true : false;
-            }
-            if (!forceQueryDataBase && isCached && isPartialCache && resultado.TuvoExito && resultado.Data.Rows.Count == 0)
-            {
-                resultado = StoredProcedures.EjecutarProcedimiento(obj, tableName, StoredProcedures.TransactionTypes.Select);
+                if (!forceQueryDataBase && isCached && isPartialCache && resultado.TuvoExito && resultado.Data.Rows.Count == 0)
+                {
+                    resultado = StoredProcedures.EjecutarProcedimiento(obj, tableName, StoredProcedures.TransactionTypes.Select);
+                }
             }
         }
 
