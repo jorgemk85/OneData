@@ -8,16 +8,16 @@ namespace DataAccess.DAO
     {
         public static string ConnectionString { get; set; }
 
-        static Connection()
-        {
-            ConnectionString = ConfigurationManager.ConnectionStrings[ConfigurationManager.AppSettings["ConnectionToUse"]].ConnectionString;
-        }
-
-        public static MySqlConnection OpenConnection()
+        public static MySqlConnection OpenConnection(bool useAppConfig)
         {
             MySqlConnection connection = null;
             try
             {
+                if (useAppConfig)
+                {
+                    ConnectionString = ConfigurationManager.ConnectionStrings[ConfigurationManager.AppSettings["ConnectionToUse"]].ConnectionString;
+                }
+                
                 connection = new MySqlConnection(ConnectionString);
                 connection.Open();
             }

@@ -12,21 +12,21 @@ namespace DataAccess.DAO
         static bool isPartialCache = false;
         static bool forceQueryDataBase = false;
 
-        protected static Result Insert(T obj) => Command(obj, StoredProcedures.TransactionTypes.Insert);
+        protected static Result Insert(T obj, bool useAppConfig) => Command(obj, StoredProcedures.TransactionTypes.Insert, useAppConfig);
 
-        protected static Result Update(T obj) => Command(obj, StoredProcedures.TransactionTypes.Update);
+        protected static Result Update(T obj, bool useAppConfig) => Command(obj, StoredProcedures.TransactionTypes.Update, useAppConfig);
 
-        protected static Result Delete(T obj) => Command(obj, StoredProcedures.TransactionTypes.Delete);
+        protected static Result Delete(T obj, bool useAppConfig) => Command(obj, StoredProcedures.TransactionTypes.Delete, useAppConfig);
 
-        protected static Result Select(params Parameter[] parameters) => Command(Tools.SetParametersInObject<T>(parameters), StoredProcedures.TransactionTypes.Select);
+        protected static Result Select(bool useAppConfig, params Parameter[] parameters) => Command(Tools.SetParametersInObject<T>(parameters), StoredProcedures.TransactionTypes.Select, useAppConfig);
 
-        protected static Result Select(string tableName, string storedProcedure, params Parameter[] parameters) => StoredProcedures.EjecutarProcedimiento(tableName, storedProcedure, parameters);
+        protected static Result Select(string tableName, string storedProcedure, bool useAppConfig, params Parameter[] parameters) => StoredProcedures.EjecutarProcedimiento(tableName, storedProcedure, parameters, useAppConfig);
 
-        protected static Result SelectAll() => Command(new T(), StoredProcedures.TransactionTypes.SelectAll);
+        protected static Result SelectAll(bool useAppConfig) => Command(new T(), StoredProcedures.TransactionTypes.SelectAll, useAppConfig);
 
-        private static Result Command(T obj, StoredProcedures.TransactionTypes transactionType)
+        private static Result Command(T obj, StoredProcedures.TransactionTypes transactionType, bool useAppConfig)
         {
-            resultado = CacheEvaluation.Evaluate(obj, transactionType, cache, isPartialCache, forceQueryDataBase);
+            resultado = CacheEvaluation.Evaluate(obj, transactionType, cache, isPartialCache, forceQueryDataBase, useAppConfig);
             SaveCache(transactionType);
             return resultado;
         }

@@ -56,11 +56,11 @@ namespace DataAccess.DAO
             }
         }
 
-        public static Result EjecutarProcedimiento<T>(T obj, string tableName, TransactionTypes transactionType, bool logTransaction = true)
+        public static Result EjecutarProcedimiento<T>(T obj, string tableName, TransactionTypes transactionType, bool useAppConfig, bool logTransaction = true)
         {
             DataTable dataTable = null;
 
-            connection = Connection.OpenConnection();
+            connection = Connection.OpenConnection(useAppConfig);
             if (connection.State != ConnectionState.Open) return new Result(exito: false, mensaje: "No se puede abrir la conexion con la base de datos.", titulo: "Error al intentar conectar.");
             command = new MySqlCommand("sp_" + tableName + GetFriendlyTransactionType(transactionType), connection);
             command.CommandType = CommandType.StoredProcedure;
@@ -98,16 +98,16 @@ namespace DataAccess.DAO
 
             Connection.CloseConnection(connection);
 
-            if (logTransaction) LogTransaction(tableName, transactionType);
+            if (logTransaction) LogTransaction(tableName, transactionType, useAppConfig);
 
             return new Result(true, dataTable);
         }
 
-        public static Result EjecutarProcedimiento(string tableName, string storedProcedure, Parameter[] parameters, bool logTransaction = true)
+        public static Result EjecutarProcedimiento(string tableName, string storedProcedure, Parameter[] parameters, bool useAppConfig, bool logTransaction = true)
         {
             DataTable dataTable = null;
 
-            connection = Connection.OpenConnection();
+            connection = Connection.OpenConnection(useAppConfig);
             if (connection.State != ConnectionState.Open) return new Result(exito: false, mensaje: "No se puede abrir la conexion con la base de datos.", titulo: "Error al intentar conectar.");
             command = new MySqlCommand(storedProcedure, connection);
             command.CommandType = CommandType.StoredProcedure;
@@ -134,12 +134,12 @@ namespace DataAccess.DAO
 
             Connection.CloseConnection(connection);
 
-            if (logTransaction) LogTransaction(tableName, TransactionTypes.SelectOther);
+            if (logTransaction) LogTransaction(tableName, TransactionTypes.SelectOther, useAppConfig);
 
             return new Result(true, dataTable);
         }
 
-        private static void LogTransaction(string dataBaseTableName, TransactionTypes transactionType)
+        private static void LogTransaction(string dataBaseTableName, TransactionTypes transactionType, bool useAppConfig)
         {
             Log newLog = new Log();
             string parametros = String.Empty;
@@ -156,7 +156,7 @@ namespace DataAccess.DAO
             }
             newLog.Parametros = parametros;
 
-            EjecutarProcedimiento<Log>(newLog, newLog.DataBaseTableName, TransactionTypes.Insert, false);
+            EjecutarProcedimiento<Log>(newLog, newLog.DataBaseTableName, TransactionTypes.Insert, useAppConfig, false);
         }
 
         private static string GetFriendlyTransactionType(TransactionTypes transactionType)
