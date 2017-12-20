@@ -52,7 +52,7 @@ namespace DataAccess.DAO
         {
             for (int i = 0; i < parameters.Length; i++)
             {
-                command.Parameters.AddWithValue(parameters[i].PropertyName, parameters[i].PropertyValue);
+                command.Parameters.AddWithValue(parameters[i].Name, parameters[i].Value);
             }
         }
 

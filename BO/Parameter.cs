@@ -10,13 +10,13 @@ namespace DataAccess.BO
 {
     public class Parameter
     {
-        public string PropertyName { get; set; }
-        public object PropertyValue { get; set; }
+        public string Name { get; set; }
+        public object Value { get; set; }
 
         public Parameter(string name, object value)
         {
-            PropertyName = name;
-            PropertyValue = value;
+            Name = name;
+            Value = value;
         }
     }
 }

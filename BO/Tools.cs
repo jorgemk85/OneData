@@ -126,10 +126,10 @@ namespace DataAccess.BO
 
             foreach (Parameter data in parameters)
             {
-                PropertyInfo propertyInfo = typeof(T).GetProperty(data.PropertyName);
+                PropertyInfo propertyInfo = typeof(T).GetProperty(data.Name);
                 if (propertyInfo != null)
                 {
-                    propertyInfo.SetValue(newObj, data.PropertyValue);
+                    propertyInfo.SetValue(newObj, data.Value);
                 }
             }
 
