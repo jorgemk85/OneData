@@ -13,6 +13,7 @@ namespace TDA
         public Connector()
         {
             Connection.ConnectionString = "server=infected.biz;user id=infected_system;password=N5941Qnu4ucIejO;persistsecurityinfo=True;database=infected_rms_licence;";
+            IsCacheEnabled = true;
         }
 
         public override Result Delete<T>(T obj) => Execute(StoredProcedures.TransactionTypes.Delete, obj);

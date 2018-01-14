@@ -7,6 +7,8 @@ namespace DataAccess.DAO
 {
     public abstract class DataAccess<T> : IConnectable where T : new()
     {
+        public static bool IsCacheEnabled { get; set; } = true;
+
         static Main main = new T() as Main;
         static Result resultado, cache;
         static bool isPartialCache = false;
@@ -26,8 +28,17 @@ namespace DataAccess.DAO
 
         private static Result Command(T obj, StoredProcedures.TransactionTypes transactionType, bool useAppConfig)
         {
-            resultado = CacheEvaluation.Evaluate(obj, transactionType, cache, isPartialCache, forceQueryDataBase, useAppConfig);
-            SaveCache(transactionType);
+            if (IsCacheEnabled)
+            {
+                resultado = QueryEvaluation.Evaluate(obj, transactionType, cache, isPartialCache, forceQueryDataBase, useAppConfig);
+                SaveCache(transactionType);
+            }
+            else
+            {
+                // Al mandar TRUE en forceQueryDataBase aseguramos que no se use el cache y al no almacenarlo con la funcion SaveCache, anulamos completamente el uso cache.
+                resultado = QueryEvaluation.Evaluate(obj, transactionType, cache, isPartialCache, true, useAppConfig);
+            }
+
             return resultado;
         }
 
@@ -53,7 +64,7 @@ namespace DataAccess.DAO
                         {
                             foreach (DataRow row in resultado.Data.Rows)
                             {
-                                CacheEvaluation.AlterCache(row, cache);
+                                QueryEvaluation.AlterCache(row, cache);
                             }
                         }
                     }
@@ -67,7 +78,7 @@ namespace DataAccess.DAO
             }
         }
 
-        #region Abstraction for Interface
+        #region Abstraction for Interface and Inheritance
         public abstract Result Insert<I>(I obj) where I : new();
         public abstract Result Update<I>(I obj) where I : new();
         public abstract Result Delete<I>(I obj) where I : new();

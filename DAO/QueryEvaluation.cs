@@ -8,7 +8,7 @@ using System.Reflection;
 
 namespace DataAccess.DAO
 {
-    public static class CacheEvaluation
+    public static class QueryEvaluation
     {
         public static Result Evaluate<T>(T obj, StoredProcedures.TransactionTypes transactionType, Result cache, bool isPartialCache, bool forceQueryDataBase, bool useAppConfig) where T : new()
         {
