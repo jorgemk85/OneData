@@ -50,7 +50,7 @@ namespace DataAccess.DAO
 
             connection = Connection.OpenConnection(useAppConfig);
             if (connection.State != ConnectionState.Open) return new Result(exito: false, mensaje: "No se puede abrir la conexion con la base de datos.", titulo: "Error al intentar conectar.");
-            command = new MySqlCommand("sp_" + tableName + GetFriendlyTransactionType(transactionType), connection);
+            command = new MySqlCommand(string.Format("{0}sp_{1}{2}", (obj as Main).Schema + ".", tableName, GetFriendlyTransactionType(transactionType)), connection);
             command.CommandType = CommandType.StoredProcedure;
 
             try
@@ -160,9 +160,9 @@ namespace DataAccess.DAO
                 case QueryEvaluation.TransactionTypes.Update:
                     return "_update";
                 case QueryEvaluation.TransactionTypes.SelectAll:
-                    return "_selectAll";
+                    return "_selectall";
                 default:
-                    return "_selectAll";
+                    return "_selectall";
             }
         }
     }
