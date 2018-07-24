@@ -1,6 +1,7 @@
 ﻿using MySql.Data.MySqlClient;
 using System;
 using System.Configuration;
+using System.Data.SqlClient;
 
 namespace DataAccess.DAO
 {
@@ -29,6 +30,31 @@ namespace DataAccess.DAO
         }
 
         public static void CloseConnection(MySqlConnection connection)
+        {
+            connection.Close();
+        }
+
+        public static SqlConnection OpenMSSQLConnection(bool useAppConfig)
+        {
+            SqlConnection connection = null;
+            try
+            {
+                if (useAppConfig)
+                {
+                    ConnectionString = ConfigurationManager.ConnectionStrings[ConfigurationManager.AppSettings["ConnectionToUse"]].ConnectionString;
+                }
+
+                connection = new SqlConnection(ConnectionString);
+                connection.Open();
+            }
+            catch (SqlException ex)
+            {
+                Console.WriteLine("Error: {0}", ex.ToString());
+            }
+            return connection;
+        }
+
+        public static void CloseConnection(SqlConnection connection)
         {
             connection.Close();
         }

@@ -1,6 +1,8 @@
 ﻿using MySql.Data.MySqlClient;
 using System;
+using System.Collections.Generic;
 using System.Data;
+using System.Data.SqlClient;
 
 namespace DataAccess.BO
 {
@@ -10,32 +12,34 @@ namespace DataAccess.BO
         public string TituloMensaje { get; set; }
         public string Mensaje { get; set; }
         public DataTable Data { get; set; }
+        public List<Object> ReturnParameters { get; set; }
 
         public bool IsFromCache { get; set; }
 
-        public Result(bool exito = false, DataTable data = null, MySqlException mse = null, ArgumentException ae = null, string titulo = "", string mensaje = "", bool isFromCache = false)
+        public Result(bool exito = false, DataTable data = null, List<Object> returnParameters = null, MySqlException mysqle = null, SqlException mssqle = null, ArgumentException ae = null, string titulo = "", string mensaje = "", bool isFromCache = false)
         {
             TuvoExito = exito;
             Data = data == null ? new DataTable() : data;
             TituloMensaje = titulo;
             Mensaje = mensaje;
             IsFromCache = isFromCache;
-            ObtenerMensajeError(mse, ae);
+            ReturnParameters = returnParameters;
+            ObtenerMensajeError(mysqle, ae, mssqle);
         }
 
-        private void ObtenerMensajeError(MySqlException mse, ArgumentException ae)
+        private void ObtenerMensajeError(MySqlException mysqle, ArgumentException ae, SqlException mssqle)
         {
-            if (mse != null)
+            if (mysqle != null )
             {
-                switch (mse.Number)
+                switch (mysqle.Number)
                 {
                     case 1451: // Foreign Key violation
                         Mensaje = "No se puede borrar el registro ya que se encuentra asociado con otros datos en la aplicacion.";
                         TituloMensaje = "Imposible eliminar.";
                         break;
                     default:
-                        Mensaje = mse.Message;
-                        TituloMensaje = "Error en MySQL (" + mse.Number + ")";
+                        Mensaje = mysqle.Message;
+                        TituloMensaje = "Error en MySQL (" + mysqle.Number + ")";
                         break;
                 }
                 return;
@@ -45,6 +49,22 @@ namespace DataAccess.BO
             {
                 Mensaje = ae.Message;
                 TituloMensaje = "Error";
+                return;
+            }
+
+            if (mssqle != null)
+            {
+                switch (mssqle.Number)
+                {
+                    case 1451: // Foreign Key violation
+                        Mensaje = "No se puede borrar el registro ya que se encuentra asociado con otros datos en la aplicacion.";
+                        TituloMensaje = "Imposible eliminar.";
+                        break;
+                    default:
+                        Mensaje = mssqle.Message;
+                        TituloMensaje = "Error en MSSQL (" + mssqle.Number + ")";
+                        break;
+                }
                 return;
             }
         }

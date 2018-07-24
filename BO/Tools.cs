@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.SqlClient;
 using System.Reflection;
 
 namespace DataAccess.BO
@@ -27,6 +28,31 @@ namespace DataAccess.BO
             }
 
             return newObject;
+        }
+
+        public static Dictionary<TKey, TValue> ConvertDataTableToDictionary<TKey, TValue>(DataTable dataTable, string keyName, string valueName)
+        {
+            if (dataTable.Columns.Count != 2)
+            {
+                throw new Exception("Esta funcion requiere 2 columnas en la DataTable de forma forzosa.");
+            }
+
+            Dictionary<TKey, TValue> newDictionary = new Dictionary<TKey, TValue>();
+            if (dataTable.Rows.Count > 0)
+            {
+                TKey key;
+                TValue value;
+
+                for (int i = 0; i < dataTable.Rows.Count; i++)
+                {
+                    key = (TKey)ConvertStringToType(dataTable.Rows[i][keyName].ToString(), typeof(TKey));
+                    value = (TValue)ConvertStringToType(dataTable.Rows[i][valueName].ToString(), typeof(TValue));
+
+                    newDictionary.Add(key, value);
+                }
+            }
+
+            return newDictionary;
         }
 
         public static List<T> ConvertDataTableToListOfType<T>(DataTable dataTable) where T : new()
@@ -225,6 +251,38 @@ namespace DataAccess.BO
             }
 
             return newValue;
+        }
+
+        public static Object MySqlParameterToObject(MySqlParameter parameter)
+        {
+            return parameter.Value;
+        }
+
+        public static Object MSSqlParameterToObject(SqlParameter parameter)
+        {
+            return parameter.Value;
+        }
+
+        public static List<Object> MySqlParameterCollectionToList(MySqlParameterCollection parameters)
+        {
+            List<Object> objects = new List<object>();
+
+            foreach (MySqlParameter parameter in parameters)
+            {
+                objects.Add(MySqlParameterToObject(parameter));
+            }
+            return objects;
+        }
+
+        public static List<Object> MSSqlParameterCollectionToList(SqlParameterCollection parameters)
+        {
+            List<Object> objects = new List<object>();
+
+            foreach (SqlParameter parameter in parameters)
+            {
+                objects.Add(MSSqlParameterToObject(parameter));
+            }
+            return objects;
         }
     }
 }

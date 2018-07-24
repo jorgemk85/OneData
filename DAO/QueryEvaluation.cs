@@ -1,6 +1,7 @@
 ﻿using DataAccess.BO;
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Data;
 using System.Linq;
 using System.Linq.Dynamic;
@@ -8,75 +9,149 @@ using System.Reflection;
 
 namespace DataAccess.DAO
 {
-    public static class QueryEvaluation
+    public class QueryEvaluation
     {
-        public static Result Evaluate<T>(T obj, StoredProcedures.TransactionTypes transactionType, Result cache, bool isPartialCache, bool forceQueryDataBase, bool useAppConfig) where T : new()
+        MySQL mySQLProcedures = new MySQL();
+        MSSQL msSQLProcedures = new MSSQL();
+        ConnectionTypes connectionType;
+
+        public enum ConnectionTypes
+        {
+            MySQL,
+            MSSQL
+        }
+
+        public QueryEvaluation()
+        {
+            connectionType = (ConnectionTypes)Enum.Parse(typeof(ConnectionTypes), ConfigurationManager.AppSettings["ConnectionType"].ToString());
+        }
+
+        public enum TransactionTypes
+        {
+            Select,
+            SelectAll,
+            Delete,
+            Insert,
+            Update,
+            SelectOther
+        }
+
+        public Result Evaluate<T>(T obj, TransactionTypes transactionType, Result cache, bool isPartialCache, bool forceQueryDataBase, bool useAppConfig) where T : new()
         {
             string tableName = (obj as Main).DataBaseTableName;
             Result resultado = new Result();
             bool isCached = cache == null ? false : true;
+            bool requiresResult = false;
 
             switch (transactionType)
             {
-                case StoredProcedures.TransactionTypes.Select:
+                case TransactionTypes.Select:
                     EvaluateSelect(obj, out resultado, isCached, tableName, cache, isPartialCache, forceQueryDataBase, useAppConfig);
                     break;
-                case StoredProcedures.TransactionTypes.SelectAll:
+                case TransactionTypes.SelectAll:
                     EvaluateSelectAll(obj, out resultado, isCached, tableName, cache, forceQueryDataBase, useAppConfig);
                     break;
-                case StoredProcedures.TransactionTypes.Delete:
-                    resultado = StoredProcedures.EjecutarProcedimiento(obj, tableName, transactionType, useAppConfig);
-                    if (isCached && resultado.TuvoExito) DeleteInCache(obj, cache);
+                case TransactionTypes.Delete:
+                    requiresResult = true;
                     break;
-                case StoredProcedures.TransactionTypes.Insert:
-                    resultado = StoredProcedures.EjecutarProcedimiento(obj, tableName, transactionType, useAppConfig);
-                    if (isCached && resultado.TuvoExito) InsertInCache(obj, cache);
+                case TransactionTypes.Insert:
+                    requiresResult = true;
                     break;
-                case StoredProcedures.TransactionTypes.Update:
-                    resultado = StoredProcedures.EjecutarProcedimiento(obj, tableName, transactionType, useAppConfig);
-                    if (isCached && resultado.TuvoExito) UpdateInCache(obj, cache);
+                case TransactionTypes.Update:
+                    requiresResult = true;
                     break;
-                case StoredProcedures.TransactionTypes.SelectOther:
-                    resultado = StoredProcedures.EjecutarProcedimiento(obj, tableName, transactionType, useAppConfig);
+                case TransactionTypes.SelectOther:
+                    if (connectionType == ConnectionTypes.MySQL)
+                    {
+                        resultado = mySQLProcedures.EjecutarProcedimiento(obj, tableName, transactionType, useAppConfig);
+                    }
+                    else
+                    {
+                        resultado = msSQLProcedures.EjecutarProcedimiento(obj, tableName, transactionType, useAppConfig);
+                    }
                     break;
                 default:
                     break;
             }
 
+            if (requiresResult)
+            {
+                if (connectionType == ConnectionTypes.MySQL)
+                {
+                    resultado = mySQLProcedures.EjecutarProcedimiento(obj, tableName, transactionType, useAppConfig);
+                }
+                else
+                {
+                    resultado = msSQLProcedures.EjecutarProcedimiento(obj, tableName, transactionType, useAppConfig);
+                }
+                if (transactionType != TransactionTypes.SelectOther)
+                {
+                    if (isCached && resultado.TuvoExito) DeleteInCache(obj, cache);
+                }
+            }
+
             return resultado;
         }
 
-        private static void EvaluateSelect<T>(T obj, out Result resultado, bool isCached, string tableName, Result cache, bool isPartialCache, bool forceQueryDataBase, bool useAppConfig) where T : new()
+        private void EvaluateSelect<T>(T obj, out Result resultado, bool isCached, string tableName, Result cache, bool isPartialCache, bool forceQueryDataBase, bool useAppConfig) where T : new()
         {
             if (forceQueryDataBase)
             {
-                resultado = StoredProcedures.EjecutarProcedimiento(obj, tableName, StoredProcedures.TransactionTypes.Select, useAppConfig);
+                if (connectionType == ConnectionTypes.MySQL)
+                {
+                    resultado = mySQLProcedures.EjecutarProcedimiento(obj, tableName, TransactionTypes.Select, useAppConfig);
+                }
+                else
+                {
+                    resultado = msSQLProcedures.EjecutarProcedimiento(obj, tableName, TransactionTypes.Select, useAppConfig);
+                }
             }
             else
             {
-                resultado = isCached == true ? SelectInCache(obj, cache) : StoredProcedures.EjecutarProcedimiento(obj, tableName, StoredProcedures.TransactionTypes.Select, useAppConfig);
+                resultado = isCached == true ? SelectInCache(obj, cache) : mySQLProcedures.EjecutarProcedimiento(obj, tableName, TransactionTypes.Select, useAppConfig);
                 resultado.IsFromCache = isCached == true ? true : false;
                 if (isCached && isPartialCache && resultado.TuvoExito && resultado.Data.Rows.Count == 0)
                 {
-                    resultado = StoredProcedures.EjecutarProcedimiento(obj, tableName, StoredProcedures.TransactionTypes.Select, useAppConfig);
+                    if (connectionType == ConnectionTypes.MySQL)
+                    {
+                        resultado = mySQLProcedures.EjecutarProcedimiento(obj, tableName, TransactionTypes.Select, useAppConfig);
+                    }
+                    else
+                    {
+                        resultado = msSQLProcedures.EjecutarProcedimiento(obj, tableName, TransactionTypes.Select, useAppConfig);
+                    }
                 }
             }
         }
 
-        private static void EvaluateSelectAll<T>(T obj, out Result resultado, bool isCached, string tableName, Result cache, bool forceQueryDataBase, bool useAppConfig)
+        private void EvaluateSelectAll<T>(T obj, out Result resultado, bool isCached, string tableName, Result cache, bool forceQueryDataBase, bool useAppConfig)
         {
             if (forceQueryDataBase)
             {
-                resultado = StoredProcedures.EjecutarProcedimiento(obj, tableName, StoredProcedures.TransactionTypes.SelectAll, useAppConfig);
+                if (connectionType == ConnectionTypes.MySQL)
+                {
+                    resultado = mySQLProcedures.EjecutarProcedimiento(obj, tableName, TransactionTypes.SelectAll, useAppConfig);
+                }
+                else
+                {
+                    resultado = msSQLProcedures.EjecutarProcedimiento(obj, tableName, TransactionTypes.SelectAll, useAppConfig);
+                }
             }
             else
             {
-                resultado = isCached == true ? cache : StoredProcedures.EjecutarProcedimiento(obj, tableName, StoredProcedures.TransactionTypes.SelectAll, useAppConfig);
+                if (connectionType == ConnectionTypes.MySQL)
+                {
+                    resultado = isCached == true ? cache : mySQLProcedures.EjecutarProcedimiento(obj, tableName, TransactionTypes.SelectAll, useAppConfig);
+                }
+                else
+                {
+                    resultado = isCached == true ? cache : msSQLProcedures.EjecutarProcedimiento(obj, tableName, TransactionTypes.SelectAll, useAppConfig);
+                }
                 resultado.IsFromCache = isCached == true ? true : false;
             }
         }
 
-        private static Result SelectInCache<T>(T obj, Result cache) where T : new()
+        private Result SelectInCache<T>(T obj, Result cache) where T : new()
         {
             int valueIndex = 0;
             List<object> values = new List<object>();
@@ -106,7 +181,7 @@ namespace DataAccess.DAO
             }
         }
 
-        private static DataRow SetRowData<T>(DataRow row, T obj, bool isInsert)
+        private DataRow SetRowData<T>(DataRow row, T obj, bool isInsert)
         {
             object value = null;
             Type type;
@@ -137,12 +212,12 @@ namespace DataAccess.DAO
             return row;
         }
 
-        private static void UpdateInCache<T>(T obj, Result cache)
+        private void UpdateInCache<T>(T obj, Result cache)
         {
             SetRowData<T>(cache.Data.Rows.Find((obj as Main).Id), obj, false).AcceptChanges();
         }
 
-        private static void InsertInCache<T>(T obj, Result cache)
+        private void InsertInCache<T>(T obj, Result cache)
         {
             (obj as Main).FechaCreacion = DateTime.Now;
             (obj as Main).FechaModificacion = DateTime.Now;
@@ -151,7 +226,7 @@ namespace DataAccess.DAO
             cache.Data.AcceptChanges();
         }
 
-        public static void AlterCache(DataRow row, Result cache)
+        public void AlterCache(DataRow row, Result cache)
         {
             DataRow cacheRow = cache.Data.Rows.Find(row[row.Table.PrimaryKey[0]]);
             string columnName = string.Empty;
@@ -174,7 +249,7 @@ namespace DataAccess.DAO
             cache.Data.AcceptChanges();
         }
 
-        private static void DeleteInCache<T>(T obj, Result cache)
+        private void DeleteInCache<T>(T obj, Result cache)
         {
             for (int i = 0; i < cache.Data.Rows.Count; i++)
             {

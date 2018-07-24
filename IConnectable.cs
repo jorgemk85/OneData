@@ -1,9 +1,6 @@
 ﻿using DataAccess.BO;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DataAccess
 {
@@ -21,7 +18,7 @@ namespace DataAccess
 
         Dictionary<Guid, T> SelectDictionary<T>(params Parameter[] parameters) where T : new();
 
-        Result SelectOther(string tableName, string storedProcedure, params Parameter[] parameters) ;
+        Result SelectOther(string tableName, string storedProcedure, params Parameter[] parameters);
 
         List<T> SelectAllList<T>() where T : new();
 

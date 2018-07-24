@@ -1,39 +1,26 @@
 ﻿using DataAccess.BO;
-using MySql.Data.MySqlClient;
 using System;
 using System.Data;
+using System.Data.SqlClient;
 using System.Diagnostics;
 using System.Reflection;
 
 namespace DataAccess.DAO
 {
-    public class StoredProcedures
+    public class MSSQL
     {
-        #region Enums
-        public enum TransactionTypes
-        {
-            Select,
-            SelectAll,
-            Delete,
-            Insert,
-            Update,
-            SelectOther
-        }
-        #endregion
+        public Guid IdentificadorId { get; set; } = Guid.Empty;
+        private SqlConnection connection;
+        private SqlCommand command;
 
-        public static Guid IdentificadorId { get; set; } = Guid.Empty;
-
-        private static MySqlConnection connection;
-        private static MySqlCommand command;
-
-        private static void SetParameters<T>(T obj, TransactionTypes transactionType)
+        private void SetParameters<T>(T obj, QueryEvaluation.TransactionTypes transactionType)
         {
             foreach (PropertyInfo propertyInfo in typeof(T).GetProperties())
             {
                 // Si encontramos el atributo entonces se brinca la propiedad.
                 if (Attribute.GetCustomAttribute(propertyInfo, typeof(UnlinkedProperty)) != null) continue;
 
-                if (transactionType == TransactionTypes.Delete)
+                if (transactionType == QueryEvaluation.TransactionTypes.Delete)
                 {
                     if (propertyInfo.Name == "Id")
                     {
@@ -48,7 +35,7 @@ namespace DataAccess.DAO
             }
         }
 
-        private static void SetParameters(Parameter[] parameters)
+        private void SetParameters(Parameter[] parameters)
         {
             for (int i = 0; i < parameters.Length; i++)
             {
@@ -56,25 +43,25 @@ namespace DataAccess.DAO
             }
         }
 
-        public static Result EjecutarProcedimiento<T>(T obj, string tableName, TransactionTypes transactionType, bool useAppConfig, bool logTransaction = true)
+        public Result EjecutarProcedimiento<T>(T obj, string tableName, QueryEvaluation.TransactionTypes transactionType, bool useAppConfig, bool logTransaction = true)
         {
             DataTable dataTable = null;
 
-            connection = Connection.OpenConnection(useAppConfig);
+            connection = Connection.OpenMSSQLConnection(useAppConfig);
             if (connection.State != ConnectionState.Open) return new Result(exito: false, mensaje: "No se puede abrir la conexion con la base de datos.", titulo: "Error al intentar conectar.");
-            command = new MySqlCommand("sp_" + tableName + GetFriendlyTransactionType(transactionType), connection);
+            command = new SqlCommand("sp_" + tableName + GetFriendlyTransactionType(transactionType), connection);
             command.CommandType = CommandType.StoredProcedure;
 
             try
             {
-                if (transactionType == TransactionTypes.Insert || transactionType == TransactionTypes.Update || transactionType == TransactionTypes.Delete)
+                if (transactionType == QueryEvaluation.TransactionTypes.Insert || transactionType == QueryEvaluation.TransactionTypes.Update || transactionType == QueryEvaluation.TransactionTypes.Delete)
                 {
                     SetParameters<T>(obj, transactionType);
                     command.ExecuteNonQuery();
                 }
                 else
                 {
-                    if (transactionType == TransactionTypes.Select)
+                    if (transactionType == QueryEvaluation.TransactionTypes.Select)
                     {
                         SetParameters<T>(obj, transactionType);
                     }
@@ -83,11 +70,11 @@ namespace DataAccess.DAO
                     dataTable.TableName = tableName;
                 }
             }
-            catch (MySqlException mse)
+            catch (SqlException mssqle)
             {
-                Debug.WriteLine(mse.Message);
+                Debug.WriteLine(mssqle.Message);
                 Connection.CloseConnection(connection);
-                return new Result(mse: mse);
+                return new Result(mssqle: mssqle);
             }
             catch (ArgumentException ae)
             {
@@ -100,16 +87,16 @@ namespace DataAccess.DAO
 
             if (logTransaction) LogTransaction(tableName, transactionType, useAppConfig);
 
-            return new Result(true, dataTable);
+            return new Result(true, dataTable, Tools.MSSqlParameterCollectionToList(command.Parameters));
         }
 
-        public static Result EjecutarProcedimiento(string tableName, string storedProcedure, Parameter[] parameters, bool useAppConfig, bool logTransaction = true)
+        public Result EjecutarProcedimiento(string tableName, string storedProcedure, Parameter[] parameters, bool useAppConfig, bool logTransaction = true)
         {
             DataTable dataTable = null;
 
-            connection = Connection.OpenConnection(useAppConfig);
+            connection = Connection.OpenMSSQLConnection(useAppConfig);
             if (connection.State != ConnectionState.Open) return new Result(exito: false, mensaje: "No se puede abrir la conexion con la base de datos.", titulo: "Error al intentar conectar.");
-            command = new MySqlCommand(storedProcedure, connection);
+            command = new SqlCommand(storedProcedure, connection);
             command.CommandType = CommandType.StoredProcedure;
 
             try
@@ -119,11 +106,11 @@ namespace DataAccess.DAO
                 dataTable.Load(command.ExecuteReader());
                 dataTable.TableName = tableName;
             }
-            catch (MySqlException mse)
+            catch (SqlException mssqle)
             {
-                Debug.WriteLine(mse.Message);
+                Debug.WriteLine(mssqle.Message);
                 Connection.CloseConnection(connection);
-                return new Result(mse: mse);
+                return new Result(mssqle: mssqle);
             }
             catch (ArgumentException ae)
             {
@@ -134,12 +121,12 @@ namespace DataAccess.DAO
 
             Connection.CloseConnection(connection);
 
-            if (logTransaction) LogTransaction(tableName, TransactionTypes.SelectOther, useAppConfig);
+            if (logTransaction) LogTransaction(tableName, QueryEvaluation.TransactionTypes.SelectOther, useAppConfig);
 
             return new Result(true, dataTable);
         }
 
-        private static void LogTransaction(string dataBaseTableName, TransactionTypes transactionType, bool useAppConfig)
+        private void LogTransaction(string dataBaseTableName, QueryEvaluation.TransactionTypes transactionType, bool useAppConfig)
         {
             Log newLog = new Log();
             string parametros = String.Empty;
@@ -147,7 +134,7 @@ namespace DataAccess.DAO
             newLog.IdentificadorId = IdentificadorId;
             newLog.Transaccion = transactionType.ToString();
             newLog.TablaAfectada = dataBaseTableName;
-            foreach (MySqlParameter parametro in command.Parameters)
+            foreach (SqlParameter parametro in command.Parameters)
             {
                 if (parametro.Value != null)
                 {
@@ -156,22 +143,22 @@ namespace DataAccess.DAO
             }
             newLog.Parametros = parametros;
 
-            EjecutarProcedimiento<Log>(newLog, newLog.DataBaseTableName, TransactionTypes.Insert, useAppConfig, false);
+            EjecutarProcedimiento<Log>(newLog, newLog.DataBaseTableName, QueryEvaluation.TransactionTypes.Insert, useAppConfig, false);
         }
 
-        private static string GetFriendlyTransactionType(TransactionTypes transactionType)
+        private string GetFriendlyTransactionType(QueryEvaluation.TransactionTypes transactionType)
         {
             switch (transactionType)
             {
-                case TransactionTypes.Select:
+                case QueryEvaluation.TransactionTypes.Select:
                     return "_select";
-                case TransactionTypes.Delete:
+                case QueryEvaluation.TransactionTypes.Delete:
                     return "_delete";
-                case TransactionTypes.Insert:
+                case QueryEvaluation.TransactionTypes.Insert:
                     return "_insert";
-                case TransactionTypes.Update:
+                case QueryEvaluation.TransactionTypes.Update:
                     return "_update";
-                case TransactionTypes.SelectAll:
+                case QueryEvaluation.TransactionTypes.SelectAll:
                     return "_selectAll";
                 default:
                     return "_selectAll";
