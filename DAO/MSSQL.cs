@@ -1,5 +1,6 @@
 ﻿using DataAccess.BO;
 using System;
+using System.Configuration;
 using System.Data;
 using System.Data.SqlClient;
 using System.Diagnostics;
@@ -7,9 +8,8 @@ using System.Reflection;
 
 namespace DataAccess.DAO
 {
-    public class MSSQL
+    public class MSSQL : DataConnectionType
     {
-        public Guid IdentificadorId { get; set; } = Guid.Empty;
         private SqlConnection connection;
         private SqlCommand command;
 
@@ -49,21 +49,21 @@ namespace DataAccess.DAO
 
             connection = Connection.OpenMSSQLConnection(useAppConfig);
             if (connection.State != ConnectionState.Open) return new Result(exito: false, mensaje: "No se puede abrir la conexion con la base de datos.", titulo: "Error al intentar conectar.");
-            command = new SqlCommand(string.Format("{0}sp_{1}{2}", (obj as Main).Schema + ".", tableName, GetFriendlyTransactionType(transactionType)), connection);
+            command = new SqlCommand(string.Format("{0}sp_{1}{2}", (obj as Main).Schema + ".", tableName, GetFriendlyTransactionSuffix(transactionType)), connection);
             command.CommandType = CommandType.StoredProcedure;
 
             try
             {
                 if (transactionType == QueryEvaluation.TransactionTypes.Insert || transactionType == QueryEvaluation.TransactionTypes.Update || transactionType == QueryEvaluation.TransactionTypes.Delete)
                 {
-                    SetParameters<T>(obj, transactionType);
+                    SetParameters(obj, transactionType);
                     command.ExecuteNonQuery();
                 }
                 else
                 {
                     if (transactionType == QueryEvaluation.TransactionTypes.Select)
                     {
-                        SetParameters<T>(obj, transactionType);
+                        SetParameters(obj, transactionType);
                     }
                     dataTable = new DataTable();
                     dataTable.Load(command.ExecuteReader());
@@ -143,26 +143,7 @@ namespace DataAccess.DAO
             }
             newLog.Parametros = parametros;
 
-            EjecutarProcedimiento<Log>(newLog, newLog.DataBaseTableName, QueryEvaluation.TransactionTypes.Insert, useAppConfig, false);
-        }
-
-        private string GetFriendlyTransactionType(QueryEvaluation.TransactionTypes transactionType)
-        {
-            switch (transactionType)
-            {
-                case QueryEvaluation.TransactionTypes.Select:
-                    return "_select";
-                case QueryEvaluation.TransactionTypes.Delete:
-                    return "_delete";
-                case QueryEvaluation.TransactionTypes.Insert:
-                    return "_insert";
-                case QueryEvaluation.TransactionTypes.Update:
-                    return "_update";
-                case QueryEvaluation.TransactionTypes.SelectAll:
-                    return "_selectAll";
-                default:
-                    return "_selectAll";
-            }
+            EjecutarProcedimiento(newLog, newLog.DataBaseTableName, QueryEvaluation.TransactionTypes.Insert, useAppConfig, false);
         }
     }
 }

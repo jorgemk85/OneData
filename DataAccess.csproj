@@ -66,6 +66,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BO\Tools.cs" />
+    <Compile Include="DAO\DataConnectionType.cs" />
     <Compile Include="DAO\MSSQL.cs" />
     <Compile Include="DAO\QueryEvaluation.cs" />
     <Compile Include="DAO\Connection.cs" />

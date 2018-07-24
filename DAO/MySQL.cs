@@ -1,16 +1,15 @@
 ﻿using DataAccess.BO;
 using MySql.Data.MySqlClient;
 using System;
+using System.Configuration;
 using System.Data;
 using System.Diagnostics;
 using System.Reflection;
 
 namespace DataAccess.DAO
 {
-    public class MySQL
+    public class MySQL : DataConnectionType
     {
-        public Guid IdentificadorId { get; set; } = Guid.Empty;
-
         private MySqlConnection connection;
         private MySqlCommand command;
 
@@ -50,7 +49,7 @@ namespace DataAccess.DAO
 
             connection = Connection.OpenConnection(useAppConfig);
             if (connection.State != ConnectionState.Open) return new Result(exito: false, mensaje: "No se puede abrir la conexion con la base de datos.", titulo: "Error al intentar conectar.");
-            command = new MySqlCommand(string.Format("{0}sp_{1}{2}", (obj as Main).Schema + ".", tableName, GetFriendlyTransactionType(transactionType)), connection);
+            command = new MySqlCommand(string.Format("{0}sp_{1}{2}", (obj as Main).Schema + ".", tableName, GetFriendlyTransactionSuffix(transactionType)), connection);
             command.CommandType = CommandType.StoredProcedure;
 
             try
@@ -144,26 +143,7 @@ namespace DataAccess.DAO
             }
             newLog.Parametros = parametros;
 
-            EjecutarProcedimiento<Log>(newLog, newLog.DataBaseTableName, QueryEvaluation.TransactionTypes.Insert, useAppConfig, false);
-        }
-
-        private string GetFriendlyTransactionType(QueryEvaluation.TransactionTypes transactionType)
-        {
-            switch (transactionType)
-            {
-                case QueryEvaluation.TransactionTypes.Select:
-                    return "_select";
-                case QueryEvaluation.TransactionTypes.Delete:
-                    return "_delete";
-                case QueryEvaluation.TransactionTypes.Insert:
-                    return "_insert";
-                case QueryEvaluation.TransactionTypes.Update:
-                    return "_update";
-                case QueryEvaluation.TransactionTypes.SelectAll:
-                    return "_selectall";
-                default:
-                    return "_selectall";
-            }
+            EjecutarProcedimiento(newLog, newLog.DataBaseTableName, QueryEvaluation.TransactionTypes.Insert, useAppConfig, false);
         }
     }
 }
