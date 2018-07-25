@@ -274,7 +274,7 @@ namespace DataAccess.BO
             return objects;
         }
 
-        public static List<Object> MSSqlParameterCollectionToList(SqlParameterCollection parameters)
+        public static List<Object> MsSqlParameterCollectionToList(SqlParameterCollection parameters)
         {
             List<Object> objects = new List<object>();
 

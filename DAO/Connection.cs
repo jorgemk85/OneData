@@ -18,7 +18,7 @@ namespace DataAccess.DAO
                 {
                     ConnectionString = ConfigurationManager.ConnectionStrings[ConfigurationManager.AppSettings["ConnectionToUse"]].ConnectionString;
                 }
-                
+
                 connection = new MySqlConnection(ConnectionString);
                 connection.Open();
             }
@@ -31,7 +31,7 @@ namespace DataAccess.DAO
 
         public static void CloseConnection(MySqlConnection connection)
         {
-            connection.Close();
+            connection?.Close();
         }
 
         public static SqlConnection OpenMSSQLConnection(bool useAppConfig)
@@ -56,7 +56,7 @@ namespace DataAccess.DAO
 
         public static void CloseConnection(SqlConnection connection)
         {
-            connection.Close();
+            connection?.Close();
         }
     }
 }

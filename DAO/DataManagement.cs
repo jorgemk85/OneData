@@ -37,12 +37,12 @@ namespace DataAccess.DAO
 
             if (connectionType == QueryEvaluation.ConnectionTypes.MySQL)
             {
-                MySQL mySQL = new MySQL();
+                MySqlOperation mySQL = new MySqlOperation();
                 return mySQL.EjecutarProcedimiento(tableName, storedProcedure, parameters, useAppConfig);
             }
             else
             {
-                MSSQL msSQL = new MSSQL();
+                MsSqlOperation msSQL = new MsSqlOperation();
                 return msSQL.EjecutarProcedimiento(tableName, storedProcedure, parameters, useAppConfig);
             }
         }
