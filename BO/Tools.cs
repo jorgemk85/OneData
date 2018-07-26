@@ -1,6 +1,5 @@
 ﻿using MySql.Data.MySqlClient;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -13,7 +12,7 @@ namespace DataAccess.BO
     {
         public static string ConvertDataTableToJsonListOfType<T>(DataTable dataTable) where T : new()
         {
-            return JsonConvert.SerializeObject(ConvertDataTableToObjectOfType<T>(dataTable), Formatting.None);
+            return JsonConvert.SerializeObject(ConvertDataTableToListOfType<T>(dataTable), Formatting.None);
         }
 
         public static string ConvertDataTableToJsonObjectOfType<T>(DataTable dataTable) where T : new()
