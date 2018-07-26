@@ -10,23 +10,29 @@ namespace DataAccess.DAO
         static Result _cache;
         static bool _isPartialCache = false;
         static bool _forceQueryDataBase = false;
+        static bool isCacheEnabled;
 
-        public static Result Insert(T obj, bool useAppConfig, bool isCacheEnabled)
+        public static void Tst()
+        {
+            isCacheEnabled = bool.Parse(ConfigurationManager.AppSettings["IsCacheEnabled"].ToString());
+        }
+
+        public static Result Insert(T obj, bool useAppConfig)
         {
             return Command(obj, QueryEvaluation.TransactionTypes.Insert, useAppConfig, isCacheEnabled);
         }
 
-        public static Result Update(T obj, bool useAppConfig, bool isCacheEnabled)
+        public static Result Update(T obj, bool useAppConfig)
         {
             return Command(obj, QueryEvaluation.TransactionTypes.Update, useAppConfig, isCacheEnabled);
         }
 
-        public static Result Delete(T obj, bool useAppConfig, bool isCacheEnabled)
+        public static Result Delete(T obj, bool useAppConfig)
         {
             return Command(obj, QueryEvaluation.TransactionTypes.Delete, useAppConfig, isCacheEnabled);
         }
 
-        public static Result Select(bool useAppConfig, bool isCacheEnabled, params Parameter[] parameters)
+        public static Result Select(bool useAppConfig, params Parameter[] parameters)
         {
             return Command(Tools.SetParametersInObject<T>(parameters), QueryEvaluation.TransactionTypes.Select, useAppConfig, isCacheEnabled);
         }
@@ -47,7 +53,7 @@ namespace DataAccess.DAO
             }
         }
 
-        public static Result SelectAll(bool useAppConfig, bool isCacheEnabled)
+        public static Result SelectAll(bool useAppConfig)
         {
             return Command(new T(), QueryEvaluation.TransactionTypes.SelectAll, useAppConfig, isCacheEnabled);
         }

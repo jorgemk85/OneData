@@ -8,15 +8,9 @@ using System.Reflection;
 
 namespace DataAccess.DAO
 {
-    public class MySqlOperation : DbOperation, IDisposable
+    public class MySqlOperation : DbOperation
     {
-        private MySqlConnection connection;
         private MySqlCommand command;
-
-        public void Dispose()
-        {
-            Connection.CloseConnection(connection);
-        }
 
         public Result EjecutarProcedimiento(string tableName, string storedProcedure, Parameter[] parameters, bool useAppConfig, bool logTransaction = true)
         {
@@ -24,7 +18,7 @@ namespace DataAccess.DAO
 
             try
             {
-                using (Connection.OpenConnection(useAppConfig))
+                using (MySqlConnection connection = Connection.OpenConnection(useAppConfig))
                 {
                     if (connection.State != ConnectionState.Open) return new Result(exito: false, mensaje: "No se puede abrir la conexion con la base de datos.", titulo: "Error al intentar conectar.");
                     command = new MySqlCommand(storedProcedure, connection);
@@ -81,7 +75,7 @@ namespace DataAccess.DAO
         {
             DataTable dataTable = null;
 
-            using (Connection.OpenConnection(useAppConfig))
+            using (MySqlConnection connection = Connection.OpenConnection(useAppConfig))
             {
                 if (connection.State != ConnectionState.Open) throw new Exception("No se puede abrir la conexion con la base de datos.");
                 command = new MySqlCommand(string.Format("{0}sp_{1}{2}", (obj as Main).Schema + ".", tableName, GetFriendlyTransactionSuffix(transactionType)), connection);
