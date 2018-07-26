@@ -78,7 +78,7 @@ namespace DataAccess.DAO
             using (MySqlConnection connection = Connection.OpenConnection(useAppConfig))
             {
                 if (connection.State != ConnectionState.Open) throw new Exception("No se puede abrir la conexion con la base de datos.");
-                command = new MySqlCommand(string.Format("{0}sp_{1}{2}", (obj as Main).Schema + ".", tableName, GetFriendlyTransactionSuffix(transactionType)), connection);
+                command = new MySqlCommand(string.Format("{0}{1}{2}{3}", (obj as Main).Schema + ".", StoredProcedurePrefix, tableName, GetFriendlyTransactionSuffix(transactionType)), connection);
                 command.CommandType = CommandType.StoredProcedure;
 
                 if (transactionType == QueryEvaluation.TransactionTypes.Insert || transactionType == QueryEvaluation.TransactionTypes.Update || transactionType == QueryEvaluation.TransactionTypes.Delete)

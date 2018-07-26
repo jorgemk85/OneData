@@ -17,6 +17,7 @@ namespace DataAccess.DAO
         protected string UpdateSuffix { get; set; }
         protected string DeleteSuffix { get; set; }
         protected string SelectAllSuffix { get; set; }
+        protected string StoredProcedurePrefix { get; set; }
 
         public DbOperation()
         {
@@ -30,6 +31,7 @@ namespace DataAccess.DAO
             UpdateSuffix = ConfigurationManager.AppSettings["UpdateSuffix"].ToString();
             DeleteSuffix = ConfigurationManager.AppSettings["DeleteSuffix"].ToString();
             SelectAllSuffix = ConfigurationManager.AppSettings["SelectAllSuffix"].ToString();
+            StoredProcedurePrefix = ConfigurationManager.AppSettings["StoredProcedurePrefix"].ToString();
         }
 
         protected string GetFriendlyTransactionSuffix(QueryEvaluation.TransactionTypes transactionType)
