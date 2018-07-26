@@ -85,6 +85,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
+    <None Include="Ejemplo.config" />
     <None Include="firma.pfx" />
     <None Include="packages.config" />
   </ItemGroup>
