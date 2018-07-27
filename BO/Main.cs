@@ -22,7 +22,7 @@ namespace DataAccess.BO
         #endregion
 
         #region Constructor
-        protected Main(Guid id, string dbTableName)
+        public Main(Guid id, string dbTableName)
         {
             Id = id;
             DataBaseTableName = dbTableName;
@@ -31,7 +31,7 @@ namespace DataAccess.BO
             CacheExpiration = 0;
         }
 
-        protected Main(Guid id, string dbTableName, string schema)
+        public Main(Guid id, string dbTableName, string schema)
         {
             Id = id;
             DataBaseTableName = dbTableName;
@@ -40,7 +40,7 @@ namespace DataAccess.BO
             CacheExpiration = 0;
         }
 
-        protected Main(Guid id, string dbTableName, bool isCacheEnabled, int cacheExpiration)
+        public Main(Guid id, string dbTableName, bool isCacheEnabled, int cacheExpiration)
         {
             Id = id;
             DataBaseTableName = dbTableName;
@@ -49,7 +49,7 @@ namespace DataAccess.BO
             CacheExpiration = cacheExpiration;
         }
 
-        protected Main(Guid id, string dbTableName, string schema, bool isCacheEnabled, int cacheExpiration)
+        public Main(Guid id, string dbTableName, string schema, bool isCacheEnabled, int cacheExpiration)
         {
             Id = id;
             DataBaseTableName = dbTableName;
