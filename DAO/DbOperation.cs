@@ -17,6 +17,16 @@ namespace DataAccess.DAO
         protected string SelectAllSuffix { get; set; }
         protected string StoredProcedurePrefix { get; set; }
 
+        public enum TransactionTypes
+        {
+            Select,
+            SelectAll,
+            Delete,
+            Insert,
+            Update,
+            SelectOther
+        }
+
         public DbOperation()
         {
             GetTransactionTypesSuffixes();
@@ -32,19 +42,19 @@ namespace DataAccess.DAO
             StoredProcedurePrefix = ConfigurationManager.AppSettings["StoredProcedurePrefix"].ToString();
         }
 
-        protected string GetFriendlyTransactionSuffix(QueryEvaluation.TransactionTypes transactionType)
+        protected string GetFriendlyTransactionSuffix(TransactionTypes transactionType)
         {
             switch (transactionType)
             {
-                case QueryEvaluation.TransactionTypes.Select:
+                case TransactionTypes.Select:
                     return SelectSuffix;
-                case QueryEvaluation.TransactionTypes.Delete:
+                case TransactionTypes.Delete:
                     return DeleteSuffix;
-                case QueryEvaluation.TransactionTypes.Insert:
+                case TransactionTypes.Insert:
                     return InsertSuffix;
-                case QueryEvaluation.TransactionTypes.Update:
+                case TransactionTypes.Update:
                     return UpdateSuffix;
-                case QueryEvaluation.TransactionTypes.SelectAll:
+                case TransactionTypes.SelectAll:
                     return SelectAllSuffix;
                 default:
                     return SelectAllSuffix;
@@ -74,7 +84,7 @@ namespace DataAccess.DAO
             }
         }
 
-        protected void SetParameters<T>(T obj, QueryEvaluation.TransactionTypes transactionType, MySqlCommand mySqlCommand = null, SqlCommand msSqlCommand = null)
+        protected void SetParameters<T>(T obj, TransactionTypes transactionType, MySqlCommand mySqlCommand = null, SqlCommand msSqlCommand = null)
         {
             if (msSqlCommand == null && mySqlCommand == null)
             {
@@ -86,7 +96,7 @@ namespace DataAccess.DAO
                 // Si encontramos el atributo entonces se brinca la propiedad.
                 if (Attribute.GetCustomAttribute(propertyInfo, typeof(UnlinkedProperty)) != null) continue;
 
-                if (transactionType == QueryEvaluation.TransactionTypes.Delete)
+                if (transactionType == TransactionTypes.Delete)
                 {
                     if (propertyInfo.Name == "Id")
                     {
@@ -154,7 +164,7 @@ namespace DataAccess.DAO
             return new Result();
         }
 
-        public virtual Result ExecuteProcedure<T>(T obj, string tableName, QueryEvaluation.TransactionTypes transactionType, bool useAppConfig, QueryEvaluation.ConnectionTypes connectionType, bool logTransaction = true)
+        public virtual Result ExecuteProcedure<T>(T obj, string tableName, TransactionTypes transactionType, bool useAppConfig, QueryEvaluation.ConnectionTypes connectionType, bool logTransaction = true)
         {
             return new Result();
         }

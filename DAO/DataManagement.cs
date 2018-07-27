@@ -21,22 +21,22 @@ namespace DataAccess.DAO
 
         public static Result Insert(T obj, bool useAppConfig)
         {
-            return Command(obj, QueryEvaluation.TransactionTypes.Insert, useAppConfig);
+            return Command(obj, DbOperation.TransactionTypes.Insert, useAppConfig);
         }
 
         public static Result Update(T obj, bool useAppConfig)
         {
-            return Command(obj, QueryEvaluation.TransactionTypes.Update, useAppConfig);
+            return Command(obj, DbOperation.TransactionTypes.Update, useAppConfig);
         }
 
         public static Result Delete(T obj, bool useAppConfig)
         {
-            return Command(obj, QueryEvaluation.TransactionTypes.Delete, useAppConfig);
+            return Command(obj, DbOperation.TransactionTypes.Delete, useAppConfig);
         }
 
         public static Result Select(bool useAppConfig, params Parameter[] parameters)
         {
-            return Command(Tools.SetParametersInObject<T>(parameters), QueryEvaluation.TransactionTypes.Select, useAppConfig);
+            return Command(Tools.SetParametersInObject<T>(parameters), DbOperation.TransactionTypes.Select, useAppConfig);
         }
 
         public static Result Select(string tableName, string storedProcedure, bool useAppConfig, params Parameter[] parameters)
@@ -50,10 +50,10 @@ namespace DataAccess.DAO
 
         public static Result SelectAll(bool useAppConfig)
         {
-            return Command(new T(), QueryEvaluation.TransactionTypes.SelectAll, useAppConfig);
+            return Command(new T(), DbOperation.TransactionTypes.SelectAll, useAppConfig);
         }
 
-        private static Result Command(T obj, QueryEvaluation.TransactionTypes transactionType, bool useAppConfig)
+        private static Result Command(T obj, DbOperation.TransactionTypes transactionType, bool useAppConfig)
         {
             QueryEvaluation queryEvaluation = new QueryEvaluation();
             Result resultado;
@@ -72,7 +72,7 @@ namespace DataAccess.DAO
             return resultado;
         }
 
-        private static void SaveCache(QueryEvaluation.TransactionTypes transactionType, Result resultado)
+        private static void SaveCache(DbOperation.TransactionTypes transactionType, Result resultado)
         {
             if (dataCache.Cache == null || dataCache.IsPartialCache)
             {
@@ -81,12 +81,12 @@ namespace DataAccess.DAO
 
                 forceQueryDataBase = false;
 
-                if (transactionType == QueryEvaluation.TransactionTypes.SelectAll)
+                if (transactionType == DbOperation.TransactionTypes.SelectAll)
                 {
                     dataCache.Cache = resultado;
                     dataCache.IsPartialCache = false;
                 }
-                else if (resultado.Data.Rows.Count > 0 && transactionType == QueryEvaluation.TransactionTypes.Select)
+                else if (resultado.Data.Rows.Count > 0 && transactionType == DbOperation.TransactionTypes.Select)
                 {
                     if (dataCache.Cache == null)
                     {
@@ -106,7 +106,7 @@ namespace DataAccess.DAO
 
                     dataCache.IsPartialCache = true;
                 }
-                else if (transactionType == QueryEvaluation.TransactionTypes.Insert)
+                else if (transactionType == DbOperation.TransactionTypes.Insert)
                 {
                     forceQueryDataBase = true;
                 }

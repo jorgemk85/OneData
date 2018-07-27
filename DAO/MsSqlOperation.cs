@@ -39,12 +39,12 @@ namespace DataAccess.DAO
                 return new Result(ae: ae);
             }
 
-            if (logTransaction) LogTransaction(tableName, QueryEvaluation.TransactionTypes.SelectOther, useAppConfig);
+            if (logTransaction) LogTransaction(tableName, TransactionTypes.SelectOther, useAppConfig);
 
             return new Result(true, dataTable);
         }
 
-        public override Result ExecuteProcedure<T>(T obj, string tableName, QueryEvaluation.TransactionTypes transactionType, bool useAppConfig, QueryEvaluation.ConnectionTypes connectionType, bool logTransaction = true)
+        public override Result ExecuteProcedure<T>(T obj, string tableName, TransactionTypes transactionType, bool useAppConfig, QueryEvaluation.ConnectionTypes connectionType, bool logTransaction = true)
         {
             DataTable dataTable = null;
 
@@ -69,7 +69,7 @@ namespace DataAccess.DAO
             return new Result(true, dataTable, Tools.MsSqlParameterCollectionToList(command.Parameters));
         }
 
-        private DataTable ConfigureConnectionAndExecuteCommand<T>(T obj, string tableName, QueryEvaluation.TransactionTypes transactionType, bool useAppConfig)
+        private DataTable ConfigureConnectionAndExecuteCommand<T>(T obj, string tableName, TransactionTypes transactionType, bool useAppConfig)
         {
             DataTable dataTable = null;
 
@@ -79,14 +79,14 @@ namespace DataAccess.DAO
                 command = new SqlCommand(string.Format("{0}{1}{2}{3}", (obj as Main).Schema + ".", StoredProcedurePrefix, tableName, GetFriendlyTransactionSuffix(transactionType)), connection);
                 command.CommandType = CommandType.StoredProcedure;
 
-                if (transactionType == QueryEvaluation.TransactionTypes.Insert || transactionType == QueryEvaluation.TransactionTypes.Update || transactionType == QueryEvaluation.TransactionTypes.Delete)
+                if (transactionType == TransactionTypes.Insert || transactionType == TransactionTypes.Update || transactionType == TransactionTypes.Delete)
                 {
                     SetParameters(obj, transactionType, msSqlCommand: command);
                     command.ExecuteNonQuery();
                 }
                 else
                 {
-                    if (transactionType == QueryEvaluation.TransactionTypes.Select)
+                    if (transactionType == TransactionTypes.Select)
                     {
                         SetParameters(obj, transactionType, msSqlCommand: command);
                     }
@@ -99,7 +99,7 @@ namespace DataAccess.DAO
             return dataTable;
         }
 
-        private void LogTransaction(string dataBaseTableName, QueryEvaluation.TransactionTypes transactionType, bool useAppConfig)
+        private void LogTransaction(string dataBaseTableName, TransactionTypes transactionType, bool useAppConfig)
         {
             Log newLog = new Log
             {
@@ -109,7 +109,7 @@ namespace DataAccess.DAO
                 Parametros = GetStringParameters(null, command)
             };
 
-            ExecuteProcedure(newLog, newLog.DataBaseTableName, QueryEvaluation.TransactionTypes.Insert, useAppConfig, QueryEvaluation.ConnectionTypes.MSSQL, false);
+            ExecuteProcedure(newLog, newLog.DataBaseTableName, TransactionTypes.Insert, useAppConfig, QueryEvaluation.ConnectionTypes.MSSQL, false);
         }
     }
 }

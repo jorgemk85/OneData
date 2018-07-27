@@ -23,20 +23,10 @@ namespace DataAccess.DAO
         public QueryEvaluation()
         {
             connectionType = (ConnectionTypes)Enum.Parse(typeof(ConnectionTypes), ConfigurationManager.AppSettings["ConnectionType"].ToString());
-            dbOperation = connectionType == QueryEvaluation.ConnectionTypes.MySQL ? (DbOperation)new MySqlOperation() : (DbOperation)new MsSqlOperation();
+            dbOperation = connectionType == ConnectionTypes.MySQL ? (DbOperation)new MySqlOperation() : (DbOperation)new MsSqlOperation();
         }
 
-        public enum TransactionTypes
-        {
-            Select,
-            SelectAll,
-            Delete,
-            Insert,
-            Update,
-            SelectOther
-        }
-
-        public Result Evaluate<T>(T obj, TransactionTypes transactionType, Result cache, bool isPartialCache, bool forceQueryDataBase, bool useAppConfig) where T : new()
+        public Result Evaluate<T>(T obj, DbOperation.TransactionTypes transactionType, Result cache, bool isPartialCache, bool forceQueryDataBase, bool useAppConfig) where T : new()
         {
             string tableName = (obj as Main).DataBaseTableName;
             Result resultado = new Result();
@@ -45,22 +35,22 @@ namespace DataAccess.DAO
 
             switch (transactionType)
             {
-                case TransactionTypes.Select:
+                case DbOperation.TransactionTypes.Select:
                     EvaluateSelect(obj, out resultado, isCached, tableName, cache, isPartialCache, forceQueryDataBase, useAppConfig);
                     break;
-                case TransactionTypes.SelectAll:
+                case DbOperation.TransactionTypes.SelectAll:
                     EvaluateSelectAll(obj, out resultado, isCached, tableName, cache, forceQueryDataBase, useAppConfig);
                     break;
-                case TransactionTypes.Delete:
+                case DbOperation.TransactionTypes.Delete:
                     requiresResult = true;
                     break;
-                case TransactionTypes.Insert:
+                case DbOperation.TransactionTypes.Insert:
                     requiresResult = true;
                     break;
-                case TransactionTypes.Update:
+                case DbOperation.TransactionTypes.Update:
                     requiresResult = true;
                     break;
-                case TransactionTypes.SelectOther:
+                case DbOperation.TransactionTypes.SelectOther:
                     resultado = dbOperation.ExecuteProcedure(obj, tableName, transactionType, useAppConfig, connectionType);
                     break;
                 default:
@@ -70,7 +60,7 @@ namespace DataAccess.DAO
             if (requiresResult)
             {
                 resultado = dbOperation.ExecuteProcedure(obj, tableName, transactionType, useAppConfig, connectionType);
-                if (transactionType != TransactionTypes.SelectOther)
+                if (transactionType != DbOperation.TransactionTypes.SelectOther)
                 {
                     if (isCached && resultado.TuvoExito) DeleteInCache(obj, cache);
                 }
@@ -83,16 +73,16 @@ namespace DataAccess.DAO
         {
             if (forceQueryDataBase)
             {
-                resultado = dbOperation.ExecuteProcedure(obj, tableName, TransactionTypes.Select, useAppConfig, connectionType);
+                resultado = dbOperation.ExecuteProcedure(obj, tableName, DbOperation.TransactionTypes.Select, useAppConfig, connectionType);
             }
             else
             {
-                resultado = isCached == true ? SelectInCache(obj, cache) : dbOperation.ExecuteProcedure(obj, tableName, TransactionTypes.Select, useAppConfig, connectionType);
+                resultado = isCached == true ? SelectInCache(obj, cache) : dbOperation.ExecuteProcedure(obj, tableName, DbOperation.TransactionTypes.Select, useAppConfig, connectionType);
 
                 resultado.IsFromCache = isCached == true ? true : false;
                 if (isCached && isPartialCache && resultado.TuvoExito && resultado.Data.Rows.Count == 0)
                 {
-                    resultado = dbOperation.ExecuteProcedure(obj, tableName, TransactionTypes.Select, useAppConfig, connectionType);
+                    resultado = dbOperation.ExecuteProcedure(obj, tableName, DbOperation.TransactionTypes.Select, useAppConfig, connectionType);
                 }
             }
         }
@@ -101,11 +91,11 @@ namespace DataAccess.DAO
         {
             if (forceQueryDataBase)
             {
-                resultado = dbOperation.ExecuteProcedure(obj, tableName, TransactionTypes.SelectAll, useAppConfig, connectionType);
+                resultado = dbOperation.ExecuteProcedure(obj, tableName, DbOperation.TransactionTypes.SelectAll, useAppConfig, connectionType);
             }
             else
             {
-                resultado = isCached == true ? cache : dbOperation.ExecuteProcedure(obj, tableName, TransactionTypes.SelectAll, useAppConfig, connectionType);
+                resultado = isCached == true ? cache : dbOperation.ExecuteProcedure(obj, tableName, DbOperation.TransactionTypes.SelectAll, useAppConfig, connectionType);
                 resultado.IsFromCache = isCached == true ? true : false;
             }
         }
