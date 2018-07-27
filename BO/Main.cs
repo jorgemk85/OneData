@@ -9,13 +9,13 @@ namespace DataAccess.BO
         public DateTime? FechaModificacion { get; set; }
 
         [UnlinkedProperty]
-        public string DataBaseTableName { get; set; }
+        public string DataBaseTableName { get; }
         [UnlinkedProperty]
-        public string Schema { get; set; }
+        public string Schema { get; }
         [UnlinkedProperty]
-        public bool IsCacheEnabled { get; set; }
+        public bool IsCacheEnabled { get; }
         [UnlinkedProperty]
-        public int CacheExpiration { get; set; }
+        public int CacheExpiration { get; }
 
         protected Main(Guid id, string dbTableName)
         {
