@@ -4,10 +4,13 @@ namespace DataAccess.BO
 {
     public abstract class Main
     {
+        #region Properties
         public Guid? Id { get; set; }
         public DateTime? FechaCreacion { get; set; }
         public DateTime? FechaModificacion { get; set; }
+        #endregion
 
+        #region Unlinked Properties
         [UnlinkedProperty]
         public string DataBaseTableName { get; }
         [UnlinkedProperty]
@@ -16,7 +19,9 @@ namespace DataAccess.BO
         public bool IsCacheEnabled { get; }
         [UnlinkedProperty]
         public int CacheExpiration { get; }
+        #endregion
 
+        #region Constructor
         protected Main(Guid id, string dbTableName)
         {
             Id = id;
@@ -52,5 +57,6 @@ namespace DataAccess.BO
             IsCacheEnabled = isCacheEnabled;
             CacheExpiration = cacheExpiration;
         }
+        #endregion
     }
 }
