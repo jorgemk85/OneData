@@ -68,6 +68,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BO\DataCache.cs" />
     <Compile Include="BO\Tools.cs" />
     <Compile Include="DAO\DbOperation.cs" />
     <Compile Include="DAO\MsSqlOperation.cs" />

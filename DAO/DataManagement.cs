@@ -7,18 +7,16 @@ namespace DataAccess.DAO
 {
     public abstract class DataManagement<T> where T : new()
     {
-        static Result _cache;
-        static bool _isPartialCache = false;
-        static bool _forceQueryDataBase = false;
-        static bool _isCacheEnabled;
-        static long _cacheValidity;
-        static long _lastCacheUpdate;
+        static DataCache dataCache = new DataCache();
+        static bool forceQueryDataBase = false;
 
         static DataManagement()
         {
-            _isCacheEnabled = bool.Parse(ConfigurationManager.AppSettings["IsCacheEnabled"].ToString());
-            _cacheValidity = long.Parse(ConfigurationManager.AppSettings["CacheValidity"].ToString()) * TimeSpan.TicksPerSecond;
-            _lastCacheUpdate = DateTime.Now.Ticks;
+            T mainObj = new T();
+
+            dataCache.IsCacheEnabled = (mainObj as Main).IsCacheEnabled;
+            dataCache.CacheExpiration = long.Parse((mainObj as Main).CacheExpiration.ToString()) * TimeSpan.TicksPerSecond;
+            dataCache.LastCacheUpdate = DateTime.Now.Ticks;
         }
 
         public static Result Insert(T obj, bool useAppConfig)
@@ -66,16 +64,16 @@ namespace DataAccess.DAO
         {
             QueryEvaluation queryEvaluation = new QueryEvaluation();
             Result resultado;
-            if (_isCacheEnabled)
+            if (dataCache.IsCacheEnabled)
             {
-                RenewCache();
-                resultado = queryEvaluation.Evaluate(obj, transactionType, _cache, _isPartialCache, _forceQueryDataBase, useAppConfig);
+                DeleteCacheIfExpired();
+                resultado = queryEvaluation.Evaluate(obj, transactionType, dataCache.Cache, dataCache.IsPartialCache, forceQueryDataBase, useAppConfig);
                 SaveCache(transactionType, resultado);
             }
             else
             {
                 // Al mandar TRUE en forceQueryDataBase aseguramos que no se use el cache y al no almacenar el resultado con la funcion SaveCache, anulamos completamente el uso cache.
-                resultado = queryEvaluation.Evaluate(obj, transactionType, _cache, _isPartialCache, true, useAppConfig);
+                resultado = queryEvaluation.Evaluate(obj, transactionType, dataCache.Cache, dataCache.IsPartialCache, true, useAppConfig);
             }
 
             return resultado;
@@ -83,23 +81,23 @@ namespace DataAccess.DAO
 
         private static void SaveCache(QueryEvaluation.TransactionTypes transactionType, Result resultado)
         {
-            if (_cache == null || _isPartialCache)
+            if (dataCache.Cache == null || dataCache.IsPartialCache)
             {
                 // Cada vez que actualizamos el cache se debe de actualizar la variable para determinar cuando fue la ultima vez que se actualizo el cache
-                _lastCacheUpdate = DateTime.Now.Ticks;
+                dataCache.LastCacheUpdate = DateTime.Now.Ticks;
 
-                _forceQueryDataBase = false;
+                forceQueryDataBase = false;
 
                 if (transactionType == QueryEvaluation.TransactionTypes.SelectAll)
                 {
-                    _cache = resultado;
-                    _isPartialCache = false;
+                    dataCache.Cache = resultado;
+                    dataCache.IsPartialCache = false;
                 }
                 else if (resultado.Data.Rows.Count > 0 && transactionType == QueryEvaluation.TransactionTypes.Select)
                 {
-                    if (_cache == null)
+                    if (dataCache.Cache == null)
                     {
-                        _cache = resultado;
+                        dataCache.Cache = resultado;
                     }
                     else
                     {
@@ -108,26 +106,26 @@ namespace DataAccess.DAO
                             QueryEvaluation queryEvaluation = new QueryEvaluation();
                             foreach (DataRow row in resultado.Data.Rows)
                             {
-                                queryEvaluation.AlterCache(row, _cache);
+                                queryEvaluation.AlterCache(row, dataCache.Cache);
                             }
                         }
                     }
 
-                    _isPartialCache = true;
+                    dataCache.IsPartialCache = true;
                 }
                 else if (transactionType == QueryEvaluation.TransactionTypes.Insert)
                 {
-                    _forceQueryDataBase = true;
+                    forceQueryDataBase = true;
                 }
             }
         }
 
-        private static void RenewCache()
+        private static void DeleteCacheIfExpired()
         {
-            if (DateTime.Now.Ticks > _lastCacheUpdate + _cacheValidity)
+            if (DateTime.Now.Ticks > dataCache.LastCacheUpdate + dataCache.CacheExpiration)
             {
                 // Elimina el cache ya que esta EXPIRADO y de debe de refrescar.
-                _cache = null;
+                dataCache.Cache = null;
             }
         }
     }
