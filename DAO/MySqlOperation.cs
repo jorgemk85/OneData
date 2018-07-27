@@ -8,7 +8,7 @@ using System.Reflection;
 
 namespace DataAccess.DAO
 {
-    public class MySqlOperation : DbOperation
+    internal class MySqlOperation : DbOperation
     {
         private MySqlCommand command;
 

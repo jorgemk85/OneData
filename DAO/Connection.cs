@@ -5,7 +5,7 @@ using System.Data.SqlClient;
 
 namespace DataAccess.DAO
 {
-    public class Connection
+    internal class Connection
     {
         public static string ConnectionString { get; set; }
 

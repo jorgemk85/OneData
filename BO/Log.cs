@@ -1,12 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DataAccess.BO
 {
-    public class Log : Main
+    internal class Log : Main
     {
         public Guid? IdentificadorId { get; set; }
         public string Transaccion { get; set; }

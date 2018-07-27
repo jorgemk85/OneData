@@ -1,6 +1,6 @@
 ﻿namespace DataAccess.BO
 {
-    public class DataCache
+    internal class DataCache
     {
         public Result Cache { get; set; }
         public bool IsPartialCache { get; set; } = false;

@@ -6,7 +6,7 @@ using System.Diagnostics;
 
 namespace DataAccess.DAO
 {
-    public class MsSqlOperation : DbOperation
+    internal class MsSqlOperation : DbOperation
     {
         private SqlCommand command;
 

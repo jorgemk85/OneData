@@ -9,7 +9,7 @@ using System.Reflection;
 
 namespace DataAccess.DAO
 {
-    public abstract class DbOperation
+    internal abstract class DbOperation
     {
         protected Guid IdentificadorId { get; set; } = Guid.Empty;
         protected string SelectSuffix { get; set; }

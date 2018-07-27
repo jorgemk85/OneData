@@ -9,7 +9,7 @@ using System.Reflection;
 
 namespace DataAccess.DAO
 {
-    public class QueryEvaluation
+    internal class QueryEvaluation
     {
         MySqlOperation mySQLProcedures = new MySqlOperation();
         MsSqlOperation msSQLProcedures = new MsSqlOperation();
