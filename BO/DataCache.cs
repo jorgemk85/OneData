@@ -12,10 +12,10 @@ namespace DataAccess.BO
 
         public void Initialize<T>(T mainObj)
         {
-            Restart(mainObj);
+            Reset(mainObj);
         }
 
-        public void Restart<T>(T mainObj)
+        public void Reset<T>(T mainObj)
         {
             Cache = null;
             IsPartialCache = false;

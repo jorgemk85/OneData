@@ -55,7 +55,7 @@ namespace DataAccess.DAO
             Result resultado;
             if (dataCache.IsCacheEnabled)
             {
-                DeleteCacheIfExpired();
+                ResetCacheIfExpired();
                 resultado = queryEvaluation.Evaluate(obj, transactionType, dataCache.Cache, dataCache.IsPartialCache, forceQueryDataBase, useAppConfig);
                 SaveCache(transactionType, resultado);
             }
@@ -109,12 +109,12 @@ namespace DataAccess.DAO
             }
         }
 
-        private static void DeleteCacheIfExpired()
+        private static void ResetCacheIfExpired()
         {
             if (DateTime.Now.Ticks > dataCache.LastCacheUpdate + dataCache.CacheExpiration)
             {
                 // Elimina el cache ya que esta EXPIRADO y de debe de refrescar.
-                dataCache.Restart(new T());
+                dataCache.Reset(new T());
             }
         }
     }
