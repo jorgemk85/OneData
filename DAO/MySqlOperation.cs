@@ -12,7 +12,7 @@ namespace DataAccess.DAO
     {
         private MySqlCommand command;
 
-        public Result EjecutarProcedimiento(string tableName, string storedProcedure, Parameter[] parameters, bool useAppConfig, bool logTransaction = true)
+        public override Result EjecutarProcedimiento(string tableName, string storedProcedure, Parameter[] parameters, bool useAppConfig, bool logTransaction = true)
         {
             DataTable dataTable = null;
 
@@ -46,7 +46,7 @@ namespace DataAccess.DAO
             return new Result(true, dataTable);
         }
 
-        public Result ExecuteProcedure<T>(T obj, string tableName, QueryEvaluation.TransactionTypes transactionType, bool useAppConfig, QueryEvaluation.ConnectionTypes connectionType, bool logTransaction = true)
+        public override Result ExecuteProcedure<T>(T obj, string tableName, QueryEvaluation.TransactionTypes transactionType, bool useAppConfig, QueryEvaluation.ConnectionTypes connectionType, bool logTransaction = true)
         {
             DataTable dataTable = null;
 
@@ -68,7 +68,6 @@ namespace DataAccess.DAO
             if (logTransaction) LogTransaction(tableName, transactionType, useAppConfig);
 
             return new Result(true, dataTable, Tools.MySqlParameterCollectionToList(command.Parameters));
-
         }
 
         private DataTable ConfigureConnectionAndExecuteCommand<T>(T obj, string tableName, QueryEvaluation.TransactionTypes transactionType, bool useAppConfig)

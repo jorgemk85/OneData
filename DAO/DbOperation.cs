@@ -2,14 +2,12 @@
 using MySql.Data.MySqlClient;
 using System;
 using System.Configuration;
-using System.Data;
 using System.Data.SqlClient;
-using System.Diagnostics;
 using System.Reflection;
 
 namespace DataAccess.DAO
 {
-    internal abstract class DbOperation
+    internal class DbOperation
     {
         protected Guid IdentificadorId { get; set; } = Guid.Empty;
         protected string SelectSuffix { get; set; }
@@ -151,5 +149,14 @@ namespace DataAccess.DAO
             return parametros;
         }
 
+        public virtual Result EjecutarProcedimiento(string tableName, string storedProcedure, Parameter[] parameters, bool useAppConfig, bool logTransaction = true)
+        {
+            return new Result();
+        }
+
+        public virtual Result ExecuteProcedure<T>(T obj, string tableName, QueryEvaluation.TransactionTypes transactionType, bool useAppConfig, QueryEvaluation.ConnectionTypes connectionType, bool logTransaction = true)
+        {
+            return new Result();
+        }
     }
 }

@@ -11,8 +11,7 @@ namespace DataAccess.DAO
 {
     internal class QueryEvaluation
     {
-        MySqlOperation mySQLProcedures = new MySqlOperation();
-        MsSqlOperation msSQLProcedures = new MsSqlOperation();
+        DbOperation dbOperation;
         ConnectionTypes connectionType;
 
         public enum ConnectionTypes
@@ -24,6 +23,7 @@ namespace DataAccess.DAO
         public QueryEvaluation()
         {
             connectionType = (ConnectionTypes)Enum.Parse(typeof(ConnectionTypes), ConfigurationManager.AppSettings["ConnectionType"].ToString());
+            dbOperation = connectionType == QueryEvaluation.ConnectionTypes.MySQL ? (DbOperation)new MySqlOperation() : (DbOperation)new MsSqlOperation();
         }
 
         public enum TransactionTypes
@@ -61,14 +61,7 @@ namespace DataAccess.DAO
                     requiresResult = true;
                     break;
                 case TransactionTypes.SelectOther:
-                    if (connectionType == ConnectionTypes.MySQL)
-                    {
-                        resultado = mySQLProcedures.ExecuteProcedure(obj, tableName, transactionType, useAppConfig, connectionType);
-                    }
-                    else
-                    {
-                        resultado = msSQLProcedures.ExecuteProcedure(obj, tableName, transactionType, useAppConfig, connectionType);
-                    }
+                    resultado = dbOperation.ExecuteProcedure(obj, tableName, transactionType, useAppConfig, connectionType);
                     break;
                 default:
                     break;
@@ -76,14 +69,7 @@ namespace DataAccess.DAO
 
             if (requiresResult)
             {
-                if (connectionType == ConnectionTypes.MySQL)
-                {
-                    resultado = mySQLProcedures.ExecuteProcedure(obj, tableName, transactionType, useAppConfig, connectionType);
-                }
-                else
-                {
-                    resultado = msSQLProcedures.ExecuteProcedure(obj, tableName, transactionType, useAppConfig, connectionType);
-                }
+                resultado = dbOperation.ExecuteProcedure(obj, tableName, transactionType, useAppConfig, connectionType);
                 if (transactionType != TransactionTypes.SelectOther)
                 {
                     if (isCached && resultado.TuvoExito) DeleteInCache(obj, cache);
@@ -97,37 +83,16 @@ namespace DataAccess.DAO
         {
             if (forceQueryDataBase)
             {
-                if (connectionType == ConnectionTypes.MySQL)
-                {
-                    resultado = mySQLProcedures.ExecuteProcedure(obj, tableName, TransactionTypes.Select, useAppConfig, connectionType);
-                }
-                else
-                {
-                    resultado = msSQLProcedures.ExecuteProcedure(obj, tableName, TransactionTypes.Select, useAppConfig, connectionType);
-                }
+                resultado = dbOperation.ExecuteProcedure(obj, tableName, TransactionTypes.Select, useAppConfig, connectionType);
             }
             else
             {
-                if (connectionType == ConnectionTypes.MySQL)
-                {
-                    resultado = isCached == true ? SelectInCache(obj, cache) : mySQLProcedures.ExecuteProcedure(obj, tableName, TransactionTypes.Select, useAppConfig, connectionType);
-                }
-                else
-                {
-                    resultado = isCached == true ? SelectInCache(obj, cache) : msSQLProcedures.ExecuteProcedure(obj, tableName, TransactionTypes.Select, useAppConfig, connectionType);
-                }
+                resultado = isCached == true ? SelectInCache(obj, cache) : dbOperation.ExecuteProcedure(obj, tableName, TransactionTypes.Select, useAppConfig, connectionType);
 
                 resultado.IsFromCache = isCached == true ? true : false;
                 if (isCached && isPartialCache && resultado.TuvoExito && resultado.Data.Rows.Count == 0)
                 {
-                    if (connectionType == ConnectionTypes.MySQL)
-                    {
-                        resultado = mySQLProcedures.ExecuteProcedure(obj, tableName, TransactionTypes.Select, useAppConfig, connectionType);
-                    }
-                    else
-                    {
-                        resultado = msSQLProcedures.ExecuteProcedure(obj, tableName, TransactionTypes.Select, useAppConfig, connectionType);
-                    }
+                    resultado = dbOperation.ExecuteProcedure(obj, tableName, TransactionTypes.Select, useAppConfig, connectionType);
                 }
             }
         }
@@ -136,25 +101,11 @@ namespace DataAccess.DAO
         {
             if (forceQueryDataBase)
             {
-                if (connectionType == ConnectionTypes.MySQL)
-                {
-                    resultado = mySQLProcedures.ExecuteProcedure(obj, tableName, TransactionTypes.SelectAll, useAppConfig, connectionType);
-                }
-                else
-                {
-                    resultado = msSQLProcedures.ExecuteProcedure(obj, tableName, TransactionTypes.SelectAll, useAppConfig, connectionType);
-                }
+                resultado = dbOperation.ExecuteProcedure(obj, tableName, TransactionTypes.SelectAll, useAppConfig, connectionType);
             }
             else
             {
-                if (connectionType == ConnectionTypes.MySQL)
-                {
-                    resultado = isCached == true ? cache : mySQLProcedures.ExecuteProcedure(obj, tableName, TransactionTypes.SelectAll, useAppConfig, connectionType);
-                }
-                else
-                {
-                    resultado = isCached == true ? cache : msSQLProcedures.ExecuteProcedure(obj, tableName, TransactionTypes.SelectAll, useAppConfig, connectionType);
-                }
+                resultado = isCached == true ? cache : dbOperation.ExecuteProcedure(obj, tableName, TransactionTypes.SelectAll, useAppConfig, connectionType);
                 resultado.IsFromCache = isCached == true ? true : false;
             }
         }
@@ -227,8 +178,8 @@ namespace DataAccess.DAO
 
         private void InsertInCache<T>(T obj, Result cache)
         {
-            (obj as Main).FechaCreacion = DateTime.Now;
-            (obj as Main).FechaModificacion = DateTime.Now;
+            //(obj as Main).FechaCreacion = DateTime.Now;
+            //(obj as Main).FechaModificacion = DateTime.Now;
 
             cache.Data.Rows.Add(SetRowData(cache.Data.NewRow(), obj, true));
             cache.Data.AcceptChanges();

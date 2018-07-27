@@ -43,16 +43,9 @@ namespace DataAccess.DAO
         {
             QueryEvaluation.ConnectionTypes connectionType = (QueryEvaluation.ConnectionTypes)Enum.Parse(typeof(QueryEvaluation.ConnectionTypes), ConfigurationManager.AppSettings["ConnectionType"].ToString());
 
-            if (connectionType == QueryEvaluation.ConnectionTypes.MySQL)
-            {
-                MySqlOperation mySQL = new MySqlOperation();
-                return mySQL.EjecutarProcedimiento(tableName, storedProcedure, parameters, useAppConfig);
-            }
-            else
-            {
-                MsSqlOperation msSQL = new MsSqlOperation();
-                return msSQL.EjecutarProcedimiento(tableName, storedProcedure, parameters, useAppConfig);
-            }
+            DbOperation dbOperation = connectionType == QueryEvaluation.ConnectionTypes.MySQL ? (DbOperation)new MySqlOperation() : (DbOperation)new MsSqlOperation();
+
+            return dbOperation.EjecutarProcedimiento(tableName, storedProcedure, parameters, useAppConfig);
         }
 
         public static Result SelectAll(bool useAppConfig)

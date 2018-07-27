@@ -10,7 +10,7 @@ namespace DataAccess.DAO
     {
         private SqlCommand command;
 
-        public Result EjecutarProcedimiento(string tableName, string storedProcedure, Parameter[] parameters, bool useAppConfig, bool logTransaction = true)
+        public override Result EjecutarProcedimiento(string tableName, string storedProcedure, Parameter[] parameters, bool useAppConfig, bool logTransaction = true)
         {
             DataTable dataTable = null;
 
@@ -44,7 +44,7 @@ namespace DataAccess.DAO
             return new Result(true, dataTable);
         }
 
-        public Result ExecuteProcedure<T>(T obj, string tableName, QueryEvaluation.TransactionTypes transactionType, bool useAppConfig, QueryEvaluation.ConnectionTypes connectionType, bool logTransaction = true)
+        public override Result ExecuteProcedure<T>(T obj, string tableName, QueryEvaluation.TransactionTypes transactionType, bool useAppConfig, QueryEvaluation.ConnectionTypes connectionType, bool logTransaction = true)
         {
             DataTable dataTable = null;
 
