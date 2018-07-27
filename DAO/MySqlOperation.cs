@@ -44,7 +44,7 @@ namespace DataAccess.DAO
             return new Result(true, dataTable);
         }
 
-        public override Result ExecuteProcedure<T>(T obj, string tableName, TransactionTypes transactionType, bool useAppConfig, QueryEvaluation.ConnectionTypes connectionType, bool logTransaction = true)
+        public override Result ExecuteProcedure<T>(T obj, string tableName, TransactionTypes transactionType, bool useAppConfig, ConnectionTypes connectionType, bool logTransaction = true)
         {
             DataTable dataTable = null;
 
@@ -108,7 +108,7 @@ namespace DataAccess.DAO
                 Parametros = GetStringParameters(command, null)
             };
 
-            ExecuteProcedure(newLog, newLog.DataBaseTableName, TransactionTypes.Insert, useAppConfig, QueryEvaluation.ConnectionTypes.MySQL, false);
+            ExecuteProcedure(newLog, newLog.DataBaseTableName, TransactionTypes.Insert, useAppConfig, ConnectionTypes.MySQL, false);
         }
     }
 }

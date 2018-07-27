@@ -27,6 +27,12 @@ namespace DataAccess.DAO
             SelectOther
         }
 
+        public enum ConnectionTypes
+        {
+            MySQL,
+            MSSQL
+        }
+
         public DbOperation()
         {
             GetTransactionTypesSuffixes();
@@ -164,7 +170,7 @@ namespace DataAccess.DAO
             return new Result();
         }
 
-        public virtual Result ExecuteProcedure<T>(T obj, string tableName, TransactionTypes transactionType, bool useAppConfig, QueryEvaluation.ConnectionTypes connectionType, bool logTransaction = true)
+        public virtual Result ExecuteProcedure<T>(T obj, string tableName, TransactionTypes transactionType, bool useAppConfig, ConnectionTypes connectionType, bool logTransaction = true)
         {
             return new Result();
         }

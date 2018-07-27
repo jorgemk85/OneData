@@ -12,18 +12,12 @@ namespace DataAccess.DAO
     internal class QueryEvaluation
     {
         DbOperation dbOperation;
-        ConnectionTypes connectionType;
-
-        public enum ConnectionTypes
-        {
-            MySQL,
-            MSSQL
-        }
+        DbOperation.ConnectionTypes connectionType;
 
         public QueryEvaluation()
         {
-            connectionType = (ConnectionTypes)Enum.Parse(typeof(ConnectionTypes), ConfigurationManager.AppSettings["ConnectionType"].ToString());
-            dbOperation = connectionType == ConnectionTypes.MySQL ? (DbOperation)new MySqlOperation() : (DbOperation)new MsSqlOperation();
+            connectionType = (DbOperation.ConnectionTypes)Enum.Parse(typeof(DbOperation.ConnectionTypes), ConfigurationManager.AppSettings["ConnectionType"].ToString());
+            dbOperation = connectionType == DbOperation.ConnectionTypes.MySQL ? (DbOperation)new MySqlOperation() : (DbOperation)new MsSqlOperation();
         }
 
         public Result Evaluate<T>(T obj, DbOperation.TransactionTypes transactionType, Result cache, bool isPartialCache, bool forceQueryDataBase, bool useAppConfig) where T : new()

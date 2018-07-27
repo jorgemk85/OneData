@@ -12,11 +12,7 @@ namespace DataAccess.DAO
 
         static DataManagement()
         {
-            T mainObj = new T();
-
-            dataCache.IsCacheEnabled = (mainObj as Main).IsCacheEnabled;
-            dataCache.CacheExpiration = long.Parse((mainObj as Main).CacheExpiration.ToString()) * TimeSpan.TicksPerSecond;
-            dataCache.LastCacheUpdate = DateTime.Now.Ticks;
+            dataCache.Initialize(new T());
         }
 
         public static Result Insert(T obj, bool useAppConfig)
@@ -41,9 +37,9 @@ namespace DataAccess.DAO
 
         public static Result Select(string tableName, string storedProcedure, bool useAppConfig, params Parameter[] parameters)
         {
-            QueryEvaluation.ConnectionTypes connectionType = (QueryEvaluation.ConnectionTypes)Enum.Parse(typeof(QueryEvaluation.ConnectionTypes), ConfigurationManager.AppSettings["ConnectionType"].ToString());
+            DbOperation.ConnectionTypes connectionType = (DbOperation.ConnectionTypes)Enum.Parse(typeof(DbOperation.ConnectionTypes), ConfigurationManager.AppSettings["ConnectionType"].ToString());
 
-            DbOperation dbOperation = connectionType == QueryEvaluation.ConnectionTypes.MySQL ? (DbOperation)new MySqlOperation() : (DbOperation)new MsSqlOperation();
+            DbOperation dbOperation = connectionType == DbOperation.ConnectionTypes.MySQL ? (DbOperation)new MySqlOperation() : (DbOperation)new MsSqlOperation();
 
             return dbOperation.EjecutarProcedimiento(tableName, storedProcedure, parameters, useAppConfig);
         }
@@ -118,7 +114,7 @@ namespace DataAccess.DAO
             if (DateTime.Now.Ticks > dataCache.LastCacheUpdate + dataCache.CacheExpiration)
             {
                 // Elimina el cache ya que esta EXPIRADO y de debe de refrescar.
-                dataCache.Cache = null;
+                dataCache.Restart(new T());
             }
         }
     }
