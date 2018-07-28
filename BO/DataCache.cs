@@ -17,11 +17,18 @@ namespace DataAccess.BO
 
         public void Reset<T>(T mainObj)
         {
-            Cache = null;
-            IsPartialCache = false;
-            IsCacheEnabled = (mainObj as Main).IsCacheEnabled;
-            CacheExpiration = long.Parse((mainObj as Main).CacheExpiration.ToString()) * TimeSpan.TicksPerSecond;
-            LastCacheUpdate = DateTime.Now.Ticks;
+            try
+            {
+                Cache = null;
+                IsPartialCache = false;
+                IsCacheEnabled = (mainObj as Main).IsCacheEnabled;
+                CacheExpiration = long.Parse((mainObj as Main).CacheExpiration.ToString()) * TimeSpan.TicksPerSecond;
+                LastCacheUpdate = DateTime.Now.Ticks;
+            }
+            catch (Exception)
+            {
+                
+            }
         }
     }
 }

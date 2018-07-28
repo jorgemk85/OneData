@@ -24,7 +24,7 @@ namespace DataAccess.DAO
             Delete,
             Insert,
             Update,
-            SelectOther
+            ExecuteStoredProcedure
         }
 
         public enum ConnectionTypes

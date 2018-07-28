@@ -44,7 +44,7 @@ namespace DataAccess.DAO
                 case DbOperation.TransactionTypes.Update:
                     requiresResult = true;
                     break;
-                case DbOperation.TransactionTypes.SelectOther:
+                case DbOperation.TransactionTypes.ExecuteStoredProcedure:
                     resultado = dbOperation.ExecuteProcedure(obj, tableName, transactionType, useAppConfig, connectionType);
                     break;
                 default:
@@ -54,7 +54,7 @@ namespace DataAccess.DAO
             if (requiresResult)
             {
                 resultado = dbOperation.ExecuteProcedure(obj, tableName, transactionType, useAppConfig, connectionType);
-                if (transactionType != DbOperation.TransactionTypes.SelectOther)
+                if (transactionType != DbOperation.TransactionTypes.ExecuteStoredProcedure)
                 {
                     if (isCached && resultado.TuvoExito) DeleteInCache(obj, cache);
                 }

@@ -39,7 +39,7 @@ namespace DataAccess.DAO
                 return new Result(ae: ae);
             }
 
-            if (logTransaction) LogTransaction(tableName, TransactionTypes.SelectOther, useAppConfig);
+            if (logTransaction) LogTransaction(tableName, TransactionTypes.ExecuteStoredProcedure, useAppConfig);
 
             return new Result(true, dataTable);
         }
@@ -75,7 +75,7 @@ namespace DataAccess.DAO
             using (MySqlConnection connection = Connection.OpenConnection(useAppConfig))
             {
                 if (connection.State != ConnectionState.Open) throw new Exception("No se puede abrir la conexion con la base de datos.");
-                command = new MySqlCommand(string.Format("{0}{1}{2}{3}", (obj as Main).Schema + ".", StoredProcedurePrefix, tableName, GetFriendlyTransactionSuffix(transactionType)), connection);
+                command = new MySqlCommand(string.Format("{0}{1}{2}", StoredProcedurePrefix, tableName, GetFriendlyTransactionSuffix(transactionType)), connection);
                 command.CommandType = CommandType.StoredProcedure;
 
                 if (transactionType == TransactionTypes.Insert || transactionType == TransactionTypes.Update || transactionType == TransactionTypes.Delete)
