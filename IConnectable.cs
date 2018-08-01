@@ -1,8 +1,8 @@
-﻿using DataAccess.BO;
+﻿using DataManagement.BO;
 using System;
 using System.Collections.Generic;
 
-namespace DataAccess
+namespace DataManagement
 {
     public interface IConnectable
     {

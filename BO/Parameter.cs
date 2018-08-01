@@ -6,7 +6,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DataAccess.BO
+namespace DataManagement.BO
 {
     public class Parameter
     {

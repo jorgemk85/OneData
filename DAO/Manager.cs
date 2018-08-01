@@ -1,16 +1,16 @@
-﻿using DataAccess.BO;
+﻿using DataManagement.BO;
 using System;
 using System.Configuration;
 using System.Data;
 
-namespace DataAccess.DAO
+namespace DataManagement.DAO
 {
-    public abstract class DataManagement<T> where T : new()
+    public abstract class Manager<T> where T : new()
     {
         static DataCache dataCache = new DataCache();
         static bool forceQueryDataBase = false;
 
-        static DataManagement()
+        static Manager()
         {
             dataCache.Initialize(new T());
         }

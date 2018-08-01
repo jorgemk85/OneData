@@ -6,7 +6,7 @@ using System.Data;
 using System.Data.SqlClient;
 using System.Reflection;
 
-namespace DataAccess.BO
+namespace DataManagement.BO
 {
     public class Tools
     {

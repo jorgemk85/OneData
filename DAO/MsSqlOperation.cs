@@ -1,10 +1,10 @@
-﻿using DataAccess.BO;
+﻿using DataManagement.BO;
 using System;
 using System.Data;
 using System.Data.SqlClient;
 using System.Diagnostics;
 
-namespace DataAccess.DAO
+namespace DataManagement.DAO
 {
     internal class MsSqlOperation : DbOperation
     {

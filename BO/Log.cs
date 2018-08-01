@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace DataAccess.BO
+namespace DataManagement.BO
 {
     internal class Log : Main
     {

@@ -1,10 +1,10 @@
-﻿using DataAccess.BO;
+﻿using DataManagement.BO;
 using MySql.Data.MySqlClient;
 using System;
 using System.Data;
 using System.Diagnostics;
 
-namespace DataAccess.DAO
+namespace DataManagement.DAO
 {
     internal class MySqlOperation : DbOperation
     {

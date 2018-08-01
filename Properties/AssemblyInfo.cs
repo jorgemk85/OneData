@@ -5,12 +5,12 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("DataAccess")]
+[assembly: AssemblyTitle("DataManagement")]
 [assembly: AssemblyDescription("Libreria para conectarse a la Base de Datos y ejecutar consultas.")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Infected Studio")]
-[assembly: AssemblyProduct("DataAccess")]
-[assembly: AssemblyCopyright("Copyright ©  2016")]
+[assembly: AssemblyCompany("Jorge Marcos Kawas")]
+[assembly: AssemblyProduct("DataManagement")]
+[assembly: AssemblyCopyright("Copyright ©  2018")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

@@ -3,7 +3,7 @@ using System;
 using System.Configuration;
 using System.Data.SqlClient;
 
-namespace DataAccess.DAO
+namespace DataManagement.DAO
 {
     internal class Connection
     {

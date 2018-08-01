@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace DataAccess.BO
+namespace DataManagement.BO
 {
     public abstract class Main
     {

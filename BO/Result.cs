@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 
-namespace DataAccess.BO
+namespace DataManagement.BO
 {
     public class Result
     {

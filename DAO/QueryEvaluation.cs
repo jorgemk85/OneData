@@ -1,4 +1,4 @@
-﻿using DataAccess.BO;
+﻿using DataManagement.BO;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
@@ -7,7 +7,7 @@ using System.Linq;
 using System.Linq.Dynamic;
 using System.Reflection;
 
-namespace DataAccess.DAO
+namespace DataManagement.DAO
 {
     internal class QueryEvaluation
     {
