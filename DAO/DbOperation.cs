@@ -24,7 +24,7 @@ namespace DataManagement.DAO
             Delete,
             Insert,
             Update,
-            SelectOther
+            ExecuteStoredProcedure
         }
 
         public enum ConnectionTypes

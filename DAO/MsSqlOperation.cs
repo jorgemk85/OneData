@@ -39,7 +39,7 @@ namespace DataManagement.DAO
                 return new Result(ae: ae);
             }
 
-            if (logTransaction) LogTransaction(tableName, TransactionTypes.SelectOther, useAppConfig);
+            if (logTransaction) LogTransaction(tableName, TransactionTypes.ExecuteStoredProcedure, useAppConfig);
 
             return new Result(true, dataTable);
         }

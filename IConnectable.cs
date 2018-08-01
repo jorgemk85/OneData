@@ -18,7 +18,7 @@ namespace DataManagement
 
         Dictionary<Guid, T> SelectDictionary<T>(params Parameter[] parameters) where T : new();
 
-        Result SelectOther(string tableName, string storedProcedure, params Parameter[] parameters);
+        Result ExecuteStoredProcedure(string tableName, string storedProcedure, params Parameter[] parameters);
 
         List<T> SelectAllList<T>() where T : new();
 
