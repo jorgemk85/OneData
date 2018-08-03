@@ -19,7 +19,6 @@ namespace DataManagement.Tools
                     // Primero leemos la primer linea y la guardamos como los headers.
                     List<string> headers = GetHeadersFromString(sr.ReadLine(), separator);
 
-                    int index = 0;
                     String line;
                     T newObj;
                     while ((line = sr.ReadLine()) != null)
@@ -29,8 +28,6 @@ namespace DataManagement.Tools
                         {
                             newList.Add(newObj);
                         }
-
-                        index++;
                     }
                 }
                 return newList;
