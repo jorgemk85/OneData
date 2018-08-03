@@ -3,7 +3,9 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.IO;
 using System.Reflection;
+using System.Xml.Serialization;
 
 namespace DataManagement.Tools
 {
@@ -29,6 +31,38 @@ namespace DataManagement.Tools
         public static string ConvertDataTableToJsonObjectOfType<T>(DataTable dataTable) where T : new()
         {
             return JsonConvert.SerializeObject(ConvertDataTableToObjectOfType<T>(dataTable), Formatting.None);
+        }
+
+        /// <summary>
+        /// Convierte un objeto de tipo DataTable en una Lista con formato XML proporcionando un tipo <typeparamref name="T"/> para la serializacion.
+        /// </summary>
+        /// <typeparam name="T">Tipo referencia para serializar.</typeparam>
+        /// <param name="dataTable">El contenido a convertir.</param>
+        /// <returns>Regresa un objeto string ya procesado que contiene una lista en formato XML.</returns>
+        public static string ConvertDataTableToXmlListOfType<T>(DataTable dataTable) where T : new()
+        {
+            XmlSerializer serializer = new XmlSerializer(typeof(List<T>));
+            using (StringWriter textWriter = new StringWriter())
+            {
+                serializer.Serialize(textWriter, ConvertDataTableToListOfType<T>(dataTable));
+                return textWriter.ToString();
+            }
+        }
+
+        /// <summary>
+        /// Convierte un objeto de tipo DataTable en formato XML proporcionando un tipo <typeparamref name="T"/> para la serializacion.
+        /// </summary>
+        /// <typeparam name="T">Tipo referencia para serializar.</typeparam>
+        /// <param name="dataTable">El contenido a convertir.</param>
+        /// <returns>Regresa un objeto string ya procesado en formato XML.</returns>
+        public static string ConvertDataTableToXmlObjectOfType<T>(DataTable dataTable) where T : new()
+        {
+            XmlSerializer serializer = new XmlSerializer(typeof(T));
+            using (StringWriter textWriter = new StringWriter())
+            {
+                serializer.Serialize(textWriter, ConvertDataTableToObjectOfType<T>(dataTable));
+                return textWriter.ToString();
+            }
         }
 
         /// <summary>
