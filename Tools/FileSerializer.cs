@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace DataManagement.Tools
 {
@@ -18,6 +19,24 @@ namespace DataManagement.Tools
         /// <param name="fileEncoding">Codificacion utilizada en el archivo plano.</param>
         /// <returns>Regresa una nueva Lista del tipo <typeparamref name="T"/> con la informacion ya procesada del archivo plano.</returns>
         public static List<T> SerializeFileToListOfType<T>(string fullyQualifiedFileName, char separator, Encoding fileEncoding) where T : new()
+        {
+            return StartFileSerialization<T>(fullyQualifiedFileName, separator, fileEncoding);
+        }
+
+        /// <summary>
+        /// Serializa un archivo plano delimitado por un caracter en un objeto del tipo <typeparamref name="T"/> usando Async.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="fullyQualifiedFileName">Nombre completo del archivo a serializar incluyendo direccion en disco.</param>
+        /// <param name="separator">Caracter delimitador en el archivo.</param>
+        /// <param name="fileEncoding">Codificacion utilizada en el archivo plano.</param>
+        /// <returns>Regresa una nueva Lista del tipo <typeparamref name="T"/> con la informacion ya procesada del archivo plano.</returns>
+        public static async Task<List<T>> SerializeFileToListOfTypeAsync<T>(string fullyQualifiedFileName, char separator, Encoding fileEncoding) where T : new()
+        {
+            return await Task.Run(() => StartFileSerialization<T>(fullyQualifiedFileName, separator, fileEncoding));
+        }
+
+        private static List<T> StartFileSerialization<T>(string fullyQualifiedFileName, char separator, Encoding fileEncoding) where T : new()
         {
             try
             {
