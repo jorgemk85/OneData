@@ -14,7 +14,7 @@ namespace DataManagement.Tools
         /// <summary>
         /// Convierte un objeto de tipo DataTable en una Lista con formato JSON proporcionando un tipo <typeparamref name="T"/> para la serializacion.
         /// </summary>
-        /// <typeparam name="T">Tipo referencia para serializar.</typeparam>
+        /// <typeparam name="T">Tipo referencia para deserializar.</typeparam>
         /// <param name="dataTable">El contenido a convertir.</param>
         /// <returns>Regresa un objeto string ya procesado que contiene una lista en formato JSON.</returns>
         public static string ConvertDataTableToJsonListOfType<T>(DataTable dataTable) where T : new()
@@ -25,7 +25,7 @@ namespace DataManagement.Tools
         /// <summary>
         /// Convierte un objeto de tipo DataTable en formato JSON proporcionando un tipo <typeparamref name="T"/> para la serializacion.
         /// </summary>
-        /// <typeparam name="T">Tipo referencia para serializar.</typeparam>
+        /// <typeparam name="T">Tipo referencia para deserializar.</typeparam>
         /// <param name="dataTable">El contenido a convertir.</param>
         /// <returns>Regresa un objeto string ya procesado en formato JSON.</returns>
         public static string ConvertDataTableToJsonObjectOfType<T>(DataTable dataTable) where T : new()
@@ -36,31 +36,48 @@ namespace DataManagement.Tools
         /// <summary>
         /// Convierte un objeto de tipo DataTable en una Lista con formato XML proporcionando un tipo <typeparamref name="T"/> para la serializacion.
         /// </summary>
-        /// <typeparam name="T">Tipo referencia para serializar.</typeparam>
+        /// <typeparam name="T">Tipo referencia para deserializar.</typeparam>
         /// <param name="dataTable">El contenido a convertir.</param>
         /// <returns>Regresa un objeto string ya procesado que contiene una lista en formato XML.</returns>
         public static string ConvertDataTableToXmlListOfType<T>(DataTable dataTable) where T : new()
         {
-            XmlSerializer serializer = new XmlSerializer(typeof(List<T>));
-            using (StringWriter textWriter = new StringWriter())
-            {
-                serializer.Serialize(textWriter, ConvertDataTableToListOfType<T>(dataTable));
-                return textWriter.ToString();
-            }
+            return ConvertObjectOfTypeToXml(ConvertDataTableToListOfType<T>(dataTable));
         }
 
         /// <summary>
         /// Convierte un objeto de tipo DataTable en formato XML proporcionando un tipo <typeparamref name="T"/> para la serializacion.
         /// </summary>
-        /// <typeparam name="T">Tipo referencia para serializar.</typeparam>
+        /// <typeparam name="T">Tipo referencia para deserializar.</typeparam>
         /// <param name="dataTable">El contenido a convertir.</param>
         /// <returns>Regresa un objeto string ya procesado en formato XML.</returns>
         public static string ConvertDataTableToXmlObjectOfType<T>(DataTable dataTable) where T : new()
         {
+            return ConvertObjectOfTypeToXml(ConvertDataTableToObjectOfType<T>(dataTable));
+        }
+
+        /// <summary>
+        /// Convierte un objeto de tipo List<typeparamref name="T"/> en formato XML.
+        /// </summary>
+        /// <typeparam name="T">Tipo referencia para deserializar.</typeparam>
+        /// <param name="list">Lista a deserializar</param>
+        /// <returns>Regresa un objeto string ya procesado en formato XML.</returns>
+        public static string ConvertListOfTypeToXml<T>(List<T> list)
+        {
+            return ConvertObjectOfTypeToXml(list);
+        }
+
+        /// <summary>
+        /// Convierte un objeto del tipo <typeparamref name="T"/> en formato XML.
+        /// </summary>
+        /// <typeparam name="T">Tipo referencia para deserializar.</typeparam>
+        /// <param name="obj">Objeto a deserializar.</param>
+        /// <returns>Regresa un objeto string ya procesado en formato XML.</returns>
+        public static string ConvertObjectOfTypeToXml<T>(T obj)
+        {
             XmlSerializer serializer = new XmlSerializer(typeof(T));
             using (StringWriter textWriter = new StringWriter())
             {
-                serializer.Serialize(textWriter, ConvertDataTableToObjectOfType<T>(dataTable));
+                serializer.Serialize(textWriter, obj);
                 return textWriter.ToString();
             }
         }
