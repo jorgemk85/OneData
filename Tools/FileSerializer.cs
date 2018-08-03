@@ -9,6 +9,14 @@ namespace DataManagement.Tools
 {
     public class FileSerializer
     {
+        /// <summary>
+        /// Serializa un archivo plano delimitado por un caracter en un objeto del tipo <typeparamref name="T"/>.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="fullyQualifiedFileName">Nombre completo del archivo a serializar incluyendo direccion en disco.</param>
+        /// <param name="separator">Caracter delimitador en el archivo.</param>
+        /// <param name="fileEncoding">Codificacion utilizada en el archivo plano.</param>
+        /// <returns>Regresa una nueva Lista del tipo <typeparamref name="T"/> con la informacion ya procesada del archivo plano.</returns>
         public static List<T> SerializeFileToListOfType<T>(string fullyQualifiedFileName, char separator, Encoding fileEncoding) where T : new()
         {
             try

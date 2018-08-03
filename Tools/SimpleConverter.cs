@@ -7,6 +7,13 @@ namespace DataManagement.Tools
 {
     public class SimpleConverter
     {
+
+        /// <summary>
+        /// Convierte un objeto de tipo string en un objeto de tipo Nullable<int>.
+        /// </summary>
+        /// <param name="value">Valor a convertir.</param>
+        /// <param name="nullable">Especifica si el valor es nullable (int?) o no.</param>
+        /// <returns>Regresa un nuevo objeto de tipo Nullable<int> ya con el valor incorporado.</returns>
         public static int? StringToInteger(string value, bool nullable)
         {
             if (!int.TryParse(value, out int newValue))
@@ -24,6 +31,11 @@ namespace DataManagement.Tools
             return newValue;
         }
 
+        /// <summary>
+        /// Convierte un objeto de tipo string a un objeto de tipo int.
+        /// </summary>
+        /// <param name="value">Valor a convertir.</param>
+        /// <returns>Regresa un nuevo objeto de tipo int ya con el valor incorporado.</returns>
         public static int StringToInteger(string value)
         {
             if (!int.TryParse(value, out int newValue))
@@ -34,6 +46,12 @@ namespace DataManagement.Tools
             return newValue;
         }
 
+        /// <summary>
+        /// Convierte un objeto de tipo string en un objeto de tipo Nullable<Int64>.
+        /// </summary>
+        /// <param name="value">Valor a convertir.</param>
+        /// <param name="nullable">Especifica si el valor es nullable (Int64?) o no.</param>
+        /// <returns>Regresa un nuevo objeto de tipo Nullable<Int64> ya con el valor incorporado.</returns>
         public static Int64? StringToInt64(string value, bool nullable)
         {
             if (!Int64.TryParse(value, out long newValue))
@@ -51,6 +69,11 @@ namespace DataManagement.Tools
             return newValue;
         }
 
+        /// <summary>
+        /// Convierte un objeto de tipo string a un objeto de tipo Int64.
+        /// </summary>
+        /// <param name="value">Valor a convertir.</param>
+        /// <returns>Regresa un nuevo objeto de tipo Int64 ya con el valor incorporado.</returns>
         public static Int64 StringToInt64(string value)
         {
             if (!Int64.TryParse(value, out long newValue))
@@ -61,6 +84,12 @@ namespace DataManagement.Tools
             return newValue;
         }
 
+        /// <summary>
+        /// Convierte un objeto de tipo string en un objeto de tipo Nullable<decimal>.
+        /// </summary>
+        /// <param name="value">Valor a convertir.</param>
+        /// <param name="nullable">Especifica si el valor es nullable (decimal?) o no.</param>
+        /// <returns>Regresa un nuevo objeto de tipo Nullable<decimal> ya con el valor incorporado.</returns>
         public static decimal? StringToDecimal(string value, bool nullable)
         {
             if (!Decimal.TryParse(value, out decimal newValue))
@@ -78,6 +107,11 @@ namespace DataManagement.Tools
             return newValue;
         }
 
+        /// <summary>
+        /// Convierte un objeto de tipo string a un objeto de tipo decimal.
+        /// </summary>
+        /// <param name="value">Valor a convertir.</param>
+        /// <returns>Regresa un nuevo objeto de tipo decimal ya con el valor incorporado.</returns>
         public static decimal StringToDecimal(string value)
         {
             if (!Decimal.TryParse(value, out decimal newValue))
@@ -88,6 +122,11 @@ namespace DataManagement.Tools
             return newValue;
         }
 
+        /// <summary>
+        /// Convierte un objeto de tipo string a un objeto de tipo Guid.
+        /// </summary>
+        /// <param name="value">Valor a convertir.</param>
+        /// <returns>Regresa un nuevo objeto de tipo Guid ya con el valor incorporado.</returns>
         public static Guid StringToGuid(string value)
         {
             if (!Guid.TryParse(value, out Guid newValue))
@@ -98,16 +137,21 @@ namespace DataManagement.Tools
             return newValue;
         }
 
-        public static Object MySqlParameterToObject(MySqlParameter parameter)
+        private static Object MySqlParameterToObject(MySqlParameter parameter)
         {
             return parameter.Value;
         }
 
-        public static Object MSSqlParameterToObject(SqlParameter parameter)
+        private static Object MSSqlParameterToObject(SqlParameter parameter)
         {
             return parameter.Value;
         }
 
+        /// <summary>
+        /// Convierte la coleccion contenida en un objeto de tipo MySqlParameterCollection en un objeto List<Object>.
+        /// </summary>
+        /// <param name="parameters">Coleccion de parametros a convertir.</param>
+        /// <returns>Regresa un nuevo objeto List<Object> con los valores de la colleccion proporcionada.</returns>
         public static List<Object> MySqlParameterCollectionToList(MySqlParameterCollection parameters)
         {
             List<Object> objects = new List<object>();
@@ -119,6 +163,11 @@ namespace DataManagement.Tools
             return objects;
         }
 
+        /// <summary>
+        /// Convierte la coleccion contenida en un objeto de tipo SqlParameterCollection en un objeto List<Object>.
+        /// </summary>
+        /// <param name="parameters">Coleccion de parametros a convertir.</param>
+        /// <returns>Regresa un nuevo objeto List<Object> con los valores de la colleccion proporcionada.</returns>
         public static List<Object> MsSqlParameterCollectionToList(SqlParameterCollection parameters)
         {
             List<Object> objects = new List<object>();
