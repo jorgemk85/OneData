@@ -1,4 +1,5 @@
 ﻿using DataManagement.BO;
+using DataManagement.Tools;
 using MySql.Data.MySqlClient;
 using System;
 using System.Data;
@@ -65,7 +66,7 @@ namespace DataManagement.DAO
 
             if (logTransaction) LogTransaction(tableName, transactionType, useAppConfig);
 
-            return new Result(true, dataTable, Tools.MySqlParameterCollectionToList(command.Parameters));
+            return new Result(true, dataTable, SimpleConverter.MySqlParameterCollectionToList(command.Parameters));
         }
 
         private DataTable ConfigureConnectionAndExecuteCommand<T>(T obj, string tableName, TransactionTypes transactionType, bool useAppConfig)

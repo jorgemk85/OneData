@@ -69,9 +69,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BO\DataCache.cs" />
-    <Compile Include="BO\FileSerializer.cs" />
-    <Compile Include="BO\Tools.cs" />
-    <Compile Include="EjemploConnector.cs" />
+    <Compile Include="Tools\DataSerializer.cs" />
+    <Compile Include="Tools\FileSerializer.cs" />
+    <Compile Include="Tools\SimpleConverter.cs" />
+    <Compile Include="Examples\EjemploConnector.cs" />
     <Compile Include="DAO\DbOperation.cs" />
     <Compile Include="DAO\MsSqlOperation.cs" />
     <Compile Include="DAO\QueryEvaluation.cs" />
@@ -79,17 +80,17 @@
     <Compile Include="BO\Log.cs" />
     <Compile Include="BO\Main.cs" />
     <Compile Include="DAO\Manager.cs" />
-    <Compile Include="HeaderName.cs" />
-    <Compile Include="IConnectable.cs" />
+    <Compile Include="Attributes\HeaderName.cs" />
+    <Compile Include="Interfaces\IConnectable.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="BO\Parameter.cs" />
     <Compile Include="BO\Result.cs" />
     <Compile Include="DAO\MySqlOperation.cs" />
-    <Compile Include="UnlinkedProperty.cs" />
+    <Compile Include="Attributes\UnlinkedProperty.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
-    <None Include="Ejemplo.config" />
+    <None Include="Examples\Ejemplo.config" />
     <None Include="firma.pfx" />
     <None Include="packages.config" />
   </ItemGroup>

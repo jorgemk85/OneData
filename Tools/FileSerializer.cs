@@ -1,12 +1,47 @@
-﻿using System;
+﻿using DataManagement.Attributes;
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Reflection;
+using System.Text;
 
-namespace DataManagement.BO
+namespace DataManagement.Tools
 {
     public class FileSerializer
     {
-        public static List<string> GetHeadersFromString(string line, char separator)
+        public static List<T> SerializeFileToListOfType<T>(string fullyQualifiedFileName, char separator, Encoding fileEncoding) where T : new()
+        {
+            try
+            {
+                List<T> newList = new List<T>();
+                using (StreamReader sr = new StreamReader(fullyQualifiedFileName, fileEncoding))
+                {
+                    // Primero leemos la primer linea y la guardamos como los headers.
+                    List<string> headers = GetHeadersFromString(sr.ReadLine(), separator);
+
+                    int index = 0;
+                    String line;
+                    T newObj;
+                    while ((line = sr.ReadLine()) != null)
+                    {
+                        newObj = SerializeStringToObjectOfType<T>(headers, line, separator);
+                        if (newObj != null)
+                        {
+                            newList.Add(newObj);
+                        }
+
+                        index++;
+                    }
+                }
+                return newList;
+            }
+            catch (Exception e)
+            {
+                throw e;
+            }
+        }
+
+        private static List<string> GetHeadersFromString(string line, char separator)
         {
             List<string> headers = new List<string>();
             string[] lineSplit = line.Split(separator);
@@ -19,7 +54,7 @@ namespace DataManagement.BO
             return headers;
         }
 
-        public static T SerializeStringToObjectOfType<T>(List<string> headers, string line, char separator) where T : new()
+        private static T SerializeStringToObjectOfType<T>(List<string> headers, string line, char separator) where T : new()
         {
             string[] lineSplit = line.Split(separator);
             Dictionary<string, string> columns = new Dictionary<string, string>();

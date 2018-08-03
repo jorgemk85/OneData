@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace DataManagement
+namespace DataManagement.Attributes
 {
     public class HeaderName : Attribute
     {

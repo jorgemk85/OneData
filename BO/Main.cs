@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DataManagement.Attributes;
+using System;
 
 namespace DataManagement.BO
 {

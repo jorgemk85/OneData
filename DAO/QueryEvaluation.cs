@@ -1,4 +1,6 @@
-﻿using DataManagement.BO;
+﻿using DataManagement.Attributes;
+using DataManagement.BO;
+using DataManagement.Tools;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
@@ -120,7 +122,7 @@ namespace DataManagement.DAO
             else
             {
                 predicate = predicate.Substring(0, predicate.Length - 5);
-                return new Result(exito: true, data: Tools.ConvertListToDataTableOfType(Tools.ConvertDataTableToListOfType<T>(cache.Data).Where(predicate, values.ToArray()).ToList()));
+                return new Result(exito: true, data: DataSerializer.ConvertListToDataTableOfType(DataSerializer.ConvertDataTableToListOfType<T>(cache.Data).Where(predicate, values.ToArray()).ToList()));
             }
         }
 

@@ -1,9 +1,10 @@
 ﻿using DataManagement.BO;
 using DataManagement.DAO;
+using DataManagement.Tools;
 using System;
 using System.Collections.Generic;
 
-namespace DataManagement
+namespace DataManagement.Examples
 {
     public class Connector
     {
@@ -31,37 +32,37 @@ namespace DataManagement
 
         public static T Select<T>(params Parameter[] parameters) where T : new()
         {
-            return Tools.ConvertDataTableToObjectOfType<T>(Manager<T>.Select(USE_APP_CONFIG, parameters).Data);
+            return DataSerializer.ConvertDataTableToObjectOfType<T>(Manager<T>.Select(USE_APP_CONFIG, parameters).Data);
         }
 
         public static Dictionary<Guid, T> SelectDictionary<T>(params Parameter[] parameters) where T : new()
         {
-            return Tools.ConvertDataTableToDictionaryOfType<T>(Manager<T>.Select(USE_APP_CONFIG, parameters).Data);
+            return DataSerializer.ConvertDataTableToDictionaryOfType<T>(Manager<T>.Select(USE_APP_CONFIG, parameters).Data);
         }
 
         public static List<T> SelectList<T>(params Parameter[] parameters) where T : new()
         {
-            return Tools.ConvertDataTableToListOfType<T>(Manager<T>.Select(USE_APP_CONFIG, parameters).Data);
+            return DataSerializer.ConvertDataTableToListOfType<T>(Manager<T>.Select(USE_APP_CONFIG, parameters).Data);
         }
 
         public static string SelectJson<T>(params Parameter[] parameters) where T : new()
         {
-            return Tools.ConvertDataTableToJsonObjectOfType<T>(Manager<T>.Select(USE_APP_CONFIG, parameters).Data);
+            return DataSerializer.ConvertDataTableToJsonObjectOfType<T>(Manager<T>.Select(USE_APP_CONFIG, parameters).Data);
         }
 
         public static Dictionary<Guid, T> SelectAllDictionary<T>() where T : new()
         {
-            return Tools.ConvertDataTableToDictionaryOfType<T>(Manager<T>.SelectAll(USE_APP_CONFIG).Data);
+            return DataSerializer.ConvertDataTableToDictionaryOfType<T>(Manager<T>.SelectAll(USE_APP_CONFIG).Data);
         }
 
         public static List<T> SelectAllList<T>() where T : new()
         {
-            return Tools.ConvertDataTableToListOfType<T>(Manager<T>.SelectAll(USE_APP_CONFIG).Data);
+            return DataSerializer.ConvertDataTableToListOfType<T>(Manager<T>.SelectAll(USE_APP_CONFIG).Data);
         }
 
         public static string SelectAllJson<T>() where T : new()
         {
-            return Tools.ConvertDataTableToJsonListOfType<T>(Manager<T>.SelectAll(USE_APP_CONFIG).Data);
+            return DataSerializer.ConvertDataTableToJsonListOfType<T>(Manager<T>.SelectAll(USE_APP_CONFIG).Data);
         }
     }
 }

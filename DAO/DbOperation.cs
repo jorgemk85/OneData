@@ -1,4 +1,5 @@
-﻿using DataManagement.BO;
+﻿using DataManagement.Attributes;
+using DataManagement.BO;
 using MySql.Data.MySqlClient;
 using System;
 using System.Configuration;

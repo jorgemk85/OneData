@@ -2,7 +2,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace DataManagement
+namespace DataManagement.Interfaces
 {
     public interface IConnectable
     {

@@ -1,4 +1,5 @@
 ﻿using DataManagement.BO;
+using DataManagement.Tools;
 using System;
 using System.Data;
 using System.Data.SqlClient;
@@ -66,7 +67,7 @@ namespace DataManagement.DAO
             if (logTransaction) LogTransaction(tableName, transactionType, useAppConfig);
 
 
-            return new Result(true, dataTable, Tools.MsSqlParameterCollectionToList(command.Parameters));
+            return new Result(true, dataTable, SimpleConverter.MsSqlParameterCollectionToList(command.Parameters));
         }
 
         private DataTable ConfigureConnectionAndExecuteCommand<T>(T obj, string tableName, TransactionTypes transactionType, bool useAppConfig)

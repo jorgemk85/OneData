@@ -1,4 +1,5 @@
 ﻿using DataManagement.BO;
+using DataManagement.Tools;
 using System;
 using System.Configuration;
 using System.Data;
@@ -32,7 +33,7 @@ namespace DataManagement.DAO
 
         public static Result Select(bool useAppConfig, params Parameter[] parameters)
         {
-            return Command(Tools.SetParametersInObject<T>(parameters), DbOperation.TransactionTypes.Select, useAppConfig);
+            return Command(DataSerializer.SetParametersInObject<T>(parameters), DbOperation.TransactionTypes.Select, useAppConfig);
         }
 
         public static Result Select(string tableName, string storedProcedure, bool useAppConfig, params Parameter[] parameters)
