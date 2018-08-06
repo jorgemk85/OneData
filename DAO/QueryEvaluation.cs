@@ -1,5 +1,7 @@
 ﻿using DataManagement.Attributes;
-using DataManagement.BO;
+using DataManagement.Models;
+using DataManagement.Enums;
+using DataManagement.Exceptions;
 using DataManagement.Tools;
 using System;
 using System.Collections.Generic;
@@ -14,15 +16,15 @@ namespace DataManagement.DAO
     internal class QueryEvaluation
     {
         DbOperation dbOperation;
-        DbOperation.ConnectionTypes connectionType;
+        ConnectionTypes connectionType;
 
         public QueryEvaluation()
         {
-            connectionType = (DbOperation.ConnectionTypes)Enum.Parse(typeof(DbOperation.ConnectionTypes), ConfigurationManager.AppSettings["ConnectionType"].ToString());
-            dbOperation = connectionType == DbOperation.ConnectionTypes.MySQL ? (DbOperation)new MySqlOperation() : (DbOperation)new MsSqlOperation();
+            connectionType = (ConnectionTypes)Enum.Parse(typeof(ConnectionTypes), ConfigurationManager.AppSettings["ConnectionType"].ToString());
+            dbOperation = connectionType == ConnectionTypes.MySQL ? (DbOperation)new MySqlOperation() : (DbOperation)new MsSqlOperation();
         }
 
-        public Result Evaluate<T>(T obj, DbOperation.TransactionTypes transactionType, Result cache, bool isPartialCache, bool forceQueryDataBase, bool useAppConfig) where T : new()
+        public Result Evaluate<T>(T obj, TransactionTypes transactionType, Result cache, bool isPartialCache, bool forceQueryDataBase, bool useAppConfig) where T : new()
         {
             string tableName = (obj as Main).DataBaseTableName;
             Result resultado = new Result();
@@ -31,23 +33,23 @@ namespace DataManagement.DAO
 
             switch (transactionType)
             {
-                case DbOperation.TransactionTypes.Select:
+                case TransactionTypes.Select:
                     EvaluateSelect(obj, out resultado, isCached, tableName, cache, isPartialCache, forceQueryDataBase, useAppConfig);
                     break;
-                case DbOperation.TransactionTypes.SelectAll:
+                case TransactionTypes.SelectAll:
                     EvaluateSelectAll(obj, out resultado, isCached, tableName, cache, forceQueryDataBase, useAppConfig);
                     break;
-                case DbOperation.TransactionTypes.Delete:
+                case TransactionTypes.Delete:
                     requiresResult = true;
                     break;
-                case DbOperation.TransactionTypes.Insert:
+                case TransactionTypes.Insert:
                     requiresResult = true;
                     break;
-                case DbOperation.TransactionTypes.Update:
+                case TransactionTypes.Update:
                     requiresResult = true;
                     break;
-                case DbOperation.TransactionTypes.ExecuteStoredProcedure:
-                    resultado = dbOperation.ExecuteProcedure(obj, tableName, transactionType, useAppConfig, connectionType);
+                case TransactionTypes.StoredProcedure:
+                    resultado = dbOperation.ExecuteProcedure(obj, tableName, transactionType, useAppConfig);
                     break;
                 default:
                     break;
@@ -55,10 +57,10 @@ namespace DataManagement.DAO
 
             if (requiresResult)
             {
-                resultado = dbOperation.ExecuteProcedure(obj, tableName, transactionType, useAppConfig, connectionType);
-                if (transactionType != DbOperation.TransactionTypes.ExecuteStoredProcedure)
+                resultado = dbOperation.ExecuteProcedure(obj, tableName, transactionType, useAppConfig);
+                if (transactionType != TransactionTypes.StoredProcedure)
                 {
-                    if (isCached && resultado.TuvoExito) DeleteInCache(obj, cache);
+                    if (isCached) DeleteInCache(obj, cache);
                 }
             }
 
@@ -69,16 +71,16 @@ namespace DataManagement.DAO
         {
             if (forceQueryDataBase)
             {
-                resultado = dbOperation.ExecuteProcedure(obj, tableName, DbOperation.TransactionTypes.Select, useAppConfig, connectionType);
+                resultado = dbOperation.ExecuteProcedure(obj, tableName, TransactionTypes.Select, useAppConfig);
             }
             else
             {
-                resultado = isCached == true ? SelectInCache(obj, cache) : dbOperation.ExecuteProcedure(obj, tableName, DbOperation.TransactionTypes.Select, useAppConfig, connectionType);
+                resultado = isCached == true ? SelectInCache(obj, cache) : dbOperation.ExecuteProcedure(obj, tableName, TransactionTypes.Select, useAppConfig);
 
                 resultado.IsFromCache = isCached == true ? true : false;
-                if (isCached && isPartialCache && resultado.TuvoExito && resultado.Data.Rows.Count == 0)
+                if (isCached && isPartialCache && resultado.Data.Rows.Count == 0)
                 {
-                    resultado = dbOperation.ExecuteProcedure(obj, tableName, DbOperation.TransactionTypes.Select, useAppConfig, connectionType);
+                    resultado = dbOperation.ExecuteProcedure(obj, tableName, TransactionTypes.Select, useAppConfig);
                 }
             }
         }
@@ -87,11 +89,11 @@ namespace DataManagement.DAO
         {
             if (forceQueryDataBase)
             {
-                resultado = dbOperation.ExecuteProcedure(obj, tableName, DbOperation.TransactionTypes.SelectAll, useAppConfig, connectionType);
+                resultado = dbOperation.ExecuteProcedure(obj, tableName, TransactionTypes.SelectAll, useAppConfig);
             }
             else
             {
-                resultado = isCached == true ? cache : dbOperation.ExecuteProcedure(obj, tableName, DbOperation.TransactionTypes.SelectAll, useAppConfig, connectionType);
+                resultado = isCached == true ? cache : dbOperation.ExecuteProcedure(obj, tableName, TransactionTypes.SelectAll, useAppConfig);
                 resultado.IsFromCache = isCached == true ? true : false;
             }
         }
@@ -108,7 +110,7 @@ namespace DataManagement.DAO
                 {
                     if (prop.GetValue(obj) != null)
                     {
-                        predicate += prop.Name + "== @" + valueIndex + " and ";
+                        predicate += string.Format("{0}== @{1} and ", prop.Name, valueIndex);
                         values.Add(prop.GetValue(obj));
                         valueIndex++;
                     }
@@ -117,12 +119,12 @@ namespace DataManagement.DAO
 
             if (string.IsNullOrEmpty(predicate))
             {
-                return new Result(exito: false, titulo: "Error en los parametros.", mensaje: "Al parecer no se establecieron paramentros para la busqueda o no se obtuvieron resultados previos a la consulta. Por favor asegurece de por lo menos colocar uno valido y volver a intentar.");
+                throw new InvalidNumberOfParametersException();
             }
             else
             {
                 predicate = predicate.Substring(0, predicate.Length - 5);
-                return new Result(exito: true, data: DataSerializer.ConvertListToDataTableOfType(DataSerializer.ConvertDataTableToListOfType<T>(cache.Data).Where(predicate, values.ToArray()).ToList()));
+                return new Result(data: DataSerializer.ConvertListToDataTableOfType(DataSerializer.ConvertDataTableToListOfType<T>(cache.Data).Where(predicate, values.ToArray()).ToList()));
             }
         }
 

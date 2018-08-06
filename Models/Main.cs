@@ -1,7 +1,7 @@
 ﻿using DataManagement.Attributes;
 using System;
 
-namespace DataManagement.BO
+namespace DataManagement.Models
 {
     /// <summary>
     /// Clase principal de la que tienen que heredar todos los objetos de negocio que se desee utilizar con la libreria DataManagement.

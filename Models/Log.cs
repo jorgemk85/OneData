@@ -1,8 +1,8 @@
 ﻿using System;
 
-namespace DataManagement.BO
+namespace DataManagement.Models
 {
-    internal class Log : Main
+    public class Log : Main
     {
         public Guid? IdentificadorId { get; set; }
         public string Transaccion { get; set; }

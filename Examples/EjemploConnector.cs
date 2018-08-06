@@ -1,4 +1,4 @@
-﻿using DataManagement.BO;
+﻿using DataManagement.Models;
 using DataManagement.DAO;
 using DataManagement.Tools;
 using System;

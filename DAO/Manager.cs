@@ -1,4 +1,6 @@
-﻿using DataManagement.BO;
+﻿using DataManagement.Models;
+using DataManagement.Enums;
+using DataManagement.Exceptions;
 using DataManagement.Tools;
 using System;
 using System.Configuration;
@@ -29,7 +31,7 @@ namespace DataManagement.DAO
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la insercion.</returns>
         public static Result Insert(T obj, bool useAppConfig)
         {
-            return Command(obj, DbOperation.TransactionTypes.Insert, useAppConfig);
+            return Command(obj, TransactionTypes.Insert, useAppConfig);
         }
 
         /// <summary>
@@ -40,7 +42,7 @@ namespace DataManagement.DAO
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la insercion.</returns>
         public static async Task<Result> InsertAsync(T obj, bool useAppConfig)
         {
-            return await Task.Run(() => Command(obj, DbOperation.TransactionTypes.Insert, useAppConfig));
+            return await Task.Run(() => Command(obj, TransactionTypes.Insert, useAppConfig));
         }
 
         /// <summary>
@@ -51,7 +53,7 @@ namespace DataManagement.DAO
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la actualizacion.</returns>
         public static Result Update(T obj, bool useAppConfig)
         {
-            return Command(obj, DbOperation.TransactionTypes.Update, useAppConfig);
+            return Command(obj, TransactionTypes.Update, useAppConfig);
         }
 
         /// <summary>
@@ -62,7 +64,7 @@ namespace DataManagement.DAO
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la actualizacion.</returns>
         public static async Task<Result> UpdateAsync(T obj, bool useAppConfig)
         {
-            return await Task.Run(() => Command(obj, DbOperation.TransactionTypes.Update, useAppConfig));
+            return await Task.Run(() => Command(obj, TransactionTypes.Update, useAppConfig));
         }
 
         /// <summary>
@@ -73,7 +75,7 @@ namespace DataManagement.DAO
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la eliminacion.</returns>
         public static Result Delete(T obj, bool useAppConfig)
         {
-            return Command(obj, DbOperation.TransactionTypes.Delete, useAppConfig);
+            return Command(obj, TransactionTypes.Delete, useAppConfig);
         }
 
         /// <summary>
@@ -84,7 +86,7 @@ namespace DataManagement.DAO
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la eliminacion.</returns>
         public static async Task<Result> DeleteAsync(T obj, bool useAppConfig)
         {
-            return await Task.Run(() => Command(obj, DbOperation.TransactionTypes.Delete, useAppConfig));
+            return await Task.Run(() => Command(obj, TransactionTypes.Delete, useAppConfig));
         }
 
         /// <summary>
@@ -95,7 +97,7 @@ namespace DataManagement.DAO
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la seleccion.</returns>
         public static Result Select(bool useAppConfig, params Parameter[] parameters)
         {
-            return Command(DataSerializer.SetParametersInObject<T>(parameters), DbOperation.TransactionTypes.Select, useAppConfig);
+            return Command(DataSerializer.SetParametersInObject<T>(parameters), TransactionTypes.Select, useAppConfig);
         }
 
         /// <summary>
@@ -106,7 +108,7 @@ namespace DataManagement.DAO
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la seleccion.</returns>
         public static async Task<Result> SelectAsync(bool useAppConfig, params Parameter[] parameters)
         {
-            return await Task.Run(() => Command(DataSerializer.SetParametersInObject<T>(parameters), DbOperation.TransactionTypes.Select, useAppConfig));
+            return await Task.Run(() => Command(DataSerializer.SetParametersInObject<T>(parameters), TransactionTypes.Select, useAppConfig));
         }
 
         /// <summary>
@@ -119,10 +121,16 @@ namespace DataManagement.DAO
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la ejecucion.</returns>
         public static Result Select(string tableName, string storedProcedure, bool useAppConfig, params Parameter[] parameters)
         {
-            DbOperation.ConnectionTypes connectionType = (DbOperation.ConnectionTypes)Enum.Parse(typeof(DbOperation.ConnectionTypes), ConfigurationManager.AppSettings["ConnectionType"].ToString());
-            DbOperation dbOperation = connectionType == DbOperation.ConnectionTypes.MySQL ? (DbOperation)new MySqlOperation() : (DbOperation)new MsSqlOperation();
-
-            return dbOperation.EjecutarProcedimiento(tableName, storedProcedure, parameters, useAppConfig);
+            try
+            {
+                ConnectionTypes connectionType = (ConnectionTypes)Enum.Parse(typeof(ConnectionTypes), ConfigurationManager.AppSettings["ConnectionType"].ToString());
+                DbOperation dbOperation = connectionType == ConnectionTypes.MySQL ? (DbOperation)new MySqlOperation() : (DbOperation)new MsSqlOperation();
+                return dbOperation.EjecutarProcedimiento(tableName, storedProcedure, parameters, useAppConfig);
+            }
+            catch (NullReferenceException nre)
+            {
+                throw new ConfigurationNotFoundException("ConnectionType", nre);
+            }
         }
 
         /// <summary>
@@ -135,10 +143,16 @@ namespace DataManagement.DAO
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la ejecucion.</returns>
         public static async Task<Result> SelectAsync(string tableName, string storedProcedure, bool useAppConfig, params Parameter[] parameters)
         {
-            DbOperation.ConnectionTypes connectionType = (DbOperation.ConnectionTypes)Enum.Parse(typeof(DbOperation.ConnectionTypes), ConfigurationManager.AppSettings["ConnectionType"].ToString());
-            DbOperation dbOperation = connectionType == DbOperation.ConnectionTypes.MySQL ? (DbOperation)new MySqlOperation() : (DbOperation)new MsSqlOperation();
-
-            return await Task.Run(() => dbOperation.EjecutarProcedimiento(tableName, storedProcedure, parameters, useAppConfig));
+            try
+            {
+                ConnectionTypes connectionType = (ConnectionTypes)Enum.Parse(typeof(ConnectionTypes), ConfigurationManager.AppSettings["ConnectionType"].ToString());
+                DbOperation dbOperation = connectionType == ConnectionTypes.MySQL ? (DbOperation)new MySqlOperation() : (DbOperation)new MsSqlOperation();
+                return await Task.Run(() => dbOperation.EjecutarProcedimiento(tableName, storedProcedure, parameters, useAppConfig));
+            }
+            catch (NullReferenceException nre)
+            {
+                throw new ConfigurationNotFoundException("ConnectionType", nre);
+            }
         }
 
         /// <summary>
@@ -148,7 +162,7 @@ namespace DataManagement.DAO
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la seleccion.</returns>
         public static Result SelectAll(bool useAppConfig)
         {
-            return Command(new T(), DbOperation.TransactionTypes.SelectAll, useAppConfig);
+            return Command(new T(), TransactionTypes.SelectAll, useAppConfig);
         }
 
         /// <summary>
@@ -158,10 +172,10 @@ namespace DataManagement.DAO
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la seleccion.</returns>
         public static async Task<Result> SelectAllAsync(bool useAppConfig)
         {
-            return await Task.Run(() => Command(new T(), DbOperation.TransactionTypes.SelectAll, useAppConfig));
+            return await Task.Run(() => Command(new T(), TransactionTypes.SelectAll, useAppConfig));
         }
 
-        private static Result Command(T obj, DbOperation.TransactionTypes transactionType, bool useAppConfig)
+        private static Result Command(T obj, TransactionTypes transactionType, bool useAppConfig)
         {
             QueryEvaluation queryEvaluation = new QueryEvaluation();
             Result resultado;
@@ -180,7 +194,7 @@ namespace DataManagement.DAO
             return resultado;
         }
 
-        private static void SaveCache(DbOperation.TransactionTypes transactionType, Result resultado)
+        private static void SaveCache(TransactionTypes transactionType, Result resultado)
         {
             if (dataCache.Cache == null || dataCache.IsPartialCache)
             {
@@ -189,12 +203,12 @@ namespace DataManagement.DAO
 
                 forceQueryDataBase = false;
 
-                if (transactionType == DbOperation.TransactionTypes.SelectAll)
+                if (transactionType == TransactionTypes.SelectAll)
                 {
                     dataCache.Cache = resultado;
                     dataCache.IsPartialCache = false;
                 }
-                else if (resultado.Data.Rows.Count > 0 && transactionType == DbOperation.TransactionTypes.Select)
+                else if (resultado.Data.Rows.Count > 0 && transactionType == TransactionTypes.Select)
                 {
                     if (dataCache.Cache == null)
                     {
@@ -214,7 +228,7 @@ namespace DataManagement.DAO
 
                     dataCache.IsPartialCache = true;
                 }
-                else if (transactionType == DbOperation.TransactionTypes.Insert)
+                else if (transactionType == TransactionTypes.Insert)
                 {
                     forceQueryDataBase = true;
                 }

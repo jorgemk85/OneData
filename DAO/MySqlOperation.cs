@@ -1,4 +1,6 @@
-﻿using DataManagement.BO;
+﻿using DataManagement.Models;
+using DataManagement.Enums;
+using DataManagement.Exceptions;
 using DataManagement.Tools;
 using MySql.Data.MySqlClient;
 using System;
@@ -19,7 +21,7 @@ namespace DataManagement.DAO
             {
                 using (MySqlConnection connection = Connection.OpenConnection(useAppConfig))
                 {
-                    if (connection.State != ConnectionState.Open) return new Result(exito: false, mensaje: "No se puede abrir la conexion con la base de datos.", titulo: "Error al intentar conectar.");
+                    if (connection.State != ConnectionState.Open) throw new BadConnectionStateException();
                     command = new MySqlCommand(storedProcedure, connection);
                     command.CommandType = CommandType.StoredProcedure;
 
@@ -29,23 +31,22 @@ namespace DataManagement.DAO
                     dataTable.TableName = tableName;
                 }
             }
-            catch (MySqlException mse)
+            catch (MySqlException mysqle)
             {
-                Debug.WriteLine(mse.Message);
-                return new Result(mysqle: mse);
+                throw mysqle;
             }
             catch (ArgumentException ae)
             {
-                Debug.WriteLine(ae.Message);
-                return new Result(ae: ae);
+                throw ae;
             }
 
-            if (logTransaction) LogTransaction(tableName, TransactionTypes.ExecuteStoredProcedure, useAppConfig);
+            if (logTransaction) LogTransaction(tableName, TransactionTypes.StoredProcedure, useAppConfig);
 
-            return new Result(true, dataTable);
+            CallOnExecutedEventHandlers(tableName, TransactionTypes.StoredProcedure);
+            return new Result(dataTable);
         }
 
-        public override Result ExecuteProcedure<T>(T obj, string tableName, TransactionTypes transactionType, bool useAppConfig, ConnectionTypes connectionType, bool logTransaction = true)
+        public override Result ExecuteProcedure<T>(T obj, string tableName, TransactionTypes transactionType, bool useAppConfig, bool logTransaction = true)
         {
             DataTable dataTable = null;
 
@@ -53,20 +54,19 @@ namespace DataManagement.DAO
             {
                 dataTable = ConfigureConnectionAndExecuteCommand(obj, tableName, transactionType, useAppConfig);
             }
-            catch (MySqlException mse)
+            catch (MySqlException mysqle)
             {
-                Debug.WriteLine(mse.Message);
-                return new Result(mysqle: mse);
+                throw mysqle;
             }
             catch (ArgumentException ae)
             {
-                Debug.WriteLine(ae.Message);
-                return new Result(ae: ae);
+                throw ae;
             }
 
             if (logTransaction) LogTransaction(tableName, transactionType, useAppConfig);
 
-            return new Result(true, dataTable, SimpleConverter.MySqlParameterCollectionToList(command.Parameters));
+            CallOnExecutedEventHandlers(tableName, transactionType);
+            return new Result(dataTable);
         }
 
         private DataTable ConfigureConnectionAndExecuteCommand<T>(T obj, string tableName, TransactionTypes transactionType, bool useAppConfig)
@@ -95,7 +95,6 @@ namespace DataManagement.DAO
                     dataTable.TableName = tableName;
                 }
             }
-
             return dataTable;
         }
 
@@ -109,7 +108,7 @@ namespace DataManagement.DAO
                 Parametros = GetStringParameters(command, null)
             };
 
-            ExecuteProcedure(newLog, newLog.DataBaseTableName, TransactionTypes.Insert, useAppConfig, ConnectionTypes.MySQL, false);
+            ExecuteProcedure(newLog, newLog.DataBaseTableName, TransactionTypes.Insert, useAppConfig, false);
         }
     }
 }

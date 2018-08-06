@@ -1,10 +1,13 @@
 ﻿using DataManagement.Attributes;
-using DataManagement.BO;
+using DataManagement.Models;
+using DataManagement.Enums;
+using DataManagement.Exceptions;
 using MySql.Data.MySqlClient;
 using System;
 using System.Configuration;
 using System.Data.SqlClient;
 using System.Reflection;
+using DataManagement.Events;
 
 namespace DataManagement.DAO
 {
@@ -18,21 +21,15 @@ namespace DataManagement.DAO
         protected string SelectAllSuffix { get; set; }
         protected string StoredProcedurePrefix { get; set; }
 
-        public enum TransactionTypes
-        {
-            Select,
-            SelectAll,
-            Delete,
-            Insert,
-            Update,
-            ExecuteStoredProcedure
-        }
-
-        public enum ConnectionTypes
-        {
-            MySQL,
-            MSSQL
-        }
+        #region Events
+        public event CommandExecutedEventHandler OnCommandExecuted;
+        public event SelectExecutedEventHandler OnSelectExecuted;
+        public event SelectAllExecutedEventHandler OnSelectAllExecuted;
+        public event DeleteExecutedEventHandler OnDeleteExecuted;
+        public event InsertExecutedEventHandler OnInsertExecuted;
+        public event UpdateExecutedEventHandler OnUpdateExecuted;
+        public event StoredProcedureExecutedEventHandler OnStoredProcedureExecuted;
+        #endregion
 
         public DbOperation()
         {
@@ -41,12 +38,26 @@ namespace DataManagement.DAO
 
         private void GetTransactionTypesSuffixes()
         {
-            SelectSuffix = ConfigurationManager.AppSettings["SelectSuffix"].ToString();
-            InsertSuffix = ConfigurationManager.AppSettings["InsertSuffix"].ToString();
-            UpdateSuffix = ConfigurationManager.AppSettings["UpdateSuffix"].ToString();
-            DeleteSuffix = ConfigurationManager.AppSettings["DeleteSuffix"].ToString();
-            SelectAllSuffix = ConfigurationManager.AppSettings["SelectAllSuffix"].ToString();
-            StoredProcedurePrefix = ConfigurationManager.AppSettings["StoredProcedurePrefix"].ToString();
+            string configuration = string.Empty;
+            try
+            {
+                configuration = "SelectSuffix";
+                SelectSuffix = ConfigurationManager.AppSettings["SelectSuffix"].ToString();
+                configuration = "InsertSuffix";
+                InsertSuffix = ConfigurationManager.AppSettings["InsertSuffix"].ToString();
+                configuration = "UpdateSuffix";
+                UpdateSuffix = ConfigurationManager.AppSettings["UpdateSuffix"].ToString();
+                configuration = "DeleteSuffix";
+                DeleteSuffix = ConfigurationManager.AppSettings["DeleteSuffix"].ToString();
+                configuration = "SelectAllSuffix";
+                SelectAllSuffix = ConfigurationManager.AppSettings["SelectAllSuffix"].ToString();
+                configuration = "StoredProcedurePrefix";
+                StoredProcedurePrefix = ConfigurationManager.AppSettings["StoredProcedurePrefix"].ToString();
+            }
+            catch (NullReferenceException nre)
+            {
+                throw new ConfigurationNotFoundException(configuration, nre);
+            }
         }
 
         protected string GetFriendlyTransactionSuffix(TransactionTypes transactionType)
@@ -166,12 +177,40 @@ namespace DataManagement.DAO
             return parametros;
         }
 
+        protected void CallOnExecutedEventHandlers(string tableName, TransactionTypes transactionType)
+        {
+            switch (transactionType)
+            {
+                case TransactionTypes.Select:
+                    OnSelectExecuted?.Invoke(this, new SelectExecutedEventArgs(tableName));
+                    break;
+                case TransactionTypes.SelectAll:
+                    OnSelectAllExecuted?.Invoke(this, new SelectAllExecutedEventArgs(tableName));
+                    break;
+                case TransactionTypes.Delete:
+                    OnDeleteExecuted?.Invoke(this, new DeleteExecutedEventArgs(tableName));
+                    break;
+                case TransactionTypes.Insert:
+                    OnInsertExecuted?.Invoke(this, new InsertExecutedEventArgs(tableName));
+                    break;
+                case TransactionTypes.Update:
+                    OnUpdateExecuted?.Invoke(this, new UpdateExecutedEventArgs(tableName));
+                    break;
+                case TransactionTypes.StoredProcedure:
+                    OnStoredProcedureExecuted?.Invoke(this, new StoredProcedureExecutedEventArgs(tableName));
+                    break;
+                default:
+                    break;
+            }
+            OnCommandExecuted?.Invoke(this, new CommandExecutedEventArgs(tableName));
+        }
+
         public virtual Result EjecutarProcedimiento(string tableName, string storedProcedure, Parameter[] parameters, bool useAppConfig, bool logTransaction = true)
         {
             return new Result();
         }
 
-        public virtual Result ExecuteProcedure<T>(T obj, string tableName, TransactionTypes transactionType, bool useAppConfig, ConnectionTypes connectionType, bool logTransaction = true)
+        public virtual Result ExecuteProcedure<T>(T obj, string tableName, TransactionTypes transactionType, bool useAppConfig, bool logTransaction = true)
         {
             return new Result();
         }

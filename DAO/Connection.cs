@@ -1,5 +1,6 @@
-﻿using MySql.Data.MySqlClient;
-using System;
+﻿using DataManagement.Events;
+using DataManagement.Exceptions;
+using MySql.Data.MySqlClient;
 using System.Configuration;
 using System.Data.SqlClient;
 
@@ -7,7 +8,27 @@ namespace DataManagement.DAO
 {
     internal class Connection
     {
+        #region Events
+        public static event ConnectionOpenedEventHandler OnConnectionOpened;
+        public static event ConnectionClosedEventHandler OnConnectionClosed;
+        #endregion
+
         public static string ConnectionString { get; set; }
+
+        private static void GetConnectionString()
+        {
+            try
+            {
+                if (ConfigurationManager.AppSettings["ConnectionToUse"] == null) throw new ConfigurationNotFoundException("ConnectionToUse");
+                if (ConfigurationManager.ConnectionStrings[ConfigurationManager.AppSettings["ConnectionToUse"]] == null) throw new ConfigurationNotFoundException(ConfigurationManager.AppSettings["ConnectionToUse"]);
+
+                ConnectionString = ConfigurationManager.ConnectionStrings[ConfigurationManager.AppSettings["ConnectionToUse"]].ConnectionString;
+            }
+            catch (ConfigurationErrorsException cee)
+            {
+                throw cee;
+            }
+        }
 
         public static MySqlConnection OpenConnection(bool useAppConfig)
         {
@@ -16,15 +37,16 @@ namespace DataManagement.DAO
             {
                 if (useAppConfig)
                 {
-                    ConnectionString = ConfigurationManager.ConnectionStrings[ConfigurationManager.AppSettings["ConnectionToUse"]].ConnectionString;
+                    GetConnectionString();
                 }
 
                 connection = new MySqlConnection(ConnectionString);
                 connection.Open();
+                OnConnectionOpened?.Invoke(null, new ConnectionOpenedEventArgs(connection.ConnectionString));
             }
             catch (MySqlException ex)
             {
-                Console.WriteLine("Error: {0}", ex.ToString());
+                throw ex;
             }
             return connection;
         }
@@ -41,7 +63,7 @@ namespace DataManagement.DAO
             {
                 if (useAppConfig)
                 {
-                    ConnectionString = ConfigurationManager.ConnectionStrings[ConfigurationManager.AppSettings["ConnectionToUse"]].ConnectionString;
+                    GetConnectionString();
                 }
 
                 connection = new SqlConnection(ConnectionString);
@@ -49,7 +71,7 @@ namespace DataManagement.DAO
             }
             catch (SqlException ex)
             {
-                Console.WriteLine("Error: {0}", ex.ToString());
+                throw ex;
             }
             return connection;
         }
@@ -57,6 +79,7 @@ namespace DataManagement.DAO
         public static void CloseConnection(SqlConnection connection)
         {
             connection?.Close();
+            OnConnectionClosed?.Invoke(null, new ConnectionClosedEventArgs());
         }
     }
 }

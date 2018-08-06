@@ -1,14 +1,21 @@
-﻿using DataManagement.BO;
+﻿using DataManagement.Models;
+using DataManagement.Enums;
+using DataManagement.Exceptions;
 using DataManagement.Tools;
 using System;
 using System.Data;
 using System.Data.SqlClient;
 using System.Diagnostics;
+using DataManagement.Events;
 
 namespace DataManagement.DAO
 {
     internal class MsSqlOperation : DbOperation
     {
+        #region Events
+        public event LogWrittenEventHandler OnLogWritten;
+        #endregion
+
         private SqlCommand command;
 
         public override Result EjecutarProcedimiento(string tableName, string storedProcedure, Parameter[] parameters, bool useAppConfig, bool logTransaction = true)
@@ -19,7 +26,7 @@ namespace DataManagement.DAO
             {
                 using (SqlConnection connection = Connection.OpenMSSQLConnection(useAppConfig))
                 {
-                    if (connection.State != ConnectionState.Open) return new Result(exito: false, mensaje: "No se puede abrir la conexion con la base de datos.", titulo: "Error al intentar conectar.");
+                    if (connection.State != ConnectionState.Open) throw new BadConnectionStateException();
                     command = new SqlCommand(storedProcedure, connection);
                     command.CommandType = CommandType.StoredProcedure;
 
@@ -31,21 +38,20 @@ namespace DataManagement.DAO
             }
             catch (SqlException mssqle)
             {
-                Debug.WriteLine(mssqle.Message);
-                return new Result(mssqle: mssqle);
+                throw mssqle;
             }
             catch (ArgumentException ae)
             {
-                Debug.WriteLine(ae.Message);
-                return new Result(ae: ae);
+                throw ae;
             }
 
-            if (logTransaction) LogTransaction(tableName, TransactionTypes.ExecuteStoredProcedure, useAppConfig);
+            if (logTransaction) LogTransaction(tableName, TransactionTypes.StoredProcedure, useAppConfig);
 
-            return new Result(true, dataTable);
+            CallOnExecutedEventHandlers(tableName, TransactionTypes.StoredProcedure);
+            return new Result(dataTable);
         }
 
-        public override Result ExecuteProcedure<T>(T obj, string tableName, TransactionTypes transactionType, bool useAppConfig, ConnectionTypes connectionType, bool logTransaction = true)
+        public override Result ExecuteProcedure<T>(T obj, string tableName, TransactionTypes transactionType, bool useAppConfig, bool logTransaction = true)
         {
             DataTable dataTable = null;
 
@@ -53,21 +59,19 @@ namespace DataManagement.DAO
             {
                 dataTable = ConfigureConnectionAndExecuteCommand(obj, tableName, transactionType, useAppConfig);
             }
-            catch (SqlException mse)
+            catch (SqlException mssqle)
             {
-                Debug.WriteLine(mse.Message);
-                return new Result(mssqle: mse);
+                throw mssqle;
             }
             catch (ArgumentException ae)
             {
-                Debug.WriteLine(ae.Message);
-                return new Result(ae: ae);
+                throw ae;
             }
 
             if (logTransaction) LogTransaction(tableName, transactionType, useAppConfig);
 
-
-            return new Result(true, dataTable, SimpleConverter.MsSqlParameterCollectionToList(command.Parameters));
+            CallOnExecutedEventHandlers(tableName, transactionType);
+            return new Result(dataTable);
         }
 
         private DataTable ConfigureConnectionAndExecuteCommand<T>(T obj, string tableName, TransactionTypes transactionType, bool useAppConfig)
@@ -76,7 +80,7 @@ namespace DataManagement.DAO
 
             using (SqlConnection connection = Connection.OpenMSSQLConnection(useAppConfig))
             {
-                if (connection.State != ConnectionState.Open) throw new Exception("No se puede abrir la conexion con la base de datos.");
+                if (connection.State != ConnectionState.Open) throw new BadConnectionStateException();
                 command = new SqlCommand(string.Format("{0}{1}{2}{3}", (obj as Main).Schema + ".", StoredProcedurePrefix, tableName, GetFriendlyTransactionSuffix(transactionType)), connection);
                 command.CommandType = CommandType.StoredProcedure;
 
@@ -110,7 +114,8 @@ namespace DataManagement.DAO
                 Parametros = GetStringParameters(null, command)
             };
 
-            ExecuteProcedure(newLog, newLog.DataBaseTableName, TransactionTypes.Insert, useAppConfig, ConnectionTypes.MSSQL, false);
+            ExecuteProcedure(newLog, newLog.DataBaseTableName, TransactionTypes.Insert, useAppConfig, false);
+            OnLogWritten?.Invoke(this, new LogWrittenEventArgs(newLog));
         }
     }
 }

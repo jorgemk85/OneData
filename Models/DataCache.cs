@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace DataManagement.BO
+namespace DataManagement.Models
 {
     internal class DataCache
     {
