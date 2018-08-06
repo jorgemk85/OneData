@@ -42,7 +42,6 @@ namespace DataManagement.DAO
 
             if (logTransaction) LogTransaction(tableName, TransactionTypes.StoredProcedure, useAppConfig);
 
-            CallOnExecutedEventHandlers(tableName, TransactionTypes.StoredProcedure);
             return new Result(dataTable);
         }
 
@@ -65,7 +64,6 @@ namespace DataManagement.DAO
 
             if (logTransaction) LogTransaction(tableName, transactionType, useAppConfig);
 
-            CallOnExecutedEventHandlers(tableName, transactionType);
             return new Result(dataTable);
         }
 

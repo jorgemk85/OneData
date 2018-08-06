@@ -1,13 +1,13 @@
 ﻿using DataManagement.Attributes;
-using DataManagement.Models;
 using DataManagement.Enums;
+using DataManagement.Events;
 using DataManagement.Exceptions;
+using DataManagement.Models;
 using MySql.Data.MySqlClient;
 using System;
 using System.Configuration;
 using System.Data.SqlClient;
 using System.Reflection;
-using DataManagement.Events;
 
 namespace DataManagement.DAO
 {
@@ -20,16 +20,6 @@ namespace DataManagement.DAO
         protected string DeleteSuffix { get; set; }
         protected string SelectAllSuffix { get; set; }
         protected string StoredProcedurePrefix { get; set; }
-
-        #region Events
-        public event CommandExecutedEventHandler OnCommandExecuted;
-        public event SelectExecutedEventHandler OnSelectExecuted;
-        public event SelectAllExecutedEventHandler OnSelectAllExecuted;
-        public event DeleteExecutedEventHandler OnDeleteExecuted;
-        public event InsertExecutedEventHandler OnInsertExecuted;
-        public event UpdateExecutedEventHandler OnUpdateExecuted;
-        public event StoredProcedureExecutedEventHandler OnStoredProcedureExecuted;
-        #endregion
 
         public DbOperation()
         {
@@ -175,34 +165,6 @@ namespace DataManagement.DAO
             }
 
             return parametros;
-        }
-
-        protected void CallOnExecutedEventHandlers(string tableName, TransactionTypes transactionType)
-        {
-            switch (transactionType)
-            {
-                case TransactionTypes.Select:
-                    OnSelectExecuted?.Invoke(this, new SelectExecutedEventArgs(tableName));
-                    break;
-                case TransactionTypes.SelectAll:
-                    OnSelectAllExecuted?.Invoke(this, new SelectAllExecutedEventArgs(tableName));
-                    break;
-                case TransactionTypes.Delete:
-                    OnDeleteExecuted?.Invoke(this, new DeleteExecutedEventArgs(tableName));
-                    break;
-                case TransactionTypes.Insert:
-                    OnInsertExecuted?.Invoke(this, new InsertExecutedEventArgs(tableName));
-                    break;
-                case TransactionTypes.Update:
-                    OnUpdateExecuted?.Invoke(this, new UpdateExecutedEventArgs(tableName));
-                    break;
-                case TransactionTypes.StoredProcedure:
-                    OnStoredProcedureExecuted?.Invoke(this, new StoredProcedureExecutedEventArgs(tableName));
-                    break;
-                default:
-                    break;
-            }
-            OnCommandExecuted?.Invoke(this, new CommandExecutedEventArgs(tableName));
         }
 
         public virtual Result EjecutarProcedimiento(string tableName, string storedProcedure, Parameter[] parameters, bool useAppConfig, bool logTransaction = true)

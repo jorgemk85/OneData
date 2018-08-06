@@ -1,6 +1,7 @@
-﻿using DataManagement.Models;
-using DataManagement.Enums;
+﻿using DataManagement.Enums;
+using DataManagement.Events;
 using DataManagement.Exceptions;
+using DataManagement.Models;
 using DataManagement.Tools;
 using System;
 using System.Configuration;
@@ -17,6 +18,16 @@ namespace DataManagement.DAO
     {
         static DataCache dataCache = new DataCache();
         static bool forceQueryDataBase = false;
+
+        #region Events
+        public event CommandExecutedEventHandler OnCommandExecuted;
+        public event SelectExecutedEventHandler OnSelectExecuted;
+        public event SelectAllExecutedEventHandler OnSelectAllExecuted;
+        public event DeleteExecutedEventHandler OnDeleteExecuted;
+        public event InsertExecutedEventHandler OnInsertExecuted;
+        public event UpdateExecutedEventHandler OnUpdateExecuted;
+        public event StoredProcedureExecutedEventHandler OnStoredProcedureExecuted;
+        #endregion
 
         static Manager()
         {
@@ -125,7 +136,9 @@ namespace DataManagement.DAO
             {
                 ConnectionTypes connectionType = (ConnectionTypes)Enum.Parse(typeof(ConnectionTypes), ConfigurationManager.AppSettings["ConnectionType"].ToString());
                 DbOperation dbOperation = connectionType == ConnectionTypes.MySQL ? (DbOperation)new MySqlOperation() : (DbOperation)new MsSqlOperation();
-                return dbOperation.EjecutarProcedimiento(tableName, storedProcedure, parameters, useAppConfig);
+                Result result = dbOperation.EjecutarProcedimiento(tableName, storedProcedure, parameters, useAppConfig);
+                CallOnExecutedEventHandlers(tableName, TransactionTypes.StoredProcedure);
+                return result;
             }
             catch (NullReferenceException nre)
             {
@@ -190,7 +203,7 @@ namespace DataManagement.DAO
                 // Al mandar TRUE en forceQueryDataBase aseguramos que no se use el cache y al no almacenar el resultado con la funcion SaveCache, anulamos completamente el uso cache.
                 resultado = queryEvaluation.Evaluate(obj, transactionType, dataCache.Cache, dataCache.IsPartialCache, true, useAppConfig);
             }
-
+            CallOnExecutedEventHandlers((obj as Main).DataBaseTableName, transactionType);
             return resultado;
         }
 
@@ -242,6 +255,34 @@ namespace DataManagement.DAO
                 // Elimina el cache ya que esta EXPIRADO y de debe de refrescar.
                 dataCache.Reset(new T());
             }
+        }
+
+        private static void CallOnExecutedEventHandlers(string tableName, TransactionTypes transactionType)
+        {
+            switch (transactionType)
+            {
+                case TransactionTypes.Select:
+                    OnSelectExecuted?.Invoke(this, new SelectExecutedEventArgs(tableName));
+                    break;
+                case TransactionTypes.SelectAll:
+                    OnSelectAllExecuted?.Invoke(this, new SelectAllExecutedEventArgs(tableName));
+                    break;
+                case TransactionTypes.Delete:
+                    OnDeleteExecuted?.Invoke(this, new DeleteExecutedEventArgs(tableName));
+                    break;
+                case TransactionTypes.Insert:
+                    OnInsertExecuted?.Invoke(this, new InsertExecutedEventArgs(tableName));
+                    break;
+                case TransactionTypes.Update:
+                    OnUpdateExecuted?.Invoke(this, new UpdateExecutedEventArgs(tableName));
+                    break;
+                case TransactionTypes.StoredProcedure:
+                    OnStoredProcedureExecuted?.Invoke(this, new StoredProcedureExecutedEventArgs(tableName));
+                    break;
+                default:
+                    break;
+            }
+            OnCommandExecuted?.Invoke(this, new CommandExecutedEventArgs(tableName));
         }
     }
 }
