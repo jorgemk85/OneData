@@ -137,7 +137,7 @@ namespace DataManagement.DAO
                 ConnectionTypes connectionType = (ConnectionTypes)Enum.Parse(typeof(ConnectionTypes), ConfigurationManager.AppSettings["ConnectionType"].ToString());
                 DbOperation dbOperation = connectionType == ConnectionTypes.MySQL ? (DbOperation)new MySqlOperation() : (DbOperation)new MsSqlOperation();
                 Result result = dbOperation.EjecutarProcedimiento(tableName, storedProcedure, parameters, useAppConfig);
-                CallOnExecutedEventHandlers(tableName, TransactionTypes.StoredProcedure);
+                CallOnExecutedEventHandlers(tableName, TransactionTypes.StoredProcedure, result);
                 return result;
             }
             catch (NullReferenceException nre)
@@ -160,7 +160,9 @@ namespace DataManagement.DAO
             {
                 ConnectionTypes connectionType = (ConnectionTypes)Enum.Parse(typeof(ConnectionTypes), ConfigurationManager.AppSettings["ConnectionType"].ToString());
                 DbOperation dbOperation = connectionType == ConnectionTypes.MySQL ? (DbOperation)new MySqlOperation() : (DbOperation)new MsSqlOperation();
-                return await Task.Run(() => dbOperation.EjecutarProcedimiento(tableName, storedProcedure, parameters, useAppConfig));
+                Result result = await Task.Run(() => dbOperation.EjecutarProcedimiento(tableName, storedProcedure, parameters, useAppConfig));
+                CallOnExecutedEventHandlers(tableName, TransactionTypes.StoredProcedure, result);
+                return result;
             }
             catch (NullReferenceException nre)
             {
@@ -191,20 +193,20 @@ namespace DataManagement.DAO
         private static Result Command(T obj, TransactionTypes transactionType, bool useAppConfig)
         {
             QueryEvaluation queryEvaluation = new QueryEvaluation();
-            Result resultado;
+            Result result;
             if (dataCache.IsCacheEnabled)
             {
                 ResetCacheIfExpired();
-                resultado = queryEvaluation.Evaluate(obj, transactionType, dataCache.Cache, dataCache.IsPartialCache, forceQueryDataBase, useAppConfig);
-                SaveCache(transactionType, resultado);
+                result = queryEvaluation.Evaluate(obj, transactionType, dataCache.Cache, dataCache.IsPartialCache, forceQueryDataBase, useAppConfig);
+                SaveCache(transactionType, result);
             }
             else
             {
                 // Al mandar TRUE en forceQueryDataBase aseguramos que no se use el cache y al no almacenar el resultado con la funcion SaveCache, anulamos completamente el uso cache.
-                resultado = queryEvaluation.Evaluate(obj, transactionType, dataCache.Cache, dataCache.IsPartialCache, true, useAppConfig);
+                result = queryEvaluation.Evaluate(obj, transactionType, dataCache.Cache, dataCache.IsPartialCache, true, useAppConfig);
             }
-            CallOnExecutedEventHandlers((obj as Main).DataBaseTableName, transactionType);
-            return resultado;
+            CallOnExecutedEventHandlers((obj as Main).DataBaseTableName, transactionType, result);
+            return result;
         }
 
         private static void SaveCache(TransactionTypes transactionType, Result resultado)
@@ -257,32 +259,32 @@ namespace DataManagement.DAO
             }
         }
 
-        private static void CallOnExecutedEventHandlers(string tableName, TransactionTypes transactionType)
+        private static void CallOnExecutedEventHandlers(string tableName, TransactionTypes transactionType, Result result)
         {
             switch (transactionType)
             {
                 case TransactionTypes.Select:
-                    OnSelectExecuted?.Invoke( new SelectExecutedEventArgs(tableName));
+                    OnSelectExecuted?.Invoke(new SelectExecutedEventArgs(tableName, result));
                     break;
                 case TransactionTypes.SelectAll:
-                    OnSelectAllExecuted?.Invoke( new SelectAllExecutedEventArgs(tableName));
+                    OnSelectAllExecuted?.Invoke(new SelectAllExecutedEventArgs(tableName, result));
                     break;
                 case TransactionTypes.Delete:
-                    OnDeleteExecuted?.Invoke( new DeleteExecutedEventArgs(tableName));
+                    OnDeleteExecuted?.Invoke(new DeleteExecutedEventArgs(tableName, result));
                     break;
                 case TransactionTypes.Insert:
-                    OnInsertExecuted?.Invoke( new InsertExecutedEventArgs(tableName));
+                    OnInsertExecuted?.Invoke(new InsertExecutedEventArgs(tableName, result));
                     break;
                 case TransactionTypes.Update:
-                    OnUpdateExecuted?.Invoke( new UpdateExecutedEventArgs(tableName));
+                    OnUpdateExecuted?.Invoke(new UpdateExecutedEventArgs(tableName, result));
                     break;
                 case TransactionTypes.StoredProcedure:
-                    OnStoredProcedureExecuted?.Invoke( new StoredProcedureExecutedEventArgs(tableName));
+                    OnStoredProcedureExecuted?.Invoke(new StoredProcedureExecutedEventArgs(tableName, result));
                     break;
                 default:
                     break;
             }
-            OnCommandExecuted?.Invoke(new CommandExecutedEventArgs(tableName));
+            OnCommandExecuted?.Invoke(new CommandExecutedEventArgs(tableName, result));
         }
     }
 }

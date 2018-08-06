@@ -1,19 +1,12 @@
-﻿using System;
-
-namespace DataManagement.Events
+﻿namespace DataManagement.Events
 {
     /// <summary>
     /// Provocado despues de ejecutar un comando de tipo STORED PROCEDURE en la base de datos.
     /// </summary>
     public delegate void StoredProcedureExecutedEventHandler(StoredProcedureExecutedEventArgs e);
 
-    public class StoredProcedureExecutedEventArgs : EventArgs
+    public class StoredProcedureExecutedEventArgs : ExecutedEventArgs
     {
-        public string TableName { get; set; }
-
-        public StoredProcedureExecutedEventArgs(string tableName)
-        {
-            TableName = tableName;
-        }
+        public StoredProcedureExecutedEventArgs(string tableName, Models.Result result) : base(tableName, result) { }
     }
 }

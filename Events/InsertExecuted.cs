@@ -1,19 +1,12 @@
-﻿using System;
-
-namespace DataManagement.Events
+﻿namespace DataManagement.Events
 {
     /// <summary>
     /// Provocado despues de ejecutar un comando de tipo UPDATE en la base de datos.
     /// </summary>
     public delegate void InsertExecutedEventHandler(InsertExecutedEventArgs e);
 
-    public class InsertExecutedEventArgs : EventArgs
+    public class InsertExecutedEventArgs : ExecutedEventArgs
     {
-        public string TableName { get; set; }
-
-        public InsertExecutedEventArgs(string tableName)
-        {
-            TableName = tableName;
-        }
+        public InsertExecutedEventArgs(string tableName, Models.Result result) : base(tableName, result) { }
     }
 }

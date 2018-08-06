@@ -1,19 +1,12 @@
-﻿using System;
-
-namespace DataManagement.Events
+﻿namespace DataManagement.Events
 {
     /// <summary>
     /// Provocado despues de ejecutar un comando de tipo DELETE en la base de datos.
     /// </summary>
     public delegate void DeleteExecutedEventHandler(DeleteExecutedEventArgs e);
 
-    public class DeleteExecutedEventArgs : EventArgs
+    public class DeleteExecutedEventArgs : ExecutedEventArgs
     {
-        public string TableName { get; set; }
-
-        public DeleteExecutedEventArgs(string tableName)
-        {
-            TableName = tableName;
-        }
+        public DeleteExecutedEventArgs(string tableName, Models.Result result) : base(tableName, result) { }
     }
 }
