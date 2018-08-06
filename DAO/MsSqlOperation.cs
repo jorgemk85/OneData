@@ -1,21 +1,15 @@
-﻿using DataManagement.Models;
-using DataManagement.Enums;
+﻿using DataManagement.Enums;
+using DataManagement.Events;
 using DataManagement.Exceptions;
-using DataManagement.Tools;
+using DataManagement.Models;
 using System;
 using System.Data;
 using System.Data.SqlClient;
-using System.Diagnostics;
-using DataManagement.Events;
 
 namespace DataManagement.DAO
 {
     internal class MsSqlOperation : DbOperation
     {
-        #region Events
-        public event LogWrittenEventHandler OnLogWritten;
-        #endregion
-
         private SqlCommand command;
 
         public override Result EjecutarProcedimiento(string tableName, string storedProcedure, Parameter[] parameters, bool useAppConfig, bool logTransaction = true)
@@ -113,7 +107,6 @@ namespace DataManagement.DAO
             };
 
             ExecuteProcedure(newLog, newLog.DataBaseTableName, TransactionTypes.Insert, useAppConfig, false);
-            OnLogWritten?.Invoke(this, new LogWrittenEventArgs(newLog));
         }
     }
 }

@@ -8,11 +8,6 @@ namespace DataManagement.DAO
 {
     internal class Connection
     {
-        #region Events
-        public static event ConnectionOpenedEventHandler OnConnectionOpened;
-        public static event ConnectionClosedEventHandler OnConnectionClosed;
-        #endregion
-
         public static string ConnectionString { get; set; }
 
         private static void GetConnectionString()
@@ -42,7 +37,7 @@ namespace DataManagement.DAO
 
                 connection = new MySqlConnection(ConnectionString);
                 connection.Open();
-                OnConnectionOpened?.Invoke(null, new ConnectionOpenedEventArgs(connection.ConnectionString));
+                //OnConnectionOpened?.Invoke(null, new ConnectionOpenedEventArgs(connection.ConnectionString));
             }
             catch (MySqlException ex)
             {
@@ -79,7 +74,7 @@ namespace DataManagement.DAO
         public static void CloseConnection(SqlConnection connection)
         {
             connection?.Close();
-            OnConnectionClosed?.Invoke(null, new ConnectionClosedEventArgs());
+            //OnConnectionClosed?.Invoke(null, new ConnectionClosedEventArgs());
         }
     }
 }

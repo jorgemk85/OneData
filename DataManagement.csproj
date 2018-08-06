@@ -69,11 +69,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Events\CommandExecuted.cs" />
-    <Compile Include="Events\ConnectionClosed.cs" />
-    <Compile Include="Events\ConnectionOpened.cs" />
     <Compile Include="Events\DeleteExecuted.cs" />
     <Compile Include="Events\InsertExecuted.cs" />
-    <Compile Include="Events\LogWritten.cs" />
     <Compile Include="Events\SelectAllExecuted.cs" />
     <Compile Include="Events\SelectExecuted.cs" />
     <Compile Include="Events\StoredProcedureExecuted.cs" />
