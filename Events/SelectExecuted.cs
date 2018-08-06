@@ -5,7 +5,7 @@ namespace DataManagement.Events
     /// <summary>
     /// Provocado despues de ejecutar un comando de tipo SELECT en la base de datos.
     /// </summary>
-    public delegate void SelectExecutedEventHandler(Object sender, SelectExecutedEventArgs e);
+    public delegate void SelectExecutedEventHandler(SelectExecutedEventArgs e);
 
     public class SelectExecutedEventArgs : EventArgs
     {

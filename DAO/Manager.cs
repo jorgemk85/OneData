@@ -20,13 +20,13 @@ namespace DataManagement.DAO
         static bool forceQueryDataBase = false;
 
         #region Events
-        public event CommandExecutedEventHandler OnCommandExecuted;
-        public event SelectExecutedEventHandler OnSelectExecuted;
-        public event SelectAllExecutedEventHandler OnSelectAllExecuted;
-        public event DeleteExecutedEventHandler OnDeleteExecuted;
-        public event InsertExecutedEventHandler OnInsertExecuted;
-        public event UpdateExecutedEventHandler OnUpdateExecuted;
-        public event StoredProcedureExecutedEventHandler OnStoredProcedureExecuted;
+        public static event CommandExecutedEventHandler OnCommandExecuted;
+        public static event SelectExecutedEventHandler OnSelectExecuted;
+        public static event SelectAllExecutedEventHandler OnSelectAllExecuted;
+        public static event DeleteExecutedEventHandler OnDeleteExecuted;
+        public static event InsertExecutedEventHandler OnInsertExecuted;
+        public static event UpdateExecutedEventHandler OnUpdateExecuted;
+        public static event StoredProcedureExecutedEventHandler OnStoredProcedureExecuted;
         #endregion
 
         static Manager()
@@ -262,27 +262,27 @@ namespace DataManagement.DAO
             switch (transactionType)
             {
                 case TransactionTypes.Select:
-                    OnSelectExecuted?.Invoke(this, new SelectExecutedEventArgs(tableName));
+                    OnSelectExecuted?.Invoke( new SelectExecutedEventArgs(tableName));
                     break;
                 case TransactionTypes.SelectAll:
-                    OnSelectAllExecuted?.Invoke(this, new SelectAllExecutedEventArgs(tableName));
+                    OnSelectAllExecuted?.Invoke( new SelectAllExecutedEventArgs(tableName));
                     break;
                 case TransactionTypes.Delete:
-                    OnDeleteExecuted?.Invoke(this, new DeleteExecutedEventArgs(tableName));
+                    OnDeleteExecuted?.Invoke( new DeleteExecutedEventArgs(tableName));
                     break;
                 case TransactionTypes.Insert:
-                    OnInsertExecuted?.Invoke(this, new InsertExecutedEventArgs(tableName));
+                    OnInsertExecuted?.Invoke( new InsertExecutedEventArgs(tableName));
                     break;
                 case TransactionTypes.Update:
-                    OnUpdateExecuted?.Invoke(this, new UpdateExecutedEventArgs(tableName));
+                    OnUpdateExecuted?.Invoke( new UpdateExecutedEventArgs(tableName));
                     break;
                 case TransactionTypes.StoredProcedure:
-                    OnStoredProcedureExecuted?.Invoke(this, new StoredProcedureExecutedEventArgs(tableName));
+                    OnStoredProcedureExecuted?.Invoke( new StoredProcedureExecutedEventArgs(tableName));
                     break;
                 default:
                     break;
             }
-            OnCommandExecuted?.Invoke(this, new CommandExecutedEventArgs(tableName));
+            OnCommandExecuted?.Invoke(new CommandExecutedEventArgs(tableName));
         }
     }
 }
