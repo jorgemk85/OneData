@@ -17,7 +17,7 @@ namespace DataManagement.Tools
         /// <typeparam name="T">Tipo referencia para deserializar.</typeparam>
         /// <param name="dataTable">El contenido a convertir.</param>
         /// <returns>Regresa un objeto string ya procesado que contiene una lista en formato JSON.</returns>
-        public static string ConvertDataTableToJsonListOfType<T>(DataTable dataTable) where T : new()
+        public static string SerializeDataTableToJsonListOfType<T>(DataTable dataTable) where T : new()
         {
             return JsonConvert.SerializeObject(ConvertDataTableToListOfType<T>(dataTable), Formatting.None);
         }
@@ -28,7 +28,7 @@ namespace DataManagement.Tools
         /// <typeparam name="T">Tipo referencia para deserializar.</typeparam>
         /// <param name="dataTable">El contenido a convertir.</param>
         /// <returns>Regresa un objeto string ya procesado en formato JSON.</returns>
-        public static string ConvertDataTableToJsonObjectOfType<T>(DataTable dataTable) where T : new()
+        public static string SerializeDataTableToJsonObjectOfType<T>(DataTable dataTable) where T : new()
         {
             return JsonConvert.SerializeObject(ConvertDataTableToObjectOfType<T>(dataTable), Formatting.None);
         }
@@ -39,9 +39,9 @@ namespace DataManagement.Tools
         /// <typeparam name="T">Tipo referencia para deserializar.</typeparam>
         /// <param name="dataTable">El contenido a convertir.</param>
         /// <returns>Regresa un objeto string ya procesado que contiene una lista en formato XML.</returns>
-        public static string ConvertDataTableToXmlListOfType<T>(DataTable dataTable) where T : new()
+        public static string SerializeDataTableToXmlListOfType<T>(DataTable dataTable) where T : new()
         {
-            return ConvertObjectOfTypeToXml(ConvertDataTableToListOfType<T>(dataTable));
+            return SerializeObjectOfTypeToXml(ConvertDataTableToListOfType<T>(dataTable));
         }
 
         /// <summary>
@@ -50,9 +50,9 @@ namespace DataManagement.Tools
         /// <typeparam name="T">Tipo referencia para deserializar.</typeparam>
         /// <param name="dataTable">El contenido a convertir.</param>
         /// <returns>Regresa un objeto string ya procesado en formato XML.</returns>
-        public static string ConvertDataTableToXmlObjectOfType<T>(DataTable dataTable) where T : new()
+        public static string SerializeDataTableToXmlObjectOfType<T>(DataTable dataTable) where T : new()
         {
-            return ConvertObjectOfTypeToXml(ConvertDataTableToObjectOfType<T>(dataTable));
+            return SerializeObjectOfTypeToXml(ConvertDataTableToObjectOfType<T>(dataTable));
         }
 
         /// <summary>
@@ -61,9 +61,9 @@ namespace DataManagement.Tools
         /// <typeparam name="T">Tipo referencia para deserializar.</typeparam>
         /// <param name="list">Lista a deserializar</param>
         /// <returns>Regresa un objeto string ya procesado en formato XML.</returns>
-        public static string ConvertListOfTypeToXml<T>(List<T> list)
+        public static string SerializeListOfTypeToXml<T>(List<T> list)
         {
-            return ConvertObjectOfTypeToXml(list);
+            return SerializeObjectOfTypeToXml(list);
         }
 
         /// <summary>
@@ -72,7 +72,7 @@ namespace DataManagement.Tools
         /// <typeparam name="T">Tipo referencia para deserializar.</typeparam>
         /// <param name="obj">Objeto a deserializar.</param>
         /// <returns>Regresa un objeto string ya procesado en formato XML.</returns>
-        public static string ConvertObjectOfTypeToXml<T>(T obj)
+        public static string SerializeObjectOfTypeToXml<T>(T obj)
         {
             XmlSerializer serializer = new XmlSerializer(typeof(T));
             using (StringWriter textWriter = new StringWriter())
@@ -97,7 +97,7 @@ namespace DataManagement.Tools
                 {
                     if (dataTable.Columns.Contains(propertyInfo.Name))
                     {
-                        propertyInfo.SetValue(newObject, ConvertStringToType(dataTable.Rows[0][propertyInfo.Name].ToString(), propertyInfo.PropertyType));
+                        propertyInfo.SetValue(newObject, SimpleConverter.ConvertStringToType(dataTable.Rows[0][propertyInfo.Name].ToString(), propertyInfo.PropertyType));
                     }
                 }
             }
@@ -133,8 +133,8 @@ namespace DataManagement.Tools
 
                 for (int i = 0; i < dataTable.Rows.Count; i++)
                 {
-                    key = (TKey)ConvertStringToType(dataTable.Rows[i][keyName].ToString(), typeof(TKey));
-                    value = (TValue)ConvertStringToType(dataTable.Rows[i][valueName].ToString(), typeof(TValue));
+                    key = (TKey)SimpleConverter.ConvertStringToType(dataTable.Rows[i][keyName].ToString(), typeof(TKey));
+                    value = (TValue)SimpleConverter.ConvertStringToType(dataTable.Rows[i][valueName].ToString(), typeof(TValue));
 
                     newDictionary.Add(key, value);
                 }
@@ -161,7 +161,7 @@ namespace DataManagement.Tools
                 {
                     if (dataTable.Columns.Contains(propertyInfo.Name))
                     {
-                        propertyInfo.SetValue(newObject, ConvertStringToType(row[propertyInfo.Name].ToString(), propertyInfo.PropertyType));
+                        propertyInfo.SetValue(newObject, SimpleConverter.ConvertStringToType(row[propertyInfo.Name].ToString(), propertyInfo.PropertyType));
                     }
                 }
                 newList.Add(newObject);
@@ -187,7 +187,7 @@ namespace DataManagement.Tools
                 {
                     if (dataTable.Columns.Contains(propertyInfo.Name))
                     {
-                        propertyInfo.SetValue(newObject, ConvertStringToType(row[propertyInfo.Name].ToString(), propertyInfo.PropertyType));
+                        propertyInfo.SetValue(newObject, SimpleConverter.ConvertStringToType(row[propertyInfo.Name].ToString(), propertyInfo.PropertyType));
                     }
                 }
                 newDictionary.Add((newObject as Main).Id.GetValueOrDefault(), newObject);
@@ -222,38 +222,6 @@ namespace DataManagement.Tools
             }
             dataTable.PrimaryKey = new DataColumn[] { dataTable.Columns["id"] };
             return dataTable;
-        }
-
-        /// <summary>
-        /// Convierte un objeto de tipo String al tipo proporcionado.
-        /// </summary>
-        /// <param name="value">Cadena string a convertir.</param>
-        /// <param name="targetType">El tipo objetivo para la conversion.</param>
-        /// <returns>Regresa un nuevo Objeto ya convertido.</returns>
-        public static object ConvertStringToType(string value, Type targetType)
-        {
-            Type underlyingType = Nullable.GetUnderlyingType(targetType);
-
-            if (underlyingType != null)
-            {
-                if (string.IsNullOrEmpty(value))
-                {
-                    return null;
-                }
-            }
-            else
-            {
-                underlyingType = targetType;
-            }
-            switch (underlyingType.Name)
-            {
-                case "Guid":
-                    return Guid.Parse(value);
-                case "String":
-                    return value;
-                default:
-                    return Convert.ChangeType(value, underlyingType);
-            }
         }
 
         /// <summary>

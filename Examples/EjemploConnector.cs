@@ -47,7 +47,7 @@ namespace DataManagement.Examples
 
         public static string SelectJson<T>(params Parameter[] parameters) where T : new()
         {
-            return DataSerializer.ConvertDataTableToJsonObjectOfType<T>(Manager<T>.Select(USE_APP_CONFIG, parameters).Data);
+            return DataSerializer.SerializeDataTableToJsonObjectOfType<T>(Manager<T>.Select(USE_APP_CONFIG, parameters).Data);
         }
 
         public static Dictionary<Guid, T> SelectAllDictionary<T>() where T : new()
@@ -62,7 +62,7 @@ namespace DataManagement.Examples
 
         public static string SelectAllJson<T>() where T : new()
         {
-            return DataSerializer.ConvertDataTableToJsonListOfType<T>(Manager<T>.SelectAll(USE_APP_CONFIG).Data);
+            return DataSerializer.SerializeDataTableToJsonListOfType<T>(Manager<T>.SelectAll(USE_APP_CONFIG).Data);
         }
     }
 }

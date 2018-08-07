@@ -7,6 +7,46 @@ namespace DataManagement.Tools
 {
     public class SimpleConverter
     {
+        /// <summary>
+        /// Convierte un objeto de tipo String al tipo proporcionado. Esta funcion acepta Nullable Types.
+        /// </summary>
+        /// <param name="value">Cadena string a convertir.</param>
+        /// <param name="targetType">El tipo objetivo para la conversion.</param>
+        /// <returns>Regresa un nuevo Objeto ya convertido al tipo deseado.</returns>
+        public static object ConvertStringToType(string value, Type targetType)
+        {
+            Type underlyingType = Nullable.GetUnderlyingType(targetType);
+
+            if (underlyingType != null)
+            {
+                if (string.IsNullOrEmpty(value))
+                {
+                    return null;
+                }
+            }
+            else
+            {
+                underlyingType = targetType;
+            }
+            switch (underlyingType.Name)
+            {
+                case "Guid":
+                    return Guid.Parse(value);
+                case "String":
+                    return value;
+                case "DateTime":
+                    try
+                    {
+                        return DateTime.Parse(value);
+                    }
+                    catch (Exception)
+                    {
+                        return DateTime.FromOADate(long.Parse(value));
+                    }
+                default:
+                    return Convert.ChangeType(value, underlyingType);
+            }
+        }
 
         /// <summary>
         /// Convierte un objeto de tipo string en un objeto de tipo Nullable<int>.

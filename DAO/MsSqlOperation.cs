@@ -18,7 +18,7 @@ namespace DataManagement.DAO
 
             try
             {
-                using (SqlConnection connection = Connection.OpenMSSQLConnection(useAppConfig))
+                using (SqlConnection connection = Connection.OpenMsSqlConnection(useAppConfig))
                 {
                     if (connection.State != ConnectionState.Open) throw new BadConnectionStateException();
                     command = new SqlCommand(storedProcedure, connection);
@@ -70,7 +70,7 @@ namespace DataManagement.DAO
         {
             DataTable dataTable = null;
 
-            using (SqlConnection connection = Connection.OpenMSSQLConnection(useAppConfig))
+            using (SqlConnection connection = Connection.OpenMsSqlConnection(useAppConfig))
             {
                 if (connection.State != ConnectionState.Open) throw new BadConnectionStateException();
                 command = new SqlCommand(string.Format("{0}{1}{2}{3}", (obj as Main).Schema + ".", StoredProcedurePrefix, tableName, GetFriendlyTransactionSuffix(transactionType)), connection);

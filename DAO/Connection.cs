@@ -1,5 +1,4 @@
-﻿using DataManagement.Events;
-using DataManagement.Exceptions;
+﻿using DataManagement.Exceptions;
 using MySql.Data.MySqlClient;
 using System.Configuration;
 using System.Data.SqlClient;
@@ -25,7 +24,7 @@ namespace DataManagement.DAO
             }
         }
 
-        public static MySqlConnection OpenConnection(bool useAppConfig)
+        public static MySqlConnection OpenMySqlConnection(bool useAppConfig)
         {
             MySqlConnection connection = null;
             try
@@ -46,12 +45,7 @@ namespace DataManagement.DAO
             return connection;
         }
 
-        public static void CloseConnection(MySqlConnection connection)
-        {
-            connection?.Close();
-        }
-
-        public static SqlConnection OpenMSSQLConnection(bool useAppConfig)
+        public static SqlConnection OpenMsSqlConnection(bool useAppConfig)
         {
             SqlConnection connection = null;
             try
@@ -74,7 +68,11 @@ namespace DataManagement.DAO
         public static void CloseConnection(SqlConnection connection)
         {
             connection?.Close();
-            //OnConnectionClosed?.Invoke(null, new ConnectionClosedEventArgs());
+        }
+
+        public static void CloseConnection(MySqlConnection connection)
+        {
+            connection?.Close();
         }
     }
 }

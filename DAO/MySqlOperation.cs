@@ -19,7 +19,7 @@ namespace DataManagement.DAO
 
             try
             {
-                using (MySqlConnection connection = Connection.OpenConnection(useAppConfig))
+                using (MySqlConnection connection = Connection.OpenMySqlConnection(useAppConfig))
                 {
                     if (connection.State != ConnectionState.Open) throw new BadConnectionStateException();
                     command = new MySqlCommand(storedProcedure, connection);
@@ -71,7 +71,7 @@ namespace DataManagement.DAO
         {
             DataTable dataTable = null;
 
-            using (MySqlConnection connection = Connection.OpenConnection(useAppConfig))
+            using (MySqlConnection connection = Connection.OpenMySqlConnection(useAppConfig))
             {
                 if (connection.State != ConnectionState.Open) throw new Exception("No se puede abrir la conexion con la base de datos.");
                 command = new MySqlCommand(string.Format("{0}{1}{2}", StoredProcedurePrefix, tableName, GetFriendlyTransactionSuffix(transactionType)), connection);

@@ -18,9 +18,9 @@ namespace DataManagement.Tools
         /// <param name="separator">Caracter delimitador en el archivo.</param>
         /// <param name="fileEncoding">Codificacion utilizada en el archivo plano.</param>
         /// <returns>Regresa una nueva Lista del tipo <typeparamref name="T"/> con la informacion ya procesada del archivo plano.</returns>
-        public static List<T> SerializeFileToListOfType<T>(string fullyQualifiedFileName, char separator, Encoding fileEncoding) where T : new()
+        public static List<T> DeserializeFileToListOfType<T>(string fullyQualifiedFileName, char separator, Encoding fileEncoding) where T : new()
         {
-            return StartFileSerialization<T>(fullyQualifiedFileName, separator, fileEncoding);
+            return DeserializeFile<T>(fullyQualifiedFileName, separator, fileEncoding);
         }
 
         /// <summary>
@@ -31,12 +31,61 @@ namespace DataManagement.Tools
         /// <param name="separator">Caracter delimitador en el archivo.</param>
         /// <param name="fileEncoding">Codificacion utilizada en el archivo plano.</param>
         /// <returns>Regresa una nueva Lista del tipo <typeparamref name="T"/> con la informacion ya procesada del archivo plano.</returns>
-        public static async Task<List<T>> SerializeFileToListOfTypeAsync<T>(string fullyQualifiedFileName, char separator, Encoding fileEncoding) where T : new()
+        public static async Task<List<T>> DeserializeFileToListOfTypeAsync<T>(string fullyQualifiedFileName, char separator, Encoding fileEncoding) where T : new()
         {
-            return await Task.Run(() => StartFileSerialization<T>(fullyQualifiedFileName, separator, fileEncoding));
+            return await Task.Run(() => DeserializeFile<T>(fullyQualifiedFileName, separator, fileEncoding));
         }
 
-        private static List<T> StartFileSerialization<T>(string fullyQualifiedFileName, char separator, Encoding fileEncoding) where T : new()
+        public static void SerializeListOfTypeToFile<T>(List<T> list, string fullyQualifiedFileName, char separator)
+        {
+            SerializeList(list, fullyQualifiedFileName, separator);
+        }
+
+        public static async void SerializeListOfTypeToFileAsync<T>(List<T> list, string fullyQualifiedFileName, char separator)
+        {
+            await Task.Run(() => SerializeList(list, fullyQualifiedFileName, separator));
+        }
+
+        private static void SerializeList<T>(List<T> list, string fullyQualifiedFileName, char separator)
+        {
+            try
+            {
+                using (StreamWriter sw = new StreamWriter(fullyQualifiedFileName))
+                {
+                    // Primero escribimos los headers.
+                    string headers = string.Empty;
+                    string headerName = string.Empty;
+                    foreach (PropertyInfo property in typeof(T).GetProperties())
+                    {
+                        headerName = property.Name;
+                        if (property.GetCustomAttribute<HeaderName>() != null)
+                        {
+                            headerName = property.GetCustomAttribute<HeaderName>().Name;
+                        }
+                        headers += string.Format("{0}{1}", headerName, separator);
+                    }
+                    sw.WriteLine(headers.Remove(headers.Length - 1));
+
+                    // Ahora escribimos la lista en el archivo, linea por linea.
+                    string line;
+                    foreach (T item in list)
+                    {
+                        line = string.Empty;
+                        foreach (PropertyInfo property in typeof(T).GetProperties())
+                        {
+                            line += string.Format("{0}{1}", property.GetValue(item), separator);
+                        }
+                        sw.WriteLine(line.Remove(line.Length - 1));
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                throw e;
+            }
+        }
+
+        private static List<T> DeserializeFile<T>(string fullyQualifiedFileName, char separator, Encoding fileEncoding) where T : new()
         {
             try
             {
@@ -50,7 +99,7 @@ namespace DataManagement.Tools
                     T newObj;
                     while ((line = sr.ReadLine()) != null)
                     {
-                        newObj = SerializeStringToObjectOfType<T>(headers, line, separator);
+                        newObj = SerializeLineToObjectOfType<T>(headers, line, separator);
                         if (newObj != null)
                         {
                             newList.Add(newObj);
@@ -78,7 +127,7 @@ namespace DataManagement.Tools
             return headers;
         }
 
-        private static T SerializeStringToObjectOfType<T>(List<string> headers, string line, char separator) where T : new()
+        private static T SerializeLineToObjectOfType<T>(List<string> headers, string line, char separator) where T : new()
         {
             string[] lineSplit = line.Split(separator);
             Dictionary<string, string> columns = new Dictionary<string, string>();

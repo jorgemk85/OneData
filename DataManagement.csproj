@@ -39,12 +39,16 @@
     <AssemblyOriginatorKeyFile>firma.pfx</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="EPPlus, Version=4.5.2.1, Culture=neutral, PublicKeyToken=ea159fdaa78159a1, processorArchitecture=MSIL">
+      <HintPath>..\..\source\repos\Development\packages\EPPlus.4.5.2.1\lib\net40\EPPlus.dll</HintPath>
+    </Reference>
     <Reference Include="MySql.Data, Version=6.10.5.0, Culture=neutral, PublicKeyToken=c5687fc88969c44d, processorArchitecture=MSIL">
       <HintPath>..\RMS\packages\MySql.Data.6.10.5\lib\net452\MySql.Data.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=11.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\MancaChan\MancaChan\packages\Newtonsoft.Json.11.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
+    <Reference Include="PresentationCore" />
     <Reference Include="System" />
     <Reference Include="System.ComponentModel" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
@@ -58,6 +62,7 @@
     </Reference>
     <Reference Include="System.Management" />
     <Reference Include="System.Runtime" />
+    <Reference Include="System.Security" />
     <Reference Include="System.Transactions" />
     <Reference Include="System.Web" />
     <Reference Include="System.Windows.Forms" />
@@ -83,6 +88,7 @@
     <Compile Include="Exceptions\InvalidNumberOfParametersException.cs" />
     <Compile Include="Exceptions\ConfigurationNotFoundException.cs" />
     <Compile Include="Tools\DataSerializer.cs" />
+    <Compile Include="Tools\ExcelSerializer.cs" />
     <Compile Include="Tools\FileSerializer.cs" />
     <Compile Include="Tools\SimpleConverter.cs" />
     <Compile Include="Examples\EjemploConnector.cs" />
