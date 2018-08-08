@@ -87,21 +87,6 @@ namespace DataManagement.Tools
         }
 
         /// <summary>
-        /// Convierte un objeto de tipo string a un objeto de tipo int.
-        /// </summary>
-        /// <param name="value">Valor a convertir.</param>
-        /// <returns>Regresa un nuevo objeto de tipo int ya con el valor incorporado.</returns>
-        public static int StringToInteger(string value)
-        {
-            if (!int.TryParse(value, out int newValue))
-            {
-                newValue = 0;
-            }
-
-            return newValue;
-        }
-
-        /// <summary>
         /// Convierte un objeto de tipo string en un objeto de tipo Nullable<Int64>.
         /// </summary>
         /// <param name="value">Valor a convertir.</param>
@@ -125,21 +110,6 @@ namespace DataManagement.Tools
         }
 
         /// <summary>
-        /// Convierte un objeto de tipo string a un objeto de tipo Int64.
-        /// </summary>
-        /// <param name="value">Valor a convertir.</param>
-        /// <returns>Regresa un nuevo objeto de tipo Int64 ya con el valor incorporado.</returns>
-        public static Int64 StringToInt64(string value)
-        {
-            if (!Int64.TryParse(value, out long newValue))
-            {
-                newValue = 0;
-            }
-
-            return newValue;
-        }
-
-        /// <summary>
         /// Convierte un objeto de tipo string en un objeto de tipo Nullable<decimal>.
         /// </summary>
         /// <param name="value">Valor a convertir.</param>
@@ -157,21 +127,6 @@ namespace DataManagement.Tools
                 {
                     return null;
                 }
-            }
-
-            return newValue;
-        }
-
-        /// <summary>
-        /// Convierte un objeto de tipo string a un objeto de tipo decimal.
-        /// </summary>
-        /// <param name="value">Valor a convertir.</param>
-        /// <returns>Regresa un nuevo objeto de tipo decimal ya con el valor incorporado.</returns>
-        public static decimal StringToDecimal(string value)
-        {
-            if (!Decimal.TryParse(value, out decimal newValue))
-            {
-                newValue = 0;
             }
 
             return newValue;
