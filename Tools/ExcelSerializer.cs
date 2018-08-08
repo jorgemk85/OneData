@@ -42,45 +42,56 @@ namespace DataManagement.Tools
         {
             PropertyInfo[] properties = typeof(T).GetProperties();
 
-            using (ExcelPackage excelPackage = new ExcelPackage(new FileInfo(fullyQualifiedFileName)))
+            try
             {
-                ExcelWorksheet excelWorksheet = excelPackage.Workbook.Worksheets[worksheetName];
+                if (!File.Exists(fullyQualifiedFileName))
+                {
+                    throw new FileNotFoundException();
+                }
+                using (ExcelPackage excelPackage = new ExcelPackage(new FileInfo(fullyQualifiedFileName)))
+                {
+                    ExcelWorksheet excelWorksheet = excelPackage.Workbook.Worksheets[worksheetName];
 
-                try
-                {
-                    return GetExcelContent<T>(excelWorksheet, GetHeadersFromString(excelWorksheet), ref properties);
+                    return GetExcelContent<T>(excelWorksheet, GetHeadersFromFirstRow(excelWorksheet), ref properties);
                 }
-                catch (Exception e)
-                {
-                    throw e;
-                }
+            }
+            catch (Exception e)
+            {
+                throw e;
             }
         }
 
         private static List<T> GetExcelContent<T>(ExcelWorksheet excelWorksheet, List<string> headers, ref PropertyInfo[] properties) where T : new()
         {
-            string propertyName = string.Empty;
-            HeaderName headerName;
             ExcelAddressBase dimension = excelWorksheet.Dimension;
             List<T> newList = new List<T>();
+            Dictionary<string, string> columnsNames = new Dictionary<string, string>();
 
             for (int y = 0; y < dimension.End.Row - 1; y++)
             {
                 T newObj = new T();
+                columnsNames.Clear();
+                for (int i = 0; i < dimension.End.Column; i++)
+                {
+                    columnsNames.Add(headers[i], excelWorksheet.Cells[y + 2, i + 1].Value.ToString());
+                }
                 foreach (string header in headers)
                 {
                     for (int x = 0; x < properties.Length; x++)
                     {
+                        HeaderName headerNameAttribute;
+                        string propertyName = string.Empty;
+
                         propertyName = properties[x].Name;
-                        headerName = properties[x].GetCustomAttribute<HeaderName>();
-                        if (headerName != null)
+                        headerNameAttribute = properties[x].GetCustomAttribute<HeaderName>();
+                        if (headerNameAttribute != null)
                         {
-                            propertyName = headerName.Name;
+                            propertyName = headerNameAttribute.Name;
                         }
 
-                        if (header.Equals(propertyName))
+                        if (propertyName.Equals(header))
                         {
-                            properties[x].SetValue(newObj, SimpleConverter.ConvertStringToType(excelWorksheet.Cells[y + 2, x + 1].Value.ToString(), properties[x].PropertyType));
+                            SetValueInProperty(columnsNames, excelWorksheet.Cells[y + 2, x + 1].Value.ToString(), properties[x], headerNameAttribute, header, newObj);
                             break;
                         }
                     }
@@ -91,7 +102,7 @@ namespace DataManagement.Tools
             return newList;
         }
 
-        private static List<string> GetHeadersFromString(ExcelWorksheet excelWorksheet)
+        private static List<string> GetHeadersFromFirstRow(ExcelWorksheet excelWorksheet)
         {
             List<string> headers = new List<string>();
 
@@ -154,6 +165,28 @@ namespace DataManagement.Tools
                     return "#";
                 default:
                     return "General";
+            }
+        }
+
+        private static void SetValueInProperty<T>(Dictionary<string, string> columns, string cellValue, PropertyInfo property, HeaderName headerNameAttribute, string header, T newObj)
+        {
+            if (columns.ContainsKey(header))
+            {
+                property.SetValue(newObj, SimpleConverter.ConvertStringToType(cellValue, property.PropertyType));
+            }
+            else
+            {
+                if (headerNameAttribute == null)
+                {
+                    throw new Exception(string.Format("No se encontro algun dato para el encabezado {0} en el archivo proporcionado.", header));
+                }
+                else
+                {
+                    if (headerNameAttribute.Important)
+                    {
+                        throw new Exception(string.Format("No se encontro algun dato para el encabezado {0} en el archivo proporcionado.", header));
+                    }
+                }
             }
         }
     }

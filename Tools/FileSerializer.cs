@@ -93,13 +93,13 @@ namespace DataManagement.Tools
                 using (StreamReader sr = new StreamReader(fullyQualifiedFileName, fileEncoding))
                 {
                     // Primero leemos la primer linea y la guardamos como los headers.
-                    List<string> headers = GetHeadersFromString(sr.ReadLine(), separator);
+                    List<string> headers = GetHeadersFromLine(sr.ReadLine(), separator);
 
                     String line;
                     T newObj;
                     while ((line = sr.ReadLine()) != null)
                     {
-                        newObj = SerializeLineToObjectOfType<T>(headers, line, separator);
+                        newObj = DeserializeLineToObjectOfType<T>(headers, line, separator);
                         if (newObj != null)
                         {
                             newList.Add(newObj);
@@ -114,7 +114,7 @@ namespace DataManagement.Tools
             }
         }
 
-        private static List<string> GetHeadersFromString(string line, char separator)
+        private static List<string> GetHeadersFromLine(string line, char separator)
         {
             List<string> headers = new List<string>();
             string[] lineSplit = line.Split(separator);
@@ -127,15 +127,15 @@ namespace DataManagement.Tools
             return headers;
         }
 
-        private static T SerializeLineToObjectOfType<T>(List<string> headers, string line, char separator) where T : new()
+        private static T DeserializeLineToObjectOfType<T>(List<string> headers, string line, char separator) where T : new()
         {
             string[] lineSplit = line.Split(separator);
-            Dictionary<string, string> columns = new Dictionary<string, string>();
+            Dictionary<string, string> columnsNames = new Dictionary<string, string>();
             T newObj;
 
             for (int i = 0; i < lineSplit.Length; i++)
             {
-                columns.Add(headers[i], lineSplit[i]);
+                columnsNames.Add(headers[i], lineSplit[i]);
             }
 
             try
@@ -150,15 +150,15 @@ namespace DataManagement.Tools
                         HeaderName headerNameAttribute = null;
                         string propertyName = properties[i].Name;
 
-                        if (properties[i].GetCustomAttribute<HeaderName>() != null)
+                        headerNameAttribute = properties[i].GetCustomAttribute<HeaderName>();
+                        if (headerNameAttribute != null)
                         {
-                            headerNameAttribute = properties[i].GetCustomAttribute<HeaderName>();
                             propertyName = headerNameAttribute.Name;
                         }
 
                         if (propertyName.Equals(header))
                         {
-                            SetValueInProperty(columns, properties[i], headerNameAttribute, header, newObj);
+                            SetValueInProperty(columnsNames, properties[i], headerNameAttribute, header, newObj);
                             break;
                         }
                     }
@@ -176,7 +176,7 @@ namespace DataManagement.Tools
         {
             if (columns.ContainsKey(header))
             {
-                property.SetValue(newObj, Convert.ChangeType(columns[header].Replace("$", string.Empty), property.PropertyType));
+                property.SetValue(newObj, SimpleConverter.ConvertStringToType(columns[header], property.PropertyType));
             }
             else
             {

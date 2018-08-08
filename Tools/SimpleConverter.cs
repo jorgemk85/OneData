@@ -1,4 +1,5 @@
-﻿using MySql.Data.MySqlClient;
+﻿using DataManagement.Exceptions;
+using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
@@ -28,23 +29,37 @@ namespace DataManagement.Tools
             {
                 underlyingType = targetType;
             }
-            switch (underlyingType.Name)
+
+            try
             {
-                case "Guid":
-                    return Guid.Parse(value);
-                case "String":
-                    return value;
-                case "DateTime":
-                    try
-                    {
-                        return DateTime.Parse(value);
-                    }
-                    catch (Exception)
-                    {
-                        return DateTime.FromOADate(long.Parse(value));
-                    }
-                default:
-                    return Convert.ChangeType(value, underlyingType);
+                switch (underlyingType.Name)
+                {
+                    case "Guid":
+                        return Guid.Parse(value);
+                    case "String":
+                        return value;
+                    case "Decimal":
+                        return Convert.ChangeType(value.Replace("$", string.Empty), underlyingType);
+                    case "Float":
+                        return Convert.ChangeType(value.Replace("$", string.Empty), underlyingType);
+                    case "Double":
+                        return Convert.ChangeType(value.Replace("$", string.Empty), underlyingType);
+                    case "DateTime":
+                        try
+                        {
+                            return DateTime.Parse(value);
+                        }
+                        catch (Exception)
+                        {
+                            return DateTime.FromOADate(long.Parse(value));
+                        }
+                    default:
+                        return Convert.ChangeType(value, underlyingType);
+                }
+            }
+            catch (FormatException e)
+            {
+                throw new ConvertionFailedException(value, targetType, e);
             }
         }
 
