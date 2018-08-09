@@ -1,7 +1,4 @@
 ﻿using DataManagement.Exceptions;
-using System;
-using System.Collections.Generic;
-using System.Linq.Expressions;
 using System.Reflection;
 
 namespace DataManagement.Tools
@@ -17,18 +14,12 @@ namespace DataManagement.Tools
         {
             PropertyInfo[] typeProperties = obj.GetType().GetProperties();
 
-            string nullProperties = string.Empty;
-            for (int i = 0; i < typeProperties.Length; i++)
+            foreach (PropertyInfo property in typeProperties)
             {
-                if (typeProperties[i].GetValue(obj) == null)
+                if (property.GetValue(obj) == null)
                 {
-                    nullProperties += string.Format("{0},", typeProperties[i].Name);
+                    return false;
                 }
-            }
-
-            if (!string.IsNullOrWhiteSpace(nullProperties))
-            {
-                throw new FoundNullsException(nullProperties.Substring(0, nullProperties.Length - 1));
             }
 
             return true;

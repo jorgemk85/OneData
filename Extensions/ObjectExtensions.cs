@@ -24,31 +24,16 @@ namespace DataManagement.Extensions
         /// <returns>Regresa el objeto ya alimentado de los valores.</returns>
         public static bool FillAndValidate<T>(this T obj, dynamic values)
         {
-            return Validate(ConsolidationTools.SetValuesIntoObjectOfType(obj, values), false);
+            return Validate(ConsolidationTools.SetValuesIntoObjectOfType(obj, values));
         }
 
         /// <summary>
         /// Valida que no exista una sola propiedad con valor nulo.
         /// </summary>
-        /// <param name="alwaysReturn">Indica si se debe de regresar siempre un booleano aunque marque error la validacion.</param>
-        /// <returns>Regresa True cuando el objeto tiene todas las propiedades asignadas, o error, cuando es lo contrario.</returns>
-        public static bool Validate(this object obj, bool alwaysReturn)
+        /// <returns>Regresa True cuando el objeto tiene todas las propiedades asignadas.</returns>
+        public static bool Validate(this object obj)
         {
-            try
-            {
-                return ConsolidationTools.PerformNullValidation(obj);
-            }
-            catch (Exception e)
-            {
-                if (alwaysReturn)
-                {
-                    return false;
-                }
-                else
-                {
-                    throw e;
-                }
-            }
+            return ConsolidationTools.PerformNullValidation(obj);
         }
     }
 }
