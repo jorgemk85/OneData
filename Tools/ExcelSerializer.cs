@@ -5,18 +5,35 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Reflection;
+using System.Threading.Tasks;
 
 namespace DataManagement.Tools
 {
     public class ExcelSerializer
     {
         /// <summary>
-        /// Serializa un objeto de tipo List<typeparamref name="T"/> y lo guarda en u archivo Excel.
+        /// Serializa un objeto de tipo List<typeparamref name="T"/> y lo guarda en un archivo Excel.
         /// </summary>
         /// <typeparam name="T">Tipo de objeto.</typeparam>
         /// <param name="list">Lista de objetos de tipo <typeparamref name="T"/> que se convertira.</param>
         /// <param name="fullyQualifiedFileName">Directorio completo, incluyendo nombre de archivo y extension. Se utiliza para guardar el producto final.</param>
         public static void SerializeListOfTypeToExcel<T>(List<T> list, string fullyQualifiedFileName)
+        {
+            SerializeList(list, fullyQualifiedFileName);
+        }
+
+        /// <summary>
+        /// Serializa un objeto de tipo List<typeparamref name="T"/> y lo guarda en un archivo Excel utilizando Async.
+        /// </summary>
+        /// <typeparam name="T">Tipo de objeto.</typeparam>
+        /// <param name="list">Lista de objetos de tipo <typeparamref name="T"/> que se convertira.</param>
+        /// <param name="fullyQualifiedFileName">Directorio completo, incluyendo nombre de archivo y extension. Se utiliza para guardar el producto final.</param>
+        public static async void SerializeListOfTypeToExcelAsync<T>(List<T> list, string fullyQualifiedFileName)
+        {
+            await Task.Run(() => SerializeList(list, fullyQualifiedFileName));
+        }
+
+        private static void SerializeList<T>(List<T> list, string fullyQualifiedFileName)
         {
             PropertyInfo[] properties = typeof(T).GetProperties();
 
@@ -39,6 +56,23 @@ namespace DataManagement.Tools
         /// <param name="fullyQualifiedFileName">Direccion completa del archivo de Excel. Incluir directorio, nombre y extension.</param>
         /// <returns></returns>
         public static List<T> DeserializeExcelToListOfType<T>(string worksheetName, string fullyQualifiedFileName) where T : new()
+        {
+            return DeserializeExcel<T>(worksheetName, fullyQualifiedFileName);
+        }
+
+        /// <summary>
+        /// Deserializa un archivo de Excel y lo convierte en un objeto List de tipo <typeparamref name="T"/> utilizando Async.
+        /// </summary>
+        /// <typeparam name="T">Tipo de objeto.</typeparam>
+        /// <param name="worksheetName">Nombre de la pagina donde se encuentra la informacion a deserializar.</param>
+        /// <param name="fullyQualifiedFileName">Direccion completa del archivo de Excel. Incluir directorio, nombre y extension.</param>
+        /// <returns></returns>
+        public static async Task<List<T>> DeserializeExcelToListOfTypeAsync<T>(string worksheetName, string fullyQualifiedFileName) where T : new()
+        {
+            return await Task.Run(() => DeserializeExcel<T>(worksheetName, fullyQualifiedFileName));
+        }
+
+        private static List<T> DeserializeExcel<T>(string worksheetName, string fullyQualifiedFileName) where T : new()
         {
             PropertyInfo[] properties = typeof(T).GetProperties();
 

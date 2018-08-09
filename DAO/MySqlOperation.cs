@@ -1,11 +1,9 @@
-﻿using DataManagement.Models;
-using DataManagement.Enums;
+﻿using DataManagement.Enums;
 using DataManagement.Exceptions;
-using DataManagement.Tools;
+using DataManagement.Models;
 using MySql.Data.MySqlClient;
 using System;
 using System.Data;
-using System.Diagnostics;
 
 namespace DataManagement.DAO
 {
@@ -105,7 +103,6 @@ namespace DataManagement.DAO
                 TablaAfectada = dataBaseTableName,
                 Parametros = GetStringParameters(command, null)
             };
-
             ExecuteProcedure(newLog, newLog.DataBaseTableName, TransactionTypes.Insert, useAppConfig, false);
         }
     }

@@ -38,7 +38,7 @@ namespace DataManagement.DAO
         /// Inserta un objeto de tipo <typeparamref name="T"/> en la base de datos.
         /// </summary>
         /// <param name="obj">Objeto que contiene la informacion a insertar.</param>
-        /// <param name="useAppConfig">Señala si se debe de usar el archivo de configuracion para conectarse a la base de datos.</param>
+        /// <param name="useAppConfig">Señala si se debe de usar el archivo de configuracion para obtener el conection string y conectarse a la base de datos.</param>
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la insercion.</returns>
         public static Result Insert(T obj, bool useAppConfig)
         {
