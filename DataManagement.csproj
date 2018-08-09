@@ -96,6 +96,7 @@
     <Compile Include="Tools\DataSerializer.cs" />
     <Compile Include="Tools\ExcelSerializer.cs" />
     <Compile Include="Tools\FileSerializer.cs" />
+    <Compile Include="Tools\ConsolidationTools.cs" />
     <Compile Include="Tools\SimpleConverter.cs" />
     <Compile Include="Examples\EjemploConnector.cs" />
     <Compile Include="DAO\DbOperation.cs" />

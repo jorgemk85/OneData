@@ -1,70 +1,54 @@
-﻿using DataManagement.Exceptions;
-using DataManagement.Tools;
-using System.Reflection;
+﻿using DataManagement.Tools;
+using System;
 
 namespace DataManagement.Extensions
 {
     public static class ObjectExtensions
     {
         /// <summary>
-        /// Asigna los valores proporcionados en las propiedades correspondientes a la instancia del objeto de tipo <typeparamref name="T"/>.
+        /// Asigna los valores proporcionados en las propiedades correspondientes a la instancia del objeto de tipo <typeparamref name="T"/>. Solo se aceptan valores originados desde un objeto anonimo o predefinidos del mismo tipo enviado.
         /// </summary>
         /// <typeparam name="T">El tipo del objeto a asignar.</typeparam>
-        /// <param name="parameters">Los valores usados en la asignacion de las propiedades. Se admiten objetos anonimos o predefinidos.</param>
-        public static void New<T>(this T obj, dynamic parameters) where T : new()
+        /// <param name="values">Los valores usados en la asignacion de las propiedades. Se admiten objetos anonimos o predefinidos del mismo tipo enviado.</param>
+        /// <returns>Regresa el objeto ya alimentado de los valores.</returns>
+        public static T Fill<T>(this T obj, dynamic values)
         {
-            PropertyInfo[] typeProperties = typeof(T).GetProperties();
-            PropertyInfo[] anonymousProperties = parameters.GetType().GetProperties();
+            return ConsolidationTools.SetValuesIntoObjectOfType(obj, values);
+        }
 
-            foreach (PropertyInfo typeProperty in typeProperties)
-            {
-                foreach (PropertyInfo anonymousProperty in anonymousProperties)
-                {
-                    if (typeProperty.Name.Equals(anonymousProperty.Name))
-                    {
-                        if (typeProperty.CanWrite)
-                        {
-                            typeProperty.SetValue(obj, SimpleConverter.ConvertStringToType(anonymousProperty.GetValue(parameters).ToString(), typeProperty.PropertyType));
-                        }
-                        else
-                        {
-                            throw new SetAccessorNotFoundException(typeProperty.Name);
-                        }
-
-                        break;
-                    }
-                }
-            }
+        /// <summary>
+        /// Asigna los valores proporcionados en las propiedades correspondientes a la instancia del objeto de tipo <typeparamref name="T"/>. Solo se aceptan valores originados desde un objeto anonimo o predefinidos del mismo tipo enviado.
+        /// </summary>
+        /// <typeparam name="T">El tipo del objeto a asignar.</typeparam>
+        /// <param name="values">Los valores usados en la asignacion de las propiedades. Se admiten objetos anonimos o predefinidos del mismo tipo enviado.</param>
+        /// <returns>Regresa el objeto ya alimentado de los valores.</returns>
+        public static bool FillAndValidate<T>(this T obj, dynamic values)
+        {
+            return Validate(ConsolidationTools.SetValuesIntoObjectOfType(obj, values), false);
         }
 
         /// <summary>
         /// Valida que no exista una sola propiedad con valor nulo.
         /// </summary>
+        /// <param name="alwaysReturn">Indica si se debe de regresar siempre un booleano aunque marque error la validacion.</param>
         /// <returns>Regresa True cuando el objeto tiene todas las propiedades asignadas, o error, cuando es lo contrario.</returns>
-        public static bool Validate(this object obj)
+        public static bool Validate(this object obj, bool alwaysReturn)
         {
-            return PerformNullValidation(obj);
-        }
-
-        private static bool PerformNullValidation(object obj)
-        {
-            PropertyInfo[] typeProperties = obj.GetType().GetProperties();
-
-            string nullProperties = string.Empty;
-            for (int i = 0; i < typeProperties.Length; i++)
+            try
             {
-                if (typeProperties[i].GetValue(obj) == null)
+                return ConsolidationTools.PerformNullValidation(obj);
+            }
+            catch (Exception e)
+            {
+                if (alwaysReturn)
                 {
-                    nullProperties += string.Format("{0},", typeProperties[i].Name);
+                    return false;
+                }
+                else
+                {
+                    throw e;
                 }
             }
-
-            if (!string.IsNullOrWhiteSpace(nullProperties))
-            {
-                throw new FoundNullsException(nullProperties.Substring(0, nullProperties.Length - 1));
-            }
-
-            return true;
         }
     }
 }
