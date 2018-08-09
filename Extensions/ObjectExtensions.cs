@@ -18,8 +18,6 @@ namespace DataManagement.Extensions
 
             foreach (PropertyInfo typeProperty in typeProperties)
             {
-                object value = typeProperty.GetValue(obj);
-
                 foreach (PropertyInfo anonymousProperty in anonymousProperties)
                 {
                     if (typeProperty.Name.Equals(anonymousProperty.Name))
@@ -27,6 +25,10 @@ namespace DataManagement.Extensions
                         if (typeProperty.CanWrite)
                         {
                             typeProperty.SetValue(obj, SimpleConverter.ConvertStringToType(anonymousProperty.GetValue(parameters).ToString(), typeProperty.PropertyType));
+                        }
+                        else
+                        {
+                            throw new SetAccessorNotFoundException(typeProperty.Name);
                         }
 
                         break;
