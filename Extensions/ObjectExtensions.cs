@@ -6,7 +6,12 @@ namespace DataManagement.Extensions
 {
     public static class ObjectExtensions
     {
-        public static T New<T>(this T obj, dynamic parameters) where T : new()
+        /// <summary>
+        /// Asigna los valores proporcionados en las propiedades correspondientes a la instancia del objeto de tipo <typeparamref name="T"/>.
+        /// </summary>
+        /// <typeparam name="T">El tipo del objeto a asignar.</typeparam>
+        /// <param name="parameters">Los valores usados en la asignacion de las propiedades. Se admiten objetos anonimos o predefinidos.</param>
+        public static void New<T>(this T obj, dynamic parameters) where T : new()
         {
             PropertyInfo[] typeProperties = typeof(T).GetProperties();
             PropertyInfo[] anonymousProperties = parameters.GetType().GetProperties();
@@ -28,10 +33,12 @@ namespace DataManagement.Extensions
                     }
                 }
             }
-
-            return obj;
         }
 
+        /// <summary>
+        /// Valida que no exista una sola propiedad con valor nulo.
+        /// </summary>
+        /// <returns>Regresa True cuando el objeto tiene todas las propiedades asignadas, o error, cuando es lo contrario.</returns>
         public static bool Validate(this object obj)
         {
             return PerformNullValidation(obj);
