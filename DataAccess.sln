@@ -1,11 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25123.0
+# Visual Studio 15
+VisualStudioVersion = 15.0.27703.2047
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataAccess", "DataAccess.csproj", "{F3130B03-D383-4110-ACA2-1BDF2E7578F2}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TDA", "TestDataAccess\TDA\TDA.csproj", "{ECF72025-C933-4564-A6EF-F3B2AE1503E5}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataManagement", "DataManagement.csproj", "{F3130B03-D383-4110-ACA2-1BDF2E7578F2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -17,12 +15,11 @@ Global
 		{F3130B03-D383-4110-ACA2-1BDF2E7578F2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F3130B03-D383-4110-ACA2-1BDF2E7578F2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F3130B03-D383-4110-ACA2-1BDF2E7578F2}.Release|Any CPU.Build.0 = Release|Any CPU
-		{ECF72025-C933-4564-A6EF-F3B2AE1503E5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{ECF72025-C933-4564-A6EF-F3B2AE1503E5}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{ECF72025-C933-4564-A6EF-F3B2AE1503E5}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{ECF72025-C933-4564-A6EF-F3B2AE1503E5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {23AE876C-283F-4301-A97D-170A57A2A3B9}
 	EndGlobalSection
 EndGlobal
