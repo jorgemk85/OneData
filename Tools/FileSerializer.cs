@@ -50,11 +50,11 @@ namespace DataManagement.Tools
         {
             try
             {
-                using (StreamWriter sw = new StreamWriter(fullyQualifiedFileName))
+                using (StreamWriter streamWriter = new StreamWriter(fullyQualifiedFileName))
                 {
                     // Primero escribimos los headers.
-                    string headers = string.Empty;
                     string headerName = string.Empty;
+                    StringBuilder headerBuilder = new StringBuilder();
                     foreach (PropertyInfo property in typeof(T).GetProperties())
                     {
                         headerName = property.Name;
@@ -62,20 +62,20 @@ namespace DataManagement.Tools
                         {
                             headerName = property.GetCustomAttribute<HeaderName>().Name;
                         }
-                        headers += string.Format("{0}{1}", headerName, separator);
+                        headerBuilder.AppendFormat("{0}{1}", headerName, separator);
                     }
-                    sw.WriteLine(headers.Remove(headers.Length - 1));
+                    streamWriter.WriteLine(headerBuilder.ToString().Remove(headerBuilder.ToString().Length - 1));
 
                     // Ahora escribimos la lista en el archivo, linea por linea.
-                    string line;
+                    StringBuilder lineBuilder = new StringBuilder();
                     foreach (T item in list)
                     {
-                        line = string.Empty;
+                        lineBuilder.Clear();
                         foreach (PropertyInfo property in typeof(T).GetProperties())
                         {
-                            line += string.Format("{0}{1}", property.GetValue(item), separator);
+                            lineBuilder.AppendFormat("{0}{1}", property.GetValue(item), separator);
                         }
-                        sw.WriteLine(line.Remove(line.Length - 1));
+                        streamWriter.WriteLine(lineBuilder.ToString().Remove(lineBuilder.ToString().Length - 1));
                     }
                 }
             }

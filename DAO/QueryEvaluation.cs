@@ -10,6 +10,7 @@ using System.Data;
 using System.Linq;
 using System.Linq.Dynamic;
 using System.Reflection;
+using System.Text;
 
 namespace DataManagement.DAO
 {
@@ -103,6 +104,7 @@ namespace DataManagement.DAO
             int valueIndex = 0;
             List<object> values = new List<object>();
             string predicate = string.Empty;
+            StringBuilder builder = new StringBuilder();
 
             foreach (PropertyInfo prop in typeof(T).GetProperties())
             {
@@ -110,13 +112,14 @@ namespace DataManagement.DAO
                 {
                     if (prop.GetValue(obj) != null)
                     {
-                        predicate += string.Format("{0}== @{1} and ", prop.Name, valueIndex);
+                        builder.AppendFormat("{0}== @{1} and ", prop.Name, valueIndex);
                         values.Add(prop.GetValue(obj));
                         valueIndex++;
                     }
                 }
             }
 
+            predicate = builder.ToString();
             if (string.IsNullOrEmpty(predicate))
             {
                 throw new InvalidNumberOfParametersException();

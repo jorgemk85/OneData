@@ -8,6 +8,7 @@ using System;
 using System.Configuration;
 using System.Data.SqlClient;
 using System.Reflection;
+using System.Text;
 
 namespace DataManagement.DAO
 {
@@ -140,8 +141,7 @@ namespace DataManagement.DAO
             {
                 throw new Exception("Se necesita por lo menos un objeto Comando.");
             }
-
-            string parametros = String.Empty;
+            StringBuilder builder = new StringBuilder();
 
             if (msSqlCommand != null)
             {
@@ -149,7 +149,7 @@ namespace DataManagement.DAO
                 {
                     if (parametro.Value != null)
                     {
-                        parametros += parametro.ParameterName + ": " + parametro.Value + "|";
+                        builder.AppendFormat("{0}: {1}|", parametro.ParameterName, parametro.Value);
                     }
                 }
             }
@@ -159,12 +159,12 @@ namespace DataManagement.DAO
                 {
                     if (parametro.Value != null)
                     {
-                        parametros += parametro.ParameterName + ": " + parametro.Value + "|";
+                        builder.AppendFormat("{0}: {1}|", parametro.ParameterName, parametro.Value);
                     }
                 }
             }
 
-            return parametros;
+            return builder.ToString();
         }
 
         public virtual Result EjecutarProcedimiento(string tableName, string storedProcedure, Parameter[] parameters, bool useAppConfig, bool logTransaction = true)
