@@ -12,9 +12,9 @@ namespace DataManagement.Extensions
             ExcelSerializer.SerializeListOfTypeToExcel(list, fullyQualifiedFileName);
         }
 
-        public static List<T> FromExcel<T>(this List<T> list, string worksheetName, string fullyQualifiedFileName) where T : new()
+        public static void FromExcel<T>(this List<T> list, ref List<T> myList, string worksheetName, string fullyQualifiedFileName) where T : new()
         {
-            return ExcelSerializer.DeserializeExcelToListOfType<T>(worksheetName, fullyQualifiedFileName);
+            myList = ExcelSerializer.DeserializeExcelToListOfType<T>(worksheetName, fullyQualifiedFileName);
         }
 
         public static void ToFile<T>(this List<T> list, string fullyQualifiedFileName, char separator)
@@ -22,9 +22,9 @@ namespace DataManagement.Extensions
             FileSerializer.SerializeListOfTypeToFile(list, fullyQualifiedFileName, separator);
         }
 
-        public static List<T> FromFile<T>(this List<T> list, string fullyQualifiedFileName, char separator, Encoding encoding) where T : new()
+        public static void FromFile<T>(this List<T> list, ref List<T> myList, string fullyQualifiedFileName, char separator, Encoding encoding) where T : new()
         {
-            return FileSerializer.DeserializeFileToListOfType<T>(fullyQualifiedFileName, separator, encoding);
+            myList = FileSerializer.DeserializeFileToListOfType<T>(fullyQualifiedFileName, separator, encoding);
         }
 
         public static DataTable ToDataTable<T>(this List<T> list) where T : new()
