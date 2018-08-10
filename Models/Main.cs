@@ -10,11 +10,13 @@ namespace DataManagement.Models
     {
         #region Properties
         public Guid? Id { get; set; }
-        public DateTime? FechaCreacion { get; set; } = DateTime.Now;
-        public DateTime? FechaModificacion { get; set; } = DateTime.Now;
         #endregion
 
         #region Unlinked Properties
+        [UnlinkedProperty]
+        public DateTime? FechaCreacion { get; set; } = DateTime.Now;
+        [UnlinkedProperty]
+        public DateTime? FechaModificacion { get; set; } = DateTime.Now;
         /// <summary>
         /// Almacena el nombre de la tabla en la base de datos.
         /// </summary>

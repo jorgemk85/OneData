@@ -51,7 +51,7 @@ namespace DataManagement.Tools
                         }
                         catch (Exception)
                         {
-                            return DateTime.FromOADate(long.Parse(value));
+                            return DateTime.FromOADate(double.Parse(value));
                         }
                     default:
                         return Convert.ChangeType(value, underlyingType);

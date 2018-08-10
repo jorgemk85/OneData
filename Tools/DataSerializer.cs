@@ -93,11 +93,11 @@ namespace DataManagement.Tools
             T newObject = new T();
             if (dataTable.Rows.Count > 0)
             {
-                foreach (PropertyInfo propertyInfo in typeof(T).GetProperties())
+                foreach (PropertyInfo property in typeof(T).GetProperties())
                 {
-                    if (dataTable.Columns.Contains(propertyInfo.Name))
+                    if (dataTable.Columns.Contains(property.Name) && property.CanWrite)
                     {
-                        propertyInfo.SetValue(newObject, SimpleConverter.ConvertStringToType(dataTable.Rows[0][propertyInfo.Name].ToString(), propertyInfo.PropertyType));
+                        property.SetValue(newObject, SimpleConverter.ConvertStringToType(dataTable.Rows[0][property.Name].ToString(), property.PropertyType));
                     }
                 }
             }
@@ -157,11 +157,11 @@ namespace DataManagement.Tools
             {
                 PropertyInfo[] properties = typeof(T).GetProperties();
                 T newObject = new T();
-                foreach (PropertyInfo propertyInfo in properties)
+                foreach (PropertyInfo property in properties)
                 {
-                    if (dataTable.Columns.Contains(propertyInfo.Name))
+                    if (dataTable.Columns.Contains(property.Name) && property.CanWrite)
                     {
-                        propertyInfo.SetValue(newObject, SimpleConverter.ConvertStringToType(row[propertyInfo.Name].ToString(), propertyInfo.PropertyType));
+                        property.SetValue(newObject, SimpleConverter.ConvertStringToType(row[property.Name].ToString(), property.PropertyType));
                     }
                 }
                 newList.Add(newObject);
@@ -183,11 +183,11 @@ namespace DataManagement.Tools
             {
                 PropertyInfo[] properties = typeof(T).GetProperties();
                 T newObject = new T();
-                foreach (PropertyInfo propertyInfo in properties)
+                foreach (PropertyInfo property in properties)
                 {
-                    if (dataTable.Columns.Contains(propertyInfo.Name))
+                    if (dataTable.Columns.Contains(property.Name) && property.CanWrite)
                     {
-                        propertyInfo.SetValue(newObject, SimpleConverter.ConvertStringToType(row[propertyInfo.Name].ToString(), propertyInfo.PropertyType));
+                        property.SetValue(newObject, SimpleConverter.ConvertStringToType(row[property.Name].ToString(), property.PropertyType));
                     }
                 }
                 newDictionary.Add((newObject as Main).Id.GetValueOrDefault(), newObject);
@@ -238,10 +238,13 @@ namespace DataManagement.Tools
 
             foreach (Parameter data in parameters)
             {
-                PropertyInfo propertyInfo = typeof(T).GetProperty(data.Name);
-                if (propertyInfo != null)
+                PropertyInfo property = typeof(T).GetProperty(data.Name);
+                if (property != null)
                 {
-                    propertyInfo.SetValue(newObj, data.Value);
+                    if (property.CanWrite)
+                    {
+                        property.SetValue(newObj, data.Value);
+                    }
                 }
             }
 

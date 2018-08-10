@@ -61,7 +61,7 @@ namespace DataManagement.DAO
                 resultado = dbOperation.ExecuteProcedure(obj, tableName, transactionType, useAppConfig);
                 if (transactionType != TransactionTypes.StoredProcedure)
                 {
-                    if (isCached) DeleteInCache(obj, cache);
+                    if (isCached && resultado.Data.Rows.Count > 0) DeleteInCache(obj, cache);
                 }
             }
 

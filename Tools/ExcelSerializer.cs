@@ -42,7 +42,7 @@ namespace DataManagement.Tools
                 ExcelWorksheet excelWorksheet = excelPackage.Workbook.Worksheets.Add("Pagina 1");
 
                 SetExcelHeadersAndTypes(excelWorksheet, ref properties);
-                SetExcelContent<T>(excelWorksheet, list, ref properties);
+                SetExcelContent(excelWorksheet, list, ref properties);
                 excelWorksheet.Cells[excelWorksheet.Dimension.Address].AutoFitColumns();
                 excelPackage.SaveAs(new FileInfo(fullyQualifiedFileName));
             }
@@ -182,7 +182,14 @@ namespace DataManagement.Tools
 
         private static string GetExcelFormatBasedOnType(Type type)
         {
-            string typeClass = type.Name.ToLower();
+            Type underlyingType = Nullable.GetUnderlyingType(type);
+
+            if (underlyingType == null)
+            {
+                underlyingType = type;
+            }
+
+            string typeClass = underlyingType.Name.ToLower();
             switch (typeClass)
             {
                 case "datetime":
@@ -204,6 +211,11 @@ namespace DataManagement.Tools
 
         private static void SetValueInProperty<T>(Dictionary<string, string> columns, string cellValue, PropertyInfo property, HeaderName headerNameAttribute, string header, T newObj)
         {
+            if (!property.CanWrite)
+            {
+                return;
+            }
+
             if (columns.ContainsKey(header))
             {
                 property.SetValue(newObj, SimpleConverter.ConvertStringToType(cellValue, property.PropertyType));

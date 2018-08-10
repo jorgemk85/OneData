@@ -174,6 +174,11 @@ namespace DataManagement.Tools
 
         private static void SetValueInProperty<T>(Dictionary<string, string> columns, PropertyInfo property, HeaderName headerNameAttribute, string header, T newObj)
         {
+            if (!property.CanWrite)
+            {
+                return;
+            }
+
             if (columns.ContainsKey(header))
             {
                 property.SetValue(newObj, SimpleConverter.ConvertStringToType(columns[header], property.PropertyType));
