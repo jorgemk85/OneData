@@ -82,6 +82,7 @@
     <Compile Include="Events\StoredProcedureExecuted.cs" />
     <Compile Include="Events\UpdateExecuted.cs" />
     <Compile Include="Exceptions\ConvertionFailedException.cs" />
+    <Compile Include="Exceptions\FoundNullException.cs" />
     <Compile Include="Exceptions\SetAccessorNotFoundException.cs" />
     <Compile Include="Extensions\DataTableExtensions.cs" />
     <Compile Include="Extensions\ListExtensions.cs" />

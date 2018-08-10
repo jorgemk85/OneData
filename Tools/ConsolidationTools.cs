@@ -10,7 +10,7 @@ namespace DataManagement.Tools
         /// </summary>
         /// <param name="obj">El objeto que sera validado.</param>
         /// <returns>Regresa True cuando el objeto tiene todas las propiedades asignadas, o error, cuando es lo contrario.</returns>
-        public static bool PerformNullValidation(object obj)
+        public static bool PerformNullValidation(object obj, bool throwError)
         {
             PropertyInfo[] typeProperties = obj.GetType().GetProperties();
 
@@ -18,7 +18,14 @@ namespace DataManagement.Tools
             {
                 if (property.GetValue(obj) == null)
                 {
-                    return false;
+                    if (throwError)
+                    {
+                        throw new FoundNullException(string.Format("Se encontró un valor nulo en una propiedad del objeto de tipo {0} al crear una nueva instancia.", obj.GetType().ToString()));
+                    }
+                    else
+                    {
+                        return false;
+                    }
                 }
             }
 
