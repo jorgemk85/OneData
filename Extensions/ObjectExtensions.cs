@@ -31,9 +31,19 @@ namespace DataManagement.Extensions
         /// Valida que no exista una sola propiedad con valor nulo.
         /// </summary>
         /// <returns>Regresa True cuando el objeto tiene todas las propiedades asignadas.</returns>
-        public static bool Validate(this object obj, bool throwError = false)
+        public static bool Validate(this object obj, bool throwError = true)
         {
             return ConsolidationTools.PerformNullValidation(obj, throwError);
+        }
+
+        /// <summary>
+        /// Valida que no exista una sola propiedad con valor nulo.
+        /// </summary>
+        /// <returns>Regresa el objeto que fue validado.</returns>
+        public static T Validate<T>(this T obj)
+        {
+            ConsolidationTools.PerformNullValidation(obj, true);
+            return obj;
         }
     }
 }
