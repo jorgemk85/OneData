@@ -1,4 +1,5 @@
-﻿using DataManagement.Models;
+﻿using DataManagement.Interfaces;
+using DataManagement.Models;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -176,13 +177,13 @@ namespace DataManagement.Tools
         /// <typeparam name="T">Tipo referencia para serializar.</typeparam>
         /// <param name="dataTable">El contenido a convertir.</param>
         /// <returns>Regresa un nuevo Diccionario del tipo <typeparamref name="T"/> ya con los objetos incorporados.</returns>
-        public static Dictionary<Guid, T> ConvertDataTableToDictionaryOfType<T>(DataTable dataTable) where T : new()
+        public static Dictionary<Guid, IManageable> ConvertDataTableToDictionaryOfType<T>(DataTable dataTable) where T : new()
         {
-            Dictionary<Guid, T> newDictionary = new Dictionary<Guid, T>();
+            Dictionary<Guid, IManageable> newDictionary = new Dictionary<Guid, IManageable>();
             foreach (DataRow row in dataTable.Rows)
             {
                 PropertyInfo[] properties = typeof(T).GetProperties();
-                T newObject = new T();
+                IManageable newObject = new T() as IManageable;
                 foreach (PropertyInfo property in properties)
                 {
                     if (dataTable.Columns.Contains(property.Name) && property.CanWrite)
@@ -190,7 +191,7 @@ namespace DataManagement.Tools
                         property.SetValue(newObject, SimpleConverter.ConvertStringToType(row[property.Name].ToString(), property.PropertyType));
                     }
                 }
-                newDictionary.Add((newObject as Main).Id.GetValueOrDefault(), newObject);
+                newDictionary.Add(newObject.Id.GetValueOrDefault(), newObject);
             }
 
             return newDictionary;
@@ -230,11 +231,11 @@ namespace DataManagement.Tools
         /// <typeparam name="T">Tipo referencia para el nuevo Objeto.</typeparam>
         /// <param name="parameters">Array del objeto Parameter que contiene la informacion a colocar.</param>
         /// <returns>Regresa un nuevo objeto del tipo <typeparamref name="T"/> ya con las propiedades correspondientes alimentadas.</returns>
-        public static T SetParametersInObject<T>(Parameter[] parameters) where T : new()
+        internal static IManageable SetParametersInObject<T>(Parameter[] parameters) where T : new()
         {
-            T newObj = new T();
+            IManageable newObj = new T() as IManageable;
 
-            (newObj as Main).Id = null;
+            newObj.Id = null;
 
             foreach (Parameter data in parameters)
             {

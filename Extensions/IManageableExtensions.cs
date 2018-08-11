@@ -8,7 +8,7 @@ namespace DataManagement.Extensions
         /// <summary>
         /// Borra el objeto en la base de datos segun su Id y en su supuesto, tambien en el cache.
         /// </summary>
-        public static void Delete<T>(this T obj) where T : new()
+        public static void Delete<T>(this IManageable obj) where T : new()
         {
             Manager<T>.Delete(obj, true);
         }
@@ -24,7 +24,7 @@ namespace DataManagement.Extensions
             {
                 obj.Validate();
             }
-            Manager<T>.Update((T)obj, true);
+            Manager<T>.Update(obj, true);
         }
 
         /// <summary>
@@ -33,7 +33,7 @@ namespace DataManagement.Extensions
         public static void Insert<T>(this IManageable obj) where T : new()
         {
             obj.Validate();
-            Manager<T>.Insert((T)obj, true);
+            Manager<T>.Insert(obj, true);
         }
     }
 }

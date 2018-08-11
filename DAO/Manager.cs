@@ -36,7 +36,7 @@ namespace DataManagement.DAO
             {
                 throw new IManageableNotImplementedException();
             }
-            dataCache.Initialize(new T());
+            dataCache.Initialize(new T() as IManageable);
         }
 
         /// <summary>
@@ -45,7 +45,7 @@ namespace DataManagement.DAO
         /// <param name="obj">Objeto que contiene la informacion a insertar.</param>
         /// <param name="useAppConfig">Señala si se debe de usar el archivo de configuracion para obtener el conection string y conectarse a la base de datos.</param>
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la insercion.</returns>
-        public static Result Insert(T obj, bool useAppConfig)
+        public static Result Insert(IManageable obj, bool useAppConfig)
         {
             return Command(obj, TransactionTypes.Insert, useAppConfig);
         }
@@ -56,7 +56,7 @@ namespace DataManagement.DAO
         /// <param name="obj">Objeto que contiene la informacion a insertar.</param>
         /// <param name="useAppConfig">Señala si se debe de usar el archivo de configuracion para conectarse a la base de datos.</param>
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la insercion.</returns>
-        public static async Task<Result> InsertAsync(T obj, bool useAppConfig)
+        public static async Task<Result> InsertAsync(IManageable obj, bool useAppConfig)
         {
             return await Task.Run(() => Command(obj, TransactionTypes.Insert, useAppConfig));
         }
@@ -67,7 +67,7 @@ namespace DataManagement.DAO
         /// <param name="obj">Objeto que contiene la informacion actualizada.</param>
         /// <param name="useAppConfig">Señala si se debe de usar el archivo de configuracion para conectarse a la base de datos.</param>
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la actualizacion.</returns>
-        public static Result Update(T obj, bool useAppConfig)
+        public static Result Update(IManageable obj, bool useAppConfig)
         {
             return Command(obj, TransactionTypes.Update, useAppConfig);
         }
@@ -78,7 +78,7 @@ namespace DataManagement.DAO
         /// <param name="obj">Objeto que contiene la informacion actualizada.</param>
         /// <param name="useAppConfig">Señala si se debe de usar el archivo de configuracion para conectarse a la base de datos.</param>
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la actualizacion.</returns>
-        public static async Task<Result> UpdateAsync(T obj, bool useAppConfig)
+        public static async Task<Result> UpdateAsync(IManageable obj, bool useAppConfig)
         {
             return await Task.Run(() => Command(obj, TransactionTypes.Update, useAppConfig));
         }
@@ -89,7 +89,7 @@ namespace DataManagement.DAO
         /// <param name="obj">Objeto que contiene el Id a eliminar.</param>
         /// <param name="useAppConfig">Señala si se debe de usar el archivo de configuracion para conectarse a la base de datos.</param>
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la eliminacion.</returns>
-        public static Result Delete(T obj, bool useAppConfig)
+        public static Result Delete(IManageable obj, bool useAppConfig)
         {
             return Command(obj, TransactionTypes.Delete, useAppConfig);
         }
@@ -100,7 +100,7 @@ namespace DataManagement.DAO
         /// <param name="obj">Objeto que contiene el Id a eliminar.</param>
         /// <param name="useAppConfig">Señala si se debe de usar el archivo de configuracion para conectarse a la base de datos.</param>
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la eliminacion.</returns>
-        public static async Task<Result> DeleteAsync(T obj, bool useAppConfig)
+        public static async Task<Result> DeleteAsync(IManageable obj, bool useAppConfig)
         {
             return await Task.Run(() => Command(obj, TransactionTypes.Delete, useAppConfig));
         }
@@ -159,7 +159,7 @@ namespace DataManagement.DAO
         /// <param name="useAppConfig">Señala si se debe de usar el archivo de configuracion para conectarse a la base de datos.</param>
         /// <param name="parameters">Formacion de objetos Parameter que contiene los parametros de la consulta.</param>
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la ejecucion.</returns>
-        public static async Task<Result> SelectAsync(string tableName, string storedProcedure, bool useAppConfig, params Parameter[] parameters)
+        public static async Task<Result> StoredProcedureAsync(string tableName, string storedProcedure, bool useAppConfig, params Parameter[] parameters)
         {
             try
             {
@@ -182,7 +182,7 @@ namespace DataManagement.DAO
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la seleccion.</returns>
         public static Result SelectAll(bool useAppConfig)
         {
-            return Command(new T(), TransactionTypes.SelectAll, useAppConfig);
+            return Command(new T() as IManageable, TransactionTypes.SelectAll, useAppConfig);
         }
 
         /// <summary>
@@ -192,25 +192,25 @@ namespace DataManagement.DAO
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la seleccion.</returns>
         public static async Task<Result> SelectAllAsync(bool useAppConfig)
         {
-            return await Task.Run(() => Command(new T(), TransactionTypes.SelectAll, useAppConfig));
+            return await Task.Run(() => Command(new T() as IManageable, TransactionTypes.SelectAll, useAppConfig));
         }
 
-        private static Result Command(T obj, TransactionTypes transactionType, bool useAppConfig)
+        private static Result Command(IManageable obj, TransactionTypes transactionType, bool useAppConfig)
         {
             QueryEvaluation queryEvaluation = new QueryEvaluation();
             Result result;
             if (dataCache.IsCacheEnabled)
             {
                 ResetCacheIfExpired();
-                result = queryEvaluation.Evaluate(obj, transactionType, dataCache.Cache, dataCache.IsPartialCache, forceQueryDataBase, useAppConfig);
+                result = queryEvaluation.Evaluate<T>(obj, transactionType, dataCache.Cache, dataCache.IsPartialCache, forceQueryDataBase, useAppConfig);
                 SaveCache(transactionType, result);
             }
             else
             {
                 // Al mandar TRUE en forceQueryDataBase aseguramos que no se use el cache y al no almacenar el resultado con la funcion SaveCache, anulamos completamente el uso cache.
-                result = queryEvaluation.Evaluate(obj, transactionType, dataCache.Cache, dataCache.IsPartialCache, true, useAppConfig);
+                result = queryEvaluation.Evaluate<T>(obj, transactionType, dataCache.Cache, dataCache.IsPartialCache, true, useAppConfig);
             }
-            CallOnExecutedEventHandlers((obj as Main).DataBaseTableName, transactionType, result);
+            CallOnExecutedEventHandlers(obj.DataBaseTableName, transactionType, result);
             return result;
         }
 
@@ -260,7 +260,7 @@ namespace DataManagement.DAO
             if (DateTime.Now.Ticks > dataCache.LastCacheUpdate + dataCache.CacheExpiration)
             {
                 // Elimina el cache ya que esta EXPIRADO y de debe de refrescar.
-                dataCache.Reset(new T());
+                dataCache.Reset(new T() as IManageable);
             }
         }
 

@@ -3,6 +3,7 @@ using DataManagement.DAO;
 using DataManagement.Tools;
 using System;
 using System.Collections.Generic;
+using DataManagement.Interfaces;
 
 namespace DataManagement.Examples
 {
@@ -20,7 +21,7 @@ namespace DataManagement.Examples
             return DataSerializer.ConvertDataTableToObjectOfType<T>(Manager<T>.Select(USE_APP_CONFIG, parameters).Data);
         }
 
-        public static Dictionary<Guid, T> SelectDictionary<T>(params Parameter[] parameters) where T : new()
+        public static Dictionary<Guid, IManageable> SelectDictionary<T>(params Parameter[] parameters) where T : new()
         {
             return DataSerializer.ConvertDataTableToDictionaryOfType<T>(Manager<T>.Select(USE_APP_CONFIG, parameters).Data);
         }
@@ -35,7 +36,7 @@ namespace DataManagement.Examples
             return DataSerializer.SerializeDataTableToJsonObjectOfType<T>(Manager<T>.Select(USE_APP_CONFIG, parameters).Data);
         }
 
-        public static Dictionary<Guid, T> SelectAllDictionary<T>() where T : new()
+        public static Dictionary<Guid, IManageable> SelectAllDictionary<T>() where T : new()
         {
             return DataSerializer.ConvertDataTableToDictionaryOfType<T>(Manager<T>.SelectAll(USE_APP_CONFIG).Data);
         }

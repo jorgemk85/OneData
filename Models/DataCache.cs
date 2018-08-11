@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DataManagement.Interfaces;
+using System;
 
 namespace DataManagement.Models
 {
@@ -10,25 +11,18 @@ namespace DataManagement.Models
         public long CacheExpiration { get; set; }
         public long LastCacheUpdate { get; set; }
 
-        public void Initialize<T>(T mainObj)
+        public void Initialize(IManageable mainObj)
         {
             Reset(mainObj);
         }
 
-        public void Reset<T>(T mainObj)
+        public void Reset(IManageable mainObj)
         {
-            try
-            {
-                Cache = null;
-                IsPartialCache = false;
-                IsCacheEnabled = (mainObj as Main).IsCacheEnabled;
-                CacheExpiration = long.Parse((mainObj as Main).CacheExpiration.ToString()) * TimeSpan.TicksPerSecond;
-                LastCacheUpdate = DateTime.Now.Ticks;
-            }
-            catch (Exception)
-            {
-                
-            }
+            Cache = null;
+            IsPartialCache = false;
+            IsCacheEnabled = mainObj.IsCacheEnabled;
+            CacheExpiration = long.Parse(mainObj.CacheExpiration.ToString()) * TimeSpan.TicksPerSecond;
+            LastCacheUpdate = DateTime.Now.Ticks;
         }
     }
 }
