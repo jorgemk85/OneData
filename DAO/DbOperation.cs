@@ -92,7 +92,7 @@ namespace DataManagement.DAO
             }
         }
 
-        protected void SetParameters<T>(IManageable obj, TransactionTypes transactionType, MySqlCommand mySqlCommand = null, SqlCommand msSqlCommand = null)
+        protected void SetParameters<T>(T obj, TransactionTypes transactionType, MySqlCommand mySqlCommand = null, SqlCommand msSqlCommand = null)
         {
             if (msSqlCommand == null && mySqlCommand == null)
             {
@@ -171,7 +171,7 @@ namespace DataManagement.DAO
             return new Result();
         }
 
-        public virtual Result ExecuteProcedure<T>(IManageable obj, string tableName, TransactionTypes transactionType, bool useAppConfig, bool logTransaction = true)
+        public virtual Result ExecuteProcedure<T>(T obj, string tableName, TransactionTypes transactionType, bool useAppConfig, bool logTransaction = true)
         {
             return new Result();
         }

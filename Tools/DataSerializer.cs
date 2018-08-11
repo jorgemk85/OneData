@@ -183,7 +183,7 @@ namespace DataManagement.Tools
             foreach (DataRow row in dataTable.Rows)
             {
                 T newObject = new T();
-                PropertyInfo[] properties = newObject.GetType().GetProperties();
+                PropertyInfo[] properties = typeof(T).GetProperties();
 
                 foreach (PropertyInfo property in properties)
                 {
@@ -232,11 +232,12 @@ namespace DataManagement.Tools
         /// <typeparam name="T">Tipo referencia para el nuevo Objeto.</typeparam>
         /// <param name="parameters">Array del objeto Parameter que contiene la informacion a colocar.</param>
         /// <returns>Regresa un nuevo objeto del tipo <typeparamref name="T"/> ya con las propiedades correspondientes alimentadas.</returns>
-        internal static IManageable SetParametersInObject<T>(Parameter[] parameters) where T : new()
+        internal static T SetParametersInObject<T>(Parameter[] parameters) where T : IManageable, new()
         {
-            IManageable newObj = new T() as IManageable;
-
-            newObj.Id = null;
+            T newObj = new T
+            {
+                Id = null
+            };
 
             foreach (Parameter data in parameters)
             {

@@ -11,12 +11,12 @@ namespace DataManagement.Models
         public long CacheExpiration { get; set; }
         public long LastCacheUpdate { get; set; }
 
-        public void Initialize(IManageable mainObj)
+        public void Initialize<T>(T mainObj) where T : IManageable
         {
             Reset(mainObj);
         }
 
-        public void Reset(IManageable mainObj)
+        public void Reset<T>(T mainObj) where T : IManageable
         {
             Cache = null;
             IsPartialCache = false;

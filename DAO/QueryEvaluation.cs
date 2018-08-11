@@ -26,7 +26,7 @@ namespace DataManagement.DAO
             dbOperation = connectionType == ConnectionTypes.MySQL ? (DbOperation)new MySqlOperation() : (DbOperation)new MsSqlOperation();
         }
 
-        public Result Evaluate<T>(IManageable obj, TransactionTypes transactionType, Result cache, bool isPartialCache, bool forceQueryDataBase, bool useAppConfig) where T : new()
+        public Result Evaluate<T>(T obj, TransactionTypes transactionType, Result cache, bool isPartialCache, bool forceQueryDataBase, bool useAppConfig) where T : IManageable, new()
         {
             string tableName = obj.DataBaseTableName;
             Result resultado = new Result();
@@ -69,7 +69,7 @@ namespace DataManagement.DAO
             return resultado;
         }
 
-        private void EvaluateSelect<T>(IManageable obj, out Result resultado, bool isCached, string tableName, Result cache, bool isPartialCache, bool forceQueryDataBase, bool useAppConfig) where T : new()
+        private void EvaluateSelect<T>(T obj, out Result resultado, bool isCached, string tableName, Result cache, bool isPartialCache, bool forceQueryDataBase, bool useAppConfig) where T : IManageable, new()
         {
             if (forceQueryDataBase)
             {
@@ -87,7 +87,7 @@ namespace DataManagement.DAO
             }
         }
 
-        private void EvaluateSelectAll<T>(IManageable obj, out Result resultado, bool isCached, string tableName, Result cache, bool forceQueryDataBase, bool useAppConfig)
+        private void EvaluateSelectAll<T>(T obj, out Result resultado, bool isCached, string tableName, Result cache, bool forceQueryDataBase, bool useAppConfig)
         {
             if (forceQueryDataBase)
             {
@@ -100,7 +100,7 @@ namespace DataManagement.DAO
             }
         }
 
-        private Result SelectInCache<T>(IManageable obj, Result cache) where T : new()
+        private Result SelectInCache<T>(T obj, Result cache) where T : new()
         {
             int valueIndex = 0;
             List<object> values = new List<object>();
@@ -132,12 +132,12 @@ namespace DataManagement.DAO
             }
         }
 
-        private DataRow SetRowData(DataRow row, IManageable obj, bool isInsert)
+        private DataRow SetRowData<T>(DataRow row, T obj, bool isInsert)
         {
             object value = null;
             Type type;
 
-            foreach (PropertyInfo property in obj.GetType().GetProperties())
+            foreach (PropertyInfo property in typeof(T).GetProperties())
             {
                 if (row.Table.Columns.Contains(property.Name))
                 {
@@ -163,12 +163,12 @@ namespace DataManagement.DAO
             return row;
         }
 
-        private void UpdateInCache(IManageable obj, Result cache)
+        private void UpdateInCache<T>(T obj, Result cache) where T : IManageable
         {
             SetRowData(cache.Data.Rows.Find(obj.Id), obj, false).AcceptChanges();
         }
 
-        private void InsertInCache(IManageable obj, Result cache)
+        private void InsertInCache<T>(T obj, Result cache) 
         {
             cache.Data.Rows.Add(SetRowData(cache.Data.NewRow(), obj, true));
             cache.Data.AcceptChanges();
@@ -197,7 +197,7 @@ namespace DataManagement.DAO
             cache.Data.AcceptChanges();
         }
 
-        private void DeleteInCache(IManageable obj, Result cache)
+        private void DeleteInCache<T>(T obj, Result cache) where T : IManageable
         {
             for (int i = 0; i < cache.Data.Rows.Count; i++)
             {

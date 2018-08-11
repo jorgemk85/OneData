@@ -45,7 +45,7 @@ namespace DataManagement.DAO
             return new Result(dataTable);
         }
 
-        public override Result ExecuteProcedure<T>(IManageable obj, string tableName, TransactionTypes transactionType, bool useAppConfig, bool logTransaction = true)
+        public override Result ExecuteProcedure<T>(T obj, string tableName, TransactionTypes transactionType, bool useAppConfig, bool logTransaction = true)
         {
             DataTable dataTable = null;
 
@@ -67,7 +67,7 @@ namespace DataManagement.DAO
             return new Result(dataTable);
         }
 
-        private DataTable ConfigureConnectionAndExecuteCommand<T>(IManageable obj, string tableName, TransactionTypes transactionType, bool useAppConfig)
+        private DataTable ConfigureConnectionAndExecuteCommand<T>(T obj, string tableName, TransactionTypes transactionType, bool useAppConfig)
         {
             DataTable dataTable = null;
 
@@ -79,14 +79,14 @@ namespace DataManagement.DAO
 
                 if (transactionType == TransactionTypes.Insert || transactionType == TransactionTypes.Update || transactionType == TransactionTypes.Delete)
                 {
-                    SetParameters<T>(obj, transactionType, msSqlCommand: command);
+                    SetParameters(obj, transactionType, msSqlCommand: command);
                     command.ExecuteNonQuery();
                 }
                 else
                 {
                     if (transactionType == TransactionTypes.Select)
                     {
-                        SetParameters<T>(obj, transactionType, msSqlCommand: command);
+                        SetParameters(obj, transactionType, msSqlCommand: command);
                     }
                     dataTable = new DataTable();
                     dataTable.Load(command.ExecuteReader());

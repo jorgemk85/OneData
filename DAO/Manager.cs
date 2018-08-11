@@ -41,7 +41,7 @@ namespace DataManagement.DAO
         /// <param name="obj">Objeto que contiene la informacion a insertar.</param>
         /// <param name="useAppConfig">Señala si se debe de usar el archivo de configuracion para obtener el conection string y conectarse a la base de datos.</param>
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la insercion.</returns>
-        public static Result Insert(IManageable obj, bool useAppConfig)
+        public static Result Insert(T obj, bool useAppConfig)
         {
             return Command(obj, TransactionTypes.Insert, useAppConfig);
         }
@@ -52,7 +52,7 @@ namespace DataManagement.DAO
         /// <param name="obj">Objeto que contiene la informacion a insertar.</param>
         /// <param name="useAppConfig">Señala si se debe de usar el archivo de configuracion para conectarse a la base de datos.</param>
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la insercion.</returns>
-        public static async Task<Result> InsertAsync(IManageable obj, bool useAppConfig)
+        public static async Task<Result> InsertAsync(T obj, bool useAppConfig)
         {
             return await Task.Run(() => Command(obj, TransactionTypes.Insert, useAppConfig));
         }
@@ -63,7 +63,7 @@ namespace DataManagement.DAO
         /// <param name="obj">Objeto que contiene la informacion actualizada.</param>
         /// <param name="useAppConfig">Señala si se debe de usar el archivo de configuracion para conectarse a la base de datos.</param>
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la actualizacion.</returns>
-        public static Result Update(IManageable obj, bool useAppConfig)
+        public static Result Update(T obj, bool useAppConfig)
         {
             return Command(obj, TransactionTypes.Update, useAppConfig);
         }
@@ -74,7 +74,7 @@ namespace DataManagement.DAO
         /// <param name="obj">Objeto que contiene la informacion actualizada.</param>
         /// <param name="useAppConfig">Señala si se debe de usar el archivo de configuracion para conectarse a la base de datos.</param>
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la actualizacion.</returns>
-        public static async Task<Result> UpdateAsync(IManageable obj, bool useAppConfig)
+        public static async Task<Result> UpdateAsync(T obj, bool useAppConfig)
         {
             return await Task.Run(() => Command(obj, TransactionTypes.Update, useAppConfig));
         }
@@ -85,7 +85,7 @@ namespace DataManagement.DAO
         /// <param name="obj">Objeto que contiene el Id a eliminar.</param>
         /// <param name="useAppConfig">Señala si se debe de usar el archivo de configuracion para conectarse a la base de datos.</param>
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la eliminacion.</returns>
-        public static Result Delete(IManageable obj, bool useAppConfig)
+        public static Result Delete(T obj, bool useAppConfig)
         {
             return Command(obj, TransactionTypes.Delete, useAppConfig);
         }
@@ -96,7 +96,7 @@ namespace DataManagement.DAO
         /// <param name="obj">Objeto que contiene el Id a eliminar.</param>
         /// <param name="useAppConfig">Señala si se debe de usar el archivo de configuracion para conectarse a la base de datos.</param>
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la eliminacion.</returns>
-        public static async Task<Result> DeleteAsync(IManageable obj, bool useAppConfig)
+        public static async Task<Result> DeleteAsync(T obj, bool useAppConfig)
         {
             return await Task.Run(() => Command(obj, TransactionTypes.Delete, useAppConfig));
         }
@@ -191,7 +191,7 @@ namespace DataManagement.DAO
             return await Task.Run(() => Command(new T(), TransactionTypes.SelectAll, useAppConfig));
         }
 
-        private static Result Command(IManageable obj, TransactionTypes transactionType, bool useAppConfig)
+        private static Result Command(T obj, TransactionTypes transactionType, bool useAppConfig)
         {
             QueryEvaluation queryEvaluation = new QueryEvaluation();
             Result result;
