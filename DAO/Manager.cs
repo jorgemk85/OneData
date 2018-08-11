@@ -15,7 +15,7 @@ namespace DataManagement.DAO
     /// Clase abstracta donde se procesan las consultas a la base de datos y se administra el cache.
     /// </summary>
     /// <typeparam name="T">Tipo de clase que representa este objeto. El tipo tiene que implementar IManageable para poder operar.</typeparam>
-    public abstract class Manager<T> where T : new()
+    public abstract class Manager<T> where T : IManageable, new()
     {
         static DataCache dataCache = new DataCache();
         static bool forceQueryDataBase = false;
@@ -32,11 +32,7 @@ namespace DataManagement.DAO
 
         static Manager()
         {
-            if (!typeof(IManageable).IsAssignableFrom(typeof(T)))
-            {
-                throw new IManageableNotImplementedException();
-            }
-            dataCache.Initialize(new T() as IManageable);
+            dataCache.Initialize(new T());
         }
 
         /// <summary>
@@ -182,7 +178,7 @@ namespace DataManagement.DAO
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la seleccion.</returns>
         public static Result SelectAll(bool useAppConfig)
         {
-            return Command(new T() as IManageable, TransactionTypes.SelectAll, useAppConfig);
+            return Command(new T(), TransactionTypes.SelectAll, useAppConfig);
         }
 
         /// <summary>
@@ -192,7 +188,7 @@ namespace DataManagement.DAO
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la seleccion.</returns>
         public static async Task<Result> SelectAllAsync(bool useAppConfig)
         {
-            return await Task.Run(() => Command(new T() as IManageable, TransactionTypes.SelectAll, useAppConfig));
+            return await Task.Run(() => Command(new T(), TransactionTypes.SelectAll, useAppConfig));
         }
 
         private static Result Command(IManageable obj, TransactionTypes transactionType, bool useAppConfig)
@@ -260,7 +256,7 @@ namespace DataManagement.DAO
             if (DateTime.Now.Ticks > dataCache.LastCacheUpdate + dataCache.CacheExpiration)
             {
                 // Elimina el cache ya que esta EXPIRADO y de debe de refrescar.
-                dataCache.Reset(new T() as IManageable);
+                dataCache.Reset(new T());
             }
         }
 

@@ -16,37 +16,37 @@ namespace DataManagement.Examples
             return Manager<Log>.StoredProcedure(tableName, storedProcedure, USE_APP_CONFIG, parameters);
         }
 
-        public static T Select<T>(params Parameter[] parameters) where T : new()
+        public static T Select<T>(params Parameter[] parameters) where T : IManageable, new()
         {
             return DataSerializer.ConvertDataTableToObjectOfType<T>(Manager<T>.Select(USE_APP_CONFIG, parameters).Data);
         }
 
-        public static Dictionary<Guid, IManageable> SelectDictionary<T>(params Parameter[] parameters) where T : new()
+        public static Dictionary<Guid, T> SelectDictionary<T>(params Parameter[] parameters) where T : IManageable, new()
         {
             return DataSerializer.ConvertDataTableToDictionaryOfType<T>(Manager<T>.Select(USE_APP_CONFIG, parameters).Data);
         }
 
-        public static List<T> SelectList<T>(params Parameter[] parameters) where T : new()
+        public static List<T> SelectList<T>(params Parameter[] parameters) where T : IManageable, new()
         {
             return DataSerializer.ConvertDataTableToListOfType<T>(Manager<T>.Select(USE_APP_CONFIG, parameters).Data);
         }
 
-        public static string SelectJson<T>(params Parameter[] parameters) where T : new()
+        public static string SelectJson<T>(params Parameter[] parameters) where T : IManageable, new()
         {
             return DataSerializer.SerializeDataTableToJsonObjectOfType<T>(Manager<T>.Select(USE_APP_CONFIG, parameters).Data);
         }
 
-        public static Dictionary<Guid, IManageable> SelectAllDictionary<T>() where T : new()
+        public static Dictionary<Guid, T> SelectAllDictionary<T>() where T : IManageable, new()
         {
             return DataSerializer.ConvertDataTableToDictionaryOfType<T>(Manager<T>.SelectAll(USE_APP_CONFIG).Data);
         }
 
-        public static List<T> SelectAllList<T>() where T : new()
+        public static List<T> SelectAllList<T>() where T : IManageable, new()
         {
             return DataSerializer.ConvertDataTableToListOfType<T>(Manager<T>.SelectAll(USE_APP_CONFIG).Data);
         }
 
-        public static string SelectAllJson<T>() where T : new()
+        public static string SelectAllJson<T>() where T : IManageable, new()
         {
             return DataSerializer.SerializeDataTableToJsonListOfType<T>(Manager<T>.SelectAll(USE_APP_CONFIG).Data);
         }

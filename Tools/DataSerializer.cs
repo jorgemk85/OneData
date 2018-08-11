@@ -177,13 +177,14 @@ namespace DataManagement.Tools
         /// <typeparam name="T">Tipo referencia para serializar.</typeparam>
         /// <param name="dataTable">El contenido a convertir.</param>
         /// <returns>Regresa un nuevo Diccionario del tipo <typeparamref name="T"/> ya con los objetos incorporados.</returns>
-        public static Dictionary<Guid, IManageable> ConvertDataTableToDictionaryOfType<T>(DataTable dataTable) where T : new()
+        public static Dictionary<Guid, T> ConvertDataTableToDictionaryOfType<T>(DataTable dataTable) where T : IManageable, new()
         {
-            Dictionary<Guid, IManageable> newDictionary = new Dictionary<Guid, IManageable>();
+            Dictionary<Guid, T> newDictionary = new Dictionary<Guid, T>();
             foreach (DataRow row in dataTable.Rows)
             {
-                PropertyInfo[] properties = typeof(T).GetProperties();
-                IManageable newObject = new T() as IManageable;
+                T newObject = new T();
+                PropertyInfo[] properties = newObject.GetType().GetProperties();
+
                 foreach (PropertyInfo property in properties)
                 {
                     if (dataTable.Columns.Contains(property.Name) && property.CanWrite)

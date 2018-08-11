@@ -8,7 +8,7 @@ namespace DataManagement.Extensions
         /// <summary>
         /// Borra el objeto en la base de datos segun su Id y en su supuesto, tambien en el cache.
         /// </summary>
-        public static void Delete<T>(this IManageable obj) where T : new()
+        public static void Delete<T>(this T obj) where T : IManageable, new()
         {
             Manager<T>.Delete(obj, true);
         }
@@ -18,7 +18,7 @@ namespace DataManagement.Extensions
         /// </summary>
         /// <param name="doValidation">Indica si se desea realizar la validacion de nulos.</param>
         /// <returns></returns>
-        public static void Update<T>(this IManageable obj, bool doValidation = false) where T : new()
+        public static void Update<T>(this T obj, bool doValidation = false) where T : IManageable, new()
         {
             if (doValidation)
             {
@@ -30,7 +30,7 @@ namespace DataManagement.Extensions
         /// <summary>
         /// Inserta el objeto en la base de datos y en su supuesto, tambien en el cache. Esta funcion realiza la validacion de nulos por default.
         /// </summary>
-        public static void Insert<T>(this IManageable obj) where T : new()
+        public static void Insert<T>(this T obj) where T : IManageable, new()
         {
             obj.Validate();
             Manager<T>.Insert(obj, true);
