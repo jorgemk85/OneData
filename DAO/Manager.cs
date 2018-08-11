@@ -55,7 +55,7 @@ namespace DataManagement.DAO
         /// Inserta un objeto de tipo <typeparamref name="T"/> en la base de datos.
         /// </summary>
         /// <param name="obj">Objeto que contiene la informacion a insertar.</param>
-        /// <param name="useAppConfig">Señala si se debe de usar el archivo de configuracion para obtener el conection string y conectarse a la base de datos.</param>
+        /// <param name="connectionToUse">Especifica cual configuracion de tipo ConectionString se desea utilizar. Si se especifica nulo, o no se especifica, entonces utiliza la conexion especificada en DefaultConnection.</param>
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la insercion.</returns>
         public static Result Insert(T obj, string connectionToUse = null)
         {
@@ -67,7 +67,7 @@ namespace DataManagement.DAO
         /// Inserta un objeto de tipo <typeparamref name="T"/> en la base de datos usando Async.
         /// </summary>
         /// <param name="obj">Objeto que contiene la informacion a insertar.</param>
-        /// <param name="useAppConfig">Señala si se debe de usar el archivo de configuracion para conectarse a la base de datos.</param>
+        /// <param name="connectionToUse">Especifica cual configuracion de tipo ConectionString se desea utilizar. Si se especifica nulo, o no se especifica, entonces utiliza la conexion especificada en DefaultConnection.</param>
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la insercion.</returns>
         public static async Task<Result> InsertAsync(T obj, string connectionToUse = null)
         {
@@ -79,7 +79,7 @@ namespace DataManagement.DAO
         /// Actualiza el objeto de tipo <typeparamref name="T"/> en la base de datos.
         /// </summary>
         /// <param name="obj">Objeto que contiene la informacion actualizada.</param>
-        /// <param name="useAppConfig">Señala si se debe de usar el archivo de configuracion para conectarse a la base de datos.</param>
+        /// <param name="connectionToUse">Especifica cual configuracion de tipo ConectionString se desea utilizar. Si se especifica nulo, o no se especifica, entonces utiliza la conexion especificada en DefaultConnection.</param>
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la actualizacion.</returns>
         public static Result Update(T obj, string connectionToUse = null)
         {
@@ -91,7 +91,7 @@ namespace DataManagement.DAO
         /// Actualiza el objeto de tipo <typeparamref name="T"/> en la base de datos usando Async.
         /// </summary>
         /// <param name="obj">Objeto que contiene la informacion actualizada.</param>
-        /// <param name="useAppConfig">Señala si se debe de usar el archivo de configuracion para conectarse a la base de datos.</param>
+        /// <param name="connectionToUse">Especifica cual configuracion de tipo ConectionString se desea utilizar. Si se especifica nulo, o no se especifica, entonces utiliza la conexion especificada en DefaultConnection.</param>
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la actualizacion.</returns>
         public static async Task<Result> UpdateAsync(T obj, string connectionToUse = null)
         {
@@ -103,7 +103,7 @@ namespace DataManagement.DAO
         /// Elimina el objeto de tipo <typeparamref name="T"/> en la base de datos.
         /// </summary>
         /// <param name="obj">Objeto que contiene el Id a eliminar.</param>
-        /// <param name="useAppConfig">Señala si se debe de usar el archivo de configuracion para conectarse a la base de datos.</param>
+        /// <param name="connectionToUse">Especifica cual configuracion de tipo ConectionString se desea utilizar. Si se especifica nulo, o no se especifica, entonces utiliza la conexion especificada en DefaultConnection.</param>
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la eliminacion.</returns>
         public static Result Delete(T obj, string connectionToUse = null)
         {
@@ -115,7 +115,7 @@ namespace DataManagement.DAO
         /// Elimina el objeto de tipo <typeparamref name="T"/> en la base de datos Async.
         /// </summary>
         /// <param name="obj">Objeto que contiene el Id a eliminar.</param>
-        /// <param name="useAppConfig">Señala si se debe de usar el archivo de configuracion para conectarse a la base de datos.</param>
+        /// <param name="connectionToUse">Especifica cual configuracion de tipo ConectionString se desea utilizar. Si se especifica nulo, o no se especifica, entonces utiliza la conexion especificada en DefaultConnection.</param>
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la eliminacion.</returns>
         public static async Task<Result> DeleteAsync(T obj, string connectionToUse = null)
         {
@@ -126,7 +126,7 @@ namespace DataManagement.DAO
         /// <summary>
         /// Ejecuta una consulta de seleccion en la base de datos usando el objeto de tipo <typeparamref name="T"/> como referencia y los parametros proporcionados.
         /// </summary>
-        /// <param name="useAppConfig">Señala si se debe de usar el archivo de configuracion para conectarse a la base de datos.</param>
+        /// <param name="connectionToUse">Especifica cual configuracion de tipo ConectionString se desea utilizar. Si se especifica nulo, o no se especifica, entonces utiliza la conexion especificada en DefaultConnection.</param>
         /// <param name="parameters">Formacion de objetos Parameter que contiene los parametros de la consulta.</param>
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la seleccion.</returns>
         public static Result Select(string connectionToUse = null, params Parameter[] parameters)
@@ -138,7 +138,7 @@ namespace DataManagement.DAO
         /// <summary>
         /// Ejecuta una consulta de seleccion en la base de datos usando el objeto de tipo <typeparamref name="T"/> como referencia y los parametros proporcionados usando Async.
         /// </summary>
-        /// <param name="useAppConfig">Señala si se debe de usar el archivo de configuracion para conectarse a la base de datos.</param>
+        /// <param name="connectionToUse">Especifica cual configuracion de tipo ConectionString se desea utilizar. Si se especifica nulo, o no se especifica, entonces utiliza la conexion especificada en DefaultConnection.</param>
         /// <param name="parameters">Formacion de objetos Parameter que contiene los parametros de la consulta.</param>
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la seleccion.</returns>
         public static async Task<Result> SelectAsync(string connectionToUse = null, params Parameter[] parameters)
@@ -152,7 +152,7 @@ namespace DataManagement.DAO
         /// </summary>
         /// <param name="tableName">Nombre de la tabla relacionada al procedimiento almacenado. Este dato es solo para referencia al crear el DataTable.</param>
         /// <param name="storedProcedure">Nombre exacto del procedimiento almacenado a ejecutar.</param>
-        /// <param name="useAppConfig">Señala si se debe de usar el archivo de configuracion para conectarse a la base de datos.</param>
+        /// <param name="connectionToUse">Especifica cual configuracion de tipo ConectionString se desea utilizar. Si se especifica nulo, o no se especifica, entonces utiliza la conexion especificada en DefaultConnection.</param>
         /// <param name="parameters">Formacion de objetos Parameter que contiene los parametros de la consulta.</param>
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la ejecucion.</returns>
         public static Result StoredProcedure(string tableName, string storedProcedure, string connectionToUse = null, params Parameter[] parameters)
@@ -177,7 +177,7 @@ namespace DataManagement.DAO
         /// </summary>
         /// <param name="tableName">Nombre de la tabla relacionada al procedimiento almacenado. Este dato es solo para referencia al crear el DataTable.</param>
         /// <param name="storedProcedure">Nombre exacto del procedimiento almacenado a ejecutar.</param>
-        /// <param name="useAppConfig">Señala si se debe de usar el archivo de configuracion para conectarse a la base de datos.</param>
+        /// <param name="connectionToUse">Especifica cual configuracion de tipo ConectionString se desea utilizar. Si se especifica nulo, o no se especifica, entonces utiliza la conexion especificada en DefaultConnection.</param>
         /// <param name="parameters">Formacion de objetos Parameter que contiene los parametros de la consulta.</param>
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la ejecucion.</returns>
         public static async Task<Result> StoredProcedureAsync(string tableName, string storedProcedure, string connectionToUse = null, params Parameter[] parameters)
@@ -200,7 +200,7 @@ namespace DataManagement.DAO
         /// <summary>
         /// Seleccion de todos los objetos del tipo <typeparamref name="T"/> en la base de datos.
         /// </summary>
-        /// <param name="useAppConfig">Señala si se debe de usar el archivo de configuracion para conectarse a la base de datos.</param>
+        /// <param name="connectionToUse">Especifica cual configuracion de tipo ConectionString se desea utilizar. Si se especifica nulo, o no se especifica, entonces utiliza la conexion especificada en DefaultConnection.</param>
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la seleccion.</returns>
         public static Result SelectAll(string connectionToUse = null)
         {
@@ -211,7 +211,7 @@ namespace DataManagement.DAO
         /// <summary>
         /// Seleccion de todos los objetos del tipo <typeparamref name="T"/> en la base de datos usando Async.
         /// </summary>
-        /// <param name="useAppConfig">Señala si se debe de usar el archivo de configuracion para conectarse a la base de datos.</param>
+        /// <param name="connectionToUse">Especifica cual configuracion de tipo ConectionString se desea utilizar. Si se especifica nulo, o no se especifica, entonces utiliza la conexion especificada en DefaultConnection.</param>
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la seleccion.</returns>
         public static async Task<Result> SelectAllAsync(string connectionToUse = null)
         {
