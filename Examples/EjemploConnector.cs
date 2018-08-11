@@ -9,46 +9,46 @@ namespace DataManagement.Examples
 {
     public class Connector
     {
-        const bool USE_APP_CONFIG = true;
+        const string CONNECTION_TO_USE = "GoDaddy";
 
         public static Result ExecuteStoredProcedure(string tableName, string storedProcedure, params Parameter[] parameters)
         {
-            return Manager<Log>.StoredProcedure(tableName, storedProcedure, USE_APP_CONFIG, parameters);
+            return Manager<Log>.StoredProcedure(tableName, storedProcedure, CONNECTION_TO_USE, parameters);
         }
 
         public static T Select<T>(params Parameter[] parameters) where T : IManageable, new()
         {
-            return DataSerializer.ConvertDataTableToObjectOfType<T>(Manager<T>.Select(USE_APP_CONFIG, parameters).Data);
+            return DataSerializer.ConvertDataTableToObjectOfType<T>(Manager<T>.Select(CONNECTION_TO_USE, parameters).Data);
         }
 
         public static Dictionary<Guid, T> SelectDictionary<T>(params Parameter[] parameters) where T : IManageable, new()
         {
-            return DataSerializer.ConvertDataTableToDictionaryOfType<T>(Manager<T>.Select(USE_APP_CONFIG, parameters).Data);
+            return DataSerializer.ConvertDataTableToDictionaryOfType<T>(Manager<T>.Select(CONNECTION_TO_USE, parameters).Data);
         }
 
         public static List<T> SelectList<T>(params Parameter[] parameters) where T : IManageable, new()
         {
-            return DataSerializer.ConvertDataTableToListOfType<T>(Manager<T>.Select(USE_APP_CONFIG, parameters).Data);
+            return DataSerializer.ConvertDataTableToListOfType<T>(Manager<T>.Select(CONNECTION_TO_USE, parameters).Data);
         }
 
         public static string SelectJson<T>(params Parameter[] parameters) where T : IManageable, new()
         {
-            return DataSerializer.SerializeDataTableToJsonObjectOfType<T>(Manager<T>.Select(USE_APP_CONFIG, parameters).Data);
+            return DataSerializer.SerializeDataTableToJsonObjectOfType<T>(Manager<T>.Select(CONNECTION_TO_USE, parameters).Data);
         }
 
         public static Dictionary<Guid, T> SelectAllDictionary<T>() where T : IManageable, new()
         {
-            return DataSerializer.ConvertDataTableToDictionaryOfType<T>(Manager<T>.SelectAll(USE_APP_CONFIG).Data);
+            return DataSerializer.ConvertDataTableToDictionaryOfType<T>(Manager<T>.SelectAll(CONNECTION_TO_USE).Data);
         }
 
         public static List<T> SelectAllList<T>() where T : IManageable, new()
         {
-            return DataSerializer.ConvertDataTableToListOfType<T>(Manager<T>.SelectAll(USE_APP_CONFIG).Data);
+            return DataSerializer.ConvertDataTableToListOfType<T>(Manager<T>.SelectAll(CONNECTION_TO_USE).Data);
         }
 
         public static string SelectAllJson<T>() where T : IManageable, new()
         {
-            return DataSerializer.SerializeDataTableToJsonListOfType<T>(Manager<T>.SelectAll(USE_APP_CONFIG).Data);
+            return DataSerializer.SerializeDataTableToJsonListOfType<T>(Manager<T>.SelectAll(CONNECTION_TO_USE).Data);
         }
     }
 }

@@ -13,13 +13,13 @@ namespace DataManagement.DAO
     {
         private SqlCommand command;
 
-        public override Result EjecutarProcedimiento(string tableName, string storedProcedure, Parameter[] parameters, bool useAppConfig, bool logTransaction = true)
+        public override Result EjecutarProcedimiento(string tableName, string storedProcedure, string connectionToUse, Parameter[] parameters, bool logTransaction = true)
         {
             DataTable dataTable = null;
 
             try
             {
-                using (SqlConnection connection = Connection.OpenMsSqlConnection(useAppConfig))
+                using (SqlConnection connection = Connection.OpenMsSqlConnection(connectionToUse))
                 {
                     if (connection.State != ConnectionState.Open) throw new BadConnectionStateException();
                     command = new SqlCommand(storedProcedure, connection);
@@ -40,18 +40,18 @@ namespace DataManagement.DAO
                 throw ae;
             }
 
-            if (logTransaction) LogTransaction(tableName, TransactionTypes.StoredProcedure, useAppConfig);
+            if (logTransaction) LogTransaction(tableName, TransactionTypes.StoredProcedure, connectionToUse);
 
             return new Result(dataTable);
         }
 
-        public override Result ExecuteProcedure<T>(T obj, string tableName, TransactionTypes transactionType, bool useAppConfig, bool logTransaction = true)
+        public override Result ExecuteProcedure<T>(T obj, string tableName, string connectionToUse, TransactionTypes transactionType, bool logTransaction = true)
         {
             DataTable dataTable = null;
 
             try
             {
-                dataTable = ConfigureConnectionAndExecuteCommand<T>(obj, tableName, transactionType, useAppConfig);
+                dataTable = ConfigureConnectionAndExecuteCommand(obj, tableName, connectionToUse, transactionType);
             }
             catch (SqlException mssqle)
             {
@@ -62,19 +62,19 @@ namespace DataManagement.DAO
                 throw ae;
             }
 
-            if (logTransaction) LogTransaction(tableName, transactionType, useAppConfig);
+            if (logTransaction) LogTransaction(tableName, transactionType, connectionToUse);
 
             return new Result(dataTable);
         }
 
-        private DataTable ConfigureConnectionAndExecuteCommand<T>(T obj, string tableName, TransactionTypes transactionType, bool useAppConfig)
+        private DataTable ConfigureConnectionAndExecuteCommand<T>(T obj, string tableName, string connectionToUse, TransactionTypes transactionType) where T : IManageable
         {
             DataTable dataTable = null;
 
-            using (SqlConnection connection = Connection.OpenMsSqlConnection(useAppConfig))
+            using (SqlConnection connection = Connection.OpenMsSqlConnection(connectionToUse))
             {
                 if (connection.State != ConnectionState.Open) throw new BadConnectionStateException();
-                command = new SqlCommand(string.Format("{0}{1}{2}{3}", (obj as Main).Schema + ".", StoredProcedurePrefix, tableName, GetFriendlyTransactionSuffix(transactionType)), connection);
+                command = new SqlCommand(string.Format("{0}{1}{2}{3}", obj.Schema + ".", StoredProcedurePrefix, tableName, GetFriendlyTransactionSuffix(transactionType)), connection);
                 command.CommandType = CommandType.StoredProcedure;
 
                 if (transactionType == TransactionTypes.Insert || transactionType == TransactionTypes.Update || transactionType == TransactionTypes.Delete)
@@ -97,7 +97,7 @@ namespace DataManagement.DAO
             return dataTable;
         }
 
-        private void LogTransaction(string dataBaseTableName, TransactionTypes transactionType, bool useAppConfig)
+        private void LogTransaction(string dataBaseTableName, TransactionTypes transactionType, string connectionToUse)
         {
             Log newLog = new Log
             {
@@ -106,7 +106,7 @@ namespace DataManagement.DAO
                 Parametros = GetStringParameters(null, command)
             };
 
-            ExecuteProcedure<Log>(newLog, newLog.DataBaseTableName, TransactionTypes.Insert, useAppConfig, false);
+            ExecuteProcedure(newLog, newLog.DataBaseTableName, connectionToUse, TransactionTypes.Insert, false);
         }
     }
 }

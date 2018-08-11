@@ -7,16 +7,13 @@ namespace DataManagement.DAO
 {
     internal class Connection
     {
-        public static string ConnectionString { get; set; }
-
-        private static void GetConnectionString()
+        private static string GetConnectionString(string connectionToUse)
         {
             try
             {
-                if (ConfigurationManager.AppSettings["ConnectionToUse"] == null) throw new ConfigurationNotFoundException("ConnectionToUse");
-                if (ConfigurationManager.ConnectionStrings[ConfigurationManager.AppSettings["ConnectionToUse"]] == null) throw new ConfigurationNotFoundException(ConfigurationManager.AppSettings["ConnectionToUse"]);
+                if (ConfigurationManager.ConnectionStrings[connectionToUse] == null) throw new ConfigurationNotFoundException(connectionToUse);
 
-                ConnectionString = ConfigurationManager.ConnectionStrings[ConfigurationManager.AppSettings["ConnectionToUse"]].ConnectionString;
+                return ConfigurationManager.ConnectionStrings[connectionToUse].ConnectionString;
             }
             catch (ConfigurationErrorsException cee)
             {
@@ -24,19 +21,13 @@ namespace DataManagement.DAO
             }
         }
 
-        public static MySqlConnection OpenMySqlConnection(bool useAppConfig)
+        public static MySqlConnection OpenMySqlConnection(string connectionToUse)
         {
             MySqlConnection connection = null;
             try
             {
-                if (useAppConfig)
-                {
-                    GetConnectionString();
-                }
-
-                connection = new MySqlConnection(ConnectionString);
+                connection = new MySqlConnection(GetConnectionString(connectionToUse));
                 connection.Open();
-                //OnConnectionOpened?.Invoke(null, new ConnectionOpenedEventArgs(connection.ConnectionString));
             }
             catch (MySqlException ex)
             {
@@ -45,17 +36,12 @@ namespace DataManagement.DAO
             return connection;
         }
 
-        public static SqlConnection OpenMsSqlConnection(bool useAppConfig)
+        public static SqlConnection OpenMsSqlConnection(string connectionToUse)
         {
             SqlConnection connection = null;
             try
             {
-                if (useAppConfig)
-                {
-                    GetConnectionString();
-                }
-
-                connection = new SqlConnection(ConnectionString);
+                connection = new SqlConnection(GetConnectionString(connectionToUse));
                 connection.Open();
             }
             catch (SqlException ex)

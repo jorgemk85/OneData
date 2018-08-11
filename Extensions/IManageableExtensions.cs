@@ -10,7 +10,7 @@ namespace DataManagement.Extensions
         /// </summary>
         public static void Delete<T>(this T obj) where T : IManageable, new()
         {
-            Manager<T>.Delete(obj, true);
+            Manager<T>.Delete(obj);
         }
 
         /// <summary>
@@ -24,7 +24,7 @@ namespace DataManagement.Extensions
             {
                 obj.Validate();
             }
-            Manager<T>.Update(obj, true);
+            Manager<T>.Update(obj);
         }
 
         /// <summary>
@@ -33,7 +33,7 @@ namespace DataManagement.Extensions
         public static void Insert<T>(this T obj) where T : IManageable, new()
         {
             obj.Validate();
-            Manager<T>.Insert(obj, true);
+            Manager<T>.Insert(obj);
         }
     }
 }

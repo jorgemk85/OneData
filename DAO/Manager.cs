@@ -17,6 +17,7 @@ namespace DataManagement.DAO
     /// <typeparam name="T">Tipo de clase que representa este objeto. El tipo tiene que implementar IManageable para poder operar.</typeparam>
     public abstract class Manager<T> where T : IManageable, new()
     {
+        static string defaultConnection;
         static DataCache dataCache = new DataCache();
         static bool forceQueryDataBase = false;
 
@@ -32,7 +33,22 @@ namespace DataManagement.DAO
 
         static Manager()
         {
+            SetDefaultConnectionName();
             dataCache.Initialize(new T());
+        }
+
+        private static void SetDefaultConnectionName()
+        {
+            try
+            {
+                if (ConfigurationManager.AppSettings["DefaultConnection"] == null) throw new ConfigurationNotFoundException("DefaultConnection");
+
+                defaultConnection = ConfigurationManager.AppSettings["DefaultConnection"];
+            }
+            catch (ConfigurationErrorsException cee)
+            {
+                throw cee;
+            }
         }
 
         /// <summary>
@@ -41,9 +57,10 @@ namespace DataManagement.DAO
         /// <param name="obj">Objeto que contiene la informacion a insertar.</param>
         /// <param name="useAppConfig">Señala si se debe de usar el archivo de configuracion para obtener el conection string y conectarse a la base de datos.</param>
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la insercion.</returns>
-        public static Result Insert(T obj, bool useAppConfig)
+        public static Result Insert(T obj, string connectionToUse = null)
         {
-            return Command(obj, TransactionTypes.Insert, useAppConfig);
+            if (connectionToUse == null) connectionToUse = defaultConnection;
+            return Command(obj, TransactionTypes.Insert, connectionToUse);
         }
 
         /// <summary>
@@ -52,9 +69,10 @@ namespace DataManagement.DAO
         /// <param name="obj">Objeto que contiene la informacion a insertar.</param>
         /// <param name="useAppConfig">Señala si se debe de usar el archivo de configuracion para conectarse a la base de datos.</param>
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la insercion.</returns>
-        public static async Task<Result> InsertAsync(T obj, bool useAppConfig)
+        public static async Task<Result> InsertAsync(T obj, string connectionToUse = null)
         {
-            return await Task.Run(() => Command(obj, TransactionTypes.Insert, useAppConfig));
+            if (connectionToUse == null) connectionToUse = defaultConnection;
+            return await Task.Run(() => Command(obj, TransactionTypes.Insert, connectionToUse));
         }
 
         /// <summary>
@@ -63,9 +81,10 @@ namespace DataManagement.DAO
         /// <param name="obj">Objeto que contiene la informacion actualizada.</param>
         /// <param name="useAppConfig">Señala si se debe de usar el archivo de configuracion para conectarse a la base de datos.</param>
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la actualizacion.</returns>
-        public static Result Update(T obj, bool useAppConfig)
+        public static Result Update(T obj, string connectionToUse = null)
         {
-            return Command(obj, TransactionTypes.Update, useAppConfig);
+            if (connectionToUse == null) connectionToUse = defaultConnection;
+            return Command(obj, TransactionTypes.Update, connectionToUse);
         }
 
         /// <summary>
@@ -74,9 +93,10 @@ namespace DataManagement.DAO
         /// <param name="obj">Objeto que contiene la informacion actualizada.</param>
         /// <param name="useAppConfig">Señala si se debe de usar el archivo de configuracion para conectarse a la base de datos.</param>
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la actualizacion.</returns>
-        public static async Task<Result> UpdateAsync(T obj, bool useAppConfig)
+        public static async Task<Result> UpdateAsync(T obj, string connectionToUse = null)
         {
-            return await Task.Run(() => Command(obj, TransactionTypes.Update, useAppConfig));
+            if (connectionToUse == null) connectionToUse = defaultConnection;
+            return await Task.Run(() => Command(obj, TransactionTypes.Update, connectionToUse));
         }
 
         /// <summary>
@@ -85,9 +105,10 @@ namespace DataManagement.DAO
         /// <param name="obj">Objeto que contiene el Id a eliminar.</param>
         /// <param name="useAppConfig">Señala si se debe de usar el archivo de configuracion para conectarse a la base de datos.</param>
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la eliminacion.</returns>
-        public static Result Delete(T obj, bool useAppConfig)
+        public static Result Delete(T obj, string connectionToUse = null)
         {
-            return Command(obj, TransactionTypes.Delete, useAppConfig);
+            if (connectionToUse == null) connectionToUse = defaultConnection;
+            return Command(obj, TransactionTypes.Delete, connectionToUse);
         }
 
         /// <summary>
@@ -96,9 +117,10 @@ namespace DataManagement.DAO
         /// <param name="obj">Objeto que contiene el Id a eliminar.</param>
         /// <param name="useAppConfig">Señala si se debe de usar el archivo de configuracion para conectarse a la base de datos.</param>
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la eliminacion.</returns>
-        public static async Task<Result> DeleteAsync(T obj, bool useAppConfig)
+        public static async Task<Result> DeleteAsync(T obj, string connectionToUse = null)
         {
-            return await Task.Run(() => Command(obj, TransactionTypes.Delete, useAppConfig));
+            if (connectionToUse == null) connectionToUse = defaultConnection;
+            return await Task.Run(() => Command(obj, TransactionTypes.Delete, connectionToUse));
         }
 
         /// <summary>
@@ -107,9 +129,10 @@ namespace DataManagement.DAO
         /// <param name="useAppConfig">Señala si se debe de usar el archivo de configuracion para conectarse a la base de datos.</param>
         /// <param name="parameters">Formacion de objetos Parameter que contiene los parametros de la consulta.</param>
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la seleccion.</returns>
-        public static Result Select(bool useAppConfig, params Parameter[] parameters)
+        public static Result Select(string connectionToUse = null, params Parameter[] parameters)
         {
-            return Command(DataSerializer.SetParametersInObject<T>(parameters), TransactionTypes.Select, useAppConfig);
+            if (connectionToUse == null) connectionToUse = defaultConnection;
+            return Command(DataSerializer.SetParametersInObject<T>(parameters), TransactionTypes.Select, connectionToUse);
         }
 
         /// <summary>
@@ -118,9 +141,10 @@ namespace DataManagement.DAO
         /// <param name="useAppConfig">Señala si se debe de usar el archivo de configuracion para conectarse a la base de datos.</param>
         /// <param name="parameters">Formacion de objetos Parameter que contiene los parametros de la consulta.</param>
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la seleccion.</returns>
-        public static async Task<Result> SelectAsync(bool useAppConfig, params Parameter[] parameters)
+        public static async Task<Result> SelectAsync(string connectionToUse = null, params Parameter[] parameters)
         {
-            return await Task.Run(() => Command(DataSerializer.SetParametersInObject<T>(parameters), TransactionTypes.Select, useAppConfig));
+            if (connectionToUse == null) connectionToUse = defaultConnection;
+            return await Task.Run(() => Command(DataSerializer.SetParametersInObject<T>(parameters), TransactionTypes.Select, connectionToUse));
         }
 
         /// <summary>
@@ -131,13 +155,14 @@ namespace DataManagement.DAO
         /// <param name="useAppConfig">Señala si se debe de usar el archivo de configuracion para conectarse a la base de datos.</param>
         /// <param name="parameters">Formacion de objetos Parameter que contiene los parametros de la consulta.</param>
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la ejecucion.</returns>
-        public static Result StoredProcedure(string tableName, string storedProcedure, bool useAppConfig, params Parameter[] parameters)
+        public static Result StoredProcedure(string tableName, string storedProcedure, string connectionToUse = null, params Parameter[] parameters)
         {
             try
             {
+                if (connectionToUse == null) connectionToUse = defaultConnection;
                 ConnectionTypes connectionType = (ConnectionTypes)Enum.Parse(typeof(ConnectionTypes), ConfigurationManager.AppSettings["ConnectionType"].ToString());
                 DbOperation dbOperation = connectionType == ConnectionTypes.MySQL ? (DbOperation)new MySqlOperation() : (DbOperation)new MsSqlOperation();
-                Result result = dbOperation.EjecutarProcedimiento(tableName, storedProcedure, parameters, useAppConfig);
+                Result result = dbOperation.EjecutarProcedimiento(tableName, storedProcedure, connectionToUse, parameters);
                 CallOnExecutedEventHandlers(tableName, TransactionTypes.StoredProcedure, result);
                 return result;
             }
@@ -155,13 +180,14 @@ namespace DataManagement.DAO
         /// <param name="useAppConfig">Señala si se debe de usar el archivo de configuracion para conectarse a la base de datos.</param>
         /// <param name="parameters">Formacion de objetos Parameter que contiene los parametros de la consulta.</param>
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la ejecucion.</returns>
-        public static async Task<Result> StoredProcedureAsync(string tableName, string storedProcedure, bool useAppConfig, params Parameter[] parameters)
+        public static async Task<Result> StoredProcedureAsync(string tableName, string storedProcedure, string connectionToUse = null, params Parameter[] parameters)
         {
             try
             {
+                if (connectionToUse == null) connectionToUse = defaultConnection;
                 ConnectionTypes connectionType = (ConnectionTypes)Enum.Parse(typeof(ConnectionTypes), ConfigurationManager.AppSettings["ConnectionType"].ToString());
                 DbOperation dbOperation = connectionType == ConnectionTypes.MySQL ? (DbOperation)new MySqlOperation() : (DbOperation)new MsSqlOperation();
-                Result result = await Task.Run(() => dbOperation.EjecutarProcedimiento(tableName, storedProcedure, parameters, useAppConfig));
+                Result result = await Task.Run(() => dbOperation.EjecutarProcedimiento(tableName, storedProcedure, connectionToUse, parameters));
                 CallOnExecutedEventHandlers(tableName, TransactionTypes.StoredProcedure, result);
                 return result;
             }
@@ -176,9 +202,10 @@ namespace DataManagement.DAO
         /// </summary>
         /// <param name="useAppConfig">Señala si se debe de usar el archivo de configuracion para conectarse a la base de datos.</param>
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la seleccion.</returns>
-        public static Result SelectAll(bool useAppConfig)
+        public static Result SelectAll(string connectionToUse = null)
         {
-            return Command(new T(), TransactionTypes.SelectAll, useAppConfig);
+            if (connectionToUse == null) connectionToUse = defaultConnection;
+            return Command(new T(), TransactionTypes.SelectAll, connectionToUse);
         }
 
         /// <summary>
@@ -186,25 +213,27 @@ namespace DataManagement.DAO
         /// </summary>
         /// <param name="useAppConfig">Señala si se debe de usar el archivo de configuracion para conectarse a la base de datos.</param>
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la seleccion.</returns>
-        public static async Task<Result> SelectAllAsync(bool useAppConfig)
+        public static async Task<Result> SelectAllAsync(string connectionToUse = null)
         {
-            return await Task.Run(() => Command(new T(), TransactionTypes.SelectAll, useAppConfig));
+            if (connectionToUse == null) connectionToUse = defaultConnection;
+            return await Task.Run(() => Command(new T(), TransactionTypes.SelectAll, connectionToUse));
         }
 
-        private static Result Command(T obj, TransactionTypes transactionType, bool useAppConfig)
+        private static Result Command(T obj, TransactionTypes transactionType, string connectionToUse = null)
         {
+            if (connectionToUse == null) connectionToUse = defaultConnection;
             QueryEvaluation queryEvaluation = new QueryEvaluation();
             Result result;
             if (dataCache.IsCacheEnabled)
             {
                 ResetCacheIfExpired();
-                result = queryEvaluation.Evaluate<T>(obj, transactionType, dataCache.Cache, dataCache.IsPartialCache, forceQueryDataBase, useAppConfig);
+                result = queryEvaluation.Evaluate(obj, transactionType, dataCache.Cache, dataCache.IsPartialCache, forceQueryDataBase, connectionToUse);
                 SaveCache(transactionType, result);
             }
             else
             {
                 // Al mandar TRUE en forceQueryDataBase aseguramos que no se use el cache y al no almacenar el resultado con la funcion SaveCache, anulamos completamente el uso cache.
-                result = queryEvaluation.Evaluate<T>(obj, transactionType, dataCache.Cache, dataCache.IsPartialCache, true, useAppConfig);
+                result = queryEvaluation.Evaluate<T>(obj, transactionType, dataCache.Cache, dataCache.IsPartialCache, true, connectionToUse);
             }
             CallOnExecutedEventHandlers(obj.DataBaseTableName, transactionType, result);
             return result;

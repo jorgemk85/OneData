@@ -12,13 +12,13 @@ namespace DataManagement.DAO
     {
         private MySqlCommand command;
 
-        public override Result EjecutarProcedimiento(string tableName, string storedProcedure, Parameter[] parameters, bool useAppConfig, bool logTransaction = true)
+        public override Result EjecutarProcedimiento(string tableName, string storedProcedure, string connectionToUse, Parameter[] parameters, bool logTransaction = true)
         {
             DataTable dataTable = null;
 
             try
             {
-                using (MySqlConnection connection = Connection.OpenMySqlConnection(useAppConfig))
+                using (MySqlConnection connection = Connection.OpenMySqlConnection(connectionToUse))
                 {
                     if (connection.State != ConnectionState.Open) throw new BadConnectionStateException();
                     command = new MySqlCommand(storedProcedure, connection);
@@ -39,18 +39,18 @@ namespace DataManagement.DAO
                 throw ae;
             }
 
-            if (logTransaction) LogTransaction(tableName, TransactionTypes.StoredProcedure, useAppConfig);
+            if (logTransaction) LogTransaction(tableName, TransactionTypes.StoredProcedure, connectionToUse);
 
             return new Result(dataTable);
         }
 
-        public override Result ExecuteProcedure<T>(T obj, string tableName, TransactionTypes transactionType, bool useAppConfig, bool logTransaction = true)
+        public override Result ExecuteProcedure<T>(T obj, string tableName, string connectionToUse, TransactionTypes transactionType, bool logTransaction = true)
         {
             DataTable dataTable = null;
 
             try
             {
-                dataTable = ConfigureConnectionAndExecuteCommand<T>(obj, tableName, transactionType, useAppConfig);
+                dataTable = ConfigureConnectionAndExecuteCommand(obj, tableName, connectionToUse, transactionType);
             }
             catch (MySqlException mysqle)
             {
@@ -61,16 +61,16 @@ namespace DataManagement.DAO
                 throw ae;
             }
 
-            if (logTransaction) LogTransaction(tableName, transactionType, useAppConfig);
+            if (logTransaction) LogTransaction(tableName, transactionType, connectionToUse);
 
             return new Result(dataTable);
         }
 
-        private DataTable ConfigureConnectionAndExecuteCommand<T>(T obj, string tableName, TransactionTypes transactionType, bool useAppConfig)
+        private DataTable ConfigureConnectionAndExecuteCommand<T>(T obj, string tableName, string connectionToUse, TransactionTypes transactionType) where T : IManageable
         {
             DataTable dataTable = null;
 
-            using (MySqlConnection connection = Connection.OpenMySqlConnection(useAppConfig))
+            using (MySqlConnection connection = Connection.OpenMySqlConnection(connectionToUse))
             {
                 if (connection.State != ConnectionState.Open) throw new Exception("No se puede abrir la conexion con la base de datos.");
                 command = new MySqlCommand(string.Format("{0}{1}{2}", StoredProcedurePrefix, tableName, GetFriendlyTransactionSuffix(transactionType)), connection);
@@ -78,14 +78,14 @@ namespace DataManagement.DAO
 
                 if (transactionType == TransactionTypes.Insert || transactionType == TransactionTypes.Update || transactionType == TransactionTypes.Delete)
                 {
-                    SetParameters<T>(obj, transactionType, mySqlCommand: command);
+                    SetParameters(obj, transactionType, mySqlCommand: command);
                     command.ExecuteNonQuery();
                 }
                 else
                 {
                     if (transactionType == TransactionTypes.Select)
                     {
-                        SetParameters<T>(obj, transactionType, mySqlCommand: command);
+                        SetParameters(obj, transactionType, mySqlCommand: command);
                     }
                     dataTable = new DataTable();
                     dataTable.Load(command.ExecuteReader());
@@ -95,7 +95,7 @@ namespace DataManagement.DAO
             return dataTable;
         }
 
-        private void LogTransaction(string dataBaseTableName, TransactionTypes transactionType, bool useAppConfig)
+        private void LogTransaction(string dataBaseTableName, TransactionTypes transactionType, string connectionToUse)
         {
             Log newLog = new Log
             {
@@ -103,7 +103,7 @@ namespace DataManagement.DAO
                 TablaAfectada = dataBaseTableName,
                 Parametros = GetStringParameters(command, null)
             };
-            ExecuteProcedure<Log>(newLog, newLog.DataBaseTableName, TransactionTypes.Insert, useAppConfig, false);
+            ExecuteProcedure(newLog, newLog.DataBaseTableName, connectionToUse, TransactionTypes.Insert, false);
         }
     }
 }
