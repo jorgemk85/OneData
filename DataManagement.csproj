@@ -86,6 +86,7 @@
     <Compile Include="Exceptions\IManageableNotImplementedException.cs" />
     <Compile Include="Exceptions\SetAccessorNotFoundException.cs" />
     <Compile Include="Extensions\DataTableExtensions.cs" />
+    <Compile Include="Extensions\IManageableExtensions.cs" />
     <Compile Include="Extensions\ListExtensions.cs" />
     <Compile Include="Extensions\ObjectExtensions.cs" />
     <Compile Include="Interfaces\IManageable.cs" />
