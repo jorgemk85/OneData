@@ -1,4 +1,7 @@
-﻿using DataManagement.Tools;
+﻿using DataManagement.DAO;
+using DataManagement.Exceptions;
+using DataManagement.Interfaces;
+using DataManagement.Tools;
 using System;
 
 namespace DataManagement.Extensions
@@ -43,7 +46,39 @@ namespace DataManagement.Extensions
         public static T Validate<T>(this T obj)
         {
             ConsolidationTools.PerformNullValidation(obj, true);
+
             return obj;
+        }
+
+        /// <summary>
+        /// Borra el objeto en la base de datos segun su Id y en su supuesto, tambien en el cache.
+        /// </summary>
+        public static void Delete<T>(this T obj) where T : new()
+        {
+            Manager<T>.Delete(obj, true);
+        }
+
+        /// <summary>
+        /// Actualiza el objeto en la base de datos y en su supuesto, tambien en el cache.
+        /// </summary>
+        /// <param name="doValidation">Indica si se desea realizar la validacion de nulos.</param>
+        /// <returns></returns>
+        public static void Update<T>(this T obj, bool doValidation = false) where T : new()
+        {
+            if (doValidation)
+            {
+                obj.Validate();
+            }
+            Manager<T>.Update(obj, true);
+        }
+
+        /// <summary>
+        /// Inserta el objeto en la base de datos y en su supuesto, tambien en el cache. Esta funcion realiza la validacion de nulos por default.
+        /// </summary>
+        public static void Insert<T>(this T obj) where T : new()
+        {
+            obj.Validate();
+            Manager<T>.Insert(obj, true);
         }
     }
 }

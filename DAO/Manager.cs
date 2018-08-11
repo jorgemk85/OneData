@@ -1,6 +1,7 @@
 ﻿using DataManagement.Enums;
 using DataManagement.Events;
 using DataManagement.Exceptions;
+using DataManagement.Interfaces;
 using DataManagement.Models;
 using DataManagement.Tools;
 using System;
@@ -13,7 +14,7 @@ namespace DataManagement.DAO
     /// <summary>
     /// Clase abstracta donde se procesan las consultas a la base de datos y se administra el cache.
     /// </summary>
-    /// <typeparam name="T">Tipo de clase que representa este objeto.</typeparam>
+    /// <typeparam name="T">Tipo de clase que representa este objeto. El tipo tiene que implementar IManageable para poder operar.</typeparam>
     public abstract class Manager<T> where T : new()
     {
         static DataCache dataCache = new DataCache();
@@ -31,6 +32,10 @@ namespace DataManagement.DAO
 
         static Manager()
         {
+            if (!typeof(IManageable).IsAssignableFrom(typeof(T)))
+            {
+                throw new IManageableNotImplementedException();
+            }
             dataCache.Initialize(new T());
         }
 
@@ -130,7 +135,7 @@ namespace DataManagement.DAO
         /// <param name="useAppConfig">Señala si se debe de usar el archivo de configuracion para conectarse a la base de datos.</param>
         /// <param name="parameters">Formacion de objetos Parameter que contiene los parametros de la consulta.</param>
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la ejecucion.</returns>
-        public static Result Select(string tableName, string storedProcedure, bool useAppConfig, params Parameter[] parameters)
+        public static Result StoredProcedure(string tableName, string storedProcedure, bool useAppConfig, params Parameter[] parameters)
         {
             try
             {

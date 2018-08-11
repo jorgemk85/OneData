@@ -98,7 +98,6 @@ namespace DataManagement.DAO
         {
             Log newLog = new Log
             {
-                IdentificadorId = IdentificadorId,
                 Transaccion = transactionType.ToString(),
                 TablaAfectada = dataBaseTableName,
                 Parametros = GetStringParameters(command, null)

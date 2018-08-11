@@ -1,6 +1,5 @@
 ﻿using DataManagement.Attributes;
 using DataManagement.Enums;
-using DataManagement.Events;
 using DataManagement.Exceptions;
 using DataManagement.Models;
 using MySql.Data.MySqlClient;
@@ -14,7 +13,6 @@ namespace DataManagement.DAO
 {
     internal class DbOperation
     {
-        protected Guid IdentificadorId { get; set; } = Guid.Empty;
         protected string SelectSuffix { get; set; }
         protected string InsertSuffix { get; set; }
         protected string UpdateSuffix { get; set; }

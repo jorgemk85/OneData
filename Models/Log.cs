@@ -1,10 +1,12 @@
-﻿using System;
+﻿using DataManagement.Attributes;
+using System;
 
 namespace DataManagement.Models
 {
     public class Log : Main
     {
-        public Guid? IdentificadorId { get; set; }
+        [UnlinkedProperty]
+        public string Ip { get; set; }
         public string Transaccion { get; set; }
         public string TablaAfectada { get; set; }
         public string Parametros { get; set; }

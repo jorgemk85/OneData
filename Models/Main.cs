@@ -1,4 +1,5 @@
 ﻿using DataManagement.Attributes;
+using DataManagement.Interfaces;
 using System;
 
 namespace DataManagement.Models
@@ -6,7 +7,7 @@ namespace DataManagement.Models
     /// <summary>
     /// Clase principal de la que tienen que heredar todos los objetos de negocio que se desee utilizar con la libreria DataManagement.
     /// </summary>
-    public abstract class Main
+    public abstract class Main : IManageable
     {
         #region Properties
         public Guid? Id { get; set; }
