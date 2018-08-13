@@ -12,7 +12,7 @@ namespace DataManagement.DAO
     {
         private MySqlCommand command;
 
-        internal override void ExecuteNonQuery(string transaction, string connectionToUse)
+        internal override int ExecuteNonQuery(string transaction, string connectionToUse)
         {
             try
             {
@@ -21,7 +21,7 @@ namespace DataManagement.DAO
                     if (connection.State != ConnectionState.Open) throw new BadConnectionStateException();
                     command = new MySqlCommand(transaction, connection);
                     command.CommandType = CommandType.Text;
-                    command.ExecuteNonQuery();
+                    return command.ExecuteNonQuery();
                 }
             }
             catch (MySqlException mysqle)
@@ -70,25 +70,34 @@ namespace DataManagement.DAO
         {
             DataTable dataTable = null;
 
+            Start:
             try
             {
                 dataTable = ConfigureConnectionAndExecuteCommand(obj, tableName, connectionToUse, transactionType);
             }
-            catch (MySqlException mysqle)
+            catch (MySqlException mysqle) when (mysqle.Number == 2812)
             {
-                switch (mysqle.Number)
+                if (AutoCreateStoredProcedures)
                 {
-                    case 2812: // Cuando el Stored Procedure no existe.
-                        ExecuteNonQuery(GetTransactionText<T>(transactionType, ConnectionTypes.MySQL), connectionToUse);
-                        dataTable = ExecuteProcedure(obj, tableName, connectionToUse, transactionType, false).Data;
-                        break;
-                    default:
-                        throw mysqle;
+                    ExecuteNonQuery(GetTransactionTextForStores<T>(transactionType, ConnectionTypes.MySQL), connectionToUse);
+                    goto Start;
+                }
+                else
+                {
+                    throw mysqle;
                 }
             }
-            catch (ArgumentException ae)
+            catch (MySqlException mysqle) when (mysqle.Number == 208)
             {
-                throw ae;
+                if (AutoCreateTables)
+                {
+                    ExecuteNonQuery(Creation.GetCreateTableQuery<T>(ConnectionTypes.MySQL), connectionToUse);
+                    goto Start;
+                }
+                else
+                {
+                    throw mysqle;
+                }
             }
 
             if (logTransaction) LogTransaction(tableName, transactionType, connectionToUse);

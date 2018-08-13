@@ -22,6 +22,8 @@ namespace DataManagement.DAO
         protected string DeleteSuffix { get; set; }
         protected string SelectAllSuffix { get; set; }
         protected string StoredProcedurePrefix { get; set; }
+        protected bool AutoCreateStoredProcedures { get; set; }
+        protected bool AutoCreateTables { get; set; }
 
         public Operation()
         {
@@ -30,26 +32,15 @@ namespace DataManagement.DAO
 
         private void GetTransactionTypesSuffixes()
         {
-            string configuration = string.Empty;
-            try
-            {
-                configuration = "SelectSuffix";
-                SelectSuffix = ConfigurationManager.AppSettings["SelectSuffix"].ToString();
-                configuration = "InsertSuffix";
-                InsertSuffix = ConfigurationManager.AppSettings["InsertSuffix"].ToString();
-                configuration = "UpdateSuffix";
-                UpdateSuffix = ConfigurationManager.AppSettings["UpdateSuffix"].ToString();
-                configuration = "DeleteSuffix";
-                DeleteSuffix = ConfigurationManager.AppSettings["DeleteSuffix"].ToString();
-                configuration = "SelectAllSuffix";
-                SelectAllSuffix = ConfigurationManager.AppSettings["SelectAllSuffix"].ToString();
-                configuration = "StoredProcedurePrefix";
-                StoredProcedurePrefix = ConfigurationManager.AppSettings["StoredProcedurePrefix"].ToString();
-            }
-            catch (NullReferenceException nre)
-            {
-                throw new ConfigurationNotFoundException(configuration, nre);
-            }
+            SelectSuffix = ConsolidationTools.GetValueFromConfiguration("SelectSuffix", ConfigurationTypes.AppSetting);
+            InsertSuffix = ConsolidationTools.GetValueFromConfiguration("InsertSuffix", ConfigurationTypes.AppSetting);
+            UpdateSuffix = ConsolidationTools.GetValueFromConfiguration("UpdateSuffix", ConfigurationTypes.AppSetting);
+            DeleteSuffix = ConsolidationTools.GetValueFromConfiguration("DeleteSuffix", ConfigurationTypes.AppSetting);
+            SelectAllSuffix = ConsolidationTools.GetValueFromConfiguration("SelectAllSuffix", ConfigurationTypes.AppSetting);
+            StoredProcedurePrefix = ConsolidationTools.GetValueFromConfiguration("StoredProcedurePrefix", ConfigurationTypes.AppSetting);
+
+            AutoCreateStoredProcedures = bool.Parse(ConsolidationTools.GetValueFromConfiguration("AutoCreateStoredProcedures", ConfigurationTypes.AppSetting));
+            AutoCreateTables = bool.Parse(ConsolidationTools.GetValueFromConfiguration("AutoCreateTables", ConfigurationTypes.AppSetting));
         }
 
         protected string GetFriendlyTransactionSuffix(TransactionTypes transactionType)
@@ -178,9 +169,12 @@ namespace DataManagement.DAO
             return new Result();
         }
 
-        internal virtual void ExecuteNonQuery(string query, string connectionToUse) { }
+        internal virtual int ExecuteNonQuery(string query, string connectionToUse)
+        {
+            return 0;
+        }
 
-        protected string GetTransactionText<T>(TransactionTypes transactionType, ConnectionTypes connectionType) where T : IManageable, new()
+        protected string GetTransactionTextForStores<T>(TransactionTypes transactionType, ConnectionTypes connectionType) where T : IManageable, new()
         {
             switch (transactionType)
             {

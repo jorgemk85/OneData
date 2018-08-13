@@ -19,7 +19,7 @@ namespace DataManagement.Models
         [UnlinkedProperty]
         public DateTime? FechaModificacion { get; set; } = DateTime.Now;
         /// <summary>
-        /// Almacena el nombre de la tabla en la base de datos.
+        /// Almacena el nombre de la tabla en la base de datos SIN prefijos ni sufijos.
         /// </summary>
         [UnlinkedProperty]
         public string DataBaseTableName { get; }

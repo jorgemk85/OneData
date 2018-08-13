@@ -1,10 +1,13 @@
-﻿using DataManagement.Enums;
+﻿using DataManagement.Attributes;
+using DataManagement.Enums;
 using DataManagement.Exceptions;
 using DataManagement.Interfaces;
 using DataManagement.Models;
 using System;
 using System.Data;
 using System.Data.SqlClient;
+using System.Linq;
+using System.Reflection;
 
 namespace DataManagement.DAO
 {
@@ -12,7 +15,7 @@ namespace DataManagement.DAO
     {
         private SqlCommand command;
 
-        internal override void ExecuteNonQuery(string transaction, string connectionToUse)
+        internal override int ExecuteNonQuery(string transaction, string connectionToUse)
         {
             try
             {
@@ -21,7 +24,7 @@ namespace DataManagement.DAO
                     if (connection.State != ConnectionState.Open) throw new BadConnectionStateException();
                     command = new SqlCommand(transaction, connection);
                     command.CommandType = CommandType.Text;
-                    command.ExecuteNonQuery();
+                    return command.ExecuteNonQuery();
                 }
             }
             catch (SqlException mssqle)
@@ -70,30 +73,79 @@ namespace DataManagement.DAO
         {
             DataTable dataTable = null;
 
+            Start:
             try
             {
                 dataTable = ConfigureConnectionAndExecuteCommand(obj, tableName, connectionToUse, transactionType);
             }
-            catch (SqlException mssqle)
+            catch (SqlException mssqle) when (mssqle.Number == 2812)
             {
-                switch (mssqle.Number)
+                if (AutoCreateStoredProcedures)
                 {
-                    case 2812: // Cuando el Stored Procedure no existe, lo crea.
-                        ExecuteNonQuery(GetTransactionText<T>(transactionType, ConnectionTypes.MSSQL), connectionToUse);
-                        dataTable = ExecuteProcedure(obj, tableName, connectionToUse, transactionType, false).Data;
-                        break;
-                    default:
-                        throw mssqle;
+                    ExecuteNonQuery(GetTransactionTextForStores<T>(transactionType, ConnectionTypes.MSSQL), connectionToUse);
+                    goto Start;
+                }
+                else
+                {
+                    throw mssqle;
                 }
             }
-            catch (ArgumentException ae)
+            catch (SqlException mssqle) when (mssqle.Number == 208)
             {
-                throw ae;
+                if (AutoCreateTables)
+                {
+                    ExecuteNonQuery(Creation.GetCreateTableQuery<T>(ConnectionTypes.MSSQL), connectionToUse);
+                    VerifyForeignTables(typeof(T), connectionToUse);
+                    string foreignKeyQuery = Creation.GetCreateForeignKeysQuery(typeof(T), ConnectionTypes.MSSQL);
+
+                    if (!string.IsNullOrWhiteSpace(foreignKeyQuery))
+                    {
+                        ExecuteNonQuery(Creation.GetCreateForeignKeysQuery(typeof(T), ConnectionTypes.MSSQL), connectionToUse);
+                    }
+
+                    goto Start;
+                }
+                else
+                {
+                    throw mssqle;
+                }
             }
 
             if (logTransaction) LogTransaction(tableName, transactionType, connectionToUse);
 
             return new Result(dataTable);
+        }
+
+        private void VerifyForeignTables(Type type, string connectionToUse)
+        {
+            PropertyInfo[] properties = type.GetProperties().Where(q => q.GetCustomAttribute<UnlinkedProperty>() == null && q.GetCustomAttribute<ForeignModel>() != null).ToArray();
+
+            foreach (PropertyInfo property in properties)
+            {
+                IManageable foreignModel = (IManageable)Activator.CreateInstance(property.GetCustomAttribute<ForeignModel>().Model);
+                if (!CheckIfTableExists(foreignModel.DataBaseTableName, connectionToUse))
+                {
+                    ExecuteNonQuery(Creation.GetCreateTableQuery(foreignModel.GetType(), ConnectionTypes.MSSQL), connectionToUse);
+                    VerifyForeignTables(foreignModel.GetType(), connectionToUse);
+                    string foreignKeyQuery = Creation.GetCreateForeignKeysQuery(foreignModel.GetType(), ConnectionTypes.MSSQL);
+
+                    if (!string.IsNullOrWhiteSpace(foreignKeyQuery))
+                    {
+                        ExecuteNonQuery(foreignKeyQuery, connectionToUse);
+                    }
+                }
+            }
+        }
+
+        private bool CheckIfTableExists(string tableName, string connectionToUse)
+        {
+            string query = string.Format("SELECT name FROM sysobjects WHERE name='{0}' AND xtype='U'", tableName);
+
+            if (ExecuteNonQuery(query, connectionToUse) <= 0)
+            {
+                return false;
+            }
+            return true;
         }
 
         private DataTable ConfigureConnectionAndExecuteCommand<T>(T obj, string tableName, string connectionToUse, TransactionTypes transactionType) where T : IManageable
@@ -103,7 +155,7 @@ namespace DataManagement.DAO
             using (SqlConnection connection = Connection.OpenMsSqlConnection(connectionToUse))
             {
                 if (connection.State != ConnectionState.Open) throw new BadConnectionStateException();
-                command = new SqlCommand(string.Format("{0}{1}{2}{3}", obj.Schema + ".", StoredProcedurePrefix, tableName, GetFriendlyTransactionSuffix(transactionType)), connection);
+                command = new SqlCommand(string.Format("{0}.{1}{2}{3}", obj.Schema, StoredProcedurePrefix, tableName, GetFriendlyTransactionSuffix(transactionType)), connection);
                 command.CommandType = CommandType.StoredProcedure;
 
                 if (transactionType == TransactionTypes.Insert || transactionType == TransactionTypes.Update || transactionType == TransactionTypes.Delete)

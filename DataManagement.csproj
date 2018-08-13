@@ -73,6 +73,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Attributes\ForeignTable.cs" />
     <Compile Include="DAO\Creation.cs" />
     <Compile Include="Enums\ConfigurationTypes.cs" />
     <Compile Include="Events\CommandExecuted.cs" />
