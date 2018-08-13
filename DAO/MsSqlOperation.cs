@@ -1,5 +1,4 @@
 ﻿using DataManagement.Enums;
-using DataManagement.Events;
 using DataManagement.Exceptions;
 using DataManagement.Interfaces;
 using DataManagement.Models;
@@ -9,11 +8,33 @@ using System.Data.SqlClient;
 
 namespace DataManagement.DAO
 {
-    internal class MsSqlOperation : DbOperation
+    internal class MsSqlOperation : Operation
     {
         private SqlCommand command;
 
-        public override Result EjecutarProcedimiento(string tableName, string storedProcedure, string connectionToUse, Parameter[] parameters, bool logTransaction = true)
+        internal override void ExecuteNonQuery(string transaction, string connectionToUse)
+        {
+            try
+            {
+                using (SqlConnection connection = Connection.OpenMsSqlConnection(connectionToUse))
+                {
+                    if (connection.State != ConnectionState.Open) throw new BadConnectionStateException();
+                    command = new SqlCommand(transaction, connection);
+                    command.CommandType = CommandType.Text;
+                    command.ExecuteNonQuery();
+                }
+            }
+            catch (SqlException mssqle)
+            {
+                throw mssqle;
+            }
+            catch (ArgumentException ae)
+            {
+                throw ae;
+            }
+        }
+
+        public override Result ExecuteProcedure(string tableName, string storedProcedure, string connectionToUse, Parameter[] parameters, bool logTransaction = true)
         {
             DataTable dataTable = null;
 
@@ -55,7 +76,15 @@ namespace DataManagement.DAO
             }
             catch (SqlException mssqle)
             {
-                throw mssqle;
+                switch (mssqle.Number)
+                {
+                    case 2812: // Cuando el Stored Procedure no existe, lo crea.
+                        ExecuteNonQuery(GetTransactionText<T>(transactionType, ConnectionTypes.MSSQL), connectionToUse);
+                        dataTable = ExecuteProcedure(obj, tableName, connectionToUse, transactionType, false).Data;
+                        break;
+                    default:
+                        throw mssqle;
+                }
             }
             catch (ArgumentException ae)
             {
@@ -101,6 +130,7 @@ namespace DataManagement.DAO
         {
             Log newLog = new Log
             {
+                Ip = string.Empty,
                 Transaccion = transactionType.ToString(),
                 TablaAfectada = dataBaseTableName,
                 Parametros = GetStringParameters(null, command)

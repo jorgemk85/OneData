@@ -73,6 +73,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DAO\Creation.cs" />
+    <Compile Include="Enums\ConfigurationTypes.cs" />
     <Compile Include="Events\CommandExecuted.cs" />
     <Compile Include="Events\DeleteExecuted.cs" />
     <Compile Include="Events\ExecutedEventArgs.cs" />
@@ -102,7 +104,7 @@
     <Compile Include="Tools\ConsolidationTools.cs" />
     <Compile Include="Tools\SimpleConverter.cs" />
     <Compile Include="Examples\EjemploConnector.cs" />
-    <Compile Include="DAO\DbOperation.cs" />
+    <Compile Include="DAO\Operation.cs" />
     <Compile Include="DAO\MsSqlOperation.cs" />
     <Compile Include="DAO\QueryEvaluation.cs" />
     <Compile Include="DAO\Connection.cs" />

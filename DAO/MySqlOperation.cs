@@ -8,11 +8,33 @@ using System.Data;
 
 namespace DataManagement.DAO
 {
-    internal class MySqlOperation : DbOperation
+    internal class MySqlOperation : Operation
     {
         private MySqlCommand command;
 
-        public override Result EjecutarProcedimiento(string tableName, string storedProcedure, string connectionToUse, Parameter[] parameters, bool logTransaction = true)
+        internal override void ExecuteNonQuery(string transaction, string connectionToUse)
+        {
+            try
+            {
+                using (MySqlConnection connection = Connection.OpenMySqlConnection(connectionToUse))
+                {
+                    if (connection.State != ConnectionState.Open) throw new BadConnectionStateException();
+                    command = new MySqlCommand(transaction, connection);
+                    command.CommandType = CommandType.Text;
+                    command.ExecuteNonQuery();
+                }
+            }
+            catch (MySqlException mysqle)
+            {
+                throw mysqle;
+            }
+            catch (ArgumentException ae)
+            {
+                throw ae;
+            }
+        }
+
+        public override Result ExecuteProcedure(string tableName, string storedProcedure, string connectionToUse, Parameter[] parameters, bool logTransaction = true)
         {
             DataTable dataTable = null;
 
@@ -54,7 +76,15 @@ namespace DataManagement.DAO
             }
             catch (MySqlException mysqle)
             {
-                throw mysqle;
+                switch (mysqle.Number)
+                {
+                    case 2812: // Cuando el Stored Procedure no existe.
+                        ExecuteNonQuery(GetTransactionText<T>(transactionType, ConnectionTypes.MySQL), connectionToUse);
+                        dataTable = ExecuteProcedure(obj, tableName, connectionToUse, transactionType, false).Data;
+                        break;
+                    default:
+                        throw mysqle;
+                }
             }
             catch (ArgumentException ae)
             {
@@ -99,10 +129,12 @@ namespace DataManagement.DAO
         {
             Log newLog = new Log
             {
+                Ip = string.Empty,
                 Transaccion = transactionType.ToString(),
                 TablaAfectada = dataBaseTableName,
                 Parametros = GetStringParameters(command, null)
             };
+
             ExecuteProcedure(newLog, newLog.DataBaseTableName, connectionToUse, TransactionTypes.Insert, false);
         }
     }

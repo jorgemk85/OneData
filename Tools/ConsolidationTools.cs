@@ -1,4 +1,6 @@
-﻿using DataManagement.Exceptions;
+﻿using DataManagement.Enums;
+using DataManagement.Exceptions;
+using System.Configuration;
 using System.Reflection;
 
 namespace DataManagement.Tools
@@ -65,6 +67,21 @@ namespace DataManagement.Tools
             }
 
             return obj;
+        }
+
+        public static string GetValueFromConfiguration(string key, ConfigurationTypes type)
+        {
+            switch (type)
+            {
+                case ConfigurationTypes.ConnectionString:
+                    if (ConfigurationManager.ConnectionStrings[key] == null) throw new ConfigurationNotFoundException(key);
+                    return ConfigurationManager.ConnectionStrings[key].ConnectionString;
+                case ConfigurationTypes.AppSetting:
+                    if (ConfigurationManager.AppSettings[key] == null) throw new ConfigurationNotFoundException(key);
+                    return ConfigurationManager.AppSettings[key];
+                default:
+                    throw new ConfigurationNotFoundException(key);
+            }
         }
     }
 }

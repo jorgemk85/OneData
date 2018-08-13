@@ -1,4 +1,5 @@
-﻿using DataManagement.Exceptions;
+﻿using DataManagement.Enums;
+using DataManagement.Tools;
 using MySql.Data.MySqlClient;
 using System.Configuration;
 using System.Data.SqlClient;
@@ -11,9 +12,7 @@ namespace DataManagement.DAO
         {
             try
             {
-                if (ConfigurationManager.ConnectionStrings[connectionToUse] == null) throw new ConfigurationNotFoundException(connectionToUse);
-
-                return ConfigurationManager.ConnectionStrings[connectionToUse].ConnectionString;
+                return ConsolidationTools.GetValueFromConfiguration(connectionToUse, ConfigurationTypes.ConnectionString);
             }
             catch (ConfigurationErrorsException cee)
             {

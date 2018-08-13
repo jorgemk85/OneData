@@ -41,9 +41,7 @@ namespace DataManagement.DAO
         {
             try
             {
-                if (ConfigurationManager.AppSettings["DefaultConnection"] == null) throw new ConfigurationNotFoundException("DefaultConnection");
-
-                defaultConnection = ConfigurationManager.AppSettings["DefaultConnection"];
+                defaultConnection = ConsolidationTools.GetValueFromConfiguration("DefaultConnection", ConfigurationTypes.AppSetting);
             }
             catch (ConfigurationErrorsException cee)
             {
@@ -59,7 +57,6 @@ namespace DataManagement.DAO
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la insercion.</returns>
         public static Result Insert(T obj, string connectionToUse = null)
         {
-            if (connectionToUse == null) connectionToUse = defaultConnection;
             return Command(obj, TransactionTypes.Insert, connectionToUse);
         }
 
@@ -71,7 +68,6 @@ namespace DataManagement.DAO
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la insercion.</returns>
         public static async Task<Result> InsertAsync(T obj, string connectionToUse = null)
         {
-            if (connectionToUse == null) connectionToUse = defaultConnection;
             return await Task.Run(() => Command(obj, TransactionTypes.Insert, connectionToUse));
         }
 
@@ -83,7 +79,6 @@ namespace DataManagement.DAO
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la actualizacion.</returns>
         public static Result Update(T obj, string connectionToUse = null)
         {
-            if (connectionToUse == null) connectionToUse = defaultConnection;
             return Command(obj, TransactionTypes.Update, connectionToUse);
         }
 
@@ -95,7 +90,6 @@ namespace DataManagement.DAO
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la actualizacion.</returns>
         public static async Task<Result> UpdateAsync(T obj, string connectionToUse = null)
         {
-            if (connectionToUse == null) connectionToUse = defaultConnection;
             return await Task.Run(() => Command(obj, TransactionTypes.Update, connectionToUse));
         }
 
@@ -107,7 +101,6 @@ namespace DataManagement.DAO
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la eliminacion.</returns>
         public static Result Delete(T obj, string connectionToUse = null)
         {
-            if (connectionToUse == null) connectionToUse = defaultConnection;
             return Command(obj, TransactionTypes.Delete, connectionToUse);
         }
 
@@ -119,7 +112,6 @@ namespace DataManagement.DAO
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la eliminacion.</returns>
         public static async Task<Result> DeleteAsync(T obj, string connectionToUse = null)
         {
-            if (connectionToUse == null) connectionToUse = defaultConnection;
             return await Task.Run(() => Command(obj, TransactionTypes.Delete, connectionToUse));
         }
 
@@ -131,7 +123,6 @@ namespace DataManagement.DAO
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la seleccion.</returns>
         public static Result Select(string connectionToUse = null, params Parameter[] parameters)
         {
-            if (connectionToUse == null) connectionToUse = defaultConnection;
             return Command(DataSerializer.SetParametersInObject<T>(parameters), TransactionTypes.Select, connectionToUse);
         }
 
@@ -143,7 +134,6 @@ namespace DataManagement.DAO
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la seleccion.</returns>
         public static async Task<Result> SelectAsync(string connectionToUse = null, params Parameter[] parameters)
         {
-            if (connectionToUse == null) connectionToUse = defaultConnection;
             return await Task.Run(() => Command(DataSerializer.SetParametersInObject<T>(parameters), TransactionTypes.Select, connectionToUse));
         }
 
@@ -161,8 +151,8 @@ namespace DataManagement.DAO
             {
                 if (connectionToUse == null) connectionToUse = defaultConnection;
                 ConnectionTypes connectionType = (ConnectionTypes)Enum.Parse(typeof(ConnectionTypes), ConfigurationManager.AppSettings["ConnectionType"].ToString());
-                DbOperation dbOperation = connectionType == ConnectionTypes.MySQL ? (DbOperation)new MySqlOperation() : (DbOperation)new MsSqlOperation();
-                Result result = dbOperation.EjecutarProcedimiento(tableName, storedProcedure, connectionToUse, parameters);
+                Operation dbOperation = connectionType == ConnectionTypes.MySQL ? (Operation)new MySqlOperation() : (Operation)new MsSqlOperation();
+                Result result = dbOperation.ExecuteProcedure(tableName, storedProcedure, connectionToUse, parameters);
                 CallOnExecutedEventHandlers(tableName, TransactionTypes.StoredProcedure, result);
                 return result;
             }
@@ -186,8 +176,8 @@ namespace DataManagement.DAO
             {
                 if (connectionToUse == null) connectionToUse = defaultConnection;
                 ConnectionTypes connectionType = (ConnectionTypes)Enum.Parse(typeof(ConnectionTypes), ConfigurationManager.AppSettings["ConnectionType"].ToString());
-                DbOperation dbOperation = connectionType == ConnectionTypes.MySQL ? (DbOperation)new MySqlOperation() : (DbOperation)new MsSqlOperation();
-                Result result = await Task.Run(() => dbOperation.EjecutarProcedimiento(tableName, storedProcedure, connectionToUse, parameters));
+                Operation dbOperation = connectionType == ConnectionTypes.MySQL ? (Operation)new MySqlOperation() : (Operation)new MsSqlOperation();
+                Result result = await Task.Run(() => dbOperation.ExecuteProcedure(tableName, storedProcedure, connectionToUse, parameters));
                 CallOnExecutedEventHandlers(tableName, TransactionTypes.StoredProcedure, result);
                 return result;
             }
@@ -204,7 +194,6 @@ namespace DataManagement.DAO
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la seleccion.</returns>
         public static Result SelectAll(string connectionToUse = null)
         {
-            if (connectionToUse == null) connectionToUse = defaultConnection;
             return Command(new T(), TransactionTypes.SelectAll, connectionToUse);
         }
 
@@ -215,7 +204,6 @@ namespace DataManagement.DAO
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la seleccion.</returns>
         public static async Task<Result> SelectAllAsync(string connectionToUse = null)
         {
-            if (connectionToUse == null) connectionToUse = defaultConnection;
             return await Task.Run(() => Command(new T(), TransactionTypes.SelectAll, connectionToUse));
         }
 

@@ -5,7 +5,6 @@ namespace DataManagement.Models
 {
     public class Log : Main
     {
-        [UnlinkedProperty]
         public string Ip { get; set; }
         public string Transaccion { get; set; }
         public string TablaAfectada { get; set; }

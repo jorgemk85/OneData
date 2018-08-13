@@ -3,16 +3,18 @@ using DataManagement.Enums;
 using DataManagement.Exceptions;
 using DataManagement.Interfaces;
 using DataManagement.Models;
+using DataManagement.Tools;
 using MySql.Data.MySqlClient;
 using System;
 using System.Configuration;
 using System.Data.SqlClient;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 
 namespace DataManagement.DAO
 {
-    internal class DbOperation
+    internal class Operation
     {
         protected string SelectSuffix { get; set; }
         protected string InsertSuffix { get; set; }
@@ -21,7 +23,7 @@ namespace DataManagement.DAO
         protected string SelectAllSuffix { get; set; }
         protected string StoredProcedurePrefix { get; set; }
 
-        public DbOperation()
+        public Operation()
         {
             GetTransactionTypesSuffixes();
         }
@@ -166,14 +168,35 @@ namespace DataManagement.DAO
             return builder.ToString();
         }
 
-        public virtual Result EjecutarProcedimiento(string tableName, string storedProcedure, string connectionToUse, Parameter[] parameters, bool logTransaction = true) 
+        public virtual Result ExecuteProcedure(string tableName, string storedProcedure, string connectionToUse, Parameter[] parameters, bool logTransaction = true)
         {
             return new Result();
         }
 
-        public virtual Result ExecuteProcedure<T>(T obj, string tableName, string connectionToUse, TransactionTypes transactionType, bool logTransaction = true) where T : IManageable
+        public virtual Result ExecuteProcedure<T>(T obj, string tableName, string connectionToUse, TransactionTypes transactionType, bool logTransaction = true) where T : IManageable, new()
         {
             return new Result();
+        }
+
+        internal virtual void ExecuteNonQuery(string query, string connectionToUse) { }
+
+        protected string GetTransactionText<T>(TransactionTypes transactionType, ConnectionTypes connectionType) where T : IManageable, new()
+        {
+            switch (transactionType)
+            {
+                case TransactionTypes.Select:
+                    return Creation.CreateSelectStoredProcedure<T>(connectionType);
+                case TransactionTypes.SelectAll:
+                    return Creation.CreateSelectAllStoredProcedure<T>(connectionType);
+                case TransactionTypes.Delete:
+                    return Creation.CreateDeleteStoredProcedure<T>(connectionType);
+                case TransactionTypes.Insert:
+                    return Creation.CreateInsertStoredProcedure<T>(connectionType);
+                case TransactionTypes.Update:
+                    return Creation.CreateUpdateStoredProcedure<T>(connectionType);
+                default:
+                    throw new ArgumentException("El tipo de trascaccion no es valido para generar un nuevo procedimiento almacenado.");
+            }
         }
     }
 }
