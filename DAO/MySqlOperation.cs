@@ -14,8 +14,6 @@ namespace DataManagement.DAO
 {
     internal class MySqlOperation : Operation
     {
-        private MySqlCommand command;
-
         internal override int ExecuteNonQuery(string transaction, string connectionToUse)
         {
             try
@@ -50,7 +48,7 @@ namespace DataManagement.DAO
                     command = new MySqlCommand(storedProcedure, connection);
                     command.CommandType = CommandType.StoredProcedure;
 
-                    if (parameters != null) SetParameters(parameters, mySqlCommand: command);
+                    if (parameters != null) SetParameters(parameters, (MySqlCommand)command);
                     dataTable = new DataTable();
                     dataTable.Load(command.ExecuteReader());
                     dataTable.TableName = tableName;
@@ -165,14 +163,14 @@ namespace DataManagement.DAO
 
                 if (transactionType == TransactionTypes.Insert || transactionType == TransactionTypes.Update || transactionType == TransactionTypes.Delete)
                 {
-                    SetParameters(obj, transactionType, mySqlCommand: command);
+                    SetParameters(obj, transactionType, (MySqlCommand)command);
                     command.ExecuteNonQuery();
                 }
                 else
                 {
                     if (transactionType == TransactionTypes.Select)
                     {
-                        SetParameters(obj, transactionType, mySqlCommand: command);
+                        SetParameters(obj, transactionType, (MySqlCommand)command);
                     }
                     dataTable = new DataTable();
                     dataTable.Load(command.ExecuteReader());
@@ -189,7 +187,7 @@ namespace DataManagement.DAO
                 Ip = string.Empty,
                 Transaccion = transactionType.ToString(),
                 TablaAfectada = dataBaseTableName,
-                Parametros = GetStringParameters(command)
+                Parametros = GetStringParameters((MySqlCommand)command)
             };
 
             ExecuteProcedure(newLog, newLog.DataBaseTableName, connectionToUse, TransactionTypes.Insert, false);

@@ -5,6 +5,7 @@ using DataManagement.Interfaces;
 using DataManagement.Models;
 using System;
 using System.Data;
+using System.Data.Common;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Reflection;
@@ -14,8 +15,6 @@ namespace DataManagement.DAO
 {
     internal class MsSqlOperation : Operation
     {
-        private SqlCommand command;
-
         internal override int ExecuteNonQuery(string transaction, string connectionToUse)
         {
             try
@@ -50,7 +49,7 @@ namespace DataManagement.DAO
                     command = new SqlCommand(storedProcedure, connection);
                     command.CommandType = CommandType.StoredProcedure;
 
-                    if (parameters != null) SetParameters(parameters, msSqlCommand: command);
+                    if (parameters != null) SetParameters(parameters, (SqlCommand)command);
                     dataTable = new DataTable();
                     dataTable.Load(command.ExecuteReader());
                     dataTable.TableName = tableName;
@@ -166,14 +165,14 @@ namespace DataManagement.DAO
 
                 if (transactionType == TransactionTypes.Insert || transactionType == TransactionTypes.Update || transactionType == TransactionTypes.Delete)
                 {
-                    SetParameters(obj, transactionType, msSqlCommand: command);
+                    SetParameters(obj, transactionType, (SqlCommand)command);
                     command.ExecuteNonQuery();
                 }
                 else
                 {
                     if (transactionType == TransactionTypes.Select)
                     {
-                        SetParameters(obj, transactionType, msSqlCommand: command);
+                        SetParameters(obj, transactionType, (SqlCommand)command);
                     }
                     dataTable = new DataTable();
                     dataTable.Load(command.ExecuteReader());
@@ -191,7 +190,7 @@ namespace DataManagement.DAO
                 Ip = string.Empty,
                 Transaccion = transactionType.ToString(),
                 TablaAfectada = dataBaseTableName,
-                Parametros = GetStringParameters(command)
+                Parametros = GetStringParameters((SqlCommand)command)
             };
 
             ExecuteProcedure(newLog, newLog.DataBaseTableName, connectionToUse, TransactionTypes.Insert, false);

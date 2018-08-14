@@ -1,17 +1,9 @@
-﻿using DataManagement.Attributes;
-using DataManagement.Enums;
-using DataManagement.Exceptions;
+﻿using DataManagement.Enums;
 using DataManagement.Interfaces;
 using DataManagement.Models;
 using DataManagement.Tools;
-using MySql.Data.MySqlClient;
 using System;
-using System.Configuration;
-using System.Data;
-using System.Data.SqlClient;
-using System.Linq;
-using System.Reflection;
-using System.Text;
+using System.Data.Common;
 
 namespace DataManagement.DAO
 {
@@ -25,6 +17,8 @@ namespace DataManagement.DAO
         protected string StoredProcedurePrefix { get; set; }
         protected bool AutoCreateStoredProcedures { get; set; }
         protected bool AutoCreateTables { get; set; }
+
+        protected DbCommand command { get; set; }
 
         public Operation()
         {
