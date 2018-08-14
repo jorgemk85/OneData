@@ -8,6 +8,7 @@ using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 
 namespace DataManagement.DAO
 {
@@ -37,7 +38,7 @@ namespace DataManagement.DAO
             }
         }
 
-        public override Result ExecuteProcedure(string tableName, string storedProcedure, string connectionToUse, Parameter[] parameters, bool logTransaction = true)
+        internal override Result ExecuteProcedure(string tableName, string storedProcedure, string connectionToUse, Parameter[] parameters, bool logTransaction = true)
         {
             DataTable dataTable = null;
 
@@ -69,7 +70,7 @@ namespace DataManagement.DAO
             return new Result(dataTable);
         }
 
-        public override Result ExecuteProcedure<T>(T obj, string tableName, string connectionToUse, TransactionTypes transactionType, bool logTransaction = true)
+        internal override Result ExecuteProcedure<T>(T obj, string tableName, string connectionToUse, TransactionTypes transactionType, bool logTransaction = true) 
         {
             DataTable dataTable = null;
 
@@ -94,14 +95,7 @@ namespace DataManagement.DAO
             {
                 if (AutoCreateTables)
                 {
-                    ExecuteNonQuery(Creation.GetCreateTableQuery<T>(ConnectionTypes.MSSQL), connectionToUse);
-                    VerifyForeignTables(typeof(T), connectionToUse);
-                    string foreignKeyQuery = Creation.GetCreateForeignKeysQuery(typeof(T), ConnectionTypes.MSSQL);
-
-                    if (!string.IsNullOrWhiteSpace(foreignKeyQuery))
-                    {
-                        ExecuteNonQuery(Creation.GetCreateForeignKeysQuery(typeof(T), ConnectionTypes.MSSQL), connectionToUse);
-                    }
+                    ProcessTableCreation<T>(connectionToUse);
 
                     goto Start;
                 }
@@ -114,6 +108,18 @@ namespace DataManagement.DAO
             if (logTransaction) LogTransaction(tableName, transactionType, connectionToUse);
 
             return new Result(dataTable);
+        }
+
+        private void ProcessTableCreation<T>(string connectionToUse) where T : IManageable, new()
+        {
+            ExecuteNonQuery(Creation.GetCreateTableQuery<T>(ConnectionTypes.MSSQL), connectionToUse);
+            VerifyForeignTables(typeof(T), connectionToUse);
+            string foreignKeyQuery = Creation.GetCreateForeignKeysQuery(typeof(T), ConnectionTypes.MSSQL);
+
+            if (!string.IsNullOrWhiteSpace(foreignKeyQuery))
+            {
+                ExecuteNonQuery(Creation.GetCreateForeignKeysQuery(typeof(T), ConnectionTypes.MSSQL), connectionToUse);
+            }
         }
 
         private void VerifyForeignTables(Type type, string connectionToUse)
@@ -148,7 +154,7 @@ namespace DataManagement.DAO
             return true;
         }
 
-        private DataTable ConfigureConnectionAndExecuteCommand<T>(T obj, string tableName, string connectionToUse, TransactionTypes transactionType) where T : IManageable
+        private DataTable ConfigureConnectionAndExecuteCommand<T>(T obj, string tableName, string connectionToUse, TransactionTypes transactionType) where T : IManageable, new()
         {
             DataTable dataTable = null;
 
@@ -185,10 +191,47 @@ namespace DataManagement.DAO
                 Ip = string.Empty,
                 Transaccion = transactionType.ToString(),
                 TablaAfectada = dataBaseTableName,
-                Parametros = GetStringParameters(null, command)
+                Parametros = GetStringParameters(command)
             };
 
             ExecuteProcedure(newLog, newLog.DataBaseTableName, connectionToUse, TransactionTypes.Insert, false);
+        }
+
+        private string GetStringParameters(SqlCommand msSqlCommand)
+        {
+            StringBuilder builder = new StringBuilder();
+
+            foreach (SqlParameter parametro in msSqlCommand.Parameters)
+            {
+                if (parametro.Value != null)
+                {
+                    builder.AppendFormat("{0}: {1}|", parametro.ParameterName, parametro.Value);
+                }
+            }
+
+            return builder.ToString();
+        }
+
+        private void SetParameters<T>(T obj, TransactionTypes transactionType, SqlCommand msSqlCommand)
+        {
+            foreach (PropertyInfo propertyInfo in typeof(T).GetProperties())
+            {
+                // Si encontramos el atributo entonces se brinca la propiedad.
+                if (Attribute.GetCustomAttribute(propertyInfo, typeof(UnlinkedProperty)) != null) continue;
+
+                if (transactionType == TransactionTypes.Delete)
+                {
+                    if (propertyInfo.Name == "Id")
+                    {
+                        msSqlCommand.Parameters.AddWithValue("_id", propertyInfo.GetValue(obj));
+                        break;
+                    }
+                }
+                else
+                {
+                    msSqlCommand.Parameters.AddWithValue("_" + propertyInfo.Name, propertyInfo.GetValue(obj));
+                }
+            }
         }
     }
 }

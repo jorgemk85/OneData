@@ -7,6 +7,7 @@ using DataManagement.Tools;
 using MySql.Data.MySqlClient;
 using System;
 using System.Configuration;
+using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Reflection;
@@ -85,86 +86,12 @@ namespace DataManagement.DAO
             }
         }
 
-        protected void SetParameters<T>(T obj, TransactionTypes transactionType, MySqlCommand mySqlCommand = null, SqlCommand msSqlCommand = null)
-        {
-            if (msSqlCommand == null && mySqlCommand == null)
-            {
-                throw new Exception("Se necesita por lo menos un objeto Comando.");
-            }
-
-            foreach (PropertyInfo propertyInfo in typeof(T).GetProperties())
-            {
-                // Si encontramos el atributo entonces se brinca la propiedad.
-                if (Attribute.GetCustomAttribute(propertyInfo, typeof(UnlinkedProperty)) != null) continue;
-
-                if (transactionType == TransactionTypes.Delete)
-                {
-                    if (propertyInfo.Name == "Id")
-                    {
-                        if (mySqlCommand != null)
-                        {
-                            mySqlCommand.Parameters.AddWithValue("_id", propertyInfo.GetValue(obj));
-                            break;
-                        }
-                        else
-                        {
-                            msSqlCommand.Parameters.AddWithValue("_id", propertyInfo.GetValue(obj));
-                            break;
-                        }
-                    }
-                }
-                else
-                {
-                    if (mySqlCommand != null)
-                    {
-                        mySqlCommand.Parameters.AddWithValue("_" + propertyInfo.Name, propertyInfo.GetValue(obj));
-                    }
-                    else
-                    {
-                        msSqlCommand.Parameters.AddWithValue("_" + propertyInfo.Name, propertyInfo.GetValue(obj));
-                    }
-                }
-            }
-        }
-
-        protected string GetStringParameters(MySqlCommand mySqlCommand = null, SqlCommand msSqlCommand = null)
-        {
-            if (msSqlCommand == null && mySqlCommand == null)
-            {
-                throw new Exception("Se necesita por lo menos un objeto Comando.");
-            }
-            StringBuilder builder = new StringBuilder();
-
-            if (msSqlCommand != null)
-            {
-                foreach (SqlParameter parametro in msSqlCommand.Parameters)
-                {
-                    if (parametro.Value != null)
-                    {
-                        builder.AppendFormat("{0}: {1}|", parametro.ParameterName, parametro.Value);
-                    }
-                }
-            }
-            else
-            {
-                foreach (MySqlParameter parametro in mySqlCommand.Parameters)
-                {
-                    if (parametro.Value != null)
-                    {
-                        builder.AppendFormat("{0}: {1}|", parametro.ParameterName, parametro.Value);
-                    }
-                }
-            }
-
-            return builder.ToString();
-        }
-
-        public virtual Result ExecuteProcedure(string tableName, string storedProcedure, string connectionToUse, Parameter[] parameters, bool logTransaction = true)
+        internal virtual Result ExecuteProcedure(string tableName, string storedProcedure, string connectionToUse, Parameter[] parameters, bool logTransaction = true)
         {
             return new Result();
         }
 
-        public virtual Result ExecuteProcedure<T>(T obj, string tableName, string connectionToUse, TransactionTypes transactionType, bool logTransaction = true) where T : IManageable, new()
+        internal virtual Result ExecuteProcedure<T>(T obj, string tableName, string connectionToUse, TransactionTypes transactionType, bool logTransaction = true) where T : IManageable, new()
         {
             return new Result();
         }
