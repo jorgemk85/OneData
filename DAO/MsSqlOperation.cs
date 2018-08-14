@@ -185,6 +185,10 @@ namespace DataManagement.DAO
 
         private void LogTransaction(string dataBaseTableName, TransactionTypes transactionType, string connectionToUse)
         {
+            if (!EnableLog)
+            {
+                return;
+            }
             Log newLog = new Log
             {
                 Ip = string.Empty,

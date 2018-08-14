@@ -17,6 +17,7 @@ namespace DataManagement.DAO
         protected string StoredProcedurePrefix { get; set; }
         protected bool AutoCreateStoredProcedures { get; set; }
         protected bool AutoCreateTables { get; set; }
+        protected bool EnableLog { get; set; }
 
         protected DbCommand command { get; set; }
 
@@ -36,6 +37,7 @@ namespace DataManagement.DAO
 
             AutoCreateStoredProcedures = bool.Parse(ConsolidationTools.GetValueFromConfiguration("AutoCreateStoredProcedures", ConfigurationTypes.AppSetting));
             AutoCreateTables = bool.Parse(ConsolidationTools.GetValueFromConfiguration("AutoCreateTables", ConfigurationTypes.AppSetting));
+            EnableLog = bool.Parse(ConsolidationTools.GetValueFromConfiguration("EnableLog", ConfigurationTypes.AppSetting));
         }
 
         protected string GetFriendlyTransactionSuffix(TransactionTypes transactionType)
