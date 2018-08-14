@@ -63,29 +63,6 @@ namespace DataManagement.DAO
             }
         }
 
-        protected void SetParameters(Parameter[] parameters, MySqlCommand mySqlCommand = null, SqlCommand msSqlCommand = null)
-        {
-            if (msSqlCommand == null && mySqlCommand == null)
-            {
-                throw new Exception("Se necesita por lo menos un objeto Comando.");
-            }
-
-            if (mySqlCommand != null)
-            {
-                for (int i = 0; i < parameters.Length; i++)
-                {
-                    mySqlCommand.Parameters.AddWithValue(parameters[i].Name, parameters[i].Value);
-                }
-            }
-            else
-            {
-                for (int i = 0; i < parameters.Length; i++)
-                {
-                    msSqlCommand.Parameters.AddWithValue(parameters[i].Name, parameters[i].Value);
-                }
-            }
-        }
-
         internal virtual Result ExecuteProcedure(string tableName, string storedProcedure, string connectionToUse, Parameter[] parameters, bool logTransaction = true)
         {
             return new Result();

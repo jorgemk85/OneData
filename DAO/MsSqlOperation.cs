@@ -70,7 +70,7 @@ namespace DataManagement.DAO
             return new Result(dataTable);
         }
 
-        internal override Result ExecuteProcedure<T>(T obj, string tableName, string connectionToUse, TransactionTypes transactionType, bool logTransaction = true) 
+        internal override Result ExecuteProcedure<T>(T obj, string tableName, string connectionToUse, TransactionTypes transactionType, bool logTransaction = true)
         {
             DataTable dataTable = null;
 
@@ -231,6 +231,15 @@ namespace DataManagement.DAO
                 {
                     msSqlCommand.Parameters.AddWithValue("_" + propertyInfo.Name, propertyInfo.GetValue(obj));
                 }
+            }
+        }
+
+        private void SetParameters(Parameter[] parameters, SqlCommand msSqlCommand)
+        {
+            for (int i = 0; i < parameters.Length; i++)
+            {
+                msSqlCommand.Parameters.AddWithValue(parameters[i].Name, parameters[i].Value);
+
             }
         }
     }
