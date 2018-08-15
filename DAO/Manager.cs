@@ -41,7 +41,7 @@ namespace DataManagement.DAO
         {
             try
             {
-                defaultConnection = ConsolidationTools.GetValueFromConfiguration("DefaultConnection", ConfigurationTypes.AppSetting);
+                defaultConnection = ConsolidationTools.GetValueFromConfiguration("DefaultConnection", ConfigurationTypes.AppSetting, false, string.Empty);
             }
             catch (ConfigurationErrorsException cee)
             {
