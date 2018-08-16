@@ -11,6 +11,7 @@ namespace DataManagement.Tools
         /// Valida que no exista una sola propiedad con valor nulo.
         /// </summary>
         /// <param name="obj">El objeto que sera validado.</param>
+        /// <param name="throwError">Especifica si se debe de arrojar error o regresar false cuando se encuentren valores nulos.</param>
         /// <returns>Regresa True cuando el objeto tiene todas las propiedades asignadas, o error, cuando es lo contrario.</returns>
         public static bool PerformNullValidation(object obj, bool throwError)
         {
