@@ -7,6 +7,7 @@ namespace DataManagement.Models
     /// <summary>
     /// Clase principal de la que tienen que heredar todos los objetos de negocio que se desee utilizar con la libreria DataManagement.
     /// </summary>
+    [Serializable]
     public abstract class Main : IManageable
     {
         #region Properties

@@ -9,7 +9,7 @@ using System.Text;
 
 namespace DataManagement.DAO
 {
-    public class Creation
+    internal class Creation
     {
         static string tablePrefix;
         static string storedProcedurePrefix;
