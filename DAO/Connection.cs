@@ -12,7 +12,7 @@ namespace DataManagement.DAO
         {
             try
             {
-                return ConsolidationTools.GetValueFromConfiguration(connectionToUse, ConfigurationTypes.ConnectionString, false, string.Empty);
+                return ConsolidationTools.GetValueFromConfiguration(connectionToUse, ConfigurationTypes.ConnectionString);
             }
             catch (ConfigurationErrorsException cee)
             {

@@ -69,7 +69,13 @@ namespace DataManagement.Tools
             return obj;
         }
 
-        public static string GetValueFromConfiguration(string key, ConfigurationTypes type, bool createIfNotFound, string defaultValue)
+        /// <summary>
+        /// Obtiene el valor colocado bajo la llave proporcionada en el archivo de Configuracion del proyecto.
+        /// </summary>
+        /// <param name="key">Llave a localizar.</param>
+        /// <param name="type">Especifica el tipo de configuracion al que pertenece la llave.</param>
+        /// <returns></returns>
+        public static string GetValueFromConfiguration(string key, ConfigurationTypes type)
         {
             switch (type)
             {
@@ -77,23 +83,7 @@ namespace DataManagement.Tools
                     if (ConfigurationManager.ConnectionStrings[key] == null) throw new ConfigurationNotFoundException(key);
                     return ConfigurationManager.ConnectionStrings[key].ConnectionString;
                 case ConfigurationTypes.AppSetting:
-                    if (ConfigurationManager.AppSettings[key] == null)
-                    {
-                        if (!createIfNotFound)
-                        {
-                            throw new ConfigurationNotFoundException(key);
-                        }
-                        else if (string.IsNullOrWhiteSpace(defaultValue))
-                        {
-                            throw new ConfigurationNotFoundException(key);
-                        }
-
-                        Configuration configuration = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
-                        configuration.AppSettings.Settings.Add(key, defaultValue);
-                        configuration.Save(ConfigurationSaveMode.Modified, true);
-                        ConfigurationManager.RefreshSection("appSettings");
-                    }
-
+                    if (ConfigurationManager.AppSettings[key] == null) throw new ConfigurationNotFoundException(key);
                     return ConfigurationManager.AppSettings[key];
                 default:
                     throw new ConfigurationNotFoundException(key);
