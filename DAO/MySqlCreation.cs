@@ -43,7 +43,7 @@ namespace DataManagement.DAO
             throw new NotImplementedException();
         }
 
-        public string CreateQueryForTableCreation(IManageable obj, ref PropertyInfo[] properties)
+        public string CreateQueryForTableCreation(IManageable obj, ref PropertyInfo[] properties, bool doAlter)
         {
             throw new NotImplementedException();
         }
@@ -68,12 +68,12 @@ namespace DataManagement.DAO
             throw new NotImplementedException();
         }
 
-        public string GetCreateTableQuery<T>() where T : IManageable, new()
+        public string GetCreateTableQuery<T>(bool doAlter) where T : IManageable, new()
         {
             throw new NotImplementedException();
         }
 
-        public string GetCreateTableQuery(Type type)
+        public string GetCreateTableQuery(Type type, bool doAlter)
         {
             throw new NotImplementedException();
         }

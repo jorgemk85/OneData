@@ -231,7 +231,7 @@ namespace DataManagement.DAO
             return queryBuilder.ToString();
         }
 
-        public string GetCreateTableQuery<T>() where T : IManageable, new()
+        public string GetCreateTableQuery<T>(bool doAlter) where T : IManageable, new()
         {
             StringBuilder queryBuilder = new StringBuilder();
             PropertyInfo[] properties = typeof(T).GetProperties().Where(q => q.GetCustomAttribute<UnlinkedProperty>() == null).ToArray();
@@ -239,23 +239,31 @@ namespace DataManagement.DAO
 
             if (properties.Length == 0) return string.Empty;
 
-            return CreateQueryForTableCreation(obj, ref properties);
+            return CreateQueryForTableCreation(obj, ref properties, doAlter);
         }
 
-        public string GetCreateTableQuery(Type type)
+        public string GetCreateTableQuery(Type type, bool doAlter)
         {
             PropertyInfo[] properties = type.GetProperties().Where(q => q.GetCustomAttribute<UnlinkedProperty>() == null).ToArray();
             IManageable obj = (IManageable)Activator.CreateInstance(type);
 
             if (properties.Length == 0) return string.Empty;
 
-            return CreateQueryForTableCreation(obj, ref properties);
+            return CreateQueryForTableCreation(obj, ref properties, doAlter);
         }
 
-        public string CreateQueryForTableCreation(IManageable obj, ref PropertyInfo[] properties)
+        public string CreateQueryForTableCreation(IManageable obj, ref PropertyInfo[] properties, bool doAlter)
         {
             StringBuilder queryBuilder = new StringBuilder();
-            queryBuilder.AppendFormat("CREATE TABLE {0}.{1}{2} ", obj.Schema, TablePrefix, obj.DataBaseTableName);
+            if (doAlter)
+            {
+                queryBuilder.AppendFormat("ALTER TABLE {0}.{1}{2} ", obj.Schema, TablePrefix, obj.DataBaseTableName);
+            }
+            else
+            {
+                queryBuilder.AppendFormat("CREATE TABLE {0}.{1}{2} ", obj.Schema, TablePrefix, obj.DataBaseTableName);
+            }
+            
             queryBuilder.Append("(");
             // Aqui se colocan las propiedades del objeto. Una por columna por su puesto.
             foreach (PropertyInfo property in properties)

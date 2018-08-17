@@ -14,24 +14,27 @@
     <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>false</DebugSymbols>
-    <DebugType>none</DebugType>
-    <Optimize>true</Optimize>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <LangVersion>latest</LangVersion>
-    <DocumentationFile>bin\Debug\DataManagement.xml</DocumentationFile>
+    <DocumentationFile>
+    </DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
+    <DebugType>embedded</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <LangVersion>latest</LangVersion>
+    <DocumentationFile>bin\Release\DataManagement.xml</DocumentationFile>
+    <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
   <PropertyGroup>
     <SignAssembly>false</SignAssembly>
@@ -77,6 +80,7 @@
     <Compile Include="Attributes\ForeignModel.cs" />
     <Compile Include="DAO\MsSqlCreation.cs" />
     <Compile Include="DAO\MySqlCreation.cs" />
+    <Compile Include="DAO\Operation.cs" />
     <Compile Include="Enums\ConfigurationTypes.cs" />
     <Compile Include="Events\CommandExecuted.cs" />
     <Compile Include="Events\DeleteExecuted.cs" />
@@ -96,7 +100,6 @@
     <Compile Include="Extensions\ObjectExtensions.cs" />
     <Compile Include="Interfaces\ICreatable.cs" />
     <Compile Include="Interfaces\IManageable.cs" />
-    <Compile Include="Interfaces\IOperable.cs" />
     <Compile Include="Models\DataCache.cs" />
     <Compile Include="Enums\ConnectionTypes.cs" />
     <Compile Include="Enums\TransactionTypes.cs" />

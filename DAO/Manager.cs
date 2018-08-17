@@ -151,7 +151,7 @@ namespace DataManagement.DAO
             {
                 if (connectionToUse == null) connectionToUse = defaultConnection;
                 ConnectionTypes connectionType = (ConnectionTypes)Enum.Parse(typeof(ConnectionTypes), ConfigurationManager.AppSettings["ConnectionType"].ToString());
-                IOperable dbOperation = connectionType == ConnectionTypes.MySQL ? (IOperable)new MySqlOperation() : (IOperable)new MsSqlOperation();
+                Operation dbOperation = connectionType == ConnectionTypes.MySQL ? (Operation)new MySqlOperation() : (Operation)new MsSqlOperation();
                 Result result = dbOperation.ExecuteProcedure(tableName, storedProcedure, connectionToUse, parameters);
                 CallOnExecutedEventHandlers(tableName, TransactionTypes.StoredProcedure, result);
                 return result;
@@ -176,7 +176,7 @@ namespace DataManagement.DAO
             {
                 if (connectionToUse == null) connectionToUse = defaultConnection;
                 ConnectionTypes connectionType = (ConnectionTypes)Enum.Parse(typeof(ConnectionTypes), ConfigurationManager.AppSettings["ConnectionType"].ToString());
-                IOperable dbOperation = connectionType == ConnectionTypes.MySQL ? (IOperable)new MySqlOperation() : (IOperable)new MsSqlOperation();
+                Operation dbOperation = connectionType == ConnectionTypes.MySQL ? (Operation)new MySqlOperation() : (Operation)new MsSqlOperation();
                 Result result = await Task.Run(() => dbOperation.ExecuteProcedure(tableName, storedProcedure, connectionToUse, parameters));
                 CallOnExecutedEventHandlers(tableName, TransactionTypes.StoredProcedure, result);
                 return result;

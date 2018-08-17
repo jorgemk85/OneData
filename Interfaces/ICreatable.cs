@@ -29,11 +29,11 @@ namespace DataManagement.Interfaces
 
         string CreateSelectStoredProcedure<T>(bool doAlter) where T : IManageable, new();
 
-        string GetCreateTableQuery<T>() where T : IManageable, new();
+        string GetCreateTableQuery<T>(bool doAlter) where T : IManageable, new();
 
-        string GetCreateTableQuery(Type type);
+        string GetCreateTableQuery(Type type, bool doAlter);
 
-        string CreateQueryForTableCreation(IManageable obj, ref PropertyInfo[] properties);
+        string CreateQueryForTableCreation(IManageable obj, ref PropertyInfo[] properties, bool doAlter);
 
         string GetCreateForeignKeysQuery(Type type);
 
