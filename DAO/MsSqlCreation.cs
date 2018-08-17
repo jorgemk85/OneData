@@ -277,7 +277,7 @@ namespace DataManagement.DAO
                     queryBuilder.AppendFormat("{0} {1} NOT NULL, ", property.Name, GetSqlDataType(property.PropertyType));
                 }
             }
-            queryBuilder.Append("FechaCreacion datetime, FechaModificacion datetime);");
+            queryBuilder.Append("FechaCreacion datetime NOT NULL, FechaModificacion datetime NOT NULL);");
 
             return queryBuilder.ToString();
         }
