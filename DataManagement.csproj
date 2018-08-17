@@ -44,7 +44,7 @@
       <HintPath>packages\EPPlus.4.5.2.1\lib\net40\EPPlus.dll</HintPath>
     </Reference>
     <Reference Include="MySql.Data, Version=6.10.8.0, Culture=neutral, PublicKeyToken=c5687fc88969c44d, processorArchitecture=MSIL">
-      <HintPath>packages\MySql.Data.6.10.8\lib\net452\MySql.Data.dll</HintPath>
+      <HintPath>..\MancaChan\MancaChan\packages\MySql.Data.6.10.8\lib\net452\MySql.Data.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=11.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>packages\Newtonsoft.Json.11.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
@@ -75,7 +75,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Attributes\ForeignModel.cs" />
-    <Compile Include="DAO\Creation.cs" />
+    <Compile Include="DAO\MsSqlCreation.cs" />
+    <Compile Include="DAO\MySqlCreation.cs" />
     <Compile Include="Enums\ConfigurationTypes.cs" />
     <Compile Include="Events\CommandExecuted.cs" />
     <Compile Include="Events\DeleteExecuted.cs" />
@@ -93,7 +94,9 @@
     <Compile Include="Extensions\IManageableExtensions.cs" />
     <Compile Include="Extensions\ListExtensions.cs" />
     <Compile Include="Extensions\ObjectExtensions.cs" />
+    <Compile Include="Interfaces\ICreatable.cs" />
     <Compile Include="Interfaces\IManageable.cs" />
+    <Compile Include="Interfaces\IOperable.cs" />
     <Compile Include="Models\DataCache.cs" />
     <Compile Include="Enums\ConnectionTypes.cs" />
     <Compile Include="Enums\TransactionTypes.cs" />
@@ -106,7 +109,6 @@
     <Compile Include="Tools\ConsolidationTools.cs" />
     <Compile Include="Tools\SimpleConverter.cs" />
     <Compile Include="Examples\EjemploConnector.cs" />
-    <Compile Include="DAO\Operation.cs" />
     <Compile Include="DAO\MsSqlOperation.cs" />
     <Compile Include="DAO\QueryEvaluation.cs" />
     <Compile Include="DAO\Connection.cs" />

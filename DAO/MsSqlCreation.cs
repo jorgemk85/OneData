@@ -9,44 +9,49 @@ using System.Text;
 
 namespace DataManagement.DAO
 {
-    internal class Creation
+    internal class MsSqlCreation : ICreatable
     {
-        static string tablePrefix;
-        static string storedProcedurePrefix;
-        static string insertSuffix;
-        static string selectSuffix;
-        static string selectAllSuffix;
-        static string updateSuffix;
-        static string deleteSuffix;
+        public string TablePrefix { get; set; }
+        public string StoredProcedurePrefix { get; set; }
+        public string InsertSuffix { get; set; }
+        public string SelectSuffix { get; set; }
+        public string SelectAllSuffix { get; set; }
+        public string UpdateSuffix { get; set; }
+        public string DeleteSuffix { get; set; }
 
-        static Creation()
+        internal MsSqlCreation()
         {
-            tablePrefix = ConsolidationTools.GetValueFromConfiguration("TablePrefix", ConfigurationTypes.AppSetting);
-            storedProcedurePrefix = ConsolidationTools.GetValueFromConfiguration("StoredProcedurePrefix", ConfigurationTypes.AppSetting);
-            insertSuffix = ConsolidationTools.GetValueFromConfiguration("InsertSuffix", ConfigurationTypes.AppSetting);
-            selectSuffix = ConsolidationTools.GetValueFromConfiguration("SelectSuffix", ConfigurationTypes.AppSetting);
-            selectAllSuffix = ConsolidationTools.GetValueFromConfiguration("SelectAllSuffix", ConfigurationTypes.AppSetting);
-            updateSuffix = ConsolidationTools.GetValueFromConfiguration("UpdateSuffix", ConfigurationTypes.AppSetting);
-            deleteSuffix = ConsolidationTools.GetValueFromConfiguration("DeleteSuffix", ConfigurationTypes.AppSetting);
+            SetConfigurationProperties();
         }
 
-        private static void SetStoredProceduresParameters(ref PropertyInfo[] properties, StringBuilder queryBuilder, ConnectionTypes connectionType, bool setDefaultNull)
+        public void SetConfigurationProperties()
+        {
+            TablePrefix = ConsolidationTools.GetValueFromConfiguration("TablePrefix", ConfigurationTypes.AppSetting);
+            StoredProcedurePrefix = ConsolidationTools.GetValueFromConfiguration("StoredProcedurePrefix", ConfigurationTypes.AppSetting);
+            InsertSuffix = ConsolidationTools.GetValueFromConfiguration("InsertSuffix", ConfigurationTypes.AppSetting);
+            SelectSuffix = ConsolidationTools.GetValueFromConfiguration("SelectSuffix", ConfigurationTypes.AppSetting);
+            SelectAllSuffix = ConsolidationTools.GetValueFromConfiguration("SelectAllSuffix", ConfigurationTypes.AppSetting);
+            UpdateSuffix = ConsolidationTools.GetValueFromConfiguration("UpdateSuffix", ConfigurationTypes.AppSetting);
+            DeleteSuffix = ConsolidationTools.GetValueFromConfiguration("DeleteSuffix", ConfigurationTypes.AppSetting);
+        }
+
+        public void SetStoredProceduresParameters(ref PropertyInfo[] properties, StringBuilder queryBuilder, bool setDefaultNull)
         {
             // Aqui se colocan los parametros segun las propiedades del objeto 
             foreach (PropertyInfo property in properties)
             {
                 if (setDefaultNull)
                 {
-                    queryBuilder.AppendFormat("@_{0} {1} = null, ", property.Name, GetSqlDataType(property.PropertyType, connectionType));
+                    queryBuilder.AppendFormat("@_{0} {1} = null, ", property.Name, GetSqlDataType(property.PropertyType));
                 }
                 else
                 {
-                    queryBuilder.AppendFormat("@_{0} {1}, ", property.Name, GetSqlDataType(property.PropertyType, connectionType));
+                    queryBuilder.AppendFormat("@_{0} {1}, ", property.Name, GetSqlDataType(property.PropertyType));
                 }
             }
         }
 
-        internal static string CreateInsertStoredProcedure<T>(ConnectionTypes connectionType) where T : IManageable, new()
+        public string CreateInsertStoredProcedure<T>() where T : IManageable, new()
         {
             StringBuilder queryBuilder = new StringBuilder();
             PropertyInfo[] properties = typeof(T).GetProperties().Where(q => q.GetCustomAttribute<UnlinkedProperty>() == null).ToArray();
@@ -54,17 +59,17 @@ namespace DataManagement.DAO
 
             if (properties.Length == 0) return string.Empty;
 
-            queryBuilder.AppendFormat("CREATE PROCEDURE {0}.{1}{2}{3} ", obj.Schema, storedProcedurePrefix, obj.DataBaseTableName, insertSuffix);
+            queryBuilder.AppendFormat("CREATE PROCEDURE {0}.{1}{2}{3} ", obj.Schema, StoredProcedurePrefix, obj.DataBaseTableName, InsertSuffix);
 
             // Aqui se colocan los parametros segun las propiedades del objeto
-            SetStoredProceduresParameters(ref properties, queryBuilder, connectionType, false);
+            SetStoredProceduresParameters(ref properties, queryBuilder, false);
 
             queryBuilder.Remove(queryBuilder.Length - 2, 2);
             queryBuilder.Append(" AS ");
             queryBuilder.Append("BEGIN ");
             queryBuilder.Append("DECLARE @actualTime datetime;");
             queryBuilder.Append("SET @actualTime = getdate();");
-            queryBuilder.AppendFormat("INSERT INTO {0}.{1}{2} (", obj.Schema, tablePrefix, obj.DataBaseTableName);
+            queryBuilder.AppendFormat("INSERT INTO {0}.{1}{2} (", obj.Schema, TablePrefix, obj.DataBaseTableName);
 
             // Seccion para especificar a que columnas se va a insertar.
             foreach (PropertyInfo property in properties)
@@ -87,7 +92,7 @@ namespace DataManagement.DAO
             return queryBuilder.ToString();
         }
 
-        internal static string CreateUpdateStoredProcedure<T>(ConnectionTypes connectionType) where T : IManageable, new()
+        public string CreateUpdateStoredProcedure<T>() where T : IManageable, new()
         {
             StringBuilder queryBuilder = new StringBuilder();
             PropertyInfo[] properties = typeof(T).GetProperties().Where(q => q.GetCustomAttribute<UnlinkedProperty>() == null).ToArray();
@@ -95,17 +100,17 @@ namespace DataManagement.DAO
 
             if (properties.Length == 0) return string.Empty;
 
-            queryBuilder.AppendFormat("CREATE PROCEDURE {0}.{1}{2}{3} ", obj.Schema, storedProcedurePrefix, obj.DataBaseTableName, updateSuffix);
+            queryBuilder.AppendFormat("CREATE PROCEDURE {0}.{1}{2}{3} ", obj.Schema, StoredProcedurePrefix, obj.DataBaseTableName, UpdateSuffix);
 
             // Aqui se colocan los parametros segun las propiedades del objeto
-            SetStoredProceduresParameters(ref properties, queryBuilder, connectionType, false);
+            SetStoredProceduresParameters(ref properties, queryBuilder, false);
 
             queryBuilder.Remove(queryBuilder.Length - 2, 2);
             queryBuilder.Append(" AS ");
             queryBuilder.Append("BEGIN ");
             queryBuilder.Append("DECLARE @actualTime datetime;");
             queryBuilder.Append("SET @actualTime = getdate();");
-            queryBuilder.AppendFormat("UPDATE {0}.{1}{2} ", obj.Schema, tablePrefix, obj.DataBaseTableName);
+            queryBuilder.AppendFormat("UPDATE {0}.{1}{2} ", obj.Schema, TablePrefix, obj.DataBaseTableName);
             queryBuilder.Append("SET ");
 
             // Se especifica el parametro que va en x columna.
@@ -120,7 +125,7 @@ namespace DataManagement.DAO
             return queryBuilder.ToString();
         }
 
-        internal static string CreateDeleteStoredProcedure<T>(ConnectionTypes connectionType) where T : IManageable, new()
+        public string CreateDeleteStoredProcedure<T>() where T : IManageable, new()
         {
             StringBuilder queryBuilder = new StringBuilder();
             PropertyInfo[] properties = typeof(T).GetProperties().Where(q => q.GetCustomAttribute<UnlinkedProperty>() == null).ToArray();
@@ -128,18 +133,18 @@ namespace DataManagement.DAO
 
             if (properties.Length == 0) return string.Empty;
 
-            queryBuilder.AppendFormat("CREATE PROCEDURE {0}.{1}{2}{3} ", obj.Schema, storedProcedurePrefix, obj.DataBaseTableName, deleteSuffix);
+            queryBuilder.AppendFormat("CREATE PROCEDURE {0}.{1}{2}{3} ", obj.Schema, StoredProcedurePrefix, obj.DataBaseTableName, DeleteSuffix);
             queryBuilder.Append("@_Id uniqueidentifier ");
             queryBuilder.Append(" AS ");
             queryBuilder.Append("BEGIN ");
-            queryBuilder.AppendFormat("DELETE FROM {0}.{1}{2} ", obj.Schema, tablePrefix, obj.DataBaseTableName);
+            queryBuilder.AppendFormat("DELETE FROM {0}.{1}{2} ", obj.Schema, TablePrefix, obj.DataBaseTableName);
             queryBuilder.AppendFormat("WHERE Id = @_Id; ");
             queryBuilder.Append("END ");
 
             return queryBuilder.ToString();
         }
 
-        internal static string CreateSelectAllStoredProcedure<T>(ConnectionTypes connectionType) where T : IManageable, new()
+        public string CreateSelectAllStoredProcedure<T>() where T : IManageable, new()
         {
             StringBuilder queryBuilder = new StringBuilder();
             PropertyInfo[] properties = typeof(T).GetProperties().Where(q => q.GetCustomAttribute<UnlinkedProperty>() == null).ToArray();
@@ -147,16 +152,16 @@ namespace DataManagement.DAO
 
             if (properties.Length == 0) return string.Empty;
 
-            queryBuilder.AppendFormat("CREATE PROCEDURE {0}.{1}{2}{3} ", obj.Schema, storedProcedurePrefix, obj.DataBaseTableName, selectAllSuffix);
+            queryBuilder.AppendFormat("CREATE PROCEDURE {0}.{1}{2}{3} ", obj.Schema, StoredProcedurePrefix, obj.DataBaseTableName, SelectAllSuffix);
             queryBuilder.Append(" AS ");
             queryBuilder.Append("BEGIN ");
-            queryBuilder.AppendFormat("SELECT * FROM {0}.{1}{2} ", obj.Schema, tablePrefix, obj.DataBaseTableName);
+            queryBuilder.AppendFormat("SELECT * FROM {0}.{1}{2} ", obj.Schema, TablePrefix, obj.DataBaseTableName);
             queryBuilder.Append("END ");
 
             return queryBuilder.ToString();
         }
 
-        internal static string CreateSelectStoredProcedure<T>(ConnectionTypes connectionType) where T : IManageable, new()
+        public string CreateSelectStoredProcedure<T>() where T : IManageable, new()
         {
             StringBuilder queryBuilder = new StringBuilder();
             PropertyInfo[] properties = typeof(T).GetProperties().Where(q => q.GetCustomAttribute<UnlinkedProperty>() == null).ToArray();
@@ -164,15 +169,15 @@ namespace DataManagement.DAO
 
             if (properties.Length == 0) return string.Empty;
 
-            queryBuilder.AppendFormat("CREATE PROCEDURE {0}.{1}{2}{3} ", obj.Schema, storedProcedurePrefix, obj.DataBaseTableName, selectSuffix);
+            queryBuilder.AppendFormat("CREATE PROCEDURE {0}.{1}{2}{3} ", obj.Schema, StoredProcedurePrefix, obj.DataBaseTableName, SelectSuffix);
 
             // Aqui se colocan los parametros segun las propiedades del objeto
-            SetStoredProceduresParameters(ref properties, queryBuilder, connectionType, true);
+            SetStoredProceduresParameters(ref properties, queryBuilder, true);
 
             queryBuilder.Remove(queryBuilder.Length - 2, 2);
             queryBuilder.Append(" AS ");
             queryBuilder.Append("BEGIN ");
-            queryBuilder.AppendFormat("SELECT * FROM {0}.{1}{2} ", obj.Schema, tablePrefix, obj.DataBaseTableName);
+            queryBuilder.AppendFormat("SELECT * FROM {0}.{1}{2} ", obj.Schema, TablePrefix, obj.DataBaseTableName);
             queryBuilder.Append("WHERE ");
 
             // Se especifica el parametro que va en x columna.
@@ -188,7 +193,7 @@ namespace DataManagement.DAO
             return queryBuilder.ToString();
         }
 
-        internal static string GetCreateTableQuery<T>(ConnectionTypes connectionType) where T : IManageable, new()
+        public string GetCreateTableQuery<T>() where T : IManageable, new()
         {
             StringBuilder queryBuilder = new StringBuilder();
             PropertyInfo[] properties = typeof(T).GetProperties().Where(q => q.GetCustomAttribute<UnlinkedProperty>() == null).ToArray();
@@ -196,34 +201,34 @@ namespace DataManagement.DAO
 
             if (properties.Length == 0) return string.Empty;
 
-            return CreateQueryForTableCreation(obj, ref properties, connectionType);
+            return CreateQueryForTableCreation(obj, ref properties);
         }
 
-        internal static string GetCreateTableQuery(Type type, ConnectionTypes connectionType)
+        public string GetCreateTableQuery(Type type)
         {
             PropertyInfo[] properties = type.GetProperties().Where(q => q.GetCustomAttribute<UnlinkedProperty>() == null).ToArray();
             IManageable obj = (IManageable)Activator.CreateInstance(type);
 
             if (properties.Length == 0) return string.Empty;
 
-            return CreateQueryForTableCreation(obj, ref properties, connectionType);
+            return CreateQueryForTableCreation(obj, ref properties);
         }
 
-        private static string CreateQueryForTableCreation(IManageable obj, ref PropertyInfo[] properties, ConnectionTypes connectionType)
+        public string CreateQueryForTableCreation(IManageable obj, ref PropertyInfo[] properties)
         {
             StringBuilder queryBuilder = new StringBuilder();
-            queryBuilder.AppendFormat("CREATE TABLE {0}.{1}{2} ", obj.Schema, tablePrefix, obj.DataBaseTableName);
+            queryBuilder.AppendFormat("CREATE TABLE {0}.{1}{2} ", obj.Schema, TablePrefix, obj.DataBaseTableName);
             queryBuilder.Append("(");
             // Aqui se colocan las propiedades del objeto. Una por columna por su puesto.
             foreach (PropertyInfo property in properties)
             {
                 if (property.Name.Equals("Id"))
                 {
-                    queryBuilder.AppendFormat("{0} {1} NOT NULL PRIMARY KEY, ", property.Name, GetSqlDataType(property.PropertyType, connectionType));
+                    queryBuilder.AppendFormat("{0} {1} NOT NULL PRIMARY KEY, ", property.Name, GetSqlDataType(property.PropertyType));
                 }
                 else
                 {
-                    queryBuilder.AppendFormat("{0} {1} NOT NULL, ", property.Name, GetSqlDataType(property.PropertyType, connectionType));
+                    queryBuilder.AppendFormat("{0} {1} NOT NULL, ", property.Name, GetSqlDataType(property.PropertyType));
                 }
             }
             queryBuilder.Append("FechaCreacion datetime, FechaModificacion datetime);");
@@ -231,7 +236,7 @@ namespace DataManagement.DAO
             return queryBuilder.ToString();
         }
 
-        internal static string GetCreateForeignKeysQuery(Type type, ConnectionTypes connectionType)
+        public string GetCreateForeignKeysQuery(Type type)
         {
             StringBuilder queryBuilder = new StringBuilder();
             PropertyInfo[] properties = type.GetProperties().Where(q => q.GetCustomAttribute<UnlinkedProperty>() == null && q.GetCustomAttribute<ForeignModel>() != null).ToArray();
@@ -239,19 +244,19 @@ namespace DataManagement.DAO
 
             if (properties.Length == 0) return string.Empty;
 
-            queryBuilder.AppendFormat("ALTER TABLE {0}.{1}{2} ", obj.Schema, tablePrefix, obj.DataBaseTableName);
+            queryBuilder.AppendFormat("ALTER TABLE {0}.{1}{2} ", obj.Schema, TablePrefix, obj.DataBaseTableName);
 
             foreach (PropertyInfo property in properties)
             {
                 IManageable foreignModel = (IManageable)Activator.CreateInstance(property.GetCustomAttribute<ForeignModel>().Model);
                 queryBuilder.AppendFormat("ADD CONSTRAINT FK_{0}_{1} ", obj.DataBaseTableName, foreignModel.DataBaseTableName);
-                queryBuilder.AppendFormat("FOREIGN KEY({0}) REFERENCES {1}.{2}{3}(Id);", property.Name, obj.Schema, tablePrefix, foreignModel.DataBaseTableName);
+                queryBuilder.AppendFormat("FOREIGN KEY({0}) REFERENCES {1}.{2}{3}(Id);", property.Name, obj.Schema, TablePrefix, foreignModel.DataBaseTableName);
             }
 
             return queryBuilder.ToString();
         }
 
-        private static string GetSqlDataType(Type codeType, ConnectionTypes connectionType)
+        public string GetSqlDataType(Type codeType)
         {
             Type underlyingType = Nullable.GetUnderlyingType(codeType);
 
@@ -260,9 +265,12 @@ namespace DataManagement.DAO
                 underlyingType = codeType;
             }
 
-            // TODO: Filtrar y retornar el valor correcto segun connectionType
             switch (underlyingType.Name.ToLower())
             {
+                case "boolean":
+                    return "bit";
+                case "bool":
+                    return "bit";
                 case "guid":
                     return "uniqueidentifier";
                 case "string":
@@ -271,14 +279,40 @@ namespace DataManagement.DAO
                     return "datetime";
                 case "decimal":
                     return "decimal (18,2)";
+                case "single":
+                    return "real";
                 case "float":
                     return "float";
+                case "double":
+                    return "float";
+                case "byte":
+                    return "tinyint";
+                case "sbyte":
+                    return "smallint";
+                case "byte[]":
+                    return "binary";
+                case "short":
+                    return "smallint";
+                case "ushort":
+                    return "numeric (5)";
                 case "int":
                     return "int";
+                case "uint":
+                    return "numeric (10)";
+                case "int16":
+                    return "smallint";
                 case "int32":
                     return "int";
+                case "uint32":
+                    return "numeric (10)";
                 case "int64":
                     return "bigint";
+                case "uint64":
+                    return "numeric (20)";
+                case "long":
+                    return "bigint";
+                case "ulong":
+                    return "numeric (20)";
                 default:
                     return "varchar(255)";
             }

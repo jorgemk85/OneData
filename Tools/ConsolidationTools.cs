@@ -75,7 +75,7 @@ namespace DataManagement.Tools
         /// </summary>
         /// <param name="key">Llave a localizar.</param>
         /// <param name="type">Especifica el tipo de configuracion al que pertenece la llave.</param>
-        /// <returns></returns>
+        /// <returns>Regresa el valor obtenido del archivo de configuracion, si la llave fue encontrada.</returns>
         public static string GetValueFromConfiguration(string key, ConfigurationTypes type)
         {
             switch (type)

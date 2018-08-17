@@ -17,13 +17,13 @@ namespace DataManagement.DAO
 {
     internal class QueryEvaluation
     {
-        Operation dbOperation;
+        IOperable dbOperation;
         ConnectionTypes connectionType;
 
         public QueryEvaluation()
         {
             connectionType = (ConnectionTypes)Enum.Parse(typeof(ConnectionTypes), ConfigurationManager.AppSettings["ConnectionType"].ToString());
-            dbOperation = connectionType == ConnectionTypes.MySQL ? (Operation)new MySqlOperation() : (Operation)new MsSqlOperation();
+            dbOperation = connectionType == ConnectionTypes.MySQL ? (IOperable)new MySqlOperation() : (IOperable)new MsSqlOperation();
         }
 
         public Result Evaluate<T>(T obj, TransactionTypes transactionType, Result cache, bool isPartialCache, bool forceQueryDataBase, string connectionToUse) where T : IManageable, new()

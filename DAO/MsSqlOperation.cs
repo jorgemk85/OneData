@@ -3,6 +3,7 @@ using DataManagement.Enums;
 using DataManagement.Exceptions;
 using DataManagement.Interfaces;
 using DataManagement.Models;
+using DataManagement.Tools;
 using System;
 using System.Data;
 using System.Data.Common;
@@ -13,18 +14,49 @@ using System.Text;
 
 namespace DataManagement.DAO
 {
-    internal class MsSqlOperation : Operation
+    internal class MsSqlOperation : IOperable
     {
-        internal override int ExecuteNonQuery(string transaction, string connectionToUse)
+        public string SelectSuffix { get; set; }
+        public string InsertSuffix { get; set; }
+        public string UpdateSuffix { get; set; }
+        public string DeleteSuffix { get; set; }
+        public string SelectAllSuffix { get; set; }
+        public string StoredProcedurePrefix { get; set; }
+        public bool AutoCreateStoredProcedures { get; set; }
+        public bool AutoCreateTables { get; set; }
+        public bool EnableLog { get; set; }
+        public DbCommand Command { get; set; }
+        public ICreatable Creator { get; set; } = new MsSqlCreation();
+
+        public MsSqlOperation()
+        {
+            GetTransactionTypesSuffixes();
+        }
+
+        public void GetTransactionTypesSuffixes()
+        {
+            SelectSuffix = ConsolidationTools.GetValueFromConfiguration("SelectSuffix", ConfigurationTypes.AppSetting);
+            InsertSuffix = ConsolidationTools.GetValueFromConfiguration("InsertSuffix", ConfigurationTypes.AppSetting);
+            UpdateSuffix = ConsolidationTools.GetValueFromConfiguration("UpdateSuffix", ConfigurationTypes.AppSetting);
+            DeleteSuffix = ConsolidationTools.GetValueFromConfiguration("DeleteSuffix", ConfigurationTypes.AppSetting);
+            SelectAllSuffix = ConsolidationTools.GetValueFromConfiguration("SelectAllSuffix", ConfigurationTypes.AppSetting);
+            StoredProcedurePrefix = ConsolidationTools.GetValueFromConfiguration("StoredProcedurePrefix", ConfigurationTypes.AppSetting);
+
+            AutoCreateStoredProcedures = bool.Parse(ConsolidationTools.GetValueFromConfiguration("AutoCreateStoredProcedures", ConfigurationTypes.AppSetting));
+            AutoCreateTables = bool.Parse(ConsolidationTools.GetValueFromConfiguration("AutoCreateTables", ConfigurationTypes.AppSetting));
+            EnableLog = bool.Parse(ConsolidationTools.GetValueFromConfiguration("EnableLog", ConfigurationTypes.AppSetting));
+        }
+
+        public int ExecuteNonQuery(string transaction, string connectionToUse)
         {
             try
             {
                 using (SqlConnection connection = Connection.OpenMsSqlConnection(connectionToUse))
                 {
                     if (connection.State != ConnectionState.Open) throw new BadConnectionStateException();
-                    command = new SqlCommand(transaction, connection);
-                    command.CommandType = CommandType.Text;
-                    return command.ExecuteNonQuery();
+                    Command = new SqlCommand(transaction, connection);
+                    Command.CommandType = CommandType.Text;
+                    return Command.ExecuteNonQuery();
                 }
             }
             catch (SqlException mssqle)
@@ -37,7 +69,7 @@ namespace DataManagement.DAO
             }
         }
 
-        internal override Result ExecuteProcedure(string tableName, string storedProcedure, string connectionToUse, Parameter[] parameters, bool logTransaction = true)
+        public Result ExecuteProcedure(string tableName, string storedProcedure, string connectionToUse, Parameter[] parameters, bool logTransaction = true)
         {
             DataTable dataTable = null;
 
@@ -46,12 +78,12 @@ namespace DataManagement.DAO
                 using (SqlConnection connection = Connection.OpenMsSqlConnection(connectionToUse))
                 {
                     if (connection.State != ConnectionState.Open) throw new BadConnectionStateException();
-                    command = new SqlCommand(storedProcedure, connection);
-                    command.CommandType = CommandType.StoredProcedure;
+                    Command = new SqlCommand(storedProcedure, connection);
+                    Command.CommandType = CommandType.StoredProcedure;
 
-                    if (parameters != null) SetParameters(parameters, (SqlCommand)command);
+                    if (parameters != null) SetParameters(parameters);
                     dataTable = new DataTable();
-                    dataTable.Load(command.ExecuteReader());
+                    dataTable.Load(Command.ExecuteReader());
                     dataTable.TableName = tableName;
                 }
             }
@@ -69,7 +101,7 @@ namespace DataManagement.DAO
             return new Result(dataTable);
         }
 
-        internal override Result ExecuteProcedure<T>(T obj, string tableName, string connectionToUse, TransactionTypes transactionType, bool logTransaction = true)
+        public Result ExecuteProcedure<T>(T obj, string tableName, string connectionToUse, TransactionTypes transactionType, bool logTransaction = true) where T : IManageable, new()
         {
             DataTable dataTable = null;
 
@@ -82,7 +114,7 @@ namespace DataManagement.DAO
             {
                 if (AutoCreateStoredProcedures)
                 {
-                    ExecuteNonQuery(GetTransactionTextForStores<T>(transactionType, ConnectionTypes.MSSQL), connectionToUse);
+                    ExecuteNonQuery(GetTransactionTextForStores<T>(transactionType), connectionToUse);
                     goto Start;
                 }
                 else
@@ -109,19 +141,19 @@ namespace DataManagement.DAO
             return new Result(dataTable);
         }
 
-        private void ProcessTableCreation<T>(string connectionToUse) where T : IManageable, new()
+        public void ProcessTableCreation<T>(string connectionToUse) where T : IManageable, new()
         {
-            ExecuteNonQuery(Creation.GetCreateTableQuery<T>(ConnectionTypes.MSSQL), connectionToUse);
+            ExecuteNonQuery(Creator.GetCreateTableQuery<T>(), connectionToUse);
             VerifyForeignTables(typeof(T), connectionToUse);
-            string foreignKeyQuery = Creation.GetCreateForeignKeysQuery(typeof(T), ConnectionTypes.MSSQL);
+            string foreignKeyQuery = Creator.GetCreateForeignKeysQuery(typeof(T));
 
             if (!string.IsNullOrWhiteSpace(foreignKeyQuery))
             {
-                ExecuteNonQuery(Creation.GetCreateForeignKeysQuery(typeof(T), ConnectionTypes.MSSQL), connectionToUse);
+                ExecuteNonQuery(Creator.GetCreateForeignKeysQuery(typeof(T)), connectionToUse);
             }
         }
 
-        private void VerifyForeignTables(Type type, string connectionToUse)
+        public void VerifyForeignTables(Type type, string connectionToUse)
         {
             PropertyInfo[] properties = type.GetProperties().Where(q => q.GetCustomAttribute<UnlinkedProperty>() == null && q.GetCustomAttribute<ForeignModel>() != null).ToArray();
 
@@ -130,9 +162,9 @@ namespace DataManagement.DAO
                 IManageable foreignModel = (IManageable)Activator.CreateInstance(property.GetCustomAttribute<ForeignModel>().Model);
                 if (!CheckIfTableExists(foreignModel.DataBaseTableName, connectionToUse))
                 {
-                    ExecuteNonQuery(Creation.GetCreateTableQuery(foreignModel.GetType(), ConnectionTypes.MSSQL), connectionToUse);
+                    ExecuteNonQuery(Creator.GetCreateTableQuery(foreignModel.GetType()), connectionToUse);
                     VerifyForeignTables(foreignModel.GetType(), connectionToUse);
-                    string foreignKeyQuery = Creation.GetCreateForeignKeysQuery(foreignModel.GetType(), ConnectionTypes.MSSQL);
+                    string foreignKeyQuery = Creator.GetCreateForeignKeysQuery(foreignModel.GetType());
 
                     if (!string.IsNullOrWhiteSpace(foreignKeyQuery))
                     {
@@ -142,7 +174,7 @@ namespace DataManagement.DAO
             }
         }
 
-        private bool CheckIfTableExists(string tableName, string connectionToUse)
+        public bool CheckIfTableExists(string tableName, string connectionToUse)
         {
             string query = string.Format("SELECT name FROM sysobjects WHERE name='{0}' AND xtype='U'", tableName);
 
@@ -153,29 +185,29 @@ namespace DataManagement.DAO
             return true;
         }
 
-        private DataTable ConfigureConnectionAndExecuteCommand<T>(T obj, string tableName, string connectionToUse, TransactionTypes transactionType) where T : IManageable, new()
+        public DataTable ConfigureConnectionAndExecuteCommand<T>(T obj, string tableName, string connectionToUse, TransactionTypes transactionType) where T : IManageable, new()
         {
             DataTable dataTable = null;
 
             using (SqlConnection connection = Connection.OpenMsSqlConnection(connectionToUse))
             {
                 if (connection.State != ConnectionState.Open) throw new BadConnectionStateException();
-                command = new SqlCommand(string.Format("{0}.{1}{2}{3}", obj.Schema, StoredProcedurePrefix, tableName, GetFriendlyTransactionSuffix(transactionType)), connection);
-                command.CommandType = CommandType.StoredProcedure;
+                Command = new SqlCommand(string.Format("{0}.{1}{2}{3}", obj.Schema, StoredProcedurePrefix, tableName, GetFriendlyTransactionSuffix(transactionType)), connection);
+                Command.CommandType = CommandType.StoredProcedure;
 
                 if (transactionType == TransactionTypes.Insert || transactionType == TransactionTypes.Update || transactionType == TransactionTypes.Delete)
                 {
-                    SetParameters(obj, transactionType, (SqlCommand)command);
-                    command.ExecuteNonQuery();
+                    SetParameters(obj, transactionType);
+                    Command.ExecuteNonQuery();
                 }
                 else
                 {
                     if (transactionType == TransactionTypes.Select)
                     {
-                        SetParameters(obj, transactionType, (SqlCommand)command);
+                        SetParameters(obj, transactionType);
                     }
                     dataTable = new DataTable();
-                    dataTable.Load(command.ExecuteReader());
+                    dataTable.Load(Command.ExecuteReader());
                     dataTable.TableName = tableName;
                 }
             }
@@ -183,7 +215,7 @@ namespace DataManagement.DAO
             return dataTable;
         }
 
-        private void LogTransaction(string dataBaseTableName, TransactionTypes transactionType, string connectionToUse)
+        public void LogTransaction(string dataBaseTableName, TransactionTypes transactionType, string connectionToUse)
         {
             if (!EnableLog)
             {
@@ -194,17 +226,17 @@ namespace DataManagement.DAO
                 Ip = string.Empty,
                 Transaccion = transactionType.ToString(),
                 TablaAfectada = dataBaseTableName,
-                Parametros = GetStringParameters((SqlCommand)command)
+                Parametros = GetStringParameters()
             };
 
             ExecuteProcedure(newLog, newLog.DataBaseTableName, connectionToUse, TransactionTypes.Insert, false);
         }
 
-        private string GetStringParameters(SqlCommand msSqlCommand)
+        public string GetStringParameters()
         {
             StringBuilder builder = new StringBuilder();
 
-            foreach (SqlParameter parametro in msSqlCommand.Parameters)
+            foreach (SqlParameter parametro in Command.Parameters)
             {
                 if (parametro.Value != null)
                 {
@@ -215,7 +247,7 @@ namespace DataManagement.DAO
             return builder.ToString();
         }
 
-        private void SetParameters<T>(T obj, TransactionTypes transactionType, SqlCommand msSqlCommand)
+        public void SetParameters<T>(T obj, TransactionTypes transactionType)
         {
             foreach (PropertyInfo propertyInfo in typeof(T).GetProperties())
             {
@@ -226,23 +258,60 @@ namespace DataManagement.DAO
                 {
                     if (propertyInfo.Name == "Id")
                     {
-                        msSqlCommand.Parameters.AddWithValue("_id", propertyInfo.GetValue(obj));
+                        ((SqlCommand)Command).Parameters.AddWithValue("_id", propertyInfo.GetValue(obj));
                         break;
                     }
                 }
                 else
                 {
-                    msSqlCommand.Parameters.AddWithValue("_" + propertyInfo.Name, propertyInfo.GetValue(obj));
+                    ((SqlCommand)Command).Parameters.AddWithValue("_" + propertyInfo.Name, propertyInfo.GetValue(obj));
                 }
             }
         }
 
-        private void SetParameters(Parameter[] parameters, SqlCommand msSqlCommand)
+        public void SetParameters(Parameter[] parameters)
         {
             for (int i = 0; i < parameters.Length; i++)
             {
-                msSqlCommand.Parameters.AddWithValue(parameters[i].Name, parameters[i].Value);
+                ((SqlCommand)Command).Parameters.AddWithValue(parameters[i].Name, parameters[i].Value);
+            }
+        }
 
+        public string GetFriendlyTransactionSuffix(TransactionTypes transactionType)
+        {
+            switch (transactionType)
+            {
+                case TransactionTypes.Select:
+                    return SelectSuffix;
+                case TransactionTypes.Delete:
+                    return DeleteSuffix;
+                case TransactionTypes.Insert:
+                    return InsertSuffix;
+                case TransactionTypes.Update:
+                    return UpdateSuffix;
+                case TransactionTypes.SelectAll:
+                    return SelectAllSuffix;
+                default:
+                    return SelectAllSuffix;
+            }
+        }
+
+        public string GetTransactionTextForStores<T>(TransactionTypes transactionType) where T : IManageable, new()
+        {
+            switch (transactionType)
+            {
+                case TransactionTypes.Select:
+                    return Creator.CreateSelectStoredProcedure<T>();
+                case TransactionTypes.SelectAll:
+                    return Creator.CreateSelectAllStoredProcedure<T>();
+                case TransactionTypes.Delete:
+                    return Creator.CreateDeleteStoredProcedure<T>();
+                case TransactionTypes.Insert:
+                    return Creator.CreateInsertStoredProcedure<T>();
+                case TransactionTypes.Update:
+                    return Creator.CreateUpdateStoredProcedure<T>();
+                default:
+                    throw new ArgumentException("El tipo de trascaccion no es valido para generar un nuevo procedimiento almacenado.");
             }
         }
     }
