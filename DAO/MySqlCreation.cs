@@ -33,12 +33,12 @@ namespace DataManagement.DAO
             DeleteSuffix = ConsolidationTools.GetValueFromConfiguration("DeleteSuffix", ConfigurationTypes.AppSetting);
         }
 
-        public string CreateDeleteStoredProcedure<T>() where T : IManageable, new()
+        public string CreateDeleteStoredProcedure<T>(bool doAlter) where T : IManageable, new()
         {
             throw new NotImplementedException();
         }
 
-        public string CreateInsertStoredProcedure<T>() where T : IManageable, new()
+        public string CreateInsertStoredProcedure<T>(bool doAlter) where T : IManageable, new()
         {
             throw new NotImplementedException();
         }
@@ -48,17 +48,17 @@ namespace DataManagement.DAO
             throw new NotImplementedException();
         }
 
-        public string CreateSelectAllStoredProcedure<T>() where T : IManageable, new()
+        public string CreateSelectAllStoredProcedure<T>(bool doAlter) where T : IManageable, new()
         {
             throw new NotImplementedException();
         }
 
-        public string CreateSelectStoredProcedure<T>() where T : IManageable, new()
+        public string CreateSelectStoredProcedure<T>(bool doAlter) where T : IManageable, new()
         {
             throw new NotImplementedException();
         }
 
-        public string CreateUpdateStoredProcedure<T>() where T : IManageable, new()
+        public string CreateUpdateStoredProcedure<T>(bool doAlter) where T : IManageable, new()
         {
             throw new NotImplementedException();
         }

@@ -51,7 +51,7 @@ namespace DataManagement.DAO
             }
         }
 
-        public string CreateInsertStoredProcedure<T>() where T : IManageable, new()
+        public string CreateInsertStoredProcedure<T>(bool doAlter) where T : IManageable, new()
         {
             StringBuilder queryBuilder = new StringBuilder();
             PropertyInfo[] properties = typeof(T).GetProperties().Where(q => q.GetCustomAttribute<UnlinkedProperty>() == null).ToArray();
@@ -59,7 +59,14 @@ namespace DataManagement.DAO
 
             if (properties.Length == 0) return string.Empty;
 
-            queryBuilder.AppendFormat("CREATE PROCEDURE {0}.{1}{2}{3} ", obj.Schema, StoredProcedurePrefix, obj.DataBaseTableName, InsertSuffix);
+            if (doAlter)
+            {
+                queryBuilder.AppendFormat("ALTER PROCEDURE {0}.{1}{2}{3} ", obj.Schema, StoredProcedurePrefix, obj.DataBaseTableName, InsertSuffix);
+            }
+            else
+            {
+                queryBuilder.AppendFormat("CREATE PROCEDURE {0}.{1}{2}{3} ", obj.Schema, StoredProcedurePrefix, obj.DataBaseTableName, InsertSuffix);
+            }
 
             // Aqui se colocan los parametros segun las propiedades del objeto
             SetStoredProceduresParameters(ref properties, queryBuilder, false);
@@ -92,7 +99,7 @@ namespace DataManagement.DAO
             return queryBuilder.ToString();
         }
 
-        public string CreateUpdateStoredProcedure<T>() where T : IManageable, new()
+        public string CreateUpdateStoredProcedure<T>(bool doAlter) where T : IManageable, new()
         {
             StringBuilder queryBuilder = new StringBuilder();
             PropertyInfo[] properties = typeof(T).GetProperties().Where(q => q.GetCustomAttribute<UnlinkedProperty>() == null).ToArray();
@@ -100,7 +107,15 @@ namespace DataManagement.DAO
 
             if (properties.Length == 0) return string.Empty;
 
-            queryBuilder.AppendFormat("CREATE PROCEDURE {0}.{1}{2}{3} ", obj.Schema, StoredProcedurePrefix, obj.DataBaseTableName, UpdateSuffix);
+            if (doAlter)
+            {
+                queryBuilder.AppendFormat("ALTER PROCEDURE {0}.{1}{2}{3} ", obj.Schema, StoredProcedurePrefix, obj.DataBaseTableName, UpdateSuffix);
+            }
+            else
+            {
+                queryBuilder.AppendFormat("CREATE PROCEDURE {0}.{1}{2}{3} ", obj.Schema, StoredProcedurePrefix, obj.DataBaseTableName, UpdateSuffix);
+            }
+            
 
             // Aqui se colocan los parametros segun las propiedades del objeto
             SetStoredProceduresParameters(ref properties, queryBuilder, false);
@@ -125,7 +140,7 @@ namespace DataManagement.DAO
             return queryBuilder.ToString();
         }
 
-        public string CreateDeleteStoredProcedure<T>() where T : IManageable, new()
+        public string CreateDeleteStoredProcedure<T>(bool doAlter) where T : IManageable, new()
         {
             StringBuilder queryBuilder = new StringBuilder();
             PropertyInfo[] properties = typeof(T).GetProperties().Where(q => q.GetCustomAttribute<UnlinkedProperty>() == null).ToArray();
@@ -133,7 +148,15 @@ namespace DataManagement.DAO
 
             if (properties.Length == 0) return string.Empty;
 
-            queryBuilder.AppendFormat("CREATE PROCEDURE {0}.{1}{2}{3} ", obj.Schema, StoredProcedurePrefix, obj.DataBaseTableName, DeleteSuffix);
+            if (doAlter)
+            {
+                queryBuilder.AppendFormat("ALTER PROCEDURE {0}.{1}{2}{3} ", obj.Schema, StoredProcedurePrefix, obj.DataBaseTableName, DeleteSuffix);
+            }
+            else
+            {
+                queryBuilder.AppendFormat("CREATE PROCEDURE {0}.{1}{2}{3} ", obj.Schema, StoredProcedurePrefix, obj.DataBaseTableName, DeleteSuffix);
+            }
+            
             queryBuilder.Append("@_Id uniqueidentifier ");
             queryBuilder.Append(" AS ");
             queryBuilder.Append("BEGIN ");
@@ -144,7 +167,7 @@ namespace DataManagement.DAO
             return queryBuilder.ToString();
         }
 
-        public string CreateSelectAllStoredProcedure<T>() where T : IManageable, new()
+        public string CreateSelectAllStoredProcedure<T>(bool doAlter) where T : IManageable, new()
         {
             StringBuilder queryBuilder = new StringBuilder();
             PropertyInfo[] properties = typeof(T).GetProperties().Where(q => q.GetCustomAttribute<UnlinkedProperty>() == null).ToArray();
@@ -152,7 +175,15 @@ namespace DataManagement.DAO
 
             if (properties.Length == 0) return string.Empty;
 
-            queryBuilder.AppendFormat("CREATE PROCEDURE {0}.{1}{2}{3} ", obj.Schema, StoredProcedurePrefix, obj.DataBaseTableName, SelectAllSuffix);
+            if (doAlter)
+            {
+                queryBuilder.AppendFormat("ALTER PROCEDURE {0}.{1}{2}{3} ", obj.Schema, StoredProcedurePrefix, obj.DataBaseTableName, SelectAllSuffix);
+            }
+            else
+            {
+                queryBuilder.AppendFormat("CREATE PROCEDURE {0}.{1}{2}{3} ", obj.Schema, StoredProcedurePrefix, obj.DataBaseTableName, SelectAllSuffix);
+            }
+            
             queryBuilder.Append(" AS ");
             queryBuilder.Append("BEGIN ");
             queryBuilder.AppendFormat("SELECT * FROM {0}.{1}{2} ", obj.Schema, TablePrefix, obj.DataBaseTableName);
@@ -161,7 +192,7 @@ namespace DataManagement.DAO
             return queryBuilder.ToString();
         }
 
-        public string CreateSelectStoredProcedure<T>() where T : IManageable, new()
+        public string CreateSelectStoredProcedure<T>(bool doAlter) where T : IManageable, new()
         {
             StringBuilder queryBuilder = new StringBuilder();
             PropertyInfo[] properties = typeof(T).GetProperties().Where(q => q.GetCustomAttribute<UnlinkedProperty>() == null).ToArray();
@@ -169,7 +200,14 @@ namespace DataManagement.DAO
 
             if (properties.Length == 0) return string.Empty;
 
-            queryBuilder.AppendFormat("CREATE PROCEDURE {0}.{1}{2}{3} ", obj.Schema, StoredProcedurePrefix, obj.DataBaseTableName, SelectSuffix);
+            if (doAlter)
+            {
+                queryBuilder.AppendFormat("ALTER PROCEDURE {0}.{1}{2}{3} ", obj.Schema, StoredProcedurePrefix, obj.DataBaseTableName, SelectSuffix);
+            }
+            else
+            {
+                queryBuilder.AppendFormat("CREATE PROCEDURE {0}.{1}{2}{3} ", obj.Schema, StoredProcedurePrefix, obj.DataBaseTableName, SelectSuffix);
+            }
 
             // Aqui se colocan los parametros segun las propiedades del objeto
             SetStoredProceduresParameters(ref properties, queryBuilder, true);

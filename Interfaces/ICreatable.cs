@@ -19,15 +19,15 @@ namespace DataManagement.Interfaces
 
         void SetStoredProceduresParameters(ref PropertyInfo[] properties, StringBuilder queryBuilder, bool setDefaultNull);
 
-        string CreateInsertStoredProcedure<T>() where T : IManageable, new();
+        string CreateInsertStoredProcedure<T>(bool doAlter) where T : IManageable, new();
 
-        string CreateUpdateStoredProcedure<T>() where T : IManageable, new();
+        string CreateUpdateStoredProcedure<T>(bool doAlter) where T : IManageable, new();
 
-        string CreateDeleteStoredProcedure<T>() where T : IManageable, new();
+        string CreateDeleteStoredProcedure<T>(bool doAlter) where T : IManageable, new();
 
-        string CreateSelectAllStoredProcedure<T>() where T : IManageable, new();
+        string CreateSelectAllStoredProcedure<T>(bool doAlter) where T : IManageable, new();
 
-        string CreateSelectStoredProcedure<T>() where T : IManageable, new();
+        string CreateSelectStoredProcedure<T>(bool doAlter) where T : IManageable, new();
 
         string GetCreateTableQuery<T>() where T : IManageable, new();
 

@@ -301,15 +301,15 @@ namespace DataManagement.DAO
             switch (transactionType)
             {
                 case TransactionTypes.Select:
-                    return Creator.CreateSelectStoredProcedure<T>();
+                    return Creator.CreateSelectStoredProcedure<T>(false);
                 case TransactionTypes.SelectAll:
-                    return Creator.CreateSelectAllStoredProcedure<T>();
+                    return Creator.CreateSelectAllStoredProcedure<T>(false);
                 case TransactionTypes.Delete:
-                    return Creator.CreateDeleteStoredProcedure<T>();
+                    return Creator.CreateDeleteStoredProcedure<T>(false);
                 case TransactionTypes.Insert:
-                    return Creator.CreateInsertStoredProcedure<T>();
+                    return Creator.CreateInsertStoredProcedure<T>(false);
                 case TransactionTypes.Update:
-                    return Creator.CreateUpdateStoredProcedure<T>();
+                    return Creator.CreateUpdateStoredProcedure<T>(false);
                 default:
                     throw new ArgumentException("El tipo de trascaccion no es valido para generar un nuevo procedimiento almacenado.");
             }
