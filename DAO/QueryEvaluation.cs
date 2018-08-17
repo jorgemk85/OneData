@@ -17,13 +17,13 @@ namespace DataManagement.DAO
 {
     internal class QueryEvaluation
     {
-        Operation dbOperation;
+        Operation operation;
         ConnectionTypes connectionType;
 
         public QueryEvaluation()
         {
             connectionType = (ConnectionTypes)Enum.Parse(typeof(ConnectionTypes), ConfigurationManager.AppSettings["ConnectionType"].ToString());
-            dbOperation = connectionType == ConnectionTypes.MySQL ? (Operation)new MySqlOperation() : (Operation)new MsSqlOperation();
+            operation = Operation.GetOperationBasedOnConnectionType(connectionType);
         }
 
         public Result Evaluate<T>(T obj, TransactionTypes transactionType, Result cache, bool isPartialCache, bool forceQueryDataBase, string connectionToUse) where T : IManageable, new()
@@ -51,7 +51,7 @@ namespace DataManagement.DAO
                     requiresResult = true;
                     break;
                 case TransactionTypes.StoredProcedure:
-                    resultado = dbOperation.ExecuteProcedure(obj, tableName, connectionToUse, transactionType);
+                    resultado = operation.ExecuteProcedure(obj, tableName, connectionToUse, transactionType);
                     break;
                 default:
                     break;
@@ -59,7 +59,7 @@ namespace DataManagement.DAO
 
             if (requiresResult)
             {
-                resultado = dbOperation.ExecuteProcedure(obj, tableName, connectionToUse, transactionType);
+                resultado = operation.ExecuteProcedure(obj, tableName, connectionToUse, transactionType);
                 if (transactionType != TransactionTypes.StoredProcedure)
                 {
                     if (isCached && resultado.Data.Rows.Count > 0) DeleteInCache(obj, cache);
@@ -73,16 +73,16 @@ namespace DataManagement.DAO
         {
             if (forceQueryDataBase)
             {
-                resultado = dbOperation.ExecuteProcedure(obj, tableName, connectionToUse, TransactionTypes.Select);
+                resultado = operation.ExecuteProcedure(obj, tableName, connectionToUse, TransactionTypes.Select);
             }
             else
             {
-                resultado = isCached == true ? SelectInCache(obj, cache) : dbOperation.ExecuteProcedure(obj, tableName, connectionToUse, TransactionTypes.Select);
+                resultado = isCached == true ? SelectInCache(obj, cache) : operation.ExecuteProcedure(obj, tableName, connectionToUse, TransactionTypes.Select);
 
                 resultado.IsFromCache = isCached == true ? true : false;
                 if (isCached && isPartialCache && resultado.Data.Rows.Count == 0)
                 {
-                    resultado = dbOperation.ExecuteProcedure(obj, tableName, connectionToUse, TransactionTypes.Select);
+                    resultado = operation.ExecuteProcedure(obj, tableName, connectionToUse, TransactionTypes.Select);
                 }
             }
         }
@@ -91,11 +91,11 @@ namespace DataManagement.DAO
         {
             if (forceQueryDataBase)
             {
-                resultado = dbOperation.ExecuteProcedure(obj, tableName, connectionToUse, TransactionTypes.SelectAll);
+                resultado = operation.ExecuteProcedure(obj, tableName, connectionToUse, TransactionTypes.SelectAll);
             }
             else
             {
-                resultado = isCached == true ? cache : dbOperation.ExecuteProcedure(obj, tableName, connectionToUse, TransactionTypes.SelectAll);
+                resultado = isCached == true ? cache : operation.ExecuteProcedure(obj, tableName, connectionToUse, TransactionTypes.SelectAll);
                 resultado.IsFromCache = isCached == true ? true : false;
             }
         }

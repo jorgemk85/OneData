@@ -51,6 +51,19 @@ namespace DataManagement.DAO
             EnableLog = bool.Parse(ConsolidationTools.GetValueFromConfiguration("EnableLog", ConfigurationTypes.AppSetting));
         }
 
+        internal static Operation GetOperationBasedOnConnectionType(ConnectionTypes connectionType)
+        {
+            switch (connectionType)
+            {
+                case ConnectionTypes.MySQL:
+                    return new MySqlOperation();
+                case ConnectionTypes.MSSQL:
+                    return new MsSqlOperation();
+                default:
+                    return new MsSqlOperation();
+            }
+        }
+
         private int ExecuteNonQuery(string transaction, string connectionToUse, ConnectionTypes connectionType)
         {
             try
