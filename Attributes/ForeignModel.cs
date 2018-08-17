@@ -20,14 +20,7 @@ namespace DataManagement.Attributes
         /// <param name="model">Representa el tipo de la clase a la que se desea generar una relacion.</param>
         public ForeignModel(Type model)
         {
-            if (model.IsAssignableFrom(typeof(IManageable)))
-            {
-                Model = model;
-            }
-            else
-            {
-                throw new NotSupportedException(string.Format("El tipo '{0}' no es aceptable debido a que no implementa la interfaz '{1}'.", nameof(model), nameof(IManageable)));
-            }
+            Model = model;
         }
     }
 }

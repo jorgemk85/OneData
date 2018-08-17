@@ -22,6 +22,7 @@ namespace DataManagement.DAO
         public string DeleteSuffix { get; set; }
         public string SelectAllSuffix { get; set; }
         public string StoredProcedurePrefix { get; set; }
+        public string TablePrefix { get; set; }
         public bool AutoCreateStoredProcedures { get; set; }
         public bool AutoCreateTables { get; set; }
         public bool EnableLog { get; set; }
@@ -45,6 +46,7 @@ namespace DataManagement.DAO
             DeleteSuffix = ConsolidationTools.GetValueFromConfiguration("DeleteSuffix", ConfigurationTypes.AppSetting);
             SelectAllSuffix = ConsolidationTools.GetValueFromConfiguration("SelectAllSuffix", ConfigurationTypes.AppSetting);
             StoredProcedurePrefix = ConsolidationTools.GetValueFromConfiguration("StoredProcedurePrefix", ConfigurationTypes.AppSetting);
+            TablePrefix = ConsolidationTools.GetValueFromConfiguration("TablePrefix", ConfigurationTypes.AppSetting);
 
             AutoCreateStoredProcedures = bool.Parse(ConsolidationTools.GetValueFromConfiguration("AutoCreateStoredProcedures", ConfigurationTypes.AppSetting));
             AutoCreateTables = bool.Parse(ConsolidationTools.GetValueFromConfiguration("AutoCreateTables", ConfigurationTypes.AppSetting));
@@ -64,7 +66,7 @@ namespace DataManagement.DAO
             }
         }
 
-        private int ExecuteNonQuery(string transaction, string connectionToUse, ConnectionTypes connectionType)
+        private void ExecuteNonQuery(string transaction, string connectionToUse, ConnectionTypes connectionType)
         {
             try
             {
@@ -74,7 +76,7 @@ namespace DataManagement.DAO
                     Command = connection.CreateCommand();
                     Command.CommandType = CommandType.Text;
                     Command.CommandText = transaction;
-                    return Command.ExecuteNonQuery();
+                    Command.ExecuteNonQuery();
                 }
             }
             catch (Exception e)
@@ -275,7 +277,7 @@ namespace DataManagement.DAO
             foreach (PropertyInfo property in properties)
             {
                 IManageable foreignModel = (IManageable)Activator.CreateInstance(property.GetCustomAttribute<ForeignModel>().Model);
-                if (!CheckIfTableExists(foreignModel.DataBaseTableName, connectionToUse))
+                if (!CheckIfTableExists(foreignModel.DataBaseTableName, foreignModel.Schema, connectionToUse))
                 {
                     ExecuteNonQuery(Creator.GetCreateTableQuery(foreignModel.GetType(), false), connectionToUse, ConnectionType);
                     VerifyForeignTables(foreignModel.GetType(), connectionToUse);
@@ -289,15 +291,20 @@ namespace DataManagement.DAO
             }
         }
 
-        private bool CheckIfTableExists(string tableName, string connectionToUse)
+        private bool CheckIfTableExists(string tableName, string schema, string connectionToUse)
         {
-            string query = string.Format("SELECT name FROM sysobjects WHERE name='{0}' AND xtype='U'", tableName);
+            string query = string.Format("SELECT count(*) FROM {0}.{1}{2}", schema, TablePrefix, tableName);
+            //string query = string.Format("SELECT Count(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = '{0}{1}'", TablePrefix, tableName);
 
-            if (ExecuteNonQuery(query, connectionToUse, ConnectionType) <= 0)
+            try
+            {
+                ExecuteNonQuery(query, connectionToUse, ConnectionType);
+                return true;
+            }
+            catch
             {
                 return false;
             }
-            return true;
         }
 
         private DbParameter CreateDbParameter(string name, object value)
