@@ -238,7 +238,9 @@ namespace DataManagement.DAO
                 queryBuilder.AppendFormat("{0} {1} NOT NULL, ", property.Name, GetSqlDataType(property.PropertyType));
             }
             queryBuilder.Append("FechaCreacion datetime NOT NULL,  FechaModificacion datetime NOT NULL, ");
-            queryBuilder.Append("PRIMARY KEY (Id));");
+            queryBuilder.Append("PRIMARY KEY (Id), ");
+            queryBuilder.Append("UNIQUE KEY `id_UNIQUE` (Id)) ");
+            queryBuilder.Append("ENGINE=InnoDB;");
 
             return queryBuilder.ToString();
         }
