@@ -269,9 +269,10 @@ namespace DataManagement.DAO
 
             foreach (PropertyInfo property in properties)
             {
-                IManageable foreignModel = (IManageable)Activator.CreateInstance(property.GetCustomAttribute<ForeignModel>().Model);
+                ForeignModel foreignAttribute = property.GetCustomAttribute<ForeignModel>();
+                IManageable foreignModel = (IManageable)Activator.CreateInstance(foreignAttribute.Model);
                 queryBuilder.AppendFormat("ADD CONSTRAINT FK_{0}_{1} ", obj.DataBaseTableName, foreignModel.DataBaseTableName);
-                queryBuilder.AppendFormat("FOREIGN KEY({0}) REFERENCES {1}.{2}{3}(Id);", property.Name, obj.Schema, TablePrefix, foreignModel.DataBaseTableName);
+                queryBuilder.AppendFormat("FOREIGN KEY({0}) REFERENCES {1}.{2}{3}(Id) ON DELETE {4} ON UPDATE NO ACTION;", property.Name, obj.Schema, TablePrefix, foreignModel.DataBaseTableName, foreignAttribute.Action.ToString().Replace("_", " "));
             }
 
             return queryBuilder.ToString();

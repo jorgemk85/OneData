@@ -86,6 +86,7 @@
     <Compile Include="DAO\MySqlCreation.cs" />
     <Compile Include="DAO\Operation.cs" />
     <Compile Include="Enums\ConfigurationTypes.cs" />
+    <Compile Include="Enums\ForeignModelActionTypes.cs" />
     <Compile Include="Events\CommandExecuted.cs" />
     <Compile Include="Events\DeleteExecuted.cs" />
     <Compile Include="Events\ExecutedEventArgs.cs" />
