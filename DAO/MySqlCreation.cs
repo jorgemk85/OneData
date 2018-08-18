@@ -303,25 +303,25 @@ namespace DataManagement.DAO
                 case "short":
                     return "smallint(5)";
                 case "ushort":
-                    return "mediumint(5)";
+                    return "mediumint(5) unsigned";
                 case "int":
                     return "int(10)";
                 case "uint":
-                    return "int(10)";
+                    return "int(10) unsigned";
                 case "int16":
                     return "smallint(5)";
                 case "int32":
                     return "int(10)";
                 case "uint32":
-                    return "int(10)";
+                    return "int(10) unsigned";
                 case "int64":
                     return "bigint (20)";
                 case "uint64":
-                    return "bigint (20)";
+                    return "bigint (20) unsigned";
                 case "long":
                     return "bigint (20)";
                 case "ulong":
-                    return "bigint (20)";
+                    return "bigint (20) unsigned";
                 default:
                     return "varchar(255)";
             }
