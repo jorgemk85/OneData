@@ -13,7 +13,7 @@ namespace DataManagement.Examples
 
         public static Result ExecuteStoredProcedure(string tableName, string storedProcedure, params Parameter[] parameters)
         {
-            return Manager<Log>.StoredProcedure(tableName, storedProcedure, CONNECTION_TO_USE, parameters);
+            return Manager.StoredProcedure(tableName, storedProcedure, CONNECTION_TO_USE, parameters);
         }
 
         public static T Select<T>(params Parameter[] parameters) where T : IManageable, new()

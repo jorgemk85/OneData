@@ -11,14 +11,72 @@ using System.Threading.Tasks;
 
 namespace DataManagement.DAO
 {
+    public sealed class Manager
+    {
+        public static string DefaultSchema { get; private set; }
+        public static string DefaultConnection { get; private set; }
+
+        public Manager()
+        {
+            SetDefaultConnectionName();
+        }
+
+        private static void SetDefaultConnectionName()
+        {
+            try
+            {
+                DefaultConnection = ConsolidationTools.GetValueFromConfiguration("DefaultConnection", ConfigurationTypes.AppSetting);
+                DefaultSchema = ConsolidationTools.GetValueFromConfiguration("DefaultSchema", ConfigurationTypes.AppSetting);
+            }
+            catch (ConfigurationErrorsException cee)
+            {
+                throw cee;
+            }
+        }
+
+        /// <summary>
+        /// Ejecuta un procedimiento almacenado en la base de datos usando los parametros proporcionados.
+        /// </summary>
+        /// <param name="tableName">Nombre de la tabla relacionada al procedimiento almacenado. Este dato es solo para referencia al crear el DataTable.</param>
+        /// <param name="storedProcedure">Nombre exacto del procedimiento almacenado a ejecutar.</param>
+        /// <param name="connectionToUse">Especifica cual configuracion de tipo ConectionString se desea utilizar. Si se especifica nulo, o no se especifica, entonces utiliza la conexion especificada en DefaultConnection.</param>
+        /// <param name="parameters">Formacion de objetos Parameter que contiene los parametros de la consulta.</param>
+        /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la ejecucion.</returns>
+        public static Result StoredProcedure(string tableName, string storedProcedure, string connectionToUse = null, params Parameter[] parameters)
+        {
+            return ExecuteStoredProcedure(tableName, storedProcedure, connectionToUse, parameters);
+        }
+
+        /// <summary>
+        /// Ejecuta un procedimiento almacenado en la base de datos usando los parametros proporcionados usando Async.
+        /// </summary>
+        /// <param name="tableName">Nombre de la tabla relacionada al procedimiento almacenado. Este dato es solo para referencia al crear el DataTable.</param>
+        /// <param name="storedProcedure">Nombre exacto del procedimiento almacenado a ejecutar.</param>
+        /// <param name="connectionToUse">Especifica cual configuracion de tipo ConectionString se desea utilizar. Si se especifica nulo, o no se especifica, entonces utiliza la conexion especificada en DefaultConnection.</param>
+        /// <param name="parameters">Formacion de objetos Parameter que contiene los parametros de la consulta.</param>
+        /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la ejecucion.</returns>
+        public static async Task<Result> StoredProcedureAsync(string tableName, string storedProcedure, string connectionToUse = null, params Parameter[] parameters)
+        {
+            return await Task.Run(() => ExecuteStoredProcedure(tableName, storedProcedure, connectionToUse, parameters));
+        }
+
+        private static Result ExecuteStoredProcedure(string tableName, string storedProcedure, string connectionToUse, Parameter[] parameters)
+        {
+            if (connectionToUse == null) connectionToUse = DefaultConnection;
+            ConnectionTypes connectionType = (ConnectionTypes)Enum.Parse(typeof(ConnectionTypes), ConsolidationTools.GetValueFromConfiguration("ConnectionType", ConfigurationTypes.AppSetting));
+            Operation operation = Operation.GetOperationBasedOnConnectionType(connectionType);
+            Result result = operation.ExecuteProcedure(tableName, storedProcedure, connectionToUse, parameters);
+            return result;
+        }
+    }
+
     /// <summary>
     /// Clase abstracta donde se procesan las consultas a la base de datos y se administra el cache.
     /// </summary>
     /// <typeparam name="T">Tipo de clase que representa este objeto. El tipo tiene que implementar IManageable para poder operar.</typeparam>
     public abstract class Manager<T> where T : IManageable, new()
     {
-        public static string DefaultSchema { get; set; }
-        public static string DefaultConnection { get; set; }
+
         static DataCache dataCache = new DataCache();
         static bool forceQueryDataBase = false;
 
@@ -34,21 +92,7 @@ namespace DataManagement.DAO
 
         static Manager()
         {
-            SetDefaultConnectionName();
             dataCache.Initialize(new T());
-        }
-
-        private static void SetDefaultConnectionName()
-        {
-            try
-            {
-                DefaultConnection = ConsolidationTools.GetValueFromConfiguration("DefaultConnection", ConfigurationTypes.AppSetting);
-                DefaultSchema = ConsolidationTools.GetValueFromConfiguration("DefaultSchema", ConfigurationTypes.AppSetting);
-            }
-            catch (ConfigurationErrorsException cee)
-            {
-                throw cee;
-            }
         }
 
         /// <summary>
@@ -140,56 +184,6 @@ namespace DataManagement.DAO
         }
 
         /// <summary>
-        /// Ejecuta un procedimiento almacenado en la base de datos usando los parametros proporcionados.
-        /// </summary>
-        /// <param name="tableName">Nombre de la tabla relacionada al procedimiento almacenado. Este dato es solo para referencia al crear el DataTable.</param>
-        /// <param name="storedProcedure">Nombre exacto del procedimiento almacenado a ejecutar.</param>
-        /// <param name="connectionToUse">Especifica cual configuracion de tipo ConectionString se desea utilizar. Si se especifica nulo, o no se especifica, entonces utiliza la conexion especificada en DefaultConnection.</param>
-        /// <param name="parameters">Formacion de objetos Parameter que contiene los parametros de la consulta.</param>
-        /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la ejecucion.</returns>
-        public static Result StoredProcedure(string tableName, string storedProcedure, string connectionToUse = null, params Parameter[] parameters)
-        {
-            try
-            {
-                if (connectionToUse == null) connectionToUse = DefaultConnection;
-                ConnectionTypes connectionType = (ConnectionTypes)Enum.Parse(typeof(ConnectionTypes), ConfigurationManager.AppSettings["ConnectionType"].ToString());
-                Operation operation = Operation.GetOperationBasedOnConnectionType(connectionType);
-                Result result = operation.ExecuteProcedure(tableName, storedProcedure, connectionToUse, parameters);
-                CallOnExecutedEventHandlers(tableName, TransactionTypes.StoredProcedure, result);
-                return result;
-            }
-            catch (NullReferenceException nre)
-            {
-                throw new ConfigurationNotFoundException("ConnectionType", nre);
-            }
-        }
-
-        /// <summary>
-        /// Ejecuta un procedimiento almacenado en la base de datos usando los parametros proporcionados usando Async.
-        /// </summary>
-        /// <param name="tableName">Nombre de la tabla relacionada al procedimiento almacenado. Este dato es solo para referencia al crear el DataTable.</param>
-        /// <param name="storedProcedure">Nombre exacto del procedimiento almacenado a ejecutar.</param>
-        /// <param name="connectionToUse">Especifica cual configuracion de tipo ConectionString se desea utilizar. Si se especifica nulo, o no se especifica, entonces utiliza la conexion especificada en DefaultConnection.</param>
-        /// <param name="parameters">Formacion de objetos Parameter que contiene los parametros de la consulta.</param>
-        /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la ejecucion.</returns>
-        public static async Task<Result> StoredProcedureAsync(string tableName, string storedProcedure, string connectionToUse = null, params Parameter[] parameters)
-        {
-            try
-            {
-                if (connectionToUse == null) connectionToUse = DefaultConnection;
-                ConnectionTypes connectionType = (ConnectionTypes)Enum.Parse(typeof(ConnectionTypes), ConfigurationManager.AppSettings["ConnectionType"].ToString());
-                Operation operation = Operation.GetOperationBasedOnConnectionType(connectionType);
-                Result result = await Task.Run(() => operation.ExecuteProcedure(tableName, storedProcedure, connectionToUse, parameters));
-                CallOnExecutedEventHandlers(tableName, TransactionTypes.StoredProcedure, result);
-                return result;
-            }
-            catch (NullReferenceException nre)
-            {
-                throw new ConfigurationNotFoundException("ConnectionType", nre);
-            }
-        }
-
-        /// <summary>
         /// Seleccion de todos los objetos del tipo <typeparamref name="T"/> en la base de datos.
         /// </summary>
         /// <param name="connectionToUse">Especifica cual configuracion de tipo ConectionString se desea utilizar. Si se especifica nulo, o no se especifica, entonces utiliza la conexion especificada en DefaultConnection.</param>
@@ -211,7 +205,7 @@ namespace DataManagement.DAO
 
         private static Result Command(T obj, TransactionTypes transactionType, string connectionToUse = null)
         {
-            if (connectionToUse == null) connectionToUse = DefaultConnection;
+            if (connectionToUse == null) connectionToUse = Manager.DefaultConnection;
             QueryEvaluation queryEvaluation = new QueryEvaluation();
             Result result;
             if (dataCache.IsCacheEnabled)

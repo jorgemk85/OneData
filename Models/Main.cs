@@ -52,7 +52,7 @@ namespace DataManagement.Models
         {
             Id = id;
             DataBaseTableName = dbTableName;
-            Schema = Manager<Dummy>.DefaultSchema;
+            Schema = Manager.DefaultSchema;
             IsCacheEnabled = false;
             CacheExpiration = 0;
         }
@@ -83,7 +83,7 @@ namespace DataManagement.Models
         {
             Id = id;
             DataBaseTableName = dbTableName;
-            Schema = Manager<Dummy>.DefaultSchema;
+            Schema = Manager.DefaultSchema;
             IsCacheEnabled = isCacheEnabled;
             CacheExpiration = cacheExpiration;
         }
