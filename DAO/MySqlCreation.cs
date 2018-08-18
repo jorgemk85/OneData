@@ -16,11 +16,11 @@ namespace DataManagement.DAO
             {
                 if (setDefaultNull)
                 {
-                    queryBuilder.AppendFormat("IN _{0} {1} = null, ", property.Name, GetSqlDataType(property.PropertyType));
+                    queryBuilder.AppendFormat("    IN _{0} {1} = null,\n", property.Name, GetSqlDataType(property.PropertyType));
                 }
                 else
                 {
-                    queryBuilder.AppendFormat("IN _{0} {1}, ", property.Name, GetSqlDataType(property.PropertyType));
+                    queryBuilder.AppendFormat("    IN _{0} {1},\n", property.Name, GetSqlDataType(property.PropertyType));
                 }
             }
         }
@@ -35,38 +35,38 @@ namespace DataManagement.DAO
 
             if (doAlter)
             {
-                queryBuilder.AppendFormat("ALTER PROCEDURE {0}{1}{2} (",  StoredProcedurePrefix, obj.DataBaseTableName, InsertSuffix);
+                queryBuilder.AppendFormat("ALTER PROCEDURE {0}{1}{2} (\n",  StoredProcedurePrefix, obj.DataBaseTableName, InsertSuffix);
             }
             else
             {
-                queryBuilder.AppendFormat("CREATE PROCEDURE {0}{1}{2} (",  StoredProcedurePrefix, obj.DataBaseTableName, InsertSuffix);
+                queryBuilder.AppendFormat("CREATE PROCEDURE {0}{1}{2} (\n",  StoredProcedurePrefix, obj.DataBaseTableName, InsertSuffix);
             }
 
             // Aqui se colocan los parametros segun las propiedades del objeto
             SetStoredProceduresParameters(ref properties, queryBuilder, false);
 
             queryBuilder.Remove(queryBuilder.Length - 2, 2);
-            queryBuilder.Append(") BEGIN ");
-            queryBuilder.Append("SET @actualTime = now(); ");
-            queryBuilder.AppendFormat("INSERT INTO {0}{1} ( ",  TablePrefix, obj.DataBaseTableName);
+            queryBuilder.Append(")\nBEGIN\n");
+            queryBuilder.Append("SET @actualTime = now();\n");
+            queryBuilder.AppendFormat("INSERT INTO {0}{1} (\n",  TablePrefix, obj.DataBaseTableName);
 
             // Seccion para especificar a que columnas se va a insertar.
             foreach (PropertyInfo property in properties)
             {
-                queryBuilder.AppendFormat("{0}, ", property.Name);
+                queryBuilder.AppendFormat("    {0},\n", property.Name);
             }
 
-            queryBuilder.Append("fechaCreacion, fechaModificacion");
-            queryBuilder.Append(") VALUES ( ");
+            queryBuilder.Append("    fechaCreacion,\n    fechaModificacion");
+            queryBuilder.Append(")\nVALUES (\n");
 
             // Especificamos los parametros para insertar en la base de datos.
             foreach (PropertyInfo property in properties)
             {
-                queryBuilder.AppendFormat("_{0}, ", property.Name);
+                queryBuilder.AppendFormat("    _{0},\n", property.Name);
             }
 
-            queryBuilder.Append("@actualTime, @actualTime); ");
-            queryBuilder.Append("END ");
+            queryBuilder.Append("    @actualTime,\n    @actualTime);\n");
+            queryBuilder.Append("END");
 
             return queryBuilder.ToString();
         }
@@ -81,11 +81,11 @@ namespace DataManagement.DAO
 
             if (doAlter)
             {
-                queryBuilder.AppendFormat("ALTER PROCEDURE {0}{1}{2} (", StoredProcedurePrefix, obj.DataBaseTableName, UpdateSuffix);
+                queryBuilder.AppendFormat("ALTER PROCEDURE {0}{1}{2} (\n", StoredProcedurePrefix, obj.DataBaseTableName, UpdateSuffix);
             }
             else
             {
-                queryBuilder.AppendFormat("CREATE PROCEDURE {0}{1}{2} (", StoredProcedurePrefix, obj.DataBaseTableName, UpdateSuffix);
+                queryBuilder.AppendFormat("CREATE PROCEDURE {0}{1}{2} (\n", StoredProcedurePrefix, obj.DataBaseTableName, UpdateSuffix);
             }
 
 
@@ -93,18 +93,18 @@ namespace DataManagement.DAO
             SetStoredProceduresParameters(ref properties, queryBuilder, false);
 
             queryBuilder.Remove(queryBuilder.Length - 2, 2);
-            queryBuilder.Append(") BEGIN ");
-            queryBuilder.Append("SET @actualTime = now();");
-            queryBuilder.AppendFormat("UPDATE {0}{1} ",  TablePrefix, obj.DataBaseTableName);
-            queryBuilder.Append("SET ");
+            queryBuilder.Append(")\nBEGIN\n");
+            queryBuilder.Append("SET @actualTime = now();\n");
+            queryBuilder.AppendFormat("UPDATE {0}{1}\n",  TablePrefix, obj.DataBaseTableName);
+            queryBuilder.Append("SET\n");
 
             // Se especifica el parametro que va en x columna.
             foreach (PropertyInfo property in properties)
             {
-                queryBuilder.AppendFormat("{0} =  _{0}, ", property.Name);
+                queryBuilder.AppendFormat("    {0} =  _{0},\n", property.Name);
             }
-            queryBuilder.Append("fechaModificacion = @actualTime ");
-            queryBuilder.AppendFormat(" WHERE Id = _Id; ");
+            queryBuilder.Append("    fechaModificacion = @actualTime\n");
+            queryBuilder.AppendFormat("WHERE Id = _Id;\n");
             queryBuilder.Append("END");
 
             return queryBuilder.ToString();
@@ -120,17 +120,17 @@ namespace DataManagement.DAO
 
             if (doAlter)
             {
-                queryBuilder.AppendFormat("ALTER PROCEDURE {0}{1}{2} (", StoredProcedurePrefix, obj.DataBaseTableName, DeleteSuffix);
+                queryBuilder.AppendFormat("ALTER PROCEDURE {0}{1}{2} (\n", StoredProcedurePrefix, obj.DataBaseTableName, DeleteSuffix);
             }
             else
             {
-                queryBuilder.AppendFormat("CREATE PROCEDURE {0}{1}{2} (",  StoredProcedurePrefix, obj.DataBaseTableName, DeleteSuffix);
+                queryBuilder.AppendFormat("CREATE PROCEDURE {0}{1}{2} (\n",  StoredProcedurePrefix, obj.DataBaseTableName, DeleteSuffix);
             }
 
-            queryBuilder.Append("_Id char(36) ");
-            queryBuilder.Append(") BEGIN ");
-            queryBuilder.AppendFormat("DELETE FROM {0}{1} ", TablePrefix, obj.DataBaseTableName);
-            queryBuilder.AppendFormat("WHERE Id = _Id; ");
+            queryBuilder.Append("    IN _Id char(36))\n");
+            queryBuilder.Append("BEGIN\n");
+            queryBuilder.AppendFormat("DELETE FROM {0}{1}\n", TablePrefix, obj.DataBaseTableName);
+            queryBuilder.AppendFormat("WHERE Id = _Id;\n");
             queryBuilder.Append("END");
 
             return queryBuilder.ToString();
@@ -146,16 +146,16 @@ namespace DataManagement.DAO
 
             if (doAlter)
             {
-                queryBuilder.AppendFormat("ALTER PROCEDURE {0}{1}{2} (", StoredProcedurePrefix, obj.DataBaseTableName, SelectAllSuffix);
+                queryBuilder.AppendFormat("ALTER PROCEDURE {0}{1}{2} (\n", StoredProcedurePrefix, obj.DataBaseTableName, SelectAllSuffix);
             }
             else
             {
-                queryBuilder.AppendFormat("CREATE PROCEDURE {0}{1}{2} (", StoredProcedurePrefix, obj.DataBaseTableName, SelectAllSuffix);
+                queryBuilder.AppendFormat("CREATE PROCEDURE {0}{1}{2} (\n", StoredProcedurePrefix, obj.DataBaseTableName, SelectAllSuffix);
             }
             
-            queryBuilder.Append(") BEGIN ");
-            queryBuilder.AppendFormat("SELECT * FROM {0}{1} ", TablePrefix, obj.DataBaseTableName);
-            queryBuilder.Append("ORDER BY FechaCreacion DESC; ");
+            queryBuilder.Append(")\nBEGIN\n");
+            queryBuilder.AppendFormat("SELECT * FROM {0}{1}\n", TablePrefix, obj.DataBaseTableName);
+            queryBuilder.Append("ORDER BY FechaCreacion DESC;\n");
             queryBuilder.Append("END");
 
             return queryBuilder.ToString();
@@ -171,29 +171,29 @@ namespace DataManagement.DAO
 
             if (doAlter)
             {
-                queryBuilder.AppendFormat("ALTER PROCEDURE {0}{1}{2} (",  StoredProcedurePrefix, obj.DataBaseTableName, SelectSuffix);
+                queryBuilder.AppendFormat("ALTER PROCEDURE {0}{1}{2} (\n",  StoredProcedurePrefix, obj.DataBaseTableName, SelectSuffix);
             }
             else
             {
-                queryBuilder.AppendFormat("CREATE PROCEDURE {0}{1}{2} (",  StoredProcedurePrefix, obj.DataBaseTableName, SelectSuffix);
+                queryBuilder.AppendFormat("CREATE PROCEDURE {0}{1}{2} (\n",  StoredProcedurePrefix, obj.DataBaseTableName, SelectSuffix);
             }
 
             // Aqui se colocan los parametros segun las propiedades del objeto
             SetStoredProceduresParameters(ref properties, queryBuilder, false);
 
             queryBuilder.Remove(queryBuilder.Length - 2, 2);
-            queryBuilder.Append(") BEGIN ");
-            queryBuilder.AppendFormat("SELECT * FROM {0}{1} ",  TablePrefix, obj.DataBaseTableName);
-            queryBuilder.Append("WHERE ");
+            queryBuilder.Append(")\nBEGIN\n");
+            queryBuilder.AppendFormat("SELECT * FROM {0}{1}\n",  TablePrefix, obj.DataBaseTableName);
+            queryBuilder.Append("WHERE\n");
 
             // Se especifica el parametro que va en x columna.
             foreach (PropertyInfo property in properties)
             {
-                queryBuilder.AppendFormat("{0} LIKE IFNULL(CONCAT('%', _{0}, '%'), {0}) AND ", property.Name);
+                queryBuilder.AppendFormat("    {0} LIKE IFNULL(CONCAT('%', _{0}, '%'), {0}) AND\n", property.Name);
             }
 
-            queryBuilder.Remove(queryBuilder.Length - 5, 5);
-            queryBuilder.AppendFormat(" ORDER BY FechaCreacion desc;");
+            queryBuilder.Remove(queryBuilder.Length - 4, 4);
+            queryBuilder.AppendFormat("\nORDER BY FechaCreacion desc;\n");
             queryBuilder.Append("END");
 
             return queryBuilder.ToString();
