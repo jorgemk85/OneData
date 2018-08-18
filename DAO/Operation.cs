@@ -4,6 +4,7 @@ using DataManagement.Exceptions;
 using DataManagement.Interfaces;
 using DataManagement.Models;
 using DataManagement.Tools;
+using MySql.Data.MySqlClient;
 using System;
 using System.Data;
 using System.Data.Common;
@@ -32,6 +33,7 @@ namespace DataManagement.DAO
 
         protected const int ERR_STORED_PROCEDURE_NOT_FOUND = 2812;
         protected const int ERR_OBJECT_NOT_FOUND = 208;
+        protected const string ERR_ALLOW_USER_VARIABLES_NOT_SET = "Fatal error encountered during command execution.";
 
         public Operation()
         {
@@ -81,6 +83,14 @@ namespace DataManagement.DAO
             }
             catch (Exception e)
             {
+                if (e.InnerException != null)
+                {
+                    if (e.InnerException.Message.EndsWith("must be defined."))
+                    {
+                        throw new AllowUserVariableNotEnabledException();
+                    }
+                }
+
                 throw e;
             }
         }
@@ -122,39 +132,86 @@ namespace DataManagement.DAO
         {
             DataTable dataTable = null;
 
-        Start:
+            Start:
             try
             {
                 dataTable = ConfigureConnectionAndExecuteCommand(obj, tableName, connectionToUse, transactionType);
             }
-            catch (DbException sqle) when (((SqlException)sqle).Number == ERR_STORED_PROCEDURE_NOT_FOUND)
+            catch (DbException sqle)
             {
-                if (AutoCreateStoredProcedures)
-                {
-                    ExecuteNonQuery(GetTransactionTextForStores<T>(transactionType), connectionToUse, ConnectionType);
-                    goto Start;
-                }
-                else
-                {
-                    throw sqle;
-                }
-            }
-            catch (DbException sqle) when (((SqlException)sqle).Number == ERR_OBJECT_NOT_FOUND)
-            {
-                if (AutoCreateTables)
-                {
-                    ProcessTableCreation<T>(connectionToUse);
+                int errorNumber = GetExceptionErrorNumber(sqle);
 
-                    goto Start;
-                }
-                else
+                if (errorNumber == ERR_STORED_PROCEDURE_NOT_FOUND)
                 {
-                    throw sqle;
+                    if (AutoCreateStoredProcedures)
+                    {
+                        ExecuteNonQuery(GetTransactionTextForStores<T>(transactionType), connectionToUse, ConnectionType);
+                        goto Start;
+                    }
                 }
+
+                if (errorNumber == ERR_OBJECT_NOT_FOUND)
+                {
+                    if (AutoCreateTables)
+                    {
+                        ProcessTableCreation<T>(connectionToUse);
+
+                        goto Start;
+                    }
+                }
+
+                throw sqle;
             }
             if (logTransaction) LogTransaction(tableName, transactionType, connectionToUse);
 
             return new Result(dataTable);
+        }
+
+        private int GetExceptionErrorNumber(DbException exception)
+        {
+            if (exception.Message.StartsWith("Procedure or function"))
+            {
+                return ERR_STORED_PROCEDURE_NOT_FOUND;
+            }
+
+            if (exception.Message.EndsWith("doesn't exist"))
+            {
+                return ERR_OBJECT_NOT_FOUND;
+            }
+
+            if (exception.GetBaseException() is SqlException)
+            {
+                if (((SqlException)exception.GetBaseException()).Number != 0)
+                {
+                    return ((SqlException)exception.GetBaseException()).Number;
+                }                
+            }
+
+            if (exception.GetBaseException() is MySqlException)
+            {
+                if (((MySqlException)exception.GetBaseException()).Number != 0)
+                {
+                    return ((MySqlException)exception.GetBaseException()).Number;
+                }
+            }
+
+            if (exception.InnerException is SqlException)
+            {
+                if (((SqlException)exception.InnerException).Number != 0)
+                {
+                    return ((SqlException)exception.InnerException).Number;
+                }
+            }
+
+            if (exception.InnerException is MySqlException)
+            {
+                if (((MySqlException)exception.InnerException).Number != 0)
+                {
+                    return ((MySqlException)exception.InnerException).Number;
+                }
+            }
+
+            return -1;
         }
 
         private DataTable ConfigureConnectionAndExecuteCommand<T>(T obj, string tableName, string connectionToUse, TransactionTypes transactionType) where T : IManageable, new()

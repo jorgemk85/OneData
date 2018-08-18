@@ -17,6 +17,7 @@ namespace DataManagement.DAO
     /// <typeparam name="T">Tipo de clase que representa este objeto. El tipo tiene que implementar IManageable para poder operar.</typeparam>
     public abstract class Manager<T> where T : IManageable, new()
     {
+        public static string DefaultSchema { get; set; }
         static string defaultConnection;
         static DataCache dataCache = new DataCache();
         static bool forceQueryDataBase = false;
@@ -42,6 +43,7 @@ namespace DataManagement.DAO
             try
             {
                 defaultConnection = ConsolidationTools.GetValueFromConfiguration("DefaultConnection", ConfigurationTypes.AppSetting);
+                DefaultSchema = ConsolidationTools.GetValueFromConfiguration("DefaultSchema", ConfigurationTypes.AppSetting);
             }
             catch (ConfigurationErrorsException cee)
             {

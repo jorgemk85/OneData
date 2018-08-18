@@ -1,7 +1,5 @@
 ﻿using DataManagement.Attributes;
-using DataManagement.Enums;
 using DataManagement.Interfaces;
-using DataManagement.Tools;
 using System;
 using System.Linq;
 using System.Reflection;
@@ -9,32 +7,8 @@ using System.Text;
 
 namespace DataManagement.DAO
 {
-    internal class MsSqlCreation : ICreatable
+    internal class MsSqlCreation : Creation, ICreatable
     {
-        public string TablePrefix { get; set; }
-        public string StoredProcedurePrefix { get; set; }
-        public string InsertSuffix { get; set; }
-        public string SelectSuffix { get; set; }
-        public string SelectAllSuffix { get; set; }
-        public string UpdateSuffix { get; set; }
-        public string DeleteSuffix { get; set; }
-
-        internal MsSqlCreation()
-        {
-            SetConfigurationProperties();
-        }
-
-        public void SetConfigurationProperties()
-        {
-            TablePrefix = ConsolidationTools.GetValueFromConfiguration("TablePrefix", ConfigurationTypes.AppSetting);
-            StoredProcedurePrefix = ConsolidationTools.GetValueFromConfiguration("StoredProcedurePrefix", ConfigurationTypes.AppSetting);
-            InsertSuffix = ConsolidationTools.GetValueFromConfiguration("InsertSuffix", ConfigurationTypes.AppSetting);
-            SelectSuffix = ConsolidationTools.GetValueFromConfiguration("SelectSuffix", ConfigurationTypes.AppSetting);
-            SelectAllSuffix = ConsolidationTools.GetValueFromConfiguration("SelectAllSuffix", ConfigurationTypes.AppSetting);
-            UpdateSuffix = ConsolidationTools.GetValueFromConfiguration("UpdateSuffix", ConfigurationTypes.AppSetting);
-            DeleteSuffix = ConsolidationTools.GetValueFromConfiguration("DeleteSuffix", ConfigurationTypes.AppSetting);
-        }
-
         public void SetStoredProceduresParameters(ref PropertyInfo[] properties, StringBuilder queryBuilder, bool setDefaultNull)
         {
             // Aqui se colocan los parametros segun las propiedades del objeto 
@@ -115,7 +89,7 @@ namespace DataManagement.DAO
             {
                 queryBuilder.AppendFormat("CREATE PROCEDURE {0}.{1}{2}{3} ", obj.Schema, StoredProcedurePrefix, obj.DataBaseTableName, UpdateSuffix);
             }
-            
+
 
             // Aqui se colocan los parametros segun las propiedades del objeto
             SetStoredProceduresParameters(ref properties, queryBuilder, false);
@@ -156,7 +130,7 @@ namespace DataManagement.DAO
             {
                 queryBuilder.AppendFormat("CREATE PROCEDURE {0}.{1}{2}{3} ", obj.Schema, StoredProcedurePrefix, obj.DataBaseTableName, DeleteSuffix);
             }
-            
+
             queryBuilder.Append("@_Id uniqueidentifier ");
             queryBuilder.Append(" AS ");
             queryBuilder.Append("BEGIN ");
@@ -183,10 +157,11 @@ namespace DataManagement.DAO
             {
                 queryBuilder.AppendFormat("CREATE PROCEDURE {0}.{1}{2}{3} ", obj.Schema, StoredProcedurePrefix, obj.DataBaseTableName, SelectAllSuffix);
             }
-            
+
             queryBuilder.Append(" AS ");
             queryBuilder.Append("BEGIN ");
             queryBuilder.AppendFormat("SELECT * FROM {0}.{1}{2} ", obj.Schema, TablePrefix, obj.DataBaseTableName);
+            queryBuilder.Append("ORDER BY FechaCreacion DESC ");
             queryBuilder.Append("END ");
 
             return queryBuilder.ToString();
@@ -263,7 +238,7 @@ namespace DataManagement.DAO
             {
                 queryBuilder.AppendFormat("CREATE TABLE {0}.{1}{2} ", obj.Schema, TablePrefix, obj.DataBaseTableName);
             }
-            
+
             queryBuilder.Append("(");
             // Aqui se colocan las propiedades del objeto. Una por columna por su puesto.
             foreach (PropertyInfo property in properties)

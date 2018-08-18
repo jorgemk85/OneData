@@ -1,4 +1,5 @@
 ﻿using DataManagement.Attributes;
+using DataManagement.DAO;
 using DataManagement.Interfaces;
 using System;
 
@@ -51,7 +52,7 @@ namespace DataManagement.Models
         {
             Id = id;
             DataBaseTableName = dbTableName;
-            Schema = "dbo";
+            Schema = Manager<Log>.DefaultSchema;
             IsCacheEnabled = false;
             CacheExpiration = 0;
         }
@@ -82,7 +83,7 @@ namespace DataManagement.Models
         {
             Id = id;
             DataBaseTableName = dbTableName;
-            Schema = "dbo";
+            Schema = Manager<Log>.DefaultSchema;
             IsCacheEnabled = isCacheEnabled;
             CacheExpiration = cacheExpiration;
         }
