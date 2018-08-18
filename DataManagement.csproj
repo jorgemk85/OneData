@@ -111,6 +111,7 @@
     <Compile Include="Exceptions\BadConnectionStateException.cs" />
     <Compile Include="Exceptions\InvalidNumberOfParametersException.cs" />
     <Compile Include="Exceptions\ConfigurationNotFoundException.cs" />
+    <Compile Include="Models\Dummy.cs" />
     <Compile Include="Tools\DataSerializer.cs" />
     <Compile Include="Tools\ExcelSerializer.cs" />
     <Compile Include="Tools\FileSerializer.cs" />

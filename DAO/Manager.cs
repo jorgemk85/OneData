@@ -18,7 +18,7 @@ namespace DataManagement.DAO
     public abstract class Manager<T> where T : IManageable, new()
     {
         public static string DefaultSchema { get; set; }
-        static string defaultConnection;
+        public static string DefaultConnection { get; set; }
         static DataCache dataCache = new DataCache();
         static bool forceQueryDataBase = false;
 
@@ -42,7 +42,7 @@ namespace DataManagement.DAO
         {
             try
             {
-                defaultConnection = ConsolidationTools.GetValueFromConfiguration("DefaultConnection", ConfigurationTypes.AppSetting);
+                DefaultConnection = ConsolidationTools.GetValueFromConfiguration("DefaultConnection", ConfigurationTypes.AppSetting);
                 DefaultSchema = ConsolidationTools.GetValueFromConfiguration("DefaultSchema", ConfigurationTypes.AppSetting);
             }
             catch (ConfigurationErrorsException cee)
@@ -151,7 +151,7 @@ namespace DataManagement.DAO
         {
             try
             {
-                if (connectionToUse == null) connectionToUse = defaultConnection;
+                if (connectionToUse == null) connectionToUse = DefaultConnection;
                 ConnectionTypes connectionType = (ConnectionTypes)Enum.Parse(typeof(ConnectionTypes), ConfigurationManager.AppSettings["ConnectionType"].ToString());
                 Operation operation = Operation.GetOperationBasedOnConnectionType(connectionType);
                 Result result = operation.ExecuteProcedure(tableName, storedProcedure, connectionToUse, parameters);
@@ -176,7 +176,7 @@ namespace DataManagement.DAO
         {
             try
             {
-                if (connectionToUse == null) connectionToUse = defaultConnection;
+                if (connectionToUse == null) connectionToUse = DefaultConnection;
                 ConnectionTypes connectionType = (ConnectionTypes)Enum.Parse(typeof(ConnectionTypes), ConfigurationManager.AppSettings["ConnectionType"].ToString());
                 Operation operation = Operation.GetOperationBasedOnConnectionType(connectionType);
                 Result result = await Task.Run(() => operation.ExecuteProcedure(tableName, storedProcedure, connectionToUse, parameters));
@@ -211,7 +211,7 @@ namespace DataManagement.DAO
 
         private static Result Command(T obj, TransactionTypes transactionType, string connectionToUse = null)
         {
-            if (connectionToUse == null) connectionToUse = defaultConnection;
+            if (connectionToUse == null) connectionToUse = DefaultConnection;
             QueryEvaluation queryEvaluation = new QueryEvaluation();
             Result result;
             if (dataCache.IsCacheEnabled)
