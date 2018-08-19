@@ -4,11 +4,9 @@ using DataManagement.Exceptions;
 using DataManagement.Interfaces;
 using DataManagement.Models;
 using DataManagement.Tools;
-using MySql.Data.MySqlClient;
 using System;
 using System.Data;
 using System.Data.Common;
-using System.Data.SqlClient;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -27,17 +25,41 @@ namespace DataManagement.DAO
         public bool AutoCreateStoredProcedures { get; set; }
         public bool AutoCreateTables { get; set; }
         public bool EnableLog { get; set; }
-        public DbCommand Command { get; set; }
         public ICreatable Creator { get; set; }
         public ConnectionTypes ConnectionType { get; set; }
-
-        protected const int ERR_STORED_PROCEDURE_NOT_FOUND = 2812;
-        protected const int ERR_OBJECT_NOT_FOUND = 208;
-        protected const string ERR_ALLOW_USER_VARIABLES_NOT_SET = "Fatal error encountered during command execution.";
+        public DbCommand Command { get; set; }
+        public string CheckTableExistanceQuery { get; protected set; }
 
         public Operation()
         {
             GetTransactionTypesSuffixes();
+        }
+
+        protected object ExecuteScalar(string transaction, string connectionToUse)
+        {
+            try
+            {
+                using (DbConnection connection = ConnectionType == ConnectionTypes.MySQL ? (DbConnection)Connection.OpenMySqlConnection(connectionToUse) : (DbConnection)Connection.OpenMsSqlConnection(connectionToUse))
+                {
+                    if (connection.State != ConnectionState.Open) throw new BadConnectionStateException();
+                    Command = connection.CreateCommand();
+                    Command.CommandType = CommandType.Text;
+                    Command.CommandText = transaction;
+                    return Command.ExecuteScalar();
+                }
+            }
+            catch (DbException dbException)
+            {
+                if (dbException.InnerException != null)
+                {
+                    if (dbException.InnerException.Message.EndsWith("must be defined."))
+                    {
+                        throw new AllowUserVariableNotEnabledException();
+                    }
+                }
+
+                throw dbException;
+            }
         }
 
         private void GetTransactionTypesSuffixes()
@@ -55,197 +77,20 @@ namespace DataManagement.DAO
             EnableLog = bool.Parse(ConsolidationTools.GetValueFromConfiguration("EnableLog", ConfigurationTypes.AppSetting));
         }
 
-        internal static Operation GetOperationBasedOnConnectionType(ConnectionTypes connectionType)
+        internal static IOperable GetOperationBasedOnConnectionType(ConnectionTypes connectionType)
         {
             switch (connectionType)
             {
                 case ConnectionTypes.MySQL:
                     return new MySqlOperation();
                 case ConnectionTypes.MSSQL:
-                    return new MsSqlOperation();
+                    return new MySqlOperation();
                 default:
-                    return new MsSqlOperation();
+                    return new MySqlOperation();
             }
         }
 
-        private void ExecuteNonQuery(string transaction, string connectionToUse, ConnectionTypes connectionType)
-        {
-            try
-            {
-                using (DbConnection connection = Connection.OpenConnection(connectionToUse, connectionType))
-                {
-                    if (connection.State != ConnectionState.Open) throw new BadConnectionStateException();
-                    Command = connection.CreateCommand();
-                    Command.CommandType = CommandType.Text;
-                    Command.CommandText = transaction;
-                    Command.ExecuteNonQuery();
-                }
-            }
-            catch (Exception e)
-            {
-                if (e.InnerException != null)
-                {
-                    if (e.InnerException.Message.EndsWith("must be defined."))
-                    {
-                        throw new AllowUserVariableNotEnabledException();
-                    }
-                }
-
-                throw e;
-            }
-        }
-
-        internal Result ExecuteProcedure(string tableName, string storedProcedure, string connectionToUse, Parameter[] parameters, bool logTransaction = true)
-        {
-            DataTable dataTable = null;
-
-            try
-            {
-                using (DbConnection connection = Connection.OpenConnection(connectionToUse, ConnectionType))
-                {
-                    if (connection.State != ConnectionState.Open) throw new BadConnectionStateException();
-                    Command = connection.CreateCommand();
-                    Command.CommandType = CommandType.StoredProcedure;
-                    Command.CommandText = storedProcedure;
-
-                    if (parameters != null) SetParameters(parameters);
-                    dataTable = new DataTable();
-                    dataTable.Load(Command.ExecuteReader());
-                    dataTable.TableName = tableName;
-                }
-            }
-            catch (DbException dbe)
-            {
-                throw dbe;
-            }
-            catch (ArgumentException ae)
-            {
-                throw ae;
-            }
-
-            if (logTransaction) LogTransaction(tableName, TransactionTypes.StoredProcedure, connectionToUse);
-
-            return new Result(dataTable);
-        }
-
-        internal Result ExecuteProcedure<T>(T obj, string tableName, string connectionToUse, TransactionTypes transactionType, bool logTransaction = true) where T : IManageable, new()
-        {
-            DataTable dataTable = null;
-
-            Start:
-            try
-            {
-                dataTable = ConfigureConnectionAndExecuteCommand(obj, tableName, connectionToUse, transactionType);
-            }
-            catch (DbException sqle)
-            {
-                int errorNumber = GetExceptionErrorNumber(sqle);
-
-                if (errorNumber == ERR_STORED_PROCEDURE_NOT_FOUND)
-                {
-                    if (AutoCreateStoredProcedures)
-                    {
-                        ExecuteNonQuery(GetTransactionTextForStores<T>(transactionType), connectionToUse, ConnectionType);
-                        goto Start;
-                    }
-                }
-
-                if (errorNumber == ERR_OBJECT_NOT_FOUND)
-                {
-                    if (AutoCreateTables)
-                    {
-                        ProcessTableCreation<T>(connectionToUse);
-
-                        goto Start;
-                    }
-                }
-
-                throw sqle;
-            }
-            if (logTransaction) LogTransaction(tableName, transactionType, connectionToUse);
-
-            return new Result(dataTable);
-        }
-
-        private int GetExceptionErrorNumber(DbException exception)
-        {
-            if (exception.Message.StartsWith("Procedure or function"))
-            {
-                return ERR_STORED_PROCEDURE_NOT_FOUND;
-            }
-
-            if (exception.Message.EndsWith("doesn't exist"))
-            {
-                return ERR_OBJECT_NOT_FOUND;
-            }
-
-            if (exception.GetBaseException() is SqlException)
-            {
-                if (((SqlException)exception.GetBaseException()).Number != 0)
-                {
-                    return ((SqlException)exception.GetBaseException()).Number;
-                }                
-            }
-
-            if (exception.GetBaseException() is MySqlException)
-            {
-                if (((MySqlException)exception.GetBaseException()).Number != 0)
-                {
-                    return ((MySqlException)exception.GetBaseException()).Number;
-                }
-            }
-
-            if (exception.InnerException is SqlException)
-            {
-                if (((SqlException)exception.InnerException).Number != 0)
-                {
-                    return ((SqlException)exception.InnerException).Number;
-                }
-            }
-
-            if (exception.InnerException is MySqlException)
-            {
-                if (((MySqlException)exception.InnerException).Number != 0)
-                {
-                    return ((MySqlException)exception.InnerException).Number;
-                }
-            }
-
-            return -1;
-        }
-
-        private DataTable ConfigureConnectionAndExecuteCommand<T>(T obj, string tableName, string connectionToUse, TransactionTypes transactionType) where T : IManageable, new()
-        {
-            DataTable dataTable = null;
-
-            using (DbConnection connection = Connection.OpenConnection(connectionToUse, ConnectionType))
-            {
-                if (connection.State != ConnectionState.Open) throw new BadConnectionStateException();
-                Command = connection.CreateCommand();
-                Command.CommandType = CommandType.StoredProcedure;
-                Command.CommandText = string.Format("{0}.{1}{2}{3}", obj.Schema, StoredProcedurePrefix, tableName, GetFriendlyTransactionSuffix(transactionType));
-
-                if (transactionType == TransactionTypes.Insert || transactionType == TransactionTypes.Update || transactionType == TransactionTypes.Delete)
-                {
-                    SetParameters(obj, transactionType);
-                    Command.ExecuteNonQuery();
-                }
-                else
-                {
-                    if (transactionType == TransactionTypes.Select)
-                    {
-                        SetParameters(obj, transactionType);
-                    }
-                    dataTable = new DataTable();
-                    dataTable.Load(Command.ExecuteReader());
-                    dataTable.TableName = tableName;
-                }
-            }
-
-            return dataTable;
-        }
-
-        private string GetTransactionTextForStores<T>(TransactionTypes transactionType) where T : IManageable, new()
+        protected string GetTransactionTextForProcedure<T>(TransactionTypes transactionType) where T : IManageable, new()
         {
             switch (transactionType)
             {
@@ -264,23 +109,6 @@ namespace DataManagement.DAO
             }
         }
 
-        private void LogTransaction(string dataBaseTableName, TransactionTypes transactionType, string connectionToUse)
-        {
-            if (!EnableLog)
-            {
-                return;
-            }
-            Log newLog = new Log
-            {
-                Ip = string.Empty,
-                Transaccion = transactionType.ToString(),
-                TablaAfectada = dataBaseTableName,
-                Parametros = GetStringParameters()
-            };
-
-            ExecuteProcedure(newLog, newLog.DataBaseTableName, connectionToUse, TransactionTypes.Insert, false);
-        }
-
         private string GetStringParameters()
         {
             StringBuilder builder = new StringBuilder();
@@ -296,7 +124,7 @@ namespace DataManagement.DAO
             return builder.ToString();
         }
 
-        private string GetFriendlyTransactionSuffix(TransactionTypes transactionType)
+        protected string GetFriendlyTransactionSuffix(TransactionTypes transactionType)
         {
             switch (transactionType)
             {
@@ -315,55 +143,6 @@ namespace DataManagement.DAO
             }
         }
 
-        private void ProcessTableCreation<T>(string connectionToUse) where T : IManageable, new()
-        {
-            ExecuteNonQuery(Creator.GetCreateTableQuery<T>(false), connectionToUse, ConnectionType);
-            VerifyForeignTables(typeof(T), connectionToUse);
-            string foreignKeyQuery = Creator.GetCreateForeignKeysQuery(typeof(T));
-
-            if (!string.IsNullOrWhiteSpace(foreignKeyQuery))
-            {
-                ExecuteNonQuery(Creator.GetCreateForeignKeysQuery(typeof(T)), connectionToUse, ConnectionType);
-            }
-        }
-
-        private void VerifyForeignTables(Type type, string connectionToUse)
-        {
-            PropertyInfo[] properties = type.GetProperties().Where(q => q.GetCustomAttribute<UnlinkedProperty>() == null && q.GetCustomAttribute<ForeignModel>() != null).ToArray();
-
-            foreach (PropertyInfo property in properties)
-            {
-                IManageable foreignModel = (IManageable)Activator.CreateInstance(property.GetCustomAttribute<ForeignModel>().Model);
-                if (!CheckIfTableExists(foreignModel.DataBaseTableName, foreignModel.Schema, connectionToUse))
-                {
-                    ExecuteNonQuery(Creator.GetCreateTableQuery(foreignModel.GetType(), false), connectionToUse, ConnectionType);
-                    VerifyForeignTables(foreignModel.GetType(), connectionToUse);
-                    string foreignKeyQuery = Creator.GetCreateForeignKeysQuery(foreignModel.GetType());
-
-                    if (!string.IsNullOrWhiteSpace(foreignKeyQuery))
-                    {
-                        ExecuteNonQuery(foreignKeyQuery, connectionToUse, ConnectionType);
-                    }
-                }
-            }
-        }
-
-        private bool CheckIfTableExists(string tableName, string schema, string connectionToUse)
-        {
-            string query = string.Format("SELECT count(*) FROM {0}.{1}{2}", schema, TablePrefix, tableName);
-            //string query = string.Format("SELECT Count(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = '{0}{1}'", TablePrefix, tableName);
-
-            try
-            {
-                ExecuteNonQuery(query, connectionToUse, ConnectionType);
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
-        }
-
         private DbParameter CreateDbParameter(string name, object value)
         {
             DbParameter dbParameter = Command.CreateParameter();
@@ -374,7 +153,7 @@ namespace DataManagement.DAO
             return dbParameter;
         }
 
-        private void SetParameters(Parameter[] parameters)
+        protected void SetParameters(Parameter[] parameters)
         {
             for (int i = 0; i < parameters.Length; i++)
             {
@@ -382,7 +161,7 @@ namespace DataManagement.DAO
             }
         }
 
-        private void SetParameters<T>(T obj, TransactionTypes transactionType)
+        protected void SetParameters<T>(T obj, TransactionTypes transactionType)
         {
             foreach (PropertyInfo propertyInfo in typeof(T).GetProperties())
             {
@@ -402,6 +181,66 @@ namespace DataManagement.DAO
                     Command.Parameters.Add(CreateDbParameter("_" + propertyInfo.Name, propertyInfo.GetValue(obj)));
                 }
             }
+        }
+
+        protected void ProcessTableCreation<T>(string connectionToUse) where T : IManageable, new()
+        {
+            ExecuteScalar(Creator.GetCreateTableQuery<T>(false), connectionToUse);
+            VerifyForeignTables(typeof(T), connectionToUse);
+            string foreignKeyQuery = Creator.GetCreateForeignKeysQuery(typeof(T));
+
+            if (!string.IsNullOrWhiteSpace(foreignKeyQuery))
+            {
+                ExecuteScalar(Creator.GetCreateForeignKeysQuery(typeof(T)), connectionToUse);
+            }
+        }
+
+        private void VerifyForeignTables(Type type, string connectionToUse)
+        {
+            PropertyInfo[] properties = type.GetProperties().Where(q => q.GetCustomAttribute<UnlinkedProperty>() == null && q.GetCustomAttribute<ForeignModel>() != null).ToArray();
+
+            foreach (PropertyInfo property in properties)
+            {
+                IManageable foreignModel = (IManageable)Activator.CreateInstance(property.GetCustomAttribute<ForeignModel>().Model);
+                if (!CheckIfTableExists(foreignModel.DataBaseTableName, connectionToUse))
+                {
+                    ExecuteScalar(Creator.GetCreateTableQuery(foreignModel.GetType(), false), connectionToUse);
+                    VerifyForeignTables(foreignModel.GetType(), connectionToUse);
+                    string foreignKeyQuery = Creator.GetCreateForeignKeysQuery(foreignModel.GetType());
+
+                    if (!string.IsNullOrWhiteSpace(foreignKeyQuery))
+                    {
+                        ExecuteScalar(foreignKeyQuery, connectionToUse);
+                    }
+                }
+            }
+        }
+
+        private bool CheckIfTableExists(string tableName, string connectionToUse)
+        {
+            string query = string.Format(CheckTableExistanceQuery, TablePrefix, tableName);
+
+            if (ExecuteScalar(query, connectionToUse) != null)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        protected Log NewLog(string dataBaseTableName, TransactionTypes transactionType)
+        {
+            Log newLog = new Log
+            {
+                Ip = string.Empty,
+                Transaccion = transactionType.ToString(),
+                TablaAfectada = dataBaseTableName,
+                Parametros = GetStringParameters()
+            };
+
+            return newLog;
         }
     }
 }

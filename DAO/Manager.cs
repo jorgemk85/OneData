@@ -1,6 +1,5 @@
 ﻿using DataManagement.Enums;
 using DataManagement.Events;
-using DataManagement.Exceptions;
 using DataManagement.Interfaces;
 using DataManagement.Models;
 using DataManagement.Tools;
@@ -11,12 +10,16 @@ using System.Threading.Tasks;
 
 namespace DataManagement.DAO
 {
-    public sealed class Manager
+    /// <summary>
+    /// Clase estatica donde se procesan las ejecuciones de procedimientos almacenados y se almacenan propiedades predeterminadas.
+    /// </summary>
+    public static class Manager
     {
         public static string DefaultSchema { get; private set; }
         public static string DefaultConnection { get; private set; }
+        public static ConnectionTypes ConnectionType { get; set; }
 
-        public Manager()
+        static Manager()
         {
             SetDefaultConnectionName();
         }
@@ -27,6 +30,7 @@ namespace DataManagement.DAO
             {
                 DefaultConnection = ConsolidationTools.GetValueFromConfiguration("DefaultConnection", ConfigurationTypes.AppSetting);
                 DefaultSchema = ConsolidationTools.GetValueFromConfiguration("DefaultSchema", ConfigurationTypes.AppSetting);
+                ConnectionType = (ConnectionTypes)Enum.Parse(typeof(ConnectionTypes), ConsolidationTools.GetValueFromConfiguration("ConnectionType", ConfigurationTypes.AppSetting));
             }
             catch (ConfigurationErrorsException cee)
             {
@@ -63,10 +67,8 @@ namespace DataManagement.DAO
         private static Result ExecuteStoredProcedure(string tableName, string storedProcedure, string connectionToUse, Parameter[] parameters)
         {
             if (connectionToUse == null) connectionToUse = DefaultConnection;
-            ConnectionTypes connectionType = (ConnectionTypes)Enum.Parse(typeof(ConnectionTypes), ConsolidationTools.GetValueFromConfiguration("ConnectionType", ConfigurationTypes.AppSetting));
-            Operation operation = Operation.GetOperationBasedOnConnectionType(connectionType);
-            Result result = operation.ExecuteProcedure(tableName, storedProcedure, connectionToUse, parameters);
-            return result;
+            IOperable operation = Operation.GetOperationBasedOnConnectionType(ConnectionType);
+            return operation.ExecuteProcedure(tableName, storedProcedure, connectionToUse, parameters);
         }
     }
 

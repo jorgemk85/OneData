@@ -1,8 +1,10 @@
 ﻿using DataManagement.Enums;
 using DataManagement.Tools;
+using MySql.Data.MySqlClient;
 using System;
 using System.Configuration;
 using System.Data.Common;
+using System.Data.SqlClient;
 
 namespace DataManagement.DAO
 {
@@ -20,38 +22,42 @@ namespace DataManagement.DAO
             }
         }
 
-        public static DbConnection OpenConnection(string connectionToUse, ConnectionTypes connectionType)
+        public static MySqlConnection OpenMySqlConnection(string connectionToUse)
         {
-            DbProviderFactory factory = DbProviderFactories.GetFactory(CreateFactory(connectionType));
-            
-            DbConnection connection = null;
+            MySqlConnection connection = null;
             try
             {
-                connection = factory.CreateConnection();
-                connection.ConnectionString = GetConnectionString(connectionToUse);
+                connection = new MySqlConnection(GetConnectionString(connectionToUse));
                 connection.Open();
             }
-            catch (Exception ex)
+            catch (MySqlException ex)
             {
                 throw ex;
             }
             return connection;
         }
 
-        private static string CreateFactory(ConnectionTypes connectionType)
+        public static SqlConnection OpenMsSqlConnection(string connectionToUse)
         {
-            switch (connectionType)
+            SqlConnection connection = null;
+            try
             {
-                case ConnectionTypes.MySQL:
-                    return "MySql.Data.MySqlClient";
-                case ConnectionTypes.MSSQL:
-                    return "System.Data.SqlClient";
-                default:
-                    return "System.Data.SqlClient";
+                connection = new SqlConnection(GetConnectionString(connectionToUse));
+                connection.Open();
             }
+            catch (SqlException ex)
+            {
+                throw ex;
+            }
+            return connection;
         }
 
-        public static void CloseConnection(DbConnection connection)
+        public static void CloseConnection(SqlConnection connection)
+        {
+            connection?.Close();
+        }
+
+        public static void CloseConnection(MySqlConnection connection)
         {
             connection?.Close();
         }

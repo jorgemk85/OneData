@@ -10,7 +10,7 @@ namespace DataManagement.Models
 
         public Result(DataTable data = null, bool isFromCache = false)
         {
-            Data = data == null ? new DataTable() : data;
+            Data = data ?? new DataTable();
             IsFromCache = isFromCache;
         }
     }

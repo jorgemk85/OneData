@@ -17,7 +17,7 @@ namespace DataManagement.DAO
 {
     internal class QueryEvaluation
     {
-        Operation operation;
+        IOperable operation;
         ConnectionTypes connectionType;
 
         public QueryEvaluation()
