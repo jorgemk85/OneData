@@ -107,13 +107,14 @@
     <Compile Include="Interfaces\ICreatable.cs" />
     <Compile Include="Interfaces\IManageable.cs" />
     <Compile Include="Interfaces\IOperable.cs" />
-    <Compile Include="Models\ColumnDetail.cs" />
+    <Compile Include="Models\ColumnDefinition.cs" />
     <Compile Include="Models\DataCache.cs" />
     <Compile Include="Enums\ConnectionTypes.cs" />
     <Compile Include="Enums\TransactionTypes.cs" />
     <Compile Include="Exceptions\BadConnectionStateException.cs" />
     <Compile Include="Exceptions\InvalidNumberOfParametersException.cs" />
     <Compile Include="Exceptions\ConfigurationNotFoundException.cs" />
+    <Compile Include="Models\KeyDefinition.cs" />
     <Compile Include="Tools\DataSerializer.cs" />
     <Compile Include="Tools\ExcelSerializer.cs" />
     <Compile Include="Tools\FileSerializer.cs" />

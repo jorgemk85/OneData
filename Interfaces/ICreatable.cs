@@ -34,9 +34,9 @@ namespace DataManagement.Interfaces
 
         string CreateQueryForTableCreation(IManageable obj, ref PropertyInfo[] properties);
 
-        string GetAlterTableQuery(Type type, Dictionary<string, ColumnDetail> columnDetails);
+        string GetAlterTableQuery(Type type, Dictionary<string, ColumnDefinition> columnDetails, Dictionary<string, KeyDefinition> keyDetails);
 
-        string CreateQueryForTableAlteration(IManageable obj, ref PropertyInfo[] properties, Dictionary<string, ColumnDetail> columnDetails);
+        string CreateQueryForTableAlteration(IManageable obj, ref PropertyInfo[] properties, Dictionary<string, ColumnDefinition> columnDetails, Dictionary<string, KeyDefinition> keyDetails);
 
         string GetCreateForeignKeysQuery(Type type);
 

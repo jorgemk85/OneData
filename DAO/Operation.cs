@@ -198,7 +198,9 @@ namespace DataManagement.DAO
         {
             if (doAlter)
             {
-                ExecuteScalar(Creator.GetAlterTableQuery(typeof(T), GetTableDefinition(new T().DataBaseTableName, connectionToUse)), connectionToUse, false);
+                ExecuteScalar(Creator.GetAlterTableQuery(typeof(T), 
+                                                         GetColumnDefinition(new T().DataBaseTableName, connectionToUse),
+                                                         GetKeyDefinition(new T().DataBaseTableName, connectionToUse)), connectionToUse, false);
             }
             else
             {
@@ -227,22 +229,29 @@ namespace DataManagement.DAO
             }
         }
 
-        private Dictionary<string, ColumnDetail> GetTableDefinition(string tableName, string connectionToUse)
+        private Dictionary<string, ColumnDefinition> GetColumnDefinition(string tableName, string connectionToUse)
         {
-            return ((DataTable)ExecuteScalar(string.Format("DESCRIBE {0}", tableName), connectionToUse, true)).ToDictionary<string, ColumnDetail>("Field");
+            return ((DataTable)ExecuteScalar(string.Format("select * from information_schema.COLUMNS where table_name = '{0}'", tableName), connectionToUse, true)).ToDictionary<string, ColumnDefinition>(nameof(ColumnDefinition.Column_Name));
+        }
+
+        private Dictionary<string, KeyDefinition> GetKeyDefinition(string tableName, string connectionToUse)
+        {
+            return ((DataTable)ExecuteScalar(string.Format("select * from information_schema.KEY_COLUMN_USAGE where table_name = '{0}' and column_name != 'Id'", tableName), connectionToUse, true)).ToDictionary<string, KeyDefinition>(nameof(KeyDefinition.Column_Name));
         }
 
         private void CreateOrAlterForeignTables(IManageable foreignModel, string connectionToUse, bool doAlter)
         {
             if (doAlter)
             {
-                ExecuteScalar(Creator.GetAlterTableQuery(foreignModel.GetType(), GetTableDefinition(foreignModel.DataBaseTableName, connectionToUse)), connectionToUse, false);
+                ExecuteScalar(Creator.GetAlterTableQuery(foreignModel.GetType(),
+                                                         GetColumnDefinition(foreignModel.DataBaseTableName, connectionToUse),
+                                                         GetKeyDefinition(foreignModel.DataBaseTableName, connectionToUse)), connectionToUse, false);
             }
             else
             {
                 ExecuteScalar(Creator.GetCreateTableQuery(foreignModel.GetType()), connectionToUse, false);
             }
-            
+
             VerifyForeignTables(foreignModel.GetType(), connectionToUse, false);
             string foreignKeyQuery = Creator.GetCreateForeignKeysQuery(foreignModel.GetType());
 

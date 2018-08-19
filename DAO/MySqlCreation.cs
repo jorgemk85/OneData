@@ -222,54 +222,67 @@ namespace DataManagement.DAO
             return queryBuilder.ToString();
         }
 
-        public string GetAlterTableQuery(Type type, Dictionary<string, ColumnDetail> columnDetails)
+        public string GetAlterTableQuery(Type type, Dictionary<string, ColumnDefinition> columnDetails, Dictionary<string, KeyDefinition> keyDetails)
         {
             PropertyInfo[] properties = type.GetProperties().Where(q => q.GetCustomAttribute<UnlinkedProperty>() == null).ToArray();
             IManageable obj = (IManageable)Activator.CreateInstance(type);
 
             if (properties.Length == 0) return string.Empty;
 
-            return CreateQueryForTableAlteration(obj, ref properties, columnDetails);
+            return CreateQueryForTableAlteration(obj, ref properties, columnDetails, keyDetails);
         }
 
-        public string CreateQueryForTableAlteration(IManageable obj, ref PropertyInfo[] properties, Dictionary<string, ColumnDetail> columnDetails)
+        public string CreateQueryForTableAlteration(IManageable obj, ref PropertyInfo[] properties, Dictionary<string, ColumnDefinition> columnDetails, Dictionary<string, KeyDefinition> keyDetails)
         {
             StringBuilder queryBuilder = new StringBuilder();
             List<string> columnsFound = new List<string>();
+            string sqlDataType = string.Empty;
             // Las propiedades FechaCreacion y FechaModificacion deben de agregarse a columnsFound.
             // TODO: Necesitamos asignarle algun atributo a la FechaCreacion y FechaModificacion para indicar que son especiales.
             columnsFound.Add("FechaCreacion");
             columnsFound.Add("FechaModificacion");
 
-            ColumnDetail columnDetail;
+            ColumnDefinition columnDetail;
 
             queryBuilder.AppendFormat("ALTER TABLE {0}{1} \n", TablePrefix, obj.DataBaseTableName);
 
             // Aqui se agregan las propiedades que no estan en la tabla. Tambien guarda en una lista las columnas encontradas.
             foreach (PropertyInfo property in properties)
             {
+                sqlDataType = GetSqlDataType(property.PropertyType);
                 columnDetails.TryGetValue(property.Name, out columnDetail);
-                /* TODO: 
-                 * Esta funcion DEBE poder identificar los tipos de las variables y saber si se han modificado asi como borrar la columna en caso de ya no existir en el modelo.
-                 * Por ahora, solo identifica si la propiedad existe o no para crearla.
-                */
+
                 if (columnDetail == null)
                 {
-                    queryBuilder.AppendFormat("ADD {0} {1} NOT NULL,\n", property.Name, GetSqlDataType(property.PropertyType));
+                    queryBuilder.AppendFormat("ADD {0} {1} NOT NULL,\n", property.Name, sqlDataType);
                     continue;
+                }
+                if (!sqlDataType.Equals(columnDetail.Column_Type))
+                {
+                    queryBuilder.AppendFormat("MODIFY COLUMN {0} {1} NOT NULL,\n", property.Name, sqlDataType);
+                }
+                if (columnDetail.Column_Key.Equals("MUL"))
+                {
+                    ForeignModel foreignAttribute = property.GetCustomAttribute<ForeignModel>();
+                    if (foreignAttribute == null)
+                    {
+                        queryBuilder.AppendFormat("DROP FOREIGN KEY {0},\n", keyDetails[columnDetail.Column_Name].Constraint_Name);
+                    }
                 }
                 columnsFound.Add(property.Name);
             }
 
             // Extraemos las columnas en la tabla que ya no estan en las propiedades del modelo para quitarlas.
-            foreach (KeyValuePair<string, ColumnDetail> detail in columnDetails.Where(q => !columnsFound.Contains(q.Key)))
+            foreach (KeyValuePair<string, ColumnDefinition> detail in columnDetails.Where(q => !columnsFound.Contains(q.Key)))
             {
-                queryBuilder.AppendFormat("DROP {0},\n", detail.Value.Field);
+                queryBuilder.AppendFormat("DROP {0},\n", detail.Value.Collation_Name);
                 continue;
             }
 
             queryBuilder.Remove(queryBuilder.Length - 2, 2);
             queryBuilder.Append(";");
+
+            queryBuilder.Append(GetCreateForeignKeysQuery(obj.GetType()));
 
             return queryBuilder.ToString();
         }
