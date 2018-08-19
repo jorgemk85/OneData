@@ -1,9 +1,8 @@
 ﻿using DataManagement.Enums;
+using DataManagement.Exceptions;
 using DataManagement.Tools;
 using MySql.Data.MySqlClient;
-using System;
 using System.Configuration;
-using System.Data.Common;
 using System.Data.SqlClient;
 
 namespace DataManagement.DAO
@@ -27,14 +26,34 @@ namespace DataManagement.DAO
             MySqlConnection connection = null;
             try
             {
-                connection = new MySqlConnection(GetConnectionString(connectionToUse));
-                connection.Open();
+                if (PerformMySqlConnectionStringValidation(GetConnectionString(connectionToUse)))
+                {
+                    connection = new MySqlConnection(GetConnectionString(connectionToUse));
+                    connection.Open();
+                }
             }
             catch (MySqlException ex)
             {
                 throw ex;
             }
             return connection;
+        }
+
+        private static bool PerformMySqlConnectionStringValidation(string connectionString)
+        {
+            string trimedConnectionString = connectionString.Replace(" ", string.Empty);
+
+            if (!trimedConnectionString.Contains("AllowUserVariables=True"))
+            {
+                throw new ConnectionVariableNotEnabledException("AllowUserVariables=True");
+            }
+
+            if (!trimedConnectionString.Contains("CheckParameters=False"))
+            {
+                throw new ConnectionVariableNotEnabledException("CheckParameters=False");
+            }
+
+            return true;
         }
 
         public static SqlConnection OpenMsSqlConnection(string connectionToUse)

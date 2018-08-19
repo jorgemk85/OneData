@@ -96,7 +96,7 @@
     <Compile Include="Events\SelectExecuted.cs" />
     <Compile Include="Events\StoredProcedureExecuted.cs" />
     <Compile Include="Events\UpdateExecuted.cs" />
-    <Compile Include="Exceptions\AllowUserVariableNotEnabledException.cs" />
+    <Compile Include="Exceptions\ConnectionVariableNotEnabledException.cs" />
     <Compile Include="Exceptions\ConvertionFailedException.cs" />
     <Compile Include="Exceptions\FoundNullException.cs" />
     <Compile Include="Exceptions\IManageableNotImplementedException.cs" />

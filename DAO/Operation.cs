@@ -65,7 +65,7 @@ namespace DataManagement.DAO
                 {
                     if (dbException.InnerException.Message.EndsWith("must be defined."))
                     {
-                        throw new AllowUserVariableNotEnabledException();
+                        throw new ConnectionVariableNotEnabledException("AllowUserVariables=True");
                     }
                 }
 
