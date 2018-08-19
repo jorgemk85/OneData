@@ -16,6 +16,11 @@ namespace DataManagement.Extensions
             return DataSerializer.ConvertDataTableToDictionary<TKey, TValue>(dataTable, keyName, valueName);
         }
 
+        public static Dictionary<TKey, T> ToDictionary<TKey, T>(this DataTable dataTable, string keyName) where T : new()
+        {
+            return DataSerializer.ConvertDataTableToDictionary<TKey, T>(dataTable, keyName);
+        }
+
         public static List<T> ToList<T>(this DataTable dataTable) where T : new()
         {
             return DataSerializer.ConvertDataTableToListOfType<T>(dataTable);

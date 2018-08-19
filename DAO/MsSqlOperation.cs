@@ -83,7 +83,7 @@ namespace DataManagement.DAO
             {
                 if (AutoCreateStoredProcedures)
                 {
-                    ExecuteScalar(GetTransactionTextForProcedure<T>(transactionType), connectionToUse);
+                    ExecuteScalar(GetTransactionTextForProcedure<T>(transactionType, false), connectionToUse, false);
                     goto Start;
                 }
             }
@@ -91,7 +91,7 @@ namespace DataManagement.DAO
             {
                 if (AutoCreateTables)
                 {
-                    ProcessTableCreation<T>(connectionToUse);
+                    ProcessTable<T>(connectionToUse, false);
 
                     goto Start;
                 }

@@ -1,6 +1,8 @@
 ﻿using DataManagement.Attributes;
 using DataManagement.Interfaces;
+using DataManagement.Models;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -35,18 +37,17 @@ namespace DataManagement.DAO
 
             if (doAlter)
             {
-                queryBuilder.AppendFormat("ALTER PROCEDURE {0}{1}{2} (\n", StoredProcedurePrefix, obj.DataBaseTableName, InsertSuffix);
+                queryBuilder.AppendFormat("DROP PROCEDURE {0}{1}{2};\n", StoredProcedurePrefix, obj.DataBaseTableName, InsertSuffix);
             }
-            else
-            {
-                queryBuilder.AppendFormat("CREATE PROCEDURE {0}{1}{2} (\n", StoredProcedurePrefix, obj.DataBaseTableName, InsertSuffix);
-            }
+
+            queryBuilder.AppendFormat("CREATE PROCEDURE {0}{1}{2} (\n", StoredProcedurePrefix, obj.DataBaseTableName, InsertSuffix);
 
             // Aqui se colocan los parametros segun las propiedades del objeto
             SetStoredProceduresParameters(ref properties, queryBuilder, false);
 
             queryBuilder.Remove(queryBuilder.Length - 2, 2);
             queryBuilder.Append(")\nBEGIN\n");
+            queryBuilder.Append("SET @@sql_mode:=TRADITIONAL;\n");
             queryBuilder.Append("SET @actualTime = now();\n");
             queryBuilder.AppendFormat("INSERT INTO {0}{1} (\n", TablePrefix, obj.DataBaseTableName);
 
@@ -81,19 +82,17 @@ namespace DataManagement.DAO
 
             if (doAlter)
             {
-                queryBuilder.AppendFormat("ALTER PROCEDURE {0}{1}{2} (\n", StoredProcedurePrefix, obj.DataBaseTableName, UpdateSuffix);
-            }
-            else
-            {
-                queryBuilder.AppendFormat("CREATE PROCEDURE {0}{1}{2} (\n", StoredProcedurePrefix, obj.DataBaseTableName, UpdateSuffix);
+                queryBuilder.AppendFormat("DROP PROCEDURE {0}{1}{2};\n", StoredProcedurePrefix, obj.DataBaseTableName, InsertSuffix);
             }
 
+            queryBuilder.AppendFormat("CREATE PROCEDURE {0}{1}{2} (\n", StoredProcedurePrefix, obj.DataBaseTableName, InsertSuffix);
 
             // Aqui se colocan los parametros segun las propiedades del objeto
             SetStoredProceduresParameters(ref properties, queryBuilder, false);
 
             queryBuilder.Remove(queryBuilder.Length - 2, 2);
             queryBuilder.Append(")\nBEGIN\n");
+            queryBuilder.Append("SET @@sql_mode:=TRADITIONAL;\n");
             queryBuilder.Append("SET @actualTime = now();\n");
             queryBuilder.AppendFormat("UPDATE {0}{1}\n", TablePrefix, obj.DataBaseTableName);
             queryBuilder.Append("SET\n");
@@ -120,12 +119,10 @@ namespace DataManagement.DAO
 
             if (doAlter)
             {
-                queryBuilder.AppendFormat("ALTER PROCEDURE {0}{1}{2} (\n", StoredProcedurePrefix, obj.DataBaseTableName, DeleteSuffix);
+                queryBuilder.AppendFormat("DROP PROCEDURE {0}{1}{2};\n", StoredProcedurePrefix, obj.DataBaseTableName, InsertSuffix);
             }
-            else
-            {
-                queryBuilder.AppendFormat("CREATE PROCEDURE {0}{1}{2} (\n", StoredProcedurePrefix, obj.DataBaseTableName, DeleteSuffix);
-            }
+
+            queryBuilder.AppendFormat("CREATE PROCEDURE {0}{1}{2} (\n", StoredProcedurePrefix, obj.DataBaseTableName, InsertSuffix);
 
             queryBuilder.Append("    IN _Id char(36))\n");
             queryBuilder.Append("BEGIN\n");
@@ -146,12 +143,10 @@ namespace DataManagement.DAO
 
             if (doAlter)
             {
-                queryBuilder.AppendFormat("ALTER PROCEDURE {0}{1}{2} (\n", StoredProcedurePrefix, obj.DataBaseTableName, SelectAllSuffix);
+                queryBuilder.AppendFormat("DROP PROCEDURE {0}{1}{2};\n", StoredProcedurePrefix, obj.DataBaseTableName, InsertSuffix);
             }
-            else
-            {
-                queryBuilder.AppendFormat("CREATE PROCEDURE {0}{1}{2} (\n", StoredProcedurePrefix, obj.DataBaseTableName, SelectAllSuffix);
-            }
+
+            queryBuilder.AppendFormat("CREATE PROCEDURE {0}{1}{2} (\n", StoredProcedurePrefix, obj.DataBaseTableName, InsertSuffix);
 
             queryBuilder.Append(")\nBEGIN\n");
             queryBuilder.AppendFormat("SELECT * FROM {0}{1}\n", TablePrefix, obj.DataBaseTableName);
@@ -171,18 +166,17 @@ namespace DataManagement.DAO
 
             if (doAlter)
             {
-                queryBuilder.AppendFormat("ALTER PROCEDURE {0}{1}{2} (\n", StoredProcedurePrefix, obj.DataBaseTableName, SelectSuffix);
+                queryBuilder.AppendFormat("DROP PROCEDURE {0}{1}{2};\n", StoredProcedurePrefix, obj.DataBaseTableName, InsertSuffix);
             }
-            else
-            {
-                queryBuilder.AppendFormat("CREATE PROCEDURE {0}{1}{2} (\n", StoredProcedurePrefix, obj.DataBaseTableName, SelectSuffix);
-            }
+
+            queryBuilder.AppendFormat("CREATE PROCEDURE {0}{1}{2} (\n", StoredProcedurePrefix, obj.DataBaseTableName, InsertSuffix);
 
             // Aqui se colocan los parametros segun las propiedades del objeto
             SetStoredProceduresParameters(ref properties, queryBuilder, false);
 
             queryBuilder.Remove(queryBuilder.Length - 2, 2);
             queryBuilder.Append(")\nBEGIN\n");
+            queryBuilder.Append("SET @@sql_mode:=TRADITIONAL;\n");
             queryBuilder.AppendFormat("SELECT * FROM {0}{1}\n", TablePrefix, obj.DataBaseTableName);
             queryBuilder.Append("WHERE\n");
 
@@ -199,48 +193,83 @@ namespace DataManagement.DAO
             return queryBuilder.ToString();
         }
 
-        public string GetCreateTableQuery<T>(bool doAlter) where T : IManageable, new()
-        {
-            StringBuilder queryBuilder = new StringBuilder();
-            PropertyInfo[] properties = typeof(T).GetProperties().Where(q => q.GetCustomAttribute<UnlinkedProperty>() == null).ToArray();
-            T obj = new T();
-
-            if (properties.Length == 0) return string.Empty;
-
-            return CreateQueryForTableCreation(obj, ref properties, doAlter);
-        }
-
-        public string GetCreateTableQuery(Type type, bool doAlter)
+        public string GetCreateTableQuery(Type type)
         {
             PropertyInfo[] properties = type.GetProperties().Where(q => q.GetCustomAttribute<UnlinkedProperty>() == null).ToArray();
             IManageable obj = (IManageable)Activator.CreateInstance(type);
 
             if (properties.Length == 0) return string.Empty;
 
-            return CreateQueryForTableCreation(obj, ref properties, doAlter);
+            return CreateQueryForTableCreation(obj, ref properties);
         }
 
-        public string CreateQueryForTableCreation(IManageable obj, ref PropertyInfo[] properties, bool doAlter)
+        public string CreateQueryForTableCreation(IManageable obj, ref PropertyInfo[] properties)
         {
             StringBuilder queryBuilder = new StringBuilder();
-            if (doAlter)
-            {
-                queryBuilder.AppendFormat("ALTER TABLE {0}{1} (", TablePrefix, obj.DataBaseTableName);
-            }
-            else
-            {
-                queryBuilder.AppendFormat("CREATE TABLE {0}{1} (", TablePrefix, obj.DataBaseTableName);
-            }
 
-            // Aqui se colocan las propiedades del objeto. Una por columna por su puesto.
+            queryBuilder.AppendFormat("CREATE TABLE {0}{1} (\n", TablePrefix, obj.DataBaseTableName);
+
+            // Aqui se colocan las propiedades del objeto. Una por columna por supuesto.
             foreach (PropertyInfo property in properties)
             {
-                queryBuilder.AppendFormat("{0} {1} NOT NULL, ", property.Name, GetSqlDataType(property.PropertyType));
+                queryBuilder.AppendFormat("{0} {1} NOT NULL,\n", property.Name, GetSqlDataType(property.PropertyType));
             }
-            queryBuilder.Append("FechaCreacion datetime NOT NULL,  FechaModificacion datetime NOT NULL, ");
-            queryBuilder.Append("PRIMARY KEY (Id), ");
-            queryBuilder.Append("UNIQUE KEY `id_UNIQUE` (Id)) ");
+            queryBuilder.Append("FechaCreacion datetime NOT NULL,\nFechaModificacion datetime NOT NULL,\n");
+            queryBuilder.Append("PRIMARY KEY (Id),\n");
+            queryBuilder.Append("UNIQUE KEY `id_UNIQUE` (Id))\n");
             queryBuilder.Append("ENGINE=InnoDB;");
+
+            return queryBuilder.ToString();
+        }
+
+        public string GetAlterTableQuery(Type type, Dictionary<string, ColumnDetail> columnDetails)
+        {
+            PropertyInfo[] properties = type.GetProperties().Where(q => q.GetCustomAttribute<UnlinkedProperty>() == null).ToArray();
+            IManageable obj = (IManageable)Activator.CreateInstance(type);
+
+            if (properties.Length == 0) return string.Empty;
+
+            return CreateQueryForTableAlteration(obj, ref properties, columnDetails);
+        }
+
+        public string CreateQueryForTableAlteration(IManageable obj, ref PropertyInfo[] properties, Dictionary<string, ColumnDetail> columnDetails)
+        {
+            StringBuilder queryBuilder = new StringBuilder();
+            List<string> columnsFound = new List<string>();
+            // Las propiedades FechaCreacion y FechaModificacion deben de agregarse a columnsFound.
+            // TODO: Necesitamos asignarle algun atributo a la FechaCreacion y FechaModificacion para indicar que son especiales.
+            columnsFound.Add("FechaCreacion");
+            columnsFound.Add("FechaModificacion");
+
+            ColumnDetail columnDetail;
+
+            queryBuilder.AppendFormat("ALTER TABLE {0}{1} \n", TablePrefix, obj.DataBaseTableName);
+
+            // Aqui se agregan las propiedades que no estan en la tabla. Tambien guarda en una lista las columnas encontradas.
+            foreach (PropertyInfo property in properties)
+            {
+                columnDetails.TryGetValue(property.Name, out columnDetail);
+                /* TODO: 
+                 * Esta funcion DEBE poder identificar los tipos de las variables y saber si se han modificado asi como borrar la columna en caso de ya no existir en el modelo.
+                 * Por ahora, solo identifica si la propiedad existe o no para crearla.
+                */
+                if (columnDetail == null)
+                {
+                    queryBuilder.AppendFormat("ADD {0} {1} NOT NULL,\n", property.Name, GetSqlDataType(property.PropertyType));
+                    continue;
+                }
+                columnsFound.Add(property.Name);
+            }
+
+            // Extraemos las columnas en la tabla que ya no estan en las propiedades del modelo para quitarlas.
+            foreach (KeyValuePair<string, ColumnDetail> detail in columnDetails.Where(q => !columnsFound.Contains(q.Key)))
+            {
+                queryBuilder.AppendFormat("DROP {0},\n", detail.Value.Field);
+                continue;
+            }
+
+            queryBuilder.Remove(queryBuilder.Length - 2, 2);
+            queryBuilder.Append(";");
 
             return queryBuilder.ToString();
         }
@@ -288,7 +317,7 @@ namespace DataManagement.DAO
                 case "datetime":
                     return "datetime";
                 case "decimal":
-                    return "decimal (18,2)";
+                    return "decimal(18,2)";
                 case "single":
                     return "float";
                 case "float":
@@ -296,9 +325,9 @@ namespace DataManagement.DAO
                 case "double":
                     return "double";
                 case "byte":
-                    return "tinyint (3)";
+                    return "tinyint(3)";
                 case "sbyte":
-                    return "tinyint (3)";
+                    return "tinyint(3)";
                 case "byte[]":
                     return "binary";
                 case "short":
@@ -316,13 +345,13 @@ namespace DataManagement.DAO
                 case "uint32":
                     return "int(10) unsigned";
                 case "int64":
-                    return "bigint (20)";
+                    return "bigint(20)";
                 case "uint64":
-                    return "bigint (20) unsigned";
+                    return "bigint(20) unsigned";
                 case "long":
-                    return "bigint (20)";
+                    return "bigint(20)";
                 case "ulong":
-                    return "bigint (20) unsigned";
+                    return "bigint(20) unsigned";
                 default:
                     return "varchar(255)";
             }

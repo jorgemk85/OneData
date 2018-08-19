@@ -1,10 +1,12 @@
 ﻿using DataManagement.Attributes;
 using DataManagement.Enums;
 using DataManagement.Exceptions;
+using DataManagement.Extensions;
 using DataManagement.Interfaces;
 using DataManagement.Models;
 using DataManagement.Tools;
 using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Linq;
@@ -35,7 +37,7 @@ namespace DataManagement.DAO
             GetTransactionTypesSuffixes();
         }
 
-        protected object ExecuteScalar(string transaction, string connectionToUse)
+        protected object ExecuteScalar(string transaction, string connectionToUse, bool returnDataTable)
         {
             try
             {
@@ -45,7 +47,16 @@ namespace DataManagement.DAO
                     Command = connection.CreateCommand();
                     Command.CommandType = CommandType.Text;
                     Command.CommandText = transaction;
-                    return Command.ExecuteScalar();
+                    if (returnDataTable)
+                    {
+                        DataTable dataTable = new DataTable();
+                        dataTable.Load(Command.ExecuteReader());
+                        return dataTable;
+                    }
+                    else
+                    {
+                        return Command.ExecuteScalar();
+                    }
                 }
             }
             catch (DbException dbException)
@@ -90,20 +101,20 @@ namespace DataManagement.DAO
             }
         }
 
-        protected string GetTransactionTextForProcedure<T>(TransactionTypes transactionType) where T : IManageable, new()
+        protected string GetTransactionTextForProcedure<T>(TransactionTypes transactionType, bool doAlter) where T : IManageable, new()
         {
             switch (transactionType)
             {
                 case TransactionTypes.Select:
-                    return Creator.CreateSelectStoredProcedure<T>(false);
+                    return Creator.CreateSelectStoredProcedure<T>(doAlter);
                 case TransactionTypes.SelectAll:
-                    return Creator.CreateSelectAllStoredProcedure<T>(false);
+                    return Creator.CreateSelectAllStoredProcedure<T>(doAlter);
                 case TransactionTypes.Delete:
-                    return Creator.CreateDeleteStoredProcedure<T>(false);
+                    return Creator.CreateDeleteStoredProcedure<T>(doAlter);
                 case TransactionTypes.Insert:
-                    return Creator.CreateInsertStoredProcedure<T>(false);
+                    return Creator.CreateInsertStoredProcedure<T>(doAlter);
                 case TransactionTypes.Update:
-                    return Creator.CreateUpdateStoredProcedure<T>(false);
+                    return Creator.CreateUpdateStoredProcedure<T>(doAlter);
                 default:
                     throw new ArgumentException("El tipo de trascaccion no es valido para generar un nuevo procedimiento almacenado.");
             }
@@ -183,19 +194,26 @@ namespace DataManagement.DAO
             }
         }
 
-        protected void ProcessTableCreation<T>(string connectionToUse) where T : IManageable, new()
+        protected void ProcessTable<T>(string connectionToUse, bool doAlter) where T : IManageable, new()
         {
-            ExecuteScalar(Creator.GetCreateTableQuery<T>(false), connectionToUse);
-            VerifyForeignTables(typeof(T), connectionToUse);
-            string foreignKeyQuery = Creator.GetCreateForeignKeysQuery(typeof(T));
-
-            if (!string.IsNullOrWhiteSpace(foreignKeyQuery))
+            if (doAlter)
             {
-                ExecuteScalar(Creator.GetCreateForeignKeysQuery(typeof(T)), connectionToUse);
+                ExecuteScalar(Creator.GetAlterTableQuery(typeof(T), GetTableDefinition(new T().DataBaseTableName, connectionToUse)), connectionToUse, false);
+            }
+            else
+            {
+                ExecuteScalar(Creator.GetCreateTableQuery(typeof(T)), connectionToUse, false);
+                VerifyForeignTables(typeof(T), connectionToUse, doAlter);
+                string foreignKeyQuery = Creator.GetCreateForeignKeysQuery(typeof(T));
+
+                if (!string.IsNullOrWhiteSpace(foreignKeyQuery))
+                {
+                    ExecuteScalar(Creator.GetCreateForeignKeysQuery(typeof(T)), connectionToUse, false);
+                }
             }
         }
 
-        private void VerifyForeignTables(Type type, string connectionToUse)
+        private void VerifyForeignTables(Type type, string connectionToUse, bool doAlter)
         {
             PropertyInfo[] properties = type.GetProperties().Where(q => q.GetCustomAttribute<UnlinkedProperty>() == null && q.GetCustomAttribute<ForeignModel>() != null).ToArray();
 
@@ -204,15 +222,33 @@ namespace DataManagement.DAO
                 IManageable foreignModel = (IManageable)Activator.CreateInstance(property.GetCustomAttribute<ForeignModel>().Model);
                 if (!CheckIfTableExists(foreignModel.DataBaseTableName, connectionToUse))
                 {
-                    ExecuteScalar(Creator.GetCreateTableQuery(foreignModel.GetType(), false), connectionToUse);
-                    VerifyForeignTables(foreignModel.GetType(), connectionToUse);
-                    string foreignKeyQuery = Creator.GetCreateForeignKeysQuery(foreignModel.GetType());
-
-                    if (!string.IsNullOrWhiteSpace(foreignKeyQuery))
-                    {
-                        ExecuteScalar(foreignKeyQuery, connectionToUse);
-                    }
+                    CreateOrAlterForeignTables(foreignModel, connectionToUse, false);
                 }
+            }
+        }
+
+        private Dictionary<string, ColumnDetail> GetTableDefinition(string tableName, string connectionToUse)
+        {
+            return ((DataTable)ExecuteScalar(string.Format("DESCRIBE {0}", tableName), connectionToUse, true)).ToDictionary<string, ColumnDetail>("Field");
+        }
+
+        private void CreateOrAlterForeignTables(IManageable foreignModel, string connectionToUse, bool doAlter)
+        {
+            if (doAlter)
+            {
+                ExecuteScalar(Creator.GetAlterTableQuery(foreignModel.GetType(), GetTableDefinition(foreignModel.DataBaseTableName, connectionToUse)), connectionToUse, false);
+            }
+            else
+            {
+                ExecuteScalar(Creator.GetCreateTableQuery(foreignModel.GetType()), connectionToUse, false);
+            }
+            
+            VerifyForeignTables(foreignModel.GetType(), connectionToUse, false);
+            string foreignKeyQuery = Creator.GetCreateForeignKeysQuery(foreignModel.GetType());
+
+            if (!string.IsNullOrWhiteSpace(foreignKeyQuery))
+            {
+                ExecuteScalar(foreignKeyQuery, connectionToUse, false);
             }
         }
 
@@ -220,7 +256,7 @@ namespace DataManagement.DAO
         {
             string query = string.Format(CheckTableExistanceQuery, TablePrefix, tableName);
 
-            if (ExecuteScalar(query, connectionToUse) != null)
+            if (ExecuteScalar(query, connectionToUse, false) != null)
             {
                 return true;
             }

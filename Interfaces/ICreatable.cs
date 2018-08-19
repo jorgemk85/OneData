@@ -1,5 +1,6 @@
-﻿using DataManagement.Enums;
+﻿using DataManagement.Models;
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
 
@@ -29,11 +30,13 @@ namespace DataManagement.Interfaces
 
         string CreateSelectStoredProcedure<T>(bool doAlter) where T : IManageable, new();
 
-        string GetCreateTableQuery<T>(bool doAlter) where T : IManageable, new();
+        string GetCreateTableQuery(Type type);
 
-        string GetCreateTableQuery(Type type, bool doAlter);
+        string CreateQueryForTableCreation(IManageable obj, ref PropertyInfo[] properties);
 
-        string CreateQueryForTableCreation(IManageable obj, ref PropertyInfo[] properties, bool doAlter);
+        string GetAlterTableQuery(Type type, Dictionary<string, ColumnDetail> columnDetails);
+
+        string CreateQueryForTableAlteration(IManageable obj, ref PropertyInfo[] properties, Dictionary<string, ColumnDetail> columnDetails);
 
         string GetCreateForeignKeysQuery(Type type);
 

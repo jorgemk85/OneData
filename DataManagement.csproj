@@ -107,6 +107,7 @@
     <Compile Include="Interfaces\ICreatable.cs" />
     <Compile Include="Interfaces\IManageable.cs" />
     <Compile Include="Interfaces\IOperable.cs" />
+    <Compile Include="Models\ColumnDetail.cs" />
     <Compile Include="Models\DataCache.cs" />
     <Compile Include="Enums\ConnectionTypes.cs" />
     <Compile Include="Enums\TransactionTypes.cs" />

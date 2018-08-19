@@ -1,6 +1,8 @@
 ﻿using DataManagement.Attributes;
 using DataManagement.Interfaces;
+using DataManagement.Models;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -206,38 +208,21 @@ namespace DataManagement.DAO
             return queryBuilder.ToString();
         }
 
-        public string GetCreateTableQuery<T>(bool doAlter) where T : IManageable, new()
-        {
-            StringBuilder queryBuilder = new StringBuilder();
-            PropertyInfo[] properties = typeof(T).GetProperties().Where(q => q.GetCustomAttribute<UnlinkedProperty>() == null).ToArray();
-            T obj = new T();
-
-            if (properties.Length == 0) return string.Empty;
-
-            return CreateQueryForTableCreation(obj, ref properties, doAlter);
-        }
-
-        public string GetCreateTableQuery(Type type, bool doAlter)
+        public string GetCreateTableQuery(Type type)
         {
             PropertyInfo[] properties = type.GetProperties().Where(q => q.GetCustomAttribute<UnlinkedProperty>() == null).ToArray();
             IManageable obj = (IManageable)Activator.CreateInstance(type);
 
             if (properties.Length == 0) return string.Empty;
 
-            return CreateQueryForTableCreation(obj, ref properties, doAlter);
+            return CreateQueryForTableCreation(obj, ref properties);
         }
 
-        public string CreateQueryForTableCreation(IManageable obj, ref PropertyInfo[] properties, bool doAlter)
+        public string CreateQueryForTableCreation(IManageable obj, ref PropertyInfo[] properties)
         {
             StringBuilder queryBuilder = new StringBuilder();
-            if (doAlter)
-            {
-                queryBuilder.AppendFormat("ALTER TABLE {0}.{1}{2} ", obj.Schema, TablePrefix, obj.DataBaseTableName);
-            }
-            else
-            {
-                queryBuilder.AppendFormat("CREATE TABLE {0}.{1}{2} ", obj.Schema, TablePrefix, obj.DataBaseTableName);
-            }
+
+            queryBuilder.AppendFormat("CREATE TABLE {0}.{1}{2} ", obj.Schema, TablePrefix, obj.DataBaseTableName);
 
             queryBuilder.Append("(");
             // Aqui se colocan las propiedades del objeto. Una por columna por su puesto.
@@ -255,6 +240,21 @@ namespace DataManagement.DAO
             queryBuilder.Append("FechaCreacion datetime NOT NULL, FechaModificacion datetime NOT NULL);");
 
             return queryBuilder.ToString();
+        }
+
+        public string GetAlterTableQuery(Type type, Dictionary<string, ColumnDetail> columnDetails)
+        {
+            PropertyInfo[] properties = type.GetProperties().Where(q => q.GetCustomAttribute<UnlinkedProperty>() == null).ToArray();
+            IManageable obj = (IManageable)Activator.CreateInstance(type);
+
+            if (properties.Length == 0) return string.Empty;
+
+            return CreateQueryForTableAlteration(obj, ref properties, columnDetails);
+        }
+
+        public string CreateQueryForTableAlteration(IManageable obj, ref PropertyInfo[] properties, Dictionary<string, ColumnDetail> columnDetails)
+        {
+            return string.Empty;
         }
 
         public string GetCreateForeignKeysQuery(Type type)
@@ -300,7 +300,7 @@ namespace DataManagement.DAO
                 case "datetime":
                     return "datetime";
                 case "decimal":
-                    return "decimal (18,2)";
+                    return "decimal(18,2)";
                 case "single":
                     return "real";
                 case "float":
@@ -316,25 +316,25 @@ namespace DataManagement.DAO
                 case "short":
                     return "smallint";
                 case "ushort":
-                    return "numeric (5)";
+                    return "numeric(5)";
                 case "int":
                     return "int";
                 case "uint":
-                    return "numeric (10)";
+                    return "numeric(10)";
                 case "int16":
                     return "smallint";
                 case "int32":
                     return "int";
                 case "uint32":
-                    return "numeric (10)";
+                    return "numeric(10)";
                 case "int64":
                     return "bigint";
                 case "uint64":
-                    return "numeric (20)";
+                    return "numeric(20)";
                 case "long":
                     return "bigint";
                 case "ulong":
-                    return "numeric (20)";
+                    return "numeric(20)";
                 default:
                     return "varchar(255)";
             }

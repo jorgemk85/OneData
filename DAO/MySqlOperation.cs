@@ -3,7 +3,6 @@ using DataManagement.Exceptions;
 using DataManagement.Interfaces;
 using DataManagement.Models;
 using MySql.Data.MySqlClient;
-using System;
 using System.Data;
 
 namespace DataManagement.DAO
@@ -11,7 +10,10 @@ namespace DataManagement.DAO
     internal class MySqlOperation : Operation, IOperable
     {
         const int ERR_TABLE_NOT_FOUND = 1146;
-        const string ERR_STORED_PROCEDURE_NOT_FOUND = "cannot be found in database";
+        const int ERR_STORED_PROCEDURE_NOT_FOUND = 1305;
+        const int ERR_INCORRECT_NUMBER_OF_ARGUMENTS = 1318;
+        const int ERR_UNKOWN_COLUMN = 1054;
+        const int ERR_NO_DEFAULT_VALUE_IN_FIELD = 1364;
 
         public MySqlOperation() : base()
         {
@@ -80,26 +82,41 @@ namespace DataManagement.DAO
                     }
                 }
             }
-            catch (MySqlException mySqlException) when (mySqlException.Message.Contains(ERR_STORED_PROCEDURE_NOT_FOUND))
+            catch (MySqlException mySqlException) when (mySqlException.Number == ERR_STORED_PROCEDURE_NOT_FOUND)
             {
                 if (AutoCreateStoredProcedures)
                 {
-                    ExecuteScalar(GetTransactionTextForProcedure<T>(transactionType), connectionToUse);
+                    ExecuteScalar(GetTransactionTextForProcedure<T>(transactionType, false), connectionToUse, false);
                     goto Start;
                 }
+                throw;
             }
             catch (MySqlException mySqlException) when (mySqlException.Number == ERR_TABLE_NOT_FOUND)
             {
                 if (AutoCreateTables)
                 {
-                    ProcessTableCreation<T>(connectionToUse);
-
+                    ProcessTable<T>(connectionToUse, false);
                     goto Start;
                 }
+                throw;
             }
-            catch (ArgumentException exception)
+            catch (MySqlException mySqlException) when (mySqlException.Number == ERR_INCORRECT_NUMBER_OF_ARGUMENTS)
             {
-                exception.GetBaseException();
+                if (AutoCreateStoredProcedures)
+                {
+                    ExecuteScalar(GetTransactionTextForProcedure<T>(transactionType, true), connectionToUse, false);
+                    goto Start;
+                }
+                throw;
+            }
+            catch (MySqlException mySqlException) when (mySqlException.Number == ERR_UNKOWN_COLUMN || mySqlException.Number == ERR_NO_DEFAULT_VALUE_IN_FIELD)
+            {
+                if (AutoCreateTables)
+                {
+                    ProcessTable<T>(connectionToUse, true);
+                    goto Start;
+                }
+                throw;
             }
 
             if (logTransaction) LogTransaction(tableName, transactionType, connectionToUse);
@@ -118,3 +135,4 @@ namespace DataManagement.DAO
         }
     }
 }
+

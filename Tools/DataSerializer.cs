@@ -145,6 +145,36 @@ namespace DataManagement.Tools
         }
 
         /// <summary>
+        /// Convierte un objeto de tipo DataTable a un Diccionario con el tipo de la llave <typeparamref name="TKey"/> y el objeto como valor.
+        /// </summary>
+        /// <typeparam name="TKey">El tipo que se usara como llave.</typeparam>
+        /// <typeparam name="T">El tipo que se usara como objeto para el valor del diccionario.</typeparam>
+        /// <param name="dataTable">El contenido a convertir.</param>
+        /// <param name="keyName">El nombre de la columna dentro del objeto DataTable.Columns que se usara como Llave.</param>
+        /// <returns>Regresa un nuevo Diccionario alimentado con los valores proporcionados.</returns>
+        public static Dictionary<TKey, T> ConvertDataTableToDictionary<TKey, T>(DataTable dataTable, string keyName) where T : new()
+        {
+            Dictionary<TKey, T> newDictionary = new Dictionary<TKey, T>();
+            foreach (DataRow row in dataTable.Rows)
+            {
+                T newObject = new T();
+                PropertyInfo[] properties = typeof(T).GetProperties();
+                TKey key = (TKey)SimpleConverter.ConvertStringToType(row[keyName].ToString(), typeof(TKey));
+
+                foreach (PropertyInfo property in properties)
+                {
+                    if (dataTable.Columns.Contains(property.Name) && property.CanWrite)
+                    {
+                        property.SetValue(newObject, SimpleConverter.ConvertStringToType(row[property.Name].ToString(), property.PropertyType));
+                    }
+                }
+                newDictionary.Add(key, newObject);
+            }
+
+            return newDictionary;
+        }
+
+        /// <summary>
         /// Convierte un objeto de tipo DataTable a una Lista del tipo <typeparamref name="T"/>.
         /// </summary>
         /// <typeparam name="T">Tipo referencia para serializar.</typeparam>
