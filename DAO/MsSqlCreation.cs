@@ -30,7 +30,7 @@ namespace DataManagement.DAO
         public string CreateInsertStoredProcedure<T>(bool doAlter) where T : IManageable, new()
         {
             StringBuilder queryBuilder = new StringBuilder();
-            PropertyInfo[] properties = typeof(T).GetProperties().Where(q => q.GetCustomAttribute<UnlinkedProperty>() == null).ToArray();
+            PropertyInfo[] properties = typeof(T).GetProperties().Where(q => q.GetCustomAttribute<UnlinkedProperty>() == null && q.GetCustomAttribute<InternalProperty>() == null).ToArray();
             T obj = new T();
 
             if (properties.Length == 0) return string.Empty;
@@ -78,7 +78,7 @@ namespace DataManagement.DAO
         public string CreateUpdateStoredProcedure<T>(bool doAlter) where T : IManageable, new()
         {
             StringBuilder queryBuilder = new StringBuilder();
-            PropertyInfo[] properties = typeof(T).GetProperties().Where(q => q.GetCustomAttribute<UnlinkedProperty>() == null).ToArray();
+            PropertyInfo[] properties = typeof(T).GetProperties().Where(q => q.GetCustomAttribute<UnlinkedProperty>() == null && q.GetCustomAttribute<InternalProperty>() == null).ToArray();
             T obj = new T();
 
             if (properties.Length == 0) return string.Empty;
@@ -119,7 +119,7 @@ namespace DataManagement.DAO
         public string CreateDeleteStoredProcedure<T>(bool doAlter) where T : IManageable, new()
         {
             StringBuilder queryBuilder = new StringBuilder();
-            PropertyInfo[] properties = typeof(T).GetProperties().Where(q => q.GetCustomAttribute<UnlinkedProperty>() == null).ToArray();
+            PropertyInfo[] properties = typeof(T).GetProperties().Where(q => q.GetCustomAttribute<UnlinkedProperty>() == null && q.GetCustomAttribute<InternalProperty>() == null).ToArray();
             T obj = new T();
 
             if (properties.Length == 0) return string.Empty;
@@ -146,7 +146,7 @@ namespace DataManagement.DAO
         public string CreateSelectAllStoredProcedure<T>(bool doAlter) where T : IManageable, new()
         {
             StringBuilder queryBuilder = new StringBuilder();
-            PropertyInfo[] properties = typeof(T).GetProperties().Where(q => q.GetCustomAttribute<UnlinkedProperty>() == null).ToArray();
+            PropertyInfo[] properties = typeof(T).GetProperties().Where(q => q.GetCustomAttribute<UnlinkedProperty>() == null && q.GetCustomAttribute<InternalProperty>() == null).ToArray();
             T obj = new T();
 
             if (properties.Length == 0) return string.Empty;
@@ -172,7 +172,7 @@ namespace DataManagement.DAO
         public string CreateSelectStoredProcedure<T>(bool doAlter) where T : IManageable, new()
         {
             StringBuilder queryBuilder = new StringBuilder();
-            PropertyInfo[] properties = typeof(T).GetProperties().Where(q => q.GetCustomAttribute<UnlinkedProperty>() == null).ToArray();
+            PropertyInfo[] properties = typeof(T).GetProperties().Where(q => q.GetCustomAttribute<UnlinkedProperty>() == null && q.GetCustomAttribute<InternalProperty>() == null).ToArray();
             T obj = new T();
 
             if (properties.Length == 0) return string.Empty;
@@ -237,7 +237,7 @@ namespace DataManagement.DAO
                     queryBuilder.AppendFormat("{0} {1} NOT NULL, ", property.Name, GetSqlDataType(property.PropertyType));
                 }
             }
-            queryBuilder.Append("FechaCreacion datetime NOT NULL, FechaModificacion datetime NOT NULL);");
+            //queryBuilder.Append("FechaCreacion datetime NOT NULL, FechaModificacion datetime NOT NULL);");
 
             return queryBuilder.ToString();
         }
@@ -259,8 +259,8 @@ namespace DataManagement.DAO
             string sqlDataType = string.Empty;
             // Las propiedades FechaCreacion y FechaModificacion deben de agregarse a columnsFound.
             // TODO: Necesitamos asignarle algun atributo a la FechaCreacion y FechaModificacion para indicar que son especiales.
-            columnsFound.Add("FechaCreacion");
-            columnsFound.Add("FechaModificacion");
+            //columnsFound.Add("FechaCreacion");
+            //columnsFound.Add("FechaModificacion");
 
             ColumnDefinition columnDetail;
 
@@ -295,7 +295,7 @@ namespace DataManagement.DAO
             // Extraemos las columnas en la tabla que ya no estan en las propiedades del modelo para quitarlas.
             foreach (KeyValuePair<string, ColumnDefinition> detail in columnDetails.Where(q => !columnsFound.Contains(q.Key)))
             {
-                queryBuilder.AppendFormat("DROP {0},\n", detail.Value.Collation_Name);
+                queryBuilder.AppendFormat("DROP {0},\n", detail.Value.Column_Name);
                 continue;
             }
 

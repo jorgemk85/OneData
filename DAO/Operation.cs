@@ -176,8 +176,9 @@ namespace DataManagement.DAO
         {
             foreach (PropertyInfo propertyInfo in typeof(T).GetProperties())
             {
-                // Si encontramos el atributo entonces se brinca la propiedad.
-                if (Attribute.GetCustomAttribute(propertyInfo, typeof(UnlinkedProperty)) != null) continue;
+                // Si encontramos el atributo unlinkedProperty o InternalProperty entonces se brinca la propiedad.
+                if (propertyInfo.GetCustomAttribute<UnlinkedProperty>() != null) continue;
+                if (propertyInfo.GetCustomAttribute<InternalProperty>() != null) continue;
 
                 if (transactionType == TransactionTypes.Delete)
                 {

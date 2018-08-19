@@ -1,7 +1,8 @@
 ﻿using DataManagement.Attributes;
-using DataManagement.Models;
 using DataManagement.Enums;
 using DataManagement.Exceptions;
+using DataManagement.Interfaces;
+using DataManagement.Models;
 using DataManagement.Tools;
 using System;
 using System.Collections.Generic;
@@ -11,7 +12,6 @@ using System.Linq;
 using System.Linq.Dynamic;
 using System.Reflection;
 using System.Text;
-using DataManagement.Interfaces;
 
 namespace DataManagement.DAO
 {
@@ -107,14 +107,14 @@ namespace DataManagement.DAO
             string predicate = string.Empty;
             StringBuilder builder = new StringBuilder();
 
-            foreach (PropertyInfo prop in typeof(T).GetProperties())
+            foreach (PropertyInfo property in typeof(T).GetProperties())
             {
-                if (Attribute.GetCustomAttribute(prop, typeof(UnlinkedProperty)) == null)
+                if (property.GetCustomAttribute<UnlinkedProperty>() == null)
                 {
-                    if (prop.GetValue(obj) != null)
+                    if (property.GetValue(obj) != null)
                     {
-                        builder.AppendFormat("{0}== @{1} and ", prop.Name, valueIndex);
-                        values.Add(prop.GetValue(obj));
+                        builder.AppendFormat("{0}== @{1} and ", property.Name, valueIndex);
+                        values.Add(property.GetValue(obj));
                         valueIndex++;
                     }
                 }
@@ -128,7 +128,7 @@ namespace DataManagement.DAO
             else
             {
                 predicate = predicate.Substring(0, predicate.Length - 5);
-                return new Result(data: DataSerializer.ConvertListToDataTableOfType(DataSerializer.ConvertDataTableToListOfType<T>(cache.Data).Where(predicate, values.ToArray()).ToList()));
+                return new Result(DataSerializer.ConvertListToDataTableOfType(DataSerializer.ConvertDataTableToListOfType<T>(cache.Data).Where(predicate, values.ToArray()).ToList()));
             }
         }
 

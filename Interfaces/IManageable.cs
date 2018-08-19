@@ -9,11 +9,14 @@ namespace DataManagement.Interfaces
         Guid? Id { get; set; }
         #endregion
 
-        #region Unlinked Properties
-        [UnlinkedProperty]
+        #region Internal Properties
+        [InternalProperty]
         DateTime? FechaCreacion { get; set; }
-        [UnlinkedProperty]
+        [InternalProperty]
         DateTime? FechaModificacion { get; set; }
+        #endregion
+
+        #region Unlinked Properties
         /// <summary>
         /// Almacena el nombre de la tabla en la base de datos.
         /// </summary>
