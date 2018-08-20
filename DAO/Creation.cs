@@ -1,7 +1,5 @@
 ﻿using DataManagement.Enums;
 using DataManagement.Tools;
-using System.Reflection;
-using System.Text;
 
 namespace DataManagement.DAO
 {
@@ -17,6 +15,7 @@ namespace DataManagement.DAO
 
         public Creation()
         {
+            Logger.Info("Getting configuration properties for Creation class.");
             SetConfigurationProperties();
         }
 

@@ -30,8 +30,11 @@ namespace DataManagement.DAO
         public bool AutoAlterTables { get; private set; }
         public bool EnableLog { get; private set; }
         public bool ConstantTableConsolidation { get; private set; }
+        public bool OverrideOnlyInDebug { get; private set; }
 
         public string QueryForTableExistance { get; protected set; }
+        public string QueryForColumnDefinition { get; protected set; }
+        public string QueryForKeyDefinition { get; protected set; }
         public ICreatable Creator { get; set; }
         public ConnectionTypes ConnectionType { get; set; }
         public DbCommand Command { get; set; }
@@ -51,6 +54,7 @@ namespace DataManagement.DAO
 
             try
             {
+                Logger.Info(string.Format("Starting execution for transaction using connection {0}", connectionToUse));
                 using (DbConnection connection = ConnectionType == ConnectionTypes.MySQL ? (DbConnection)Connection.OpenMySqlConnection(connectionToUse) : (DbConnection)Connection.OpenMsSqlConnection(connectionToUse))
                 {
                     if (connection.State != ConnectionState.Open) throw new BadConnectionStateException();
@@ -75,16 +79,25 @@ namespace DataManagement.DAO
                 {
                     if (dbException.InnerException.Message.EndsWith("must be defined."))
                     {
-                        throw new ConnectionVariableNotEnabledException("AllowUserVariables=True");
+                        ConnectionVariableNotEnabledException cvnee = new ConnectionVariableNotEnabledException("AllowUserVariables=True");
+                        Logger.Error(cvnee);
+                        throw cvnee;
                     }
                 }
 
+                Logger.Error(dbException);
                 throw dbException;
+            }
+            catch (Exception exception)
+            {
+                Logger.Error(exception);
+                throw;
             }
         }
 
         private void GetConfigurationSettings()
         {
+            Logger.Info("Getting Operation configuration settings.");
             SelectSuffix = ConsolidationTools.GetValueFromConfiguration("SelectSuffix", ConfigurationTypes.AppSetting);
             InsertSuffix = ConsolidationTools.GetValueFromConfiguration("InsertSuffix", ConfigurationTypes.AppSetting);
             UpdateSuffix = ConsolidationTools.GetValueFromConfiguration("UpdateSuffix", ConfigurationTypes.AppSetting);
@@ -99,6 +112,7 @@ namespace DataManagement.DAO
             ConstantTableConsolidation = bool.Parse(ConsolidationTools.GetValueFromConfiguration("ConstantTableConsolidation", ConfigurationTypes.AppSetting));
             AutoAlterStoredProcedures = bool.Parse(ConsolidationTools.GetValueFromConfiguration("AutoAlterStoredProcedures", ConfigurationTypes.AppSetting));
             AutoAlterTables = bool.Parse(ConsolidationTools.GetValueFromConfiguration("AutoAlterTables", ConfigurationTypes.AppSetting));
+            OverrideOnlyInDebug = bool.Parse(ConsolidationTools.GetValueFromConfiguration("OverrideOnlyInDebug", ConfigurationTypes.AppSetting));
         }
 
         internal static IOperable GetOperationBasedOnConnectionType(ConnectionTypes connectionType)
@@ -108,14 +122,15 @@ namespace DataManagement.DAO
                 case ConnectionTypes.MySQL:
                     return new MySqlOperation();
                 case ConnectionTypes.MSSQL:
-                    return new MySqlOperation();
+                    return new MsSqlOperation();
                 default:
-                    return new MySqlOperation();
+                    return new MsSqlOperation();
             }
         }
 
         protected string GetTransactionTextForProcedure<T>(TransactionTypes transactionType, bool doAlter) where T : IManageable, new()
         {
+            Logger.Info(string.Format("Getting {0} transaction for type {1}. DoAlter = {2}", transactionType.ToString(), typeof(T), doAlter));
             switch (transactionType)
             {
                 case TransactionTypes.Select:
@@ -129,12 +144,16 @@ namespace DataManagement.DAO
                 case TransactionTypes.Update:
                     return Creator.CreateUpdateStoredProcedure<T>(doAlter);
                 default:
-                    throw new ArgumentException("El tipo de trascaccion no es valido para generar un nuevo procedimiento almacenado.");
+                    ArgumentException argumentException = new ArgumentException("El tipo de transaccion no es valido para generar un nuevo procedimiento almacenado.");
+                    Logger.Error(argumentException);
+                    throw argumentException;
             }
         }
 
         private string GetStringParameters()
         {
+            Logger.Info(string.Format("Getting string parameters"));
+
             StringBuilder builder = new StringBuilder();
 
             foreach (DbParameter parametro in Command.Parameters)
@@ -150,6 +169,7 @@ namespace DataManagement.DAO
 
         protected string GetFriendlyTransactionSuffix(TransactionTypes transactionType)
         {
+            Logger.Info(string.Format("Getting friendly transaction suffix for transaction type {0}.", transactionType.ToString()));
             switch (transactionType)
             {
                 case TransactionTypes.Select:
@@ -179,6 +199,7 @@ namespace DataManagement.DAO
 
         protected void SetParameters(Parameter[] parameters)
         {
+            Logger.Info(string.Format("Setting parameters in command."));
             for (int i = 0; i < parameters.Length; i++)
             {
                 Command.Parameters.Add(CreateDbParameter(parameters[i].Name, parameters[i].Value));
@@ -187,6 +208,7 @@ namespace DataManagement.DAO
 
         protected void SetParameters<T>(T obj, TransactionTypes transactionType)
         {
+            Logger.Info(string.Format("Setting parameters in command based on type {0} for transaction type {1}.", typeof(T), transactionType.ToString()));
             foreach (PropertyInfo propertyInfo in typeof(T).GetProperties())
             {
                 // Si encontramos el atributo unlinkedProperty o InternalProperty entonces se brinca la propiedad.
@@ -211,6 +233,7 @@ namespace DataManagement.DAO
         protected void PerformTableConsolidation<T>(string connectionToUse, bool doAlter) where T : IManageable, new()
         {
             T newObj = new T();
+            Logger.Info(string.Format("Starting table consolidation for table {0} using connection {1}. DoAlter = {2}", newObj.DataBaseTableName, connectionToUse, doAlter));
             if (!doAlter)
             {
                 if (!CheckIfTableExists(newObj.DataBaseTableName, connectionToUse))
@@ -224,6 +247,7 @@ namespace DataManagement.DAO
 
         protected void ProcessTable<T>(string connectionToUse, bool doAlter) where T : IManageable, new()
         {
+            Logger.Info(string.Format("Processing table {0} using connection {1}. DoAlter = {2}", new T().DataBaseTableName, connectionToUse, doAlter));
             if (doAlter)
             {
                 PerformTableConsolidation<T>(connectionToUse, doAlter);
@@ -243,6 +267,7 @@ namespace DataManagement.DAO
 
         private void VerifyForeignTables(Type type, string connectionToUse, bool doAlter)
         {
+            Logger.Info(string.Format("Verifying foreign tables for type {0} using connection {1}. DoAlter = {2}", type.ToString(), connectionToUse, doAlter));
             PropertyInfo[] properties = type.GetProperties().Where(q => q.GetCustomAttribute<UnlinkedProperty>() == null && q.GetCustomAttribute<ForeignModel>() != null).ToArray();
 
             foreach (PropertyInfo property in properties)
@@ -257,16 +282,19 @@ namespace DataManagement.DAO
 
         private Dictionary<string, ColumnDefinition> GetColumnDefinition(string tableName, string connectionToUse)
         {
-            return ((DataTable)ExecuteScalar(string.Format("select * from information_schema.COLUMNS where table_name = '{0}'", tableName), connectionToUse, true)).ToDictionary<string, ColumnDefinition>(nameof(ColumnDefinition.Column_Name));
+            Logger.Info(string.Format("Getting Column definition for table {0} using connection {1}.", tableName, connectionToUse));
+            return ((DataTable)ExecuteScalar(string.Format(QueryForColumnDefinition, tableName), connectionToUse, true)).ToDictionary<string, ColumnDefinition>(nameof(ColumnDefinition.Column_Name));
         }
 
         private Dictionary<string, KeyDefinition> GetKeyDefinition(string tableName, string connectionToUse)
         {
-            return ((DataTable)ExecuteScalar(string.Format("select * from information_schema.KEY_COLUMN_USAGE where table_name = '{0}' and column_name != 'Id'", tableName), connectionToUse, true)).ToDictionary<string, KeyDefinition>(nameof(KeyDefinition.Column_Name));
+            Logger.Info(string.Format("Getting Key definition for table {0} using connection {1}.", tableName, connectionToUse));
+            return ((DataTable)ExecuteScalar(string.Format(QueryForKeyDefinition, tableName), connectionToUse, true)).ToDictionary<string, KeyDefinition>(nameof(KeyDefinition.Column_Name));
         }
 
         private void CreateOrAlterForeignTables(IManageable foreignModel, string connectionToUse, bool doAlter)
         {
+            Logger.Info(string.Format("Create or Alter foreign tables of {0} using connection {1}. DoAlter = {2}", foreignModel.DataBaseTableName, connectionToUse, doAlter));
             if (doAlter)
             {
                 ExecuteScalar(Creator.GetAlterTableQuery(foreignModel.GetType(),
@@ -289,6 +317,7 @@ namespace DataManagement.DAO
 
         private bool CheckIfTableExists(string tableName, string connectionToUse)
         {
+            Logger.Info(string.Format("Checking if table {0} exists using connection {1}.", tableName, connectionToUse));
             string query = string.Format(QueryForTableExistance, TablePrefix, tableName);
 
             if (ExecuteScalar(query, connectionToUse, false) != null)
@@ -310,6 +339,8 @@ namespace DataManagement.DAO
                 TablaAfectada = dataBaseTableName,
                 Parametros = GetStringParameters()
             };
+
+            Logger.Info(string.Format("Created new log object for affected table {0}, transaction used {1}, with the following parameters: {2}", newLog.DataBaseTableName, newLog.Transaccion, newLog.Parametros));
 
             return newLog;
         }

@@ -1,6 +1,7 @@
 ﻿using DataManagement.Attributes;
 using DataManagement.Interfaces;
 using DataManagement.Models;
+using DataManagement.Tools;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -69,6 +70,8 @@ namespace DataManagement.DAO
             queryBuilder.Append("    @actualTime,\n    @actualTime);\n");
             queryBuilder.Append("END");
 
+            Logger.Info("(MySql) Created a new query for Insert Stored Procedure:");
+            Logger.Info(queryBuilder.ToString());
             return queryBuilder.ToString();
         }
 
@@ -106,6 +109,8 @@ namespace DataManagement.DAO
             queryBuilder.AppendFormat("WHERE Id = _Id;\n");
             queryBuilder.Append("END");
 
+            Logger.Info("(MySql) Created a new query for Update Stored Procedure:");
+            Logger.Info(queryBuilder.ToString());
             return queryBuilder.ToString();
         }
 
@@ -130,6 +135,8 @@ namespace DataManagement.DAO
             queryBuilder.AppendFormat("WHERE Id = _Id;\n");
             queryBuilder.Append("END");
 
+            Logger.Info("(MySql) Created a new query for Delete Stored Procedure:");
+            Logger.Info(queryBuilder.ToString());
             return queryBuilder.ToString();
         }
 
@@ -153,6 +160,8 @@ namespace DataManagement.DAO
             queryBuilder.Append("ORDER BY FechaCreacion DESC;\n");
             queryBuilder.Append("END");
 
+            Logger.Info("(MySql) Created a new query for SelectAll Stored Procedure:");
+            Logger.Info(queryBuilder.ToString());
             return queryBuilder.ToString();
         }
 
@@ -190,6 +199,8 @@ namespace DataManagement.DAO
             queryBuilder.AppendFormat("\nORDER BY FechaCreacion desc;\n");
             queryBuilder.Append("END");
 
+            Logger.Info("(MySql) Created a new query for Select Stored Procedure:");
+            Logger.Info(queryBuilder.ToString());
             return queryBuilder.ToString();
         }
 
@@ -212,13 +223,16 @@ namespace DataManagement.DAO
             // Aqui se colocan las propiedades del objeto. Una por columna por supuesto.
             foreach (PropertyInfo property in properties)
             {
-                queryBuilder.AppendFormat("{0} {1} NOT NULL,\n", property.Name, GetSqlDataType(property.PropertyType));
+                string isNullable = Nullable.GetUnderlyingType(property.PropertyType) == null ? string.Empty : "NOT NULL";
+                queryBuilder.AppendFormat("{0} {1} {2},\n", property.Name, GetSqlDataType(property.PropertyType), isNullable);
             }
-            //queryBuilder.Append("FechaCreacion datetime NOT NULL,\nFechaModificacion datetime NOT NULL,\n");
+
             queryBuilder.Append("PRIMARY KEY (Id),\n");
             queryBuilder.Append("UNIQUE KEY `id_UNIQUE` (Id))\n");
             queryBuilder.Append("ENGINE=InnoDB;");
 
+            Logger.Info("(MySql) Created a new query for Create Table:");
+            Logger.Info(queryBuilder.ToString());
             return queryBuilder.ToString();
         }
 
@@ -237,8 +251,8 @@ namespace DataManagement.DAO
             StringBuilder queryBuilder = new StringBuilder();
             List<string> columnsFound = new List<string>();
             string sqlDataType = string.Empty;
-            ColumnDefinition columnDetail;
-            KeyDefinition keyDetail;
+            ColumnDefinition columnDefinition;
+            KeyDefinition keyDefinition;
             bool foundDiference = false;
 
             queryBuilder.AppendFormat("ALTER TABLE {0}{1} \n", TablePrefix, obj.DataBaseTableName);
@@ -246,29 +260,41 @@ namespace DataManagement.DAO
             foreach (PropertyInfo property in properties)
             {
                 sqlDataType = GetSqlDataType(property.PropertyType);
-                columnDetails.TryGetValue(property.Name, out columnDetail);
+                columnDetails.TryGetValue(property.Name, out columnDefinition);
 
-                if (columnDetail == null)
+                if (columnDefinition == null)
                 {
                     // Agregar propiedad a tabla ya que no existe.
                     queryBuilder.AppendFormat("ADD {0} {1} NOT NULL,\n", property.Name, sqlDataType);
                     foundDiference = true;
                     continue;
                 }
-                if (!sqlDataType.Equals(columnDetail.Column_Type))
+                if (!sqlDataType.Equals(columnDefinition.Column_Type))
                 {
                     // Si el data type cambio, entonces lo modifica.
                     queryBuilder.AppendFormat("MODIFY COLUMN {0} {1} NOT NULL,\n", property.Name, sqlDataType);
                     foundDiference = true;
                 }
-                if (keyDetails.TryGetValue(property.Name, out keyDetail))
+                if (!columnDefinition.Is_Nullable.Equals("YES") && Nullable.GetUnderlyingType(property.PropertyType) == null)
+                {
+                    // Si la propiedad ya no es nullable, entonces la cambia en la base de datos
+                    queryBuilder.AppendFormat("ALTER COLUMN {0} {1},\n", property.Name, sqlDataType);
+                    foundDiference = true;
+                }
+                if (!columnDefinition.Is_Nullable.Equals("NO") && Nullable.GetUnderlyingType(property.PropertyType) != null)
+                {
+                    // Si la propiedad ES nullable, entonces la cambia en la base de datos
+                    queryBuilder.AppendFormat("ALTER COLUMN {0} {1} NOT NULL,\n", property.Name, sqlDataType);
+                    foundDiference = true;
+                }
+                if (keyDetails.TryGetValue(property.Name, out keyDefinition))
                 {
                     // Si existe una llave en la base de datos relacionada a esta propiedad entonces...
                     ForeignModel foreignAttribute = property.GetCustomAttribute<ForeignModel>();
                     if (foreignAttribute == null)
                     {
                         // En el caso de que no tenga ya el atributo, significa que dejo de ser una propiedad relacionada con algun modelo foraneo y por ende, debemos de eliminar la llave foranea
-                        queryBuilder.AppendFormat("DROP FOREIGN KEY {0},\n", keyDetail.Constraint_Name);
+                        queryBuilder.AppendFormat("DROP FOREIGN KEY {0},\n", keyDefinition.Constraint_Name);
                         foundDiference = true;
                     }
                 }
@@ -297,6 +323,8 @@ namespace DataManagement.DAO
                 queryBuilder.Append(GetCreateForeignKeysQuery(obj.GetType()));
             }
 
+            Logger.Info("(MySql) Created a new query for Alter Table:");
+            Logger.Info(queryBuilder.ToString());
             return queryBuilder.ToString();
         }
 
@@ -308,16 +336,18 @@ namespace DataManagement.DAO
 
             if (properties.Length == 0) return string.Empty;
 
-            queryBuilder.AppendFormat("ALTER TABLE {0}{1} ", TablePrefix, obj.DataBaseTableName);
+            queryBuilder.AppendFormat("ALTER TABLE {0}{1}\n", TablePrefix, obj.DataBaseTableName);
 
             foreach (PropertyInfo property in properties)
             {
                 ForeignModel foreignAttribute = property.GetCustomAttribute<ForeignModel>();
                 IManageable foreignModel = (IManageable)Activator.CreateInstance(foreignAttribute.Model);
-                queryBuilder.AppendFormat("ADD CONSTRAINT FK_{0}_{1} ", obj.DataBaseTableName, foreignModel.DataBaseTableName);
-                queryBuilder.AppendFormat("FOREIGN KEY({0}) REFERENCES {1}{2}(Id) ON DELETE {3} ON UPDATE NO ACTION;", property.Name, TablePrefix, foreignModel.DataBaseTableName, foreignAttribute.Action.ToString().Replace("_", " "));
+                queryBuilder.AppendFormat("ADD CONSTRAINT FK_{0}_{1}\n", obj.DataBaseTableName, foreignModel.DataBaseTableName);
+                queryBuilder.AppendFormat("FOREIGN KEY({0}) REFERENCES {1}{2}(Id) ON DELETE {3} ON UPDATE NO ACTION;\n", property.Name, TablePrefix, foreignModel.DataBaseTableName, foreignAttribute.Action.ToString().Replace("_", " "));
             }
 
+            Logger.Info("(MySql) Created a new query for Create Foreign Keys:");
+            Logger.Info(queryBuilder.ToString());
             return queryBuilder.ToString();
         }
 
@@ -338,6 +368,8 @@ namespace DataManagement.DAO
                     return "boolean";
                 case "guid":
                     return "char(36)";
+                case "char":
+                    return "char(1)";
                 case "string":
                     return "varchar(255)";
                 case "datetime":
@@ -379,7 +411,7 @@ namespace DataManagement.DAO
                 case "ulong":
                     return "bigint(20) unsigned";
                 default:
-                    return "varchar(255)";
+                    return "blob";
             }
         }
     }

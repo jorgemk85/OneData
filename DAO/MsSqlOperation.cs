@@ -2,6 +2,8 @@
 using DataManagement.Exceptions;
 using DataManagement.Interfaces;
 using DataManagement.Models;
+using DataManagement.Tools;
+using System;
 using System.Data;
 using System.Data.SqlClient;
 
@@ -11,12 +13,15 @@ namespace DataManagement.DAO
     {
         const int ERR_STORED_PROCEDURE_NOT_FOUND = 2812;
         const int ERR_OBJECT_NOT_FOUND = 208;
+        const int ERR_INCORRECT_NUMBER_OF_ARGUMENTS = 8144;
 
         public MsSqlOperation() : base()
         {
             ConnectionType = ConnectionTypes.MSSQL;
             Creator = new MsSqlCreation();
             QueryForTableExistance = "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE' AND TABLE_NAME = '{0}{1}'";
+            QueryForColumnDefinition = string.Format("SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '{0}'", string.Format("{0}{1}", TablePrefix, "{0}"));
+            QueryForKeyDefinition = string.Format("SELECT * FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE TABLE_NAME = '{0}' AND COLUMN_NAME != 'Id'", string.Format("{0}{1}", TablePrefix, "{0}"));
         }
 
         public Result ExecuteProcedure(string tableName, string storedProcedure, string connectionToUse, Parameter[] parameters, bool logTransaction = true)
@@ -25,6 +30,7 @@ namespace DataManagement.DAO
 
             try
             {
+                Logger.Info(string.Format("Starting execution of stored procedure {0} using connection {1}", storedProcedure, connectionToUse));
                 using (SqlConnection connection = Connection.OpenMsSqlConnection(connectionToUse))
                 {
                     if (connection.State != ConnectionState.Open) throw new BadConnectionStateException();
@@ -40,6 +46,7 @@ namespace DataManagement.DAO
             }
             catch (SqlException mySqlException)
             {
+                Logger.Error(mySqlException);
                 throw mySqlException;
             }
 
@@ -53,10 +60,11 @@ namespace DataManagement.DAO
             DataTable dataTable = null;
             bool overrideConsolidation = false;
 
-            Start:
+        Start:
             try
             {
-                if (ConstantTableConsolidation && !overrideConsolidation)
+                Logger.Info(string.Format("Starting {0} execution for object {1} using connection {2}", transactionType.ToString(), nameof(obj), connectionToUse));
+                if (ConstantTableConsolidation && (Manager.IsDebug || OverrideOnlyInDebug) && !overrideConsolidation)
                 {
                     PerformTableConsolidation<T>(connectionToUse, false);
                 }
@@ -88,19 +96,30 @@ namespace DataManagement.DAO
             {
                 if (AutoCreateStoredProcedures)
                 {
+                    Logger.Warn(string.Format("Stored Procedure for {0} not found. Creating...", transactionType.ToString()));
                     ExecuteScalar(GetTransactionTextForProcedure<T>(transactionType, false), connectionToUse, false);
                     overrideConsolidation = true;
                     goto Start;
                 }
+                Logger.Error(sqlException);
+                throw;
             }
             catch (SqlException sqlException) when (sqlException.Number == ERR_OBJECT_NOT_FOUND)
             {
                 if (AutoCreateTables)
                 {
+                    Logger.Warn(string.Format("Table {0} not found. Creating...", obj.DataBaseTableName));
                     ProcessTable<T>(connectionToUse, false);
                     overrideConsolidation = true;
                     goto Start;
                 }
+                Logger.Error(sqlException);
+                throw;
+            }
+            catch (Exception exception)
+            {
+                Logger.Error(exception);
+                throw;
             }
 
             if (logTransaction) LogTransaction(tableName, transactionType, connectionToUse);
@@ -115,7 +134,9 @@ namespace DataManagement.DAO
                 return;
             }
 
-            ExecuteProcedure(NewLog(dataBaseTableName, transactionType), dataBaseTableName, connectionToUse, TransactionTypes.Insert, false);
+            Logger.Info(string.Format("Saving log information into the database."));
+            Log newLog = NewLog(dataBaseTableName, transactionType);
+            ExecuteProcedure(newLog, newLog.DataBaseTableName, connectionToUse, TransactionTypes.Insert, false);
         }
     }
 }

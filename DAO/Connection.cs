@@ -17,6 +17,7 @@ namespace DataManagement.DAO
             }
             catch (ConfigurationErrorsException cee)
             {
+                Logger.Error(cee);
                 throw cee;
             }
         }
@@ -26,14 +27,17 @@ namespace DataManagement.DAO
             MySqlConnection connection = null;
             try
             {
+                Logger.Info("Attempting to connecto to MySql Server.");
                 if (PerformMySqlConnectionStringValidation(GetConnectionString(connectionToUse)))
                 {
                     connection = new MySqlConnection(GetConnectionString(connectionToUse));
                     connection.Open();
+                    Logger.Info("Connected.");
                 }
             }
             catch (MySqlException ex)
             {
+                Logger.Error(ex);
                 throw ex;
             }
             return connection;
@@ -45,12 +49,16 @@ namespace DataManagement.DAO
 
             if (!trimedConnectionString.Contains("AllowUserVariables=True"))
             {
-                throw new ConnectionVariableNotEnabledException("AllowUserVariables=True");
+                ConnectionVariableNotEnabledException cvnee = new ConnectionVariableNotEnabledException("AllowUserVariables=True");
+                Logger.Error(cvnee);
+                throw cvnee;
             }
 
             if (!trimedConnectionString.Contains("CheckParameters=False"))
             {
-                throw new ConnectionVariableNotEnabledException("CheckParameters=False");
+                ConnectionVariableNotEnabledException cvnee = new ConnectionVariableNotEnabledException("CheckParameters=False");
+                Logger.Error(cvnee);
+                throw cvnee;
             }
 
             return true;
@@ -61,11 +69,14 @@ namespace DataManagement.DAO
             SqlConnection connection = null;
             try
             {
+                Logger.Info("Attempting to connecto to Sql Server.");
                 connection = new SqlConnection(GetConnectionString(connectionToUse));
                 connection.Open();
+                Logger.Info("Connected.");
             }
             catch (SqlException ex)
             {
+                Logger.Error(ex);
                 throw ex;
             }
             return connection;
@@ -74,11 +85,13 @@ namespace DataManagement.DAO
         public static void CloseConnection(SqlConnection connection)
         {
             connection?.Close();
+            Logger.Info("Connection closed.");
         }
 
         public static void CloseConnection(MySqlConnection connection)
         {
             connection?.Close();
+            Logger.Info("Connection closed.");
         }
     }
 }

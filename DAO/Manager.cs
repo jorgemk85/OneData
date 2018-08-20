@@ -18,10 +18,23 @@ namespace DataManagement.DAO
         public static string DefaultSchema { get; private set; }
         public static string DefaultConnection { get; private set; }
         public static ConnectionTypes ConnectionType { get; set; }
+        public static bool IsDebug { get; private set; }
 
         static Manager()
         {
+            SetIfDebug();
             SetDefaultConnectionName();
+        }
+
+        private static void SetIfDebug()
+        {
+#if DEBUG
+            IsDebug = true;
+            Logger.Info("Debug mode is set.");
+#else
+            IsDebug = false;
+            Logger.Info("Release mode is set.");
+#endif
         }
 
         private static void SetDefaultConnectionName()
@@ -34,6 +47,7 @@ namespace DataManagement.DAO
             }
             catch (ConfigurationErrorsException cee)
             {
+                Logger.Error(cee);
                 throw cee;
             }
         }
