@@ -107,7 +107,7 @@ namespace DataManagement.DAO
             // Se especifica el parametro que va en x columna.
             foreach (PropertyInfo property in properties)
             {
-                queryBuilder.AppendFormat("{0} =  @_{0}, ", property.Name);
+                queryBuilder.AppendFormat("{0} = ISNULL(@_{0}, {0}), ", property.Name);
             }
             queryBuilder.Append("fechaModificacion = @actualTime ");
             queryBuilder.AppendFormat(" WHERE Id = @_Id; ");
