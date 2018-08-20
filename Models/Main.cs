@@ -16,9 +16,9 @@ namespace DataManagement.Models
         #endregion
 
         #region Internal Properties
-        [InternalProperty]
+        [UnmanagedProperty]
         public DateTime? FechaCreacion { get; set; } = DateTime.Now;
-        [InternalProperty]
+        [UnmanagedProperty]
         public DateTime? FechaModificacion { get; set; } = DateTime.Now;
         #endregion
 

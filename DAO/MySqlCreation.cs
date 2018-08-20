@@ -30,7 +30,7 @@ namespace DataManagement.DAO
         public string CreateInsertStoredProcedure<T>(bool doAlter) where T : IManageable, new()
         {
             StringBuilder queryBuilder = new StringBuilder();
-            PropertyInfo[] properties = typeof(T).GetProperties().Where(q => q.GetCustomAttribute<UnlinkedProperty>() == null && q.GetCustomAttribute<InternalProperty>() == null).ToArray();
+            PropertyInfo[] properties = typeof(T).GetProperties().Where(q => q.GetCustomAttribute<UnlinkedProperty>() == null && q.GetCustomAttribute<UnmanagedProperty>() == null).ToArray();
             T obj = new T();
 
             if (properties.Length == 0) return string.Empty;
@@ -75,7 +75,7 @@ namespace DataManagement.DAO
         public string CreateUpdateStoredProcedure<T>(bool doAlter) where T : IManageable, new()
         {
             StringBuilder queryBuilder = new StringBuilder();
-            PropertyInfo[] properties = typeof(T).GetProperties().Where(q => q.GetCustomAttribute<UnlinkedProperty>() == null && q.GetCustomAttribute<InternalProperty>() == null).ToArray();
+            PropertyInfo[] properties = typeof(T).GetProperties().Where(q => q.GetCustomAttribute<UnlinkedProperty>() == null && q.GetCustomAttribute<UnmanagedProperty>() == null).ToArray();
             T obj = new T();
 
             if (properties.Length == 0) return string.Empty;
@@ -112,7 +112,7 @@ namespace DataManagement.DAO
         public string CreateDeleteStoredProcedure<T>(bool doAlter) where T : IManageable, new()
         {
             StringBuilder queryBuilder = new StringBuilder();
-            PropertyInfo[] properties = typeof(T).GetProperties().Where(q => q.GetCustomAttribute<UnlinkedProperty>() == null && q.GetCustomAttribute<InternalProperty>() == null).ToArray();
+            PropertyInfo[] properties = typeof(T).GetProperties().Where(q => q.GetCustomAttribute<UnlinkedProperty>() == null && q.GetCustomAttribute<UnmanagedProperty>() == null).ToArray();
             T obj = new T();
 
             if (properties.Length == 0) return string.Empty;
@@ -136,7 +136,7 @@ namespace DataManagement.DAO
         public string CreateSelectAllStoredProcedure<T>(bool doAlter) where T : IManageable, new()
         {
             StringBuilder queryBuilder = new StringBuilder();
-            PropertyInfo[] properties = typeof(T).GetProperties().Where(q => q.GetCustomAttribute<UnlinkedProperty>() == null && q.GetCustomAttribute<InternalProperty>() == null).ToArray();
+            PropertyInfo[] properties = typeof(T).GetProperties().Where(q => q.GetCustomAttribute<UnlinkedProperty>() == null && q.GetCustomAttribute<UnmanagedProperty>() == null).ToArray();
             T obj = new T();
 
             if (properties.Length == 0) return string.Empty;
@@ -159,7 +159,7 @@ namespace DataManagement.DAO
         public string CreateSelectStoredProcedure<T>(bool doAlter) where T : IManageable, new()
         {
             StringBuilder queryBuilder = new StringBuilder();
-            PropertyInfo[] properties = typeof(T).GetProperties().Where(q => q.GetCustomAttribute<UnlinkedProperty>() == null && q.GetCustomAttribute<InternalProperty>() == null).ToArray();
+            PropertyInfo[] properties = typeof(T).GetProperties().Where(q => q.GetCustomAttribute<UnlinkedProperty>() == null && q.GetCustomAttribute<UnmanagedProperty>() == null).ToArray();
             T obj = new T();
 
             if (properties.Length == 0) return string.Empty;

@@ -10,9 +10,9 @@ namespace DataManagement.Interfaces
         #endregion
 
         #region Internal Properties
-        [InternalProperty]
+        [UnmanagedProperty]
         DateTime? FechaCreacion { get; set; }
-        [InternalProperty]
+        [UnmanagedProperty]
         DateTime? FechaModificacion { get; set; }
         #endregion
 

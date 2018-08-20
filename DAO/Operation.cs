@@ -178,7 +178,7 @@ namespace DataManagement.DAO
             {
                 // Si encontramos el atributo unlinkedProperty o InternalProperty entonces se brinca la propiedad.
                 if (propertyInfo.GetCustomAttribute<UnlinkedProperty>() != null) continue;
-                if (propertyInfo.GetCustomAttribute<InternalProperty>() != null) continue;
+                if (propertyInfo.GetCustomAttribute<UnmanagedProperty>() != null) continue;
 
                 if (transactionType == TransactionTypes.Delete)
                 {
