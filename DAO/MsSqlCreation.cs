@@ -258,9 +258,6 @@ namespace DataManagement.DAO
             List<string> columnsFound = new List<string>();
             string sqlDataType = string.Empty;
             // Las propiedades FechaCreacion y FechaModificacion deben de agregarse a columnsFound.
-            // TODO: Necesitamos asignarle algun atributo a la FechaCreacion y FechaModificacion para indicar que son especiales.
-            //columnsFound.Add("FechaCreacion");
-            //columnsFound.Add("FechaModificacion");
 
             ColumnDefinition columnDetail;
 

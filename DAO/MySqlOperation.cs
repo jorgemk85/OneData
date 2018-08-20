@@ -19,7 +19,7 @@ namespace DataManagement.DAO
         {
             ConnectionType = ConnectionTypes.MySQL;
             Creator = new MySqlCreation();
-            CheckTableExistanceQuery = "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = '{0}{1}'";
+            QueryForTableExistance = "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = '{0}{1}'";
         }
 
         public Result ExecuteProcedure(string tableName, string storedProcedure, string connectionToUse, Parameter[] parameters, bool logTransaction = true)
@@ -54,10 +54,15 @@ namespace DataManagement.DAO
         public Result ExecuteProcedure<T>(T obj, string tableName, string connectionToUse, TransactionTypes transactionType, bool logTransaction = true) where T : IManageable, new()
         {
             DataTable dataTable = null;
+            bool overrideConsolidation = false;
 
             Start:
             try
             {
+                if (ConstantTableConsolidation && !overrideConsolidation)
+                {
+                    PerformTableConsolidation<T>(connectionToUse, false);
+                }
                 using (MySqlConnection connection = Connection.OpenMySqlConnection(connectionToUse))
                 {
                     if (connection.State != ConnectionState.Open) throw new BadConnectionStateException();
@@ -87,6 +92,7 @@ namespace DataManagement.DAO
                 if (AutoCreateStoredProcedures)
                 {
                     ExecuteScalar(GetTransactionTextForProcedure<T>(transactionType, false), connectionToUse, false);
+                    overrideConsolidation = true;
                     goto Start;
                 }
                 throw;
@@ -96,24 +102,27 @@ namespace DataManagement.DAO
                 if (AutoCreateTables)
                 {
                     ProcessTable<T>(connectionToUse, false);
+                    overrideConsolidation = true;
                     goto Start;
                 }
                 throw;
             }
             catch (MySqlException mySqlException) when (mySqlException.Number == ERR_INCORRECT_NUMBER_OF_ARGUMENTS)
             {
-                if (AutoCreateStoredProcedures)
+                if (AutoAlterStoredProcedures)
                 {
                     ExecuteScalar(GetTransactionTextForProcedure<T>(transactionType, true), connectionToUse, false);
+                    overrideConsolidation = true;
                     goto Start;
                 }
                 throw;
             }
             catch (MySqlException mySqlException) when (mySqlException.Number == ERR_UNKOWN_COLUMN || mySqlException.Number == ERR_NO_DEFAULT_VALUE_IN_FIELD)
             {
-                if (AutoCreateTables)
+                if (AutoAlterTables)
                 {
                     ProcessTable<T>(connectionToUse, true);
+                    overrideConsolidation = true;
                     goto Start;
                 }
                 throw;

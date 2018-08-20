@@ -16,7 +16,7 @@ namespace DataManagement.DAO
         {
             ConnectionType = ConnectionTypes.MSSQL;
             Creator = new MsSqlCreation();
-            CheckTableExistanceQuery = "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE' AND TABLE_NAME = '{0}{1}'";
+            QueryForTableExistance = "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE' AND TABLE_NAME = '{0}{1}'";
         }
 
         public Result ExecuteProcedure(string tableName, string storedProcedure, string connectionToUse, Parameter[] parameters, bool logTransaction = true)
@@ -51,10 +51,15 @@ namespace DataManagement.DAO
         public Result ExecuteProcedure<T>(T obj, string tableName, string connectionToUse, TransactionTypes transactionType, bool logTransaction = true) where T : IManageable, new()
         {
             DataTable dataTable = null;
+            bool overrideConsolidation = false;
 
             Start:
             try
             {
+                if (ConstantTableConsolidation && !overrideConsolidation)
+                {
+                    PerformTableConsolidation<T>(connectionToUse, false);
+                }
                 using (SqlConnection connection = Connection.OpenMsSqlConnection(connectionToUse))
                 {
                     if (connection.State != ConnectionState.Open) throw new BadConnectionStateException();
@@ -84,6 +89,7 @@ namespace DataManagement.DAO
                 if (AutoCreateStoredProcedures)
                 {
                     ExecuteScalar(GetTransactionTextForProcedure<T>(transactionType, false), connectionToUse, false);
+                    overrideConsolidation = true;
                     goto Start;
                 }
             }
@@ -92,7 +98,7 @@ namespace DataManagement.DAO
                 if (AutoCreateTables)
                 {
                     ProcessTable<T>(connectionToUse, false);
-
+                    overrideConsolidation = true;
                     goto Start;
                 }
             }

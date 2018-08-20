@@ -17,28 +17,38 @@ namespace DataManagement.DAO
 {
     internal abstract class Operation
     {
-        public string SelectSuffix { get; set; }
-        public string InsertSuffix { get; set; }
-        public string UpdateSuffix { get; set; }
-        public string DeleteSuffix { get; set; }
-        public string SelectAllSuffix { get; set; }
-        public string StoredProcedurePrefix { get; set; }
-        public string TablePrefix { get; set; }
-        public bool AutoCreateStoredProcedures { get; set; }
-        public bool AutoCreateTables { get; set; }
-        public bool EnableLog { get; set; }
+        public string SelectSuffix { get; private set; }
+        public string InsertSuffix { get; private set; }
+        public string UpdateSuffix { get; private set; }
+        public string DeleteSuffix { get; private set; }
+        public string SelectAllSuffix { get; private set; }
+        public string StoredProcedurePrefix { get; private set; }
+        public string TablePrefix { get; private set; }
+        public bool AutoCreateStoredProcedures { get; private set; }
+        public bool AutoCreateTables { get; private set; }
+        public bool AutoAlterStoredProcedures { get; private set; }
+        public bool AutoAlterTables { get; private set; }
+        public bool EnableLog { get; private set; }
+        public bool ConstantTableConsolidation { get; private set; }
+
+        public string QueryForTableExistance { get; protected set; }
         public ICreatable Creator { get; set; }
         public ConnectionTypes ConnectionType { get; set; }
         public DbCommand Command { get; set; }
-        public string CheckTableExistanceQuery { get; protected set; }
+
 
         public Operation()
         {
-            GetTransactionTypesSuffixes();
+            GetConfigurationSettings();
         }
 
         protected object ExecuteScalar(string transaction, string connectionToUse, bool returnDataTable)
         {
+            if (string.IsNullOrWhiteSpace(transaction))
+            {
+                return null;
+            }
+
             try
             {
                 using (DbConnection connection = ConnectionType == ConnectionTypes.MySQL ? (DbConnection)Connection.OpenMySqlConnection(connectionToUse) : (DbConnection)Connection.OpenMsSqlConnection(connectionToUse))
@@ -73,7 +83,7 @@ namespace DataManagement.DAO
             }
         }
 
-        private void GetTransactionTypesSuffixes()
+        private void GetConfigurationSettings()
         {
             SelectSuffix = ConsolidationTools.GetValueFromConfiguration("SelectSuffix", ConfigurationTypes.AppSetting);
             InsertSuffix = ConsolidationTools.GetValueFromConfiguration("InsertSuffix", ConfigurationTypes.AppSetting);
@@ -86,6 +96,9 @@ namespace DataManagement.DAO
             AutoCreateStoredProcedures = bool.Parse(ConsolidationTools.GetValueFromConfiguration("AutoCreateStoredProcedures", ConfigurationTypes.AppSetting));
             AutoCreateTables = bool.Parse(ConsolidationTools.GetValueFromConfiguration("AutoCreateTables", ConfigurationTypes.AppSetting));
             EnableLog = bool.Parse(ConsolidationTools.GetValueFromConfiguration("EnableLog", ConfigurationTypes.AppSetting));
+            ConstantTableConsolidation = bool.Parse(ConsolidationTools.GetValueFromConfiguration("ConstantTableConsolidation", ConfigurationTypes.AppSetting));
+            AutoAlterStoredProcedures = bool.Parse(ConsolidationTools.GetValueFromConfiguration("AutoAlterStoredProcedures", ConfigurationTypes.AppSetting));
+            AutoAlterTables = bool.Parse(ConsolidationTools.GetValueFromConfiguration("AutoAlterTables", ConfigurationTypes.AppSetting));
         }
 
         internal static IOperable GetOperationBasedOnConnectionType(ConnectionTypes connectionType)
@@ -195,13 +208,25 @@ namespace DataManagement.DAO
             }
         }
 
+        protected void PerformTableConsolidation<T>(string connectionToUse, bool doAlter) where T : IManageable, new()
+        {
+            T newObj = new T();
+            if (!doAlter)
+            {
+                if (!CheckIfTableExists(newObj.DataBaseTableName, connectionToUse))
+                {
+                    ProcessTable<T>(connectionToUse, false);
+                    return;
+                }
+            }
+            ExecuteScalar(Creator.GetAlterTableQuery(typeof(T), GetColumnDefinition(newObj.DataBaseTableName, connectionToUse), GetKeyDefinition(newObj.DataBaseTableName, connectionToUse)), connectionToUse, false);
+        }
+
         protected void ProcessTable<T>(string connectionToUse, bool doAlter) where T : IManageable, new()
         {
             if (doAlter)
             {
-                ExecuteScalar(Creator.GetAlterTableQuery(typeof(T), 
-                                                         GetColumnDefinition(new T().DataBaseTableName, connectionToUse),
-                                                         GetKeyDefinition(new T().DataBaseTableName, connectionToUse)), connectionToUse, false);
+                PerformTableConsolidation<T>(connectionToUse, doAlter);
             }
             else
             {
@@ -264,7 +289,7 @@ namespace DataManagement.DAO
 
         private bool CheckIfTableExists(string tableName, string connectionToUse)
         {
-            string query = string.Format(CheckTableExistanceQuery, TablePrefix, tableName);
+            string query = string.Format(QueryForTableExistance, TablePrefix, tableName);
 
             if (ExecuteScalar(query, connectionToUse, false) != null)
             {

@@ -239,10 +239,10 @@ namespace DataManagement.DAO
             string sqlDataType = string.Empty;
             ColumnDefinition columnDetail;
             KeyDefinition keyDetail;
+            bool foundDiference = false;
 
             queryBuilder.AppendFormat("ALTER TABLE {0}{1} \n", TablePrefix, obj.DataBaseTableName);
 
-            // Aqui se agregan las propiedades que no estan en la tabla. Tambien guarda en una lista las columnas encontradas.
             foreach (PropertyInfo property in properties)
             {
                 sqlDataType = GetSqlDataType(property.PropertyType);
@@ -250,19 +250,26 @@ namespace DataManagement.DAO
 
                 if (columnDetail == null)
                 {
+                    // Agregar propiedad a tabla ya que no existe.
                     queryBuilder.AppendFormat("ADD {0} {1} NOT NULL,\n", property.Name, sqlDataType);
+                    foundDiference = true;
                     continue;
                 }
                 if (!sqlDataType.Equals(columnDetail.Column_Type))
                 {
+                    // Si el data type cambio, entonces lo modifica.
                     queryBuilder.AppendFormat("MODIFY COLUMN {0} {1} NOT NULL,\n", property.Name, sqlDataType);
+                    foundDiference = true;
                 }
                 if (keyDetails.TryGetValue(property.Name, out keyDetail))
                 {
+                    // Si existe una llave en la base de datos relacionada a esta propiedad entonces...
                     ForeignModel foreignAttribute = property.GetCustomAttribute<ForeignModel>();
                     if (foreignAttribute == null)
                     {
+                        // En el caso de que no tenga ya el atributo, significa que dejo de ser una propiedad relacionada con algun modelo foraneo y por ende, debemos de eliminar la llave foranea
                         queryBuilder.AppendFormat("DROP FOREIGN KEY {0},\n", keyDetail.Constraint_Name);
+                        foundDiference = true;
                     }
                 }
                 columnsFound.Add(property.Name);
@@ -272,13 +279,23 @@ namespace DataManagement.DAO
             foreach (KeyValuePair<string, ColumnDefinition> detail in columnDetails.Where(q => !columnsFound.Contains(q.Key)))
             {
                 queryBuilder.AppendFormat("DROP {0},\n", detail.Value.Column_Name);
+                foundDiference = true;
                 continue;
             }
 
             queryBuilder.Remove(queryBuilder.Length - 2, 2);
             queryBuilder.Append(";");
 
-            queryBuilder.Append(GetCreateForeignKeysQuery(obj.GetType()));
+            if (!foundDiference)
+            {
+                queryBuilder.Clear();
+            }
+            else
+            {
+                // Creamos las llaves foraneas que apliquen.
+                // TODO: Verificar las llaves foraneas NUEVAS.
+                queryBuilder.Append(GetCreateForeignKeysQuery(obj.GetType()));
+            }
 
             return queryBuilder.ToString();
         }
