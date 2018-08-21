@@ -67,7 +67,7 @@ namespace DataManagement.DAO
             try
             {
                 Logger.Info(string.Format("Starting {0} execution for object {1} using connection {2}", transactionType.ToString(), nameof(obj), connectionToUse));
-                if (ConstantTableConsolidation && (Manager.IsDebug || OverrideOnlyInDebug) && !overrideConsolidation && !obj.GetType().Equals(typeof(Log)))
+                if (Manager.ConstantTableConsolidation && (Manager.IsDebug || Manager.OverrideOnlyInDebug) && !overrideConsolidation && !obj.GetType().Equals(typeof(Log)))
                 {
                     PerformTableConsolidation<T>(connectionToUse, false);
                 }
@@ -98,7 +98,7 @@ namespace DataManagement.DAO
             }
             catch (MySqlException mySqlException) when (mySqlException.Number == ERR_STORED_PROCEDURE_NOT_FOUND)
             {
-                if (AutoCreateStoredProcedures)
+                if (Manager.AutoCreateStoredProcedures)
                 {
                     Logger.Warn(string.Format("Stored Procedure for {0} not found. Creating...", transactionType.ToString()));
                     ExecuteScalar(GetTransactionTextForProcedure<T>(transactionType, false), connectionToUse, false);
@@ -110,7 +110,7 @@ namespace DataManagement.DAO
             }
             catch (MySqlException mySqlException) when (mySqlException.Number == ERR_TABLE_NOT_FOUND)
             {
-                if (AutoCreateTables)
+                if (Manager.AutoCreateTables)
                 {
                     Logger.Warn(string.Format("Table {0} not found. Creating...", obj.DataBaseTableName));
                     ProcessTable<T>(connectionToUse, false);
@@ -122,7 +122,7 @@ namespace DataManagement.DAO
             }
             catch (MySqlException mySqlException) when (mySqlException.Number == ERR_INCORRECT_NUMBER_OF_ARGUMENTS)
             {
-                if (AutoAlterStoredProcedures)
+                if (Manager.AutoAlterStoredProcedures)
                 {
                     Logger.Warn(string.Format("Incorrect number of arguments related to the {0} stored procedure. Modifying...", transactionType.ToString()));
                     ExecuteScalar(GetTransactionTextForProcedure<T>(transactionType, true), connectionToUse, false);
@@ -134,7 +134,7 @@ namespace DataManagement.DAO
             }
             catch (MySqlException mySqlException) when (mySqlException.Number == ERR_UNKOWN_COLUMN || mySqlException.Number == ERR_NO_DEFAULT_VALUE_IN_FIELD)
             {
-                if (AutoAlterTables)
+                if (Manager.AutoAlterTables)
                 {
                     ProcessTable<T>(connectionToUse, true);
                     overrideConsolidation = true;
@@ -156,7 +156,7 @@ namespace DataManagement.DAO
 
         public void LogTransaction(string dataBaseTableName, TransactionTypes transactionType, string connectionToUse)
         {
-            if (!EnableLog)
+            if (!Manager.EnableLogInDatabase)
             {
                 return;
             }

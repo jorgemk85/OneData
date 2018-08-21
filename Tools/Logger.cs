@@ -1,4 +1,5 @@
-﻿using log4net;
+﻿using DataManagement.DAO;
+using log4net;
 using System;
 using System.Reflection;
 
@@ -10,22 +11,34 @@ namespace DataManagement.Tools
 
         public static void Error(Exception ex)
         {
-            log.Error(ex);
+            if (Manager.EnableLogInFile)
+            {
+                log.Error(ex);
+            }
         }
 
         public static void Warn(string message)
         {
-            log.Warn(message);
+            if (Manager.EnableLogInFile)
+            {
+                log.Warn(message);
+            }
         }
 
         public static void Info(string message)
         {
-            log.Info(message);
+            if (Manager.EnableLogInFile)
+            {
+                log.Info(message);
+            }
         }
 
         public static void Debug(string message)
         {
-            log.Debug(message);
+            if (Manager.EnableLogInFile)
+            {
+                log.Debug(message);
+            }
         }
     }
 }

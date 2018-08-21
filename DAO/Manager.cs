@@ -19,6 +19,14 @@ namespace DataManagement.DAO
         public static string DefaultConnection { get; private set; }
         public static ConnectionTypes ConnectionType { get; set; }
         public static bool IsDebug { get; private set; }
+        public static bool AutoCreateStoredProcedures { get; private set; }
+        public static bool AutoCreateTables { get; private set; }
+        public static bool AutoAlterStoredProcedures { get; private set; }
+        public static bool AutoAlterTables { get; private set; }
+        public static bool EnableLogInDatabase { get; private set; }
+        public static bool EnableLogInFile { get; private set; }
+        public static bool ConstantTableConsolidation { get; private set; }
+        public static bool OverrideOnlyInDebug { get; private set; }
 
         static Manager()
         {
@@ -44,6 +52,14 @@ namespace DataManagement.DAO
                 DefaultConnection = ConsolidationTools.GetValueFromConfiguration("DefaultConnection", ConfigurationTypes.AppSetting);
                 DefaultSchema = ConsolidationTools.GetValueFromConfiguration("DefaultSchema", ConfigurationTypes.AppSetting);
                 ConnectionType = (ConnectionTypes)Enum.Parse(typeof(ConnectionTypes), ConsolidationTools.GetValueFromConfiguration("ConnectionType", ConfigurationTypes.AppSetting));
+                AutoCreateStoredProcedures = bool.Parse(ConsolidationTools.GetValueFromConfiguration("AutoCreateStoredProcedures", ConfigurationTypes.AppSetting));
+                AutoCreateTables = bool.Parse(ConsolidationTools.GetValueFromConfiguration("AutoCreateTables", ConfigurationTypes.AppSetting));
+                EnableLogInDatabase = bool.Parse(ConsolidationTools.GetValueFromConfiguration("EnableLogInDatabase", ConfigurationTypes.AppSetting));
+                EnableLogInFile = bool.Parse(ConsolidationTools.GetValueFromConfiguration("EnableLogInFile", ConfigurationTypes.AppSetting));
+                ConstantTableConsolidation = bool.Parse(ConsolidationTools.GetValueFromConfiguration("ConstantTableConsolidation", ConfigurationTypes.AppSetting));
+                AutoAlterStoredProcedures = bool.Parse(ConsolidationTools.GetValueFromConfiguration("AutoAlterStoredProcedures", ConfigurationTypes.AppSetting));
+                AutoAlterTables = bool.Parse(ConsolidationTools.GetValueFromConfiguration("AutoAlterTables", ConfigurationTypes.AppSetting));
+                OverrideOnlyInDebug = bool.Parse(ConsolidationTools.GetValueFromConfiguration("OverrideOnlyInDebug", ConfigurationTypes.AppSetting));
             }
             catch (ConfigurationErrorsException cee)
             {

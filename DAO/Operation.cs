@@ -24,14 +24,6 @@ namespace DataManagement.DAO
         public string SelectAllSuffix { get; private set; }
         public string StoredProcedurePrefix { get; private set; }
         public string TablePrefix { get; private set; }
-        public bool AutoCreateStoredProcedures { get; private set; }
-        public bool AutoCreateTables { get; private set; }
-        public bool AutoAlterStoredProcedures { get; private set; }
-        public bool AutoAlterTables { get; private set; }
-        public bool EnableLog { get; private set; }
-        public bool ConstantTableConsolidation { get; private set; }
-        public bool OverrideOnlyInDebug { get; private set; }
-
         public string QueryForTableExistance { get; protected set; }
         public string QueryForColumnDefinition { get; protected set; }
         public string QueryForKeyDefinition { get; protected set; }
@@ -108,14 +100,6 @@ namespace DataManagement.DAO
             SelectAllSuffix = ConsolidationTools.GetValueFromConfiguration("SelectAllSuffix", ConfigurationTypes.AppSetting);
             StoredProcedurePrefix = ConsolidationTools.GetValueFromConfiguration("StoredProcedurePrefix", ConfigurationTypes.AppSetting);
             TablePrefix = ConsolidationTools.GetValueFromConfiguration("TablePrefix", ConfigurationTypes.AppSetting);
-
-            AutoCreateStoredProcedures = bool.Parse(ConsolidationTools.GetValueFromConfiguration("AutoCreateStoredProcedures", ConfigurationTypes.AppSetting));
-            AutoCreateTables = bool.Parse(ConsolidationTools.GetValueFromConfiguration("AutoCreateTables", ConfigurationTypes.AppSetting));
-            EnableLog = bool.Parse(ConsolidationTools.GetValueFromConfiguration("EnableLog", ConfigurationTypes.AppSetting));
-            ConstantTableConsolidation = bool.Parse(ConsolidationTools.GetValueFromConfiguration("ConstantTableConsolidation", ConfigurationTypes.AppSetting));
-            AutoAlterStoredProcedures = bool.Parse(ConsolidationTools.GetValueFromConfiguration("AutoAlterStoredProcedures", ConfigurationTypes.AppSetting));
-            AutoAlterTables = bool.Parse(ConsolidationTools.GetValueFromConfiguration("AutoAlterTables", ConfigurationTypes.AppSetting));
-            OverrideOnlyInDebug = bool.Parse(ConsolidationTools.GetValueFromConfiguration("OverrideOnlyInDebug", ConfigurationTypes.AppSetting));
         }
 
         internal static IOperable GetOperationBasedOnConnectionType(ConnectionTypes connectionType)
