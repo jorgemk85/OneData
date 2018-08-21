@@ -239,10 +239,10 @@ namespace DataManagement.DAO
             // Aqui se colocan las propiedades del objeto. Una por columna por su puesto.
             foreach (PropertyInfo property in properties)
             {
-                string isNullable = Nullable.GetUnderlyingType(property.PropertyType) == null ? string.Empty : "NOT NULL";
+                string isNullable = Nullable.GetUnderlyingType(property.PropertyType) == null ? "NOT NULL" : string.Empty;
                 if (property.Name.Equals("Id"))
                 {
-                    queryBuilder.AppendFormat("{0} {1} {2} PRIMARY KEY,\n", property.Name, GetSqlDataType(property.PropertyType), isNullable);
+                    queryBuilder.AppendFormat("{0} {1} NOT NULL PRIMARY KEY,\n", property.Name, GetSqlDataType(property.PropertyType));
                 }
                 else
                 {
@@ -271,45 +271,49 @@ namespace DataManagement.DAO
         {
             StringBuilder queryBuilder = new StringBuilder();
             List<string> columnsFound = new List<string>();
-            string sqlDataType = string.Empty;
-            ColumnDefinition columnDefinition;
-            KeyDefinition keyDefinition;
             bool foundDiference = false;
 
             queryBuilder.AppendFormat("ALTER TABLE {0}{1} \n", TablePrefix, obj.DataBaseTableName);
 
             foreach (PropertyInfo property in properties)
             {
-                sqlDataType = GetSqlDataType(property.PropertyType);
-                columnDetails.TryGetValue(property.Name, out columnDefinition);
+                columnDetails.TryGetValue(property.Name, out ColumnDefinition columnDefinition);
+                string sqlDataType = GetSqlDataType(property.PropertyType);
+                bool isNullable = Nullable.GetUnderlyingType(property.PropertyType) == null ? false : true;
+                string nullable = isNullable == true ? string.Empty : "NOT NULL";
+
+                if (property.Name.Equals("Id"))
+                {
+                    columnsFound.Add(property.Name);
+                    continue;
+                }
 
                 if (columnDefinition == null)
                 {
                     // Agregar propiedad a tabla ya que no existe.
-                    queryBuilder.AppendFormat("ADD {0} {1} NOT NULL,\n", property.Name, sqlDataType);
+                    queryBuilder.AppendFormat("ADD {0} {1} {2},\n", property.Name, sqlDataType, nullable);
                     foundDiference = true;
                     continue;
                 }
-                columnDefinition.Column_Type = string.Format("{0}{1}", columnDefinition.Data_Type, columnDefinition.Character_Maximum_Length == null ? string.Empty : string.Format("({0})", columnDefinition.Character_Maximum_Length.GetValueOrDefault().ToString()));
                 if (!sqlDataType.Equals(columnDefinition.Column_Type))
                 {
                     // Si el data type cambio, entonces lo modifica.
-                    queryBuilder.AppendFormat("ALTER COLUMN {0} {1} NOT NULL,\n", property.Name, sqlDataType);
+                    queryBuilder.AppendFormat("ALTER COLUMN {0} {1} {2},\n", property.Name, sqlDataType);
                     foundDiference = true;
                 }
-                if (columnDefinition.Is_Nullable.Equals("YES") && Nullable.GetUnderlyingType(property.PropertyType) != null)
+                if (columnDefinition.Is_Nullable.Equals("YES") && !isNullable)
                 {
                     // Si la propiedad ya no es nullable, entonces la cambia en la base de datos
                     queryBuilder.AppendFormat("ALTER COLUMN {0} {1} NOT NULL,\n", property.Name, sqlDataType);
                     foundDiference = true;
                 }
-                if (columnDefinition.Is_Nullable.Equals("NO") && Nullable.GetUnderlyingType(property.PropertyType) == null)
+                if (columnDefinition.Is_Nullable.Equals("NO") && isNullable)
                 {
                     // Si la propiedad ES nullable, entonces la cambia en la base de datos
                     queryBuilder.AppendFormat("ALTER COLUMN {0} {1},\n", property.Name, sqlDataType);
                     foundDiference = true;
                 }
-                if (keyDetails.TryGetValue(property.Name, out keyDefinition))
+                if (keyDetails.TryGetValue(property.Name, out KeyDefinition keyDefinition))
                 {
                     // Si existe una llave en la base de datos relacionada a esta propiedad entonces...
                     ForeignModel foreignAttribute = property.GetCustomAttribute<ForeignModel>();
@@ -338,14 +342,10 @@ namespace DataManagement.DAO
             {
                 queryBuilder.Clear();
             }
-            else
-            {
-                // Creamos las llaves foraneas que apliquen.
-                // TODO: Verificar las llaves foraneas NUEVAS.
-                //queryBuilder.Append(GetCreateForeignKeysQuery(obj.GetType()));
-            }
 
-            if (string.IsNullOrWhiteSpace(queryBuilder.ToString()))
+            queryBuilder.Append(GetCreateForeignKeysQuery(obj.GetType(), keyDetails));
+
+            if (!string.IsNullOrWhiteSpace(queryBuilder.ToString()))
             {
                 Logger.Info("Created a new query for Alter Table:");
                 Logger.Info(queryBuilder.ToString());
@@ -354,10 +354,10 @@ namespace DataManagement.DAO
             return queryBuilder.ToString();
         }
 
-        public string GetCreateForeignKeysQuery(Type type)
+        public string GetCreateForeignKeysQuery(Type type, Dictionary<string, KeyDefinition> keyDetails = null)
         {
             StringBuilder queryBuilder = new StringBuilder();
-            PropertyInfo[] properties = type.GetProperties().Where(q => q.GetCustomAttribute<UnlinkedProperty>() == null && q.GetCustomAttribute<ForeignModel>() != null).ToArray();
+            PropertyInfo[] properties = type.GetProperties().Where(q => q.GetCustomAttribute<UnlinkedProperty>() == null && q.GetCustomAttribute<ForeignModel>() != null && !keyDetails.ContainsKey(q.Name)).ToArray();
             IManageable obj = (IManageable)Activator.CreateInstance(type);
 
             if (properties.Length == 0) return string.Empty;

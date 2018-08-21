@@ -64,7 +64,7 @@ namespace DataManagement.DAO
             try
             {
                 Logger.Info(string.Format("Starting {0} execution for object {1} using connection {2}", transactionType.ToString(), nameof(obj), connectionToUse));
-                if (ConstantTableConsolidation && (Manager.IsDebug || OverrideOnlyInDebug) && !overrideConsolidation)
+                if (ConstantTableConsolidation && (Manager.IsDebug || OverrideOnlyInDebug) && !overrideConsolidation && !obj.GetType().Equals(typeof(Log)))
                 {
                     PerformTableConsolidation<T>(connectionToUse, false);
                 }
@@ -110,6 +110,18 @@ namespace DataManagement.DAO
                 {
                     Logger.Warn(string.Format("Table {0} not found. Creating...", obj.DataBaseTableName));
                     ProcessTable<T>(connectionToUse, false);
+                    overrideConsolidation = true;
+                    goto Start;
+                }
+                Logger.Error(sqlException);
+                throw;
+            }
+            catch (SqlException sqlException) when (sqlException.Number == ERR_INCORRECT_NUMBER_OF_ARGUMENTS)
+            {
+                if (AutoAlterStoredProcedures)
+                {
+                    Logger.Warn(string.Format("Incorrect number of arguments related to the {0} stored procedure. Modifying...", transactionType.ToString()));
+                    ExecuteScalar(GetTransactionTextForProcedure<T>(transactionType, true), connectionToUse, false);
                     overrideConsolidation = true;
                     goto Start;
                 }

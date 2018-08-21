@@ -38,7 +38,7 @@ namespace DataManagement.Interfaces
 
         string CreateQueryForTableAlteration(IManageable obj, ref PropertyInfo[] properties, Dictionary<string, ColumnDefinition> columnDetails, Dictionary<string, KeyDefinition> keyDetails);
 
-        string GetCreateForeignKeysQuery(Type type);
+        string GetCreateForeignKeysQuery(Type type, Dictionary<string, KeyDefinition> keyDetails = null);
 
         string GetSqlDataType(Type codeType);
     }
