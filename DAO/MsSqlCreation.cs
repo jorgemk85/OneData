@@ -10,7 +10,7 @@ using System.Text;
 
 namespace DataManagement.DAO
 {
-    internal class MsSqlCreation : Creation, ICreatable
+    internal class MsSqlCreation : ICreatable
     {
         public void SetStoredProceduresParameters(ref PropertyInfo[] properties, StringBuilder queryBuilder, bool setDefaultNull)
         {
