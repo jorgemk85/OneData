@@ -17,25 +17,12 @@ namespace DataManagement.DAO
 {
     internal abstract class Operation
     {
-        public string SelectSuffix { get; private set; }
-        public string InsertSuffix { get; private set; }
-        public string UpdateSuffix { get; private set; }
-        public string DeleteSuffix { get; private set; }
-        public string SelectAllSuffix { get; private set; }
-        public string StoredProcedurePrefix { get; private set; }
-        public string TablePrefix { get; private set; }
         public string QueryForTableExistance { get; protected set; }
         public string QueryForColumnDefinition { get; protected set; }
         public string QueryForKeyDefinition { get; protected set; }
         public ICreatable Creator { get; set; }
         public ConnectionTypes ConnectionType { get; set; }
         public DbCommand Command { get; set; }
-
-
-        public Operation()
-        {
-            GetConfigurationSettings();
-        }
 
         protected object ExecuteScalar(string transaction, string connectionToUse, bool returnDataTable)
         {
@@ -88,18 +75,6 @@ namespace DataManagement.DAO
                 Logger.Error(exception);
                 throw;
             }
-        }
-
-        private void GetConfigurationSettings()
-        {
-            Logger.Info("Getting Operation configuration settings.");
-            SelectSuffix = ConsolidationTools.GetValueFromConfiguration("SelectSuffix", ConfigurationTypes.AppSetting);
-            InsertSuffix = ConsolidationTools.GetValueFromConfiguration("InsertSuffix", ConfigurationTypes.AppSetting);
-            UpdateSuffix = ConsolidationTools.GetValueFromConfiguration("UpdateSuffix", ConfigurationTypes.AppSetting);
-            DeleteSuffix = ConsolidationTools.GetValueFromConfiguration("DeleteSuffix", ConfigurationTypes.AppSetting);
-            SelectAllSuffix = ConsolidationTools.GetValueFromConfiguration("SelectAllSuffix", ConfigurationTypes.AppSetting);
-            StoredProcedurePrefix = ConsolidationTools.GetValueFromConfiguration("StoredProcedurePrefix", ConfigurationTypes.AppSetting);
-            TablePrefix = ConsolidationTools.GetValueFromConfiguration("TablePrefix", ConfigurationTypes.AppSetting);
         }
 
         internal static IOperable GetOperationBasedOnConnectionType(ConnectionTypes connectionType)
@@ -156,21 +131,20 @@ namespace DataManagement.DAO
 
         protected string GetFriendlyTransactionSuffix(TransactionTypes transactionType)
         {
-            Logger.Info(string.Format("Getting friendly transaction suffix for transaction type {0}.", transactionType.ToString()));
             switch (transactionType)
             {
                 case TransactionTypes.Select:
-                    return SelectSuffix;
+                    return Manager.SelectSuffix;
                 case TransactionTypes.Delete:
-                    return DeleteSuffix;
+                    return Manager.DeleteSuffix;
                 case TransactionTypes.Insert:
-                    return InsertSuffix;
+                    return Manager.InsertSuffix;
                 case TransactionTypes.Update:
-                    return UpdateSuffix;
+                    return Manager.UpdateSuffix;
                 case TransactionTypes.SelectAll:
-                    return SelectAllSuffix;
+                    return Manager.SelectAllSuffix;
                 default:
-                    return SelectAllSuffix;
+                    return Manager.SelectAllSuffix;
             }
         }
 
@@ -305,7 +279,7 @@ namespace DataManagement.DAO
         private bool CheckIfTableExists(string tableName, string connectionToUse)
         {
             Logger.Info(string.Format("Checking if table {0} exists using connection {1}.", tableName, connectionToUse));
-            string query = string.Format(QueryForTableExistance, TablePrefix, tableName);
+            string query = string.Format(QueryForTableExistance, Manager.TablePrefix, tableName);
 
             if (ExecuteScalar(query, connectionToUse, false) != null)
             {

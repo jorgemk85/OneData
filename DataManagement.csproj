@@ -82,7 +82,6 @@
   <ItemGroup>
     <Compile Include="Attributes\ForeignModel.cs" />
     <Compile Include="Attributes\UnmanagedProperty.cs" />
-    <Compile Include="DAO\Creation.cs" />
     <Compile Include="DAO\MsSqlCreation.cs" />
     <Compile Include="DAO\MySqlCreation.cs" />
     <Compile Include="DAO\Operation.cs" />

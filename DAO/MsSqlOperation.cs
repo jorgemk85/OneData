@@ -20,8 +20,8 @@ namespace DataManagement.DAO
             ConnectionType = ConnectionTypes.MSSQL;
             Creator = new MsSqlCreation();
             QueryForTableExistance = "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE' AND TABLE_NAME = '{0}{1}'";
-            QueryForColumnDefinition = string.Format("SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '{0}'", string.Format("{0}{1}", TablePrefix, "{0}"));
-            QueryForKeyDefinition = string.Format("SELECT * FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE TABLE_NAME = '{0}' AND COLUMN_NAME != 'Id'", string.Format("{0}{1}", TablePrefix, "{0}"));
+            QueryForColumnDefinition = string.Format("SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '{0}'", string.Format("{0}{1}", Manager.TablePrefix, "{0}"));
+            QueryForKeyDefinition = string.Format("SELECT * FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE TABLE_NAME = '{0}' AND COLUMN_NAME != 'Id'", string.Format("{0}{1}", Manager.TablePrefix, "{0}"));
         }
 
         public Result ExecuteProcedure(string tableName, string storedProcedure, string connectionToUse, Parameter[] parameters, bool logTransaction = true)
@@ -64,7 +64,7 @@ namespace DataManagement.DAO
         Start:
             try
             {
-                Logger.Info(string.Format("Starting {0} execution for object {1} using connection {2}", transactionType.ToString(), nameof(obj), connectionToUse));
+                Logger.Info(string.Format("Starting {0} execution for object {1} using connection {2}", transactionType.ToString(), typeof(T), connectionToUse));
                 if (Manager.ConstantTableConsolidation && (Manager.IsDebug || Manager.OverrideOnlyInDebug) && !overrideConsolidation && !obj.GetType().Equals(typeof(Log)))
                 {
                     PerformTableConsolidation<T>(connectionToUse, false);
@@ -74,7 +74,7 @@ namespace DataManagement.DAO
                     if (connection.State != ConnectionState.Open) throw new BadConnectionStateException();
                     Command = connection.CreateCommand();
                     Command.CommandType = CommandType.StoredProcedure;
-                    Command.CommandText = string.Format("{0}.{1}{2}{3}", obj.Schema, StoredProcedurePrefix, tableName, GetFriendlyTransactionSuffix(transactionType));
+                    Command.CommandText = string.Format("{0}.{1}{2}{3}", obj.Schema, Manager.StoredProcedurePrefix, tableName, GetFriendlyTransactionSuffix(transactionType));
 
                     if (transactionType == TransactionTypes.Insert || transactionType == TransactionTypes.Update || transactionType == TransactionTypes.Delete)
                     {
@@ -92,7 +92,7 @@ namespace DataManagement.DAO
                         dataTable.TableName = tableName;
                     }
                 }
-                Logger.Info(string.Format("Execution {0} for object {1} using connection {2} has finished successfully.", transactionType.ToString(), nameof(obj), connectionToUse));
+                Logger.Info(string.Format("Execution {0} for object {1} using connection {2} has finished successfully.", transactionType.ToString(), typeof(T), connectionToUse));
             }
             catch (SqlException sqlException) when (sqlException.Number == ERR_STORED_PROCEDURE_NOT_FOUND)
             {

@@ -38,11 +38,11 @@ namespace DataManagement.DAO
 
             if (doAlter)
             {
-                queryBuilder.AppendFormat("ALTER PROCEDURE {0}.{1}{2}{3}\n", obj.Schema, StoredProcedurePrefix, obj.DataBaseTableName, InsertSuffix);
+                queryBuilder.AppendFormat("ALTER PROCEDURE {0}.{1}{2}{3}\n", obj.Schema, Manager.StoredProcedurePrefix, obj.DataBaseTableName, Manager.InsertSuffix);
             }
             else
             {
-                queryBuilder.AppendFormat("CREATE PROCEDURE {0}.{1}{2}{3}\n", obj.Schema, StoredProcedurePrefix, obj.DataBaseTableName, InsertSuffix);
+                queryBuilder.AppendFormat("CREATE PROCEDURE {0}.{1}{2}{3}\n", obj.Schema, Manager.StoredProcedurePrefix, obj.DataBaseTableName, Manager.InsertSuffix);
             }
 
             // Aqui se colocan los parametros segun las propiedades del objeto
@@ -53,7 +53,7 @@ namespace DataManagement.DAO
             queryBuilder.Append("BEGIN\n");
             queryBuilder.Append("DECLARE @actualTime datetime;\n");
             queryBuilder.Append("SET @actualTime = getdate();\n");
-            queryBuilder.AppendFormat("INSERT INTO {0}.{1}{2} (\n", obj.Schema, TablePrefix, obj.DataBaseTableName);
+            queryBuilder.AppendFormat("INSERT INTO {0}.{1}{2} (\n", obj.Schema, Manager.TablePrefix, obj.DataBaseTableName);
 
             // Seccion para especificar a que columnas se va a insertar.
             foreach (PropertyInfo property in properties)
@@ -88,11 +88,11 @@ namespace DataManagement.DAO
 
             if (doAlter)
             {
-                queryBuilder.AppendFormat("ALTER PROCEDURE {0}.{1}{2}{3}\n", obj.Schema, StoredProcedurePrefix, obj.DataBaseTableName, UpdateSuffix);
+                queryBuilder.AppendFormat("ALTER PROCEDURE {0}.{1}{2}{3}\n", obj.Schema, Manager.StoredProcedurePrefix, obj.DataBaseTableName, Manager.UpdateSuffix);
             }
             else
             {
-                queryBuilder.AppendFormat("CREATE PROCEDURE {0}.{1}{2}{3}\n", obj.Schema, StoredProcedurePrefix, obj.DataBaseTableName, UpdateSuffix);
+                queryBuilder.AppendFormat("CREATE PROCEDURE {0}.{1}{2}{3}\n", obj.Schema, Manager.StoredProcedurePrefix, obj.DataBaseTableName, Manager.UpdateSuffix);
             }
 
 
@@ -104,7 +104,7 @@ namespace DataManagement.DAO
             queryBuilder.Append("BEGIN\n");
             queryBuilder.Append("DECLARE @actualTime datetime;\n");
             queryBuilder.Append("SET @actualTime = getdate();\n");
-            queryBuilder.AppendFormat("UPDATE {0}.{1}{2}\n", obj.Schema, TablePrefix, obj.DataBaseTableName);
+            queryBuilder.AppendFormat("UPDATE {0}.{1}{2}\n", obj.Schema, Manager.TablePrefix, obj.DataBaseTableName);
             queryBuilder.Append("SET\n");
 
             // Se especifica el parametro que va en x columna.
@@ -131,17 +131,17 @@ namespace DataManagement.DAO
 
             if (doAlter)
             {
-                queryBuilder.AppendFormat("ALTER PROCEDURE {0}.{1}{2}{3}\n", obj.Schema, StoredProcedurePrefix, obj.DataBaseTableName, DeleteSuffix);
+                queryBuilder.AppendFormat("ALTER PROCEDURE {0}.{1}{2}{3}\n", obj.Schema, Manager.StoredProcedurePrefix, obj.DataBaseTableName, Manager.DeleteSuffix);
             }
             else
             {
-                queryBuilder.AppendFormat("CREATE PROCEDURE {0}.{1}{2}{3}\n", obj.Schema, StoredProcedurePrefix, obj.DataBaseTableName, DeleteSuffix);
+                queryBuilder.AppendFormat("CREATE PROCEDURE {0}.{1}{2}{3}\n", obj.Schema, Manager.StoredProcedurePrefix, obj.DataBaseTableName, Manager.DeleteSuffix);
             }
 
             queryBuilder.Append("@_Id uniqueidentifier\n");
             queryBuilder.Append("AS\n");
             queryBuilder.Append("BEGIN\n");
-            queryBuilder.AppendFormat("DELETE FROM {0}.{1}{2}\n", obj.Schema, TablePrefix, obj.DataBaseTableName);
+            queryBuilder.AppendFormat("DELETE FROM {0}.{1}{2}\n", obj.Schema, Manager.TablePrefix, obj.DataBaseTableName);
             queryBuilder.AppendFormat("WHERE Id = @_Id;\n");
             queryBuilder.Append("END");
 
@@ -160,16 +160,16 @@ namespace DataManagement.DAO
 
             if (doAlter)
             {
-                queryBuilder.AppendFormat("ALTER PROCEDURE {0}.{1}{2}{3}\n", obj.Schema, StoredProcedurePrefix, obj.DataBaseTableName, SelectAllSuffix);
+                queryBuilder.AppendFormat("ALTER PROCEDURE {0}.{1}{2}{3}\n", obj.Schema, Manager.StoredProcedurePrefix, obj.DataBaseTableName, Manager.SelectAllSuffix);
             }
             else
             {
-                queryBuilder.AppendFormat("CREATE PROCEDURE {0}.{1}{2}{3}\n", obj.Schema, StoredProcedurePrefix, obj.DataBaseTableName, SelectAllSuffix);
+                queryBuilder.AppendFormat("CREATE PROCEDURE {0}.{1}{2}{3}\n", obj.Schema, Manager.StoredProcedurePrefix, obj.DataBaseTableName, Manager.SelectAllSuffix);
             }
 
             queryBuilder.Append("AS\n");
             queryBuilder.Append("BEGIN\n");
-            queryBuilder.AppendFormat("SELECT * FROM {0}.{1}{2}\n", obj.Schema, TablePrefix, obj.DataBaseTableName);
+            queryBuilder.AppendFormat("SELECT * FROM {0}.{1}{2}\n", obj.Schema, Manager.TablePrefix, obj.DataBaseTableName);
             queryBuilder.Append("ORDER BY FechaCreacion DESC\n");
             queryBuilder.Append("END");
 
@@ -188,11 +188,11 @@ namespace DataManagement.DAO
 
             if (doAlter)
             {
-                queryBuilder.AppendFormat("ALTER PROCEDURE {0}.{1}{2}{3}\n", obj.Schema, StoredProcedurePrefix, obj.DataBaseTableName, SelectSuffix);
+                queryBuilder.AppendFormat("ALTER PROCEDURE {0}.{1}{2}{3}\n", obj.Schema, Manager.StoredProcedurePrefix, obj.DataBaseTableName, Manager.SelectSuffix);
             }
             else
             {
-                queryBuilder.AppendFormat("CREATE PROCEDURE {0}.{1}{2}{3}\n", obj.Schema, StoredProcedurePrefix, obj.DataBaseTableName, SelectSuffix);
+                queryBuilder.AppendFormat("CREATE PROCEDURE {0}.{1}{2}{3}\n", obj.Schema, Manager.StoredProcedurePrefix, obj.DataBaseTableName, Manager.SelectSuffix);
             }
 
             // Aqui se colocan los parametros segun las propiedades del objeto
@@ -201,7 +201,7 @@ namespace DataManagement.DAO
             queryBuilder.Remove(queryBuilder.Length - 2, 2);
             queryBuilder.Append("\nAS\n");
             queryBuilder.Append("BEGIN\n");
-            queryBuilder.AppendFormat("SELECT * FROM {0}.{1}{2}\n", obj.Schema, TablePrefix, obj.DataBaseTableName);
+            queryBuilder.AppendFormat("SELECT * FROM {0}.{1}{2}\n", obj.Schema, Manager.TablePrefix, obj.DataBaseTableName);
             queryBuilder.Append("WHERE\n");
 
             // Se especifica el parametro que va en x columna.
@@ -233,7 +233,7 @@ namespace DataManagement.DAO
         {
             StringBuilder queryBuilder = new StringBuilder();
 
-            queryBuilder.AppendFormat("CREATE TABLE {0}.{1}{2}\n", obj.Schema, TablePrefix, obj.DataBaseTableName);
+            queryBuilder.AppendFormat("CREATE TABLE {0}.{1}{2}\n", obj.Schema, Manager.TablePrefix, obj.DataBaseTableName);
 
             queryBuilder.Append("(");
             // Aqui se colocan las propiedades del objeto. Una por columna por su puesto.
@@ -272,7 +272,7 @@ namespace DataManagement.DAO
             StringBuilder queryBuilder = new StringBuilder();
             List<string> columnsFound = new List<string>();
             bool foundDiference = false;
-            string fullyQualifiedTableName = string.Format("{0}.{1}{2}", obj.Schema, TablePrefix, obj.DataBaseTableName);
+            string fullyQualifiedTableName = string.Format("{0}.{1}{2}", obj.Schema, Manager.TablePrefix, obj.DataBaseTableName);
 
             foreach (PropertyInfo property in properties)
             {
@@ -378,14 +378,14 @@ namespace DataManagement.DAO
 
             if (properties.Length == 0) return string.Empty;
 
-            queryBuilder.AppendFormat("ALTER TABLE {0}.{1}{2}\n", obj.Schema, TablePrefix, obj.DataBaseTableName);
+            queryBuilder.AppendFormat("ALTER TABLE {0}.{1}{2}\n", obj.Schema, Manager.TablePrefix, obj.DataBaseTableName);
 
             foreach (PropertyInfo property in properties)
             {
                 ForeignModel foreignAttribute = property.GetCustomAttribute<ForeignModel>();
                 IManageable foreignModel = (IManageable)Activator.CreateInstance(foreignAttribute.Model);
                 queryBuilder.AppendFormat("ADD CONSTRAINT FK_{0}_{1}\n", obj.DataBaseTableName, foreignModel.DataBaseTableName);
-                queryBuilder.AppendFormat("FOREIGN KEY({0}) REFERENCES {1}.{2}{3}(Id) ON DELETE {4} ON UPDATE NO ACTION;\n", property.Name, obj.Schema, TablePrefix, foreignModel.DataBaseTableName, foreignAttribute.Action.ToString().Replace("_", " "));
+                queryBuilder.AppendFormat("FOREIGN KEY({0}) REFERENCES {1}.{2}{3}(Id) ON DELETE {4} ON UPDATE NO ACTION;\n", property.Name, obj.Schema, Manager.TablePrefix, foreignModel.DataBaseTableName, foreignAttribute.Action.ToString().Replace("_", " "));
             }
 
             Logger.Info("Created a new query for Create Foreign Keys:");

@@ -66,7 +66,7 @@ namespace DataManagement.DAO
         Start:
             try
             {
-                Logger.Info(string.Format("Starting {0} execution for object {1} using connection {2}", transactionType.ToString(), nameof(obj), connectionToUse));
+                Logger.Info(string.Format("Starting {0} execution for object {1} using connection {2}", transactionType.ToString(), typeof(T), connectionToUse));
                 if (Manager.ConstantTableConsolidation && (Manager.IsDebug || Manager.OverrideOnlyInDebug) && !overrideConsolidation && !obj.GetType().Equals(typeof(Log)))
                 {
                     PerformTableConsolidation<T>(connectionToUse, false);
@@ -76,7 +76,7 @@ namespace DataManagement.DAO
                     if (connection.State != ConnectionState.Open) throw new BadConnectionStateException();
                     Command = connection.CreateCommand();
                     Command.CommandType = CommandType.StoredProcedure;
-                    Command.CommandText = string.Format("{0}.{1}{2}{3}", obj.Schema, StoredProcedurePrefix, tableName, GetFriendlyTransactionSuffix(transactionType));
+                    Command.CommandText = string.Format("{0}.{1}{2}{3}", obj.Schema, Manager.StoredProcedurePrefix, tableName, GetFriendlyTransactionSuffix(transactionType));
 
                     if (transactionType == TransactionTypes.Insert || transactionType == TransactionTypes.Update || transactionType == TransactionTypes.Delete)
                     {
@@ -94,7 +94,7 @@ namespace DataManagement.DAO
                         dataTable.TableName = tableName;
                     }
                 }
-                Logger.Info(string.Format("Execution {0} for object {1} using connection {2} has finished successfully.", transactionType.ToString(), nameof(obj), connectionToUse));
+                Logger.Info(string.Format("Execution {0} for object {1} using connection {2} has finished successfully.", transactionType.ToString(), typeof(T), connectionToUse));
             }
             catch (MySqlException mySqlException) when (mySqlException.Number == ERR_STORED_PROCEDURE_NOT_FOUND)
             {

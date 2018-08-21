@@ -8,16 +8,6 @@ namespace DataManagement.Interfaces
 {
     internal interface ICreatable
     {
-        string TablePrefix { get; set; }
-        string StoredProcedurePrefix { get; set; }
-        string InsertSuffix { get; set; }
-        string SelectSuffix { get; set; }
-        string SelectAllSuffix { get; set; }
-        string UpdateSuffix { get; set; }
-        string DeleteSuffix { get; set; }
-
-        void SetConfigurationProperties();
-
         void SetStoredProceduresParameters(ref PropertyInfo[] properties, StringBuilder queryBuilder, bool setDefaultNull);
 
         string CreateInsertStoredProcedure<T>(bool doAlter) where T : IManageable, new();
