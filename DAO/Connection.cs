@@ -27,7 +27,7 @@ namespace DataManagement.DAO
             MySqlConnection connection = null;
             try
             {
-                Logger.Info("Attempting to connecto to MySql Server.");
+                Logger.Info("Attempting to connect to MySql Server.");
                 if (PerformMySqlConnectionStringValidation(GetConnectionString(connectionToUse)))
                 {
                     connection = new MySqlConnection(GetConnectionString(connectionToUse));
@@ -69,7 +69,7 @@ namespace DataManagement.DAO
             SqlConnection connection = null;
             try
             {
-                Logger.Info("Attempting to connecto to Sql Server.");
+                Logger.Info("Attempting to connect to Sql Server.");
                 connection = new SqlConnection(GetConnectionString(connectionToUse));
                 connection.Open();
                 Logger.Info("Connected.");
