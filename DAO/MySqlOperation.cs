@@ -32,7 +32,7 @@ namespace DataManagement.DAO
 
             try
             {
-                Logger.Info(string.Format("Starting execution of stored procedure {0} using connection {1}", storedProcedure, connectionToUse));
+                Logger.Info(string.Format("Starting execution of stored procedure {0} using connection {1}.", storedProcedure, connectionToUse));
                 using (MySqlConnection connection = Connection.OpenMySqlConnection(connectionToUse))
                 {
                     if (connection.State != ConnectionState.Open) throw new BadConnectionStateException();
@@ -45,6 +45,7 @@ namespace DataManagement.DAO
                     dataTable.Load(Command.ExecuteReader());
                     dataTable.TableName = tableName;
                 }
+                Logger.Info(string.Format("Execution of stored procedure {0} using connection {1} has finished successfully.", storedProcedure, connectionToUse));
             }
             catch (MySqlException mySqlException)
             {
@@ -93,6 +94,7 @@ namespace DataManagement.DAO
                         dataTable.TableName = tableName;
                     }
                 }
+                Logger.Info(string.Format("Execution {0} for object {1} using connection {2} has finished successfully.", transactionType.ToString(), nameof(obj), connectionToUse));
             }
             catch (MySqlException mySqlException) when (mySqlException.Number == ERR_STORED_PROCEDURE_NOT_FOUND)
             {

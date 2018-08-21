@@ -65,11 +65,14 @@ namespace DataManagement.DAO
                     {
                         DataTable dataTable = new DataTable();
                         dataTable.Load(Command.ExecuteReader());
+                        Logger.Info(string.Format("Execution for transaction using connection {0} has finished successfully.", connectionToUse));
                         return dataTable;
                     }
                     else
                     {
-                        return Command.ExecuteScalar();
+                        object scalar = Command.ExecuteScalar();
+                        Logger.Info(string.Format("Execution for transaction using connection {0} has finished successfully.", connectionToUse));
+                        return scalar;
                     }
                 }
             }

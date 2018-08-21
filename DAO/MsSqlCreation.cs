@@ -342,14 +342,13 @@ namespace DataManagement.DAO
             {
                 queryBuilder.Clear();
             }
-
-            queryBuilder.Append(GetCreateForeignKeysQuery(obj.GetType(), keyDetails));
-
-            if (!string.IsNullOrWhiteSpace(queryBuilder.ToString()))
+            else
             {
                 Logger.Info("Created a new query for Alter Table:");
                 Logger.Info(queryBuilder.ToString());
             }
+
+            queryBuilder.Append(GetCreateForeignKeysQuery(obj.GetType(), keyDetails));
 
             return queryBuilder.ToString();
         }
