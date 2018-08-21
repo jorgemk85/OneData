@@ -2,42 +2,41 @@
 using log4net;
 using System;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 
 namespace DataManagement.Tools
 {
     internal static class Logger
     {
-        private static readonly ILog log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
-        public static void Error(Exception ex)
+        public static void Error(Exception ex, [CallerMemberName] string callerName = "")
         {
             if (Manager.EnableLogInFile)
             {
-                log.Error(ex);
+                LogManager.GetLogger(callerName).Error(ex);
             }
         }
 
-        public static void Warn(string message)
+        public static void Warn(string message, [CallerMemberName] string callerName = "")
         {
             if (Manager.EnableLogInFile)
             {
-                log.Warn(message);
+                LogManager.GetLogger(callerName).Warn(message);
             }
         }
 
-        public static void Info(string message)
+        public static void Info(string message, [CallerMemberName] string callerName = "")
         {
             if (Manager.EnableLogInFile)
             {
-                log.Info(message);
+                LogManager.GetLogger(callerName).Info(message);
             }
         }
 
-        public static void Debug(string message)
+        public static void Debug(string message, [CallerMemberName] string callerName = "")
         {
             if (Manager.EnableLogInFile)
             {
-                log.Debug(message);
+                LogManager.GetLogger(callerName).Debug(message);
             }
         }
     }
