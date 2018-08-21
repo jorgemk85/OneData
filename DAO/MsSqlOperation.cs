@@ -121,6 +121,7 @@ namespace DataManagement.DAO
                 if (AutoAlterStoredProcedures)
                 {
                     Logger.Warn(string.Format("Incorrect number of arguments related to the {0} stored procedure. Modifying...", transactionType.ToString()));
+                    PerformTableConsolidation<T>(connectionToUse, true);
                     ExecuteScalar(GetTransactionTextForProcedure<T>(transactionType, true), connectionToUse, false);
                     overrideConsolidation = true;
                     goto Start;

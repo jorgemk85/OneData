@@ -272,15 +272,14 @@ namespace DataManagement.DAO
             StringBuilder queryBuilder = new StringBuilder();
             List<string> columnsFound = new List<string>();
             bool foundDiference = false;
-
-            queryBuilder.AppendFormat("ALTER TABLE {0}{1} \n", TablePrefix, obj.DataBaseTableName);
+            string fullyQualifiedTableName = string.Format("{0}.{1}{2}", obj.Schema, TablePrefix, obj.DataBaseTableName);
 
             foreach (PropertyInfo property in properties)
             {
                 columnDetails.TryGetValue(property.Name, out ColumnDefinition columnDefinition);
                 string sqlDataType = GetSqlDataType(property.PropertyType);
                 bool isNullable = Nullable.GetUnderlyingType(property.PropertyType) == null ? false : true;
-                string nullable = isNullable == true ? string.Empty : "NOT NULL";
+                string nullWithDefault = isNullable == true ? string.Empty : string.Format("NOT NULL DEFAULT {0}", GetDefault(property.PropertyType));
 
                 if (property.Name.Equals("Id"))
                 {
@@ -291,26 +290,31 @@ namespace DataManagement.DAO
                 if (columnDefinition == null)
                 {
                     // Agregar propiedad a tabla ya que no existe.
-                    queryBuilder.AppendFormat("ADD {0} {1} {2},\n", property.Name, sqlDataType, nullable);
+                    queryBuilder.AppendFormat("ALTER TABLE {0} \n", fullyQualifiedTableName);
+                    queryBuilder.AppendFormat("ADD {0} {1} {2};\n", property.Name, sqlDataType, nullWithDefault);
                     foundDiference = true;
                     continue;
                 }
+                columnDefinition.Column_Type = columnDefinition.Character_Maximum_Length != null ? string.Format("{0}({1})", columnDefinition.Data_Type, columnDefinition.Character_Maximum_Length) : columnDefinition.Data_Type;
                 if (!sqlDataType.Equals(columnDefinition.Column_Type))
                 {
                     // Si el data type cambio, entonces lo modifica.
-                    queryBuilder.AppendFormat("ALTER COLUMN {0} {1} {2},\n", property.Name, sqlDataType);
+                    queryBuilder.AppendFormat("ALTER TABLE {0} \n", fullyQualifiedTableName);
+                    queryBuilder.AppendFormat("ALTER COLUMN {0} {1} {2};\n", property.Name, sqlDataType);
                     foundDiference = true;
                 }
                 if (columnDefinition.Is_Nullable.Equals("YES") && !isNullable)
                 {
                     // Si la propiedad ya no es nullable, entonces la cambia en la base de datos
-                    queryBuilder.AppendFormat("ALTER COLUMN {0} {1} NOT NULL,\n", property.Name, sqlDataType);
+                    queryBuilder.AppendFormat("ALTER TABLE {0} \n", fullyQualifiedTableName);
+                    queryBuilder.AppendFormat("ALTER COLUMN {0} {1} NOT NULL;\n", property.Name, sqlDataType);
                     foundDiference = true;
                 }
                 if (columnDefinition.Is_Nullable.Equals("NO") && isNullable)
                 {
                     // Si la propiedad ES nullable, entonces la cambia en la base de datos
-                    queryBuilder.AppendFormat("ALTER COLUMN {0} {1},\n", property.Name, sqlDataType);
+                    queryBuilder.AppendFormat("ALTER TABLE {0} \n", fullyQualifiedTableName);
+                    queryBuilder.AppendFormat("ALTER COLUMN {0} {1};\n", property.Name, sqlDataType);
                     foundDiference = true;
                 }
                 if (keyDetails.TryGetValue(property.Name, out KeyDefinition keyDefinition))
@@ -320,7 +324,8 @@ namespace DataManagement.DAO
                     if (foreignAttribute == null)
                     {
                         // En el caso de que no tenga ya el atributo, significa que dejo de ser una propiedad relacionada con algun modelo foraneo y por ende, debemos de eliminar la llave foranea
-                        queryBuilder.AppendFormat("DROP FOREIGN KEY {0},\n", keyDefinition.Constraint_Name);
+                        queryBuilder.AppendFormat("ALTER TABLE {0} \n", fullyQualifiedTableName);
+                        queryBuilder.AppendFormat("DROP FOREIGN KEY {0};\n", keyDefinition.Constraint_Name);
                         foundDiference = true;
                     }
                 }
@@ -330,13 +335,11 @@ namespace DataManagement.DAO
             // Extraemos las columnas en la tabla que ya no estan en las propiedades del modelo para quitarlas.
             foreach (KeyValuePair<string, ColumnDefinition> detail in columnDetails.Where(q => !columnsFound.Contains(q.Key)))
             {
-                queryBuilder.AppendFormat("DROP COLUMN {0},\n", detail.Value.Column_Name);
+                queryBuilder.AppendFormat("ALTER TABLE {0} \n", fullyQualifiedTableName);
+                queryBuilder.AppendFormat("DROP COLUMN {0};\n", detail.Value.Column_Name);
                 foundDiference = true;
                 continue;
             }
-
-            queryBuilder.Remove(queryBuilder.Length - 2, 2);
-            queryBuilder.Append(";");
 
             if (!foundDiference)
             {
@@ -351,6 +354,20 @@ namespace DataManagement.DAO
             queryBuilder.Append(GetCreateForeignKeysQuery(obj.GetType(), keyDetails));
 
             return queryBuilder.ToString();
+        }
+
+        public object GetDefault(Type type)
+        {
+            if (type.IsValueType)
+            {
+                object value = Activator.CreateInstance(type);
+                if (string.IsNullOrWhiteSpace(value.ToString()))
+                {
+                    value = "''";
+                }
+                return value;
+            }
+            return null;
         }
 
         public string GetCreateForeignKeysQuery(Type type, Dictionary<string, KeyDefinition> keyDetails = null)
