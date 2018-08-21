@@ -1,7 +1,7 @@
 ﻿namespace DataManagement.Events
 {
     /// <summary>
-    /// Provocado despues de ejecutar un comando de tipo UPDATE en la base de datos.
+    /// Provocado despues de ejecutar un comando de tipo INSERT en la base de datos.
     /// </summary>
     public delegate void InsertExecutedEventHandler(InsertExecutedEventArgs e);
 

@@ -456,5 +456,10 @@ namespace DataManagement.DAO
                     return "varbinary(1024)";
             }
         }
+
+        public string CreateInsertListStoredProcedure<T>(bool doAlter) where T : IManageable, new()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

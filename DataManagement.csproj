@@ -91,6 +91,7 @@
     <Compile Include="Events\DeleteExecuted.cs" />
     <Compile Include="Events\ExecutedEventArgs.cs" />
     <Compile Include="Events\InsertExecuted.cs" />
+    <Compile Include="Events\InsertListExecuted.cs" />
     <Compile Include="Events\SelectAllExecuted.cs" />
     <Compile Include="Events\SelectExecuted.cs" />
     <Compile Include="Events\StoredProcedureExecuted.cs" />

@@ -103,6 +103,8 @@ namespace DataManagement.DAO
                     return Creator.CreateDeleteStoredProcedure<T>(doAlter);
                 case TransactionTypes.Insert:
                     return Creator.CreateInsertStoredProcedure<T>(doAlter);
+                case TransactionTypes.InsertList:
+                    return Creator.CreateInsertListStoredProcedure<T>(doAlter);
                 case TransactionTypes.Update:
                     return Creator.CreateUpdateStoredProcedure<T>(doAlter);
                 default:
@@ -139,6 +141,8 @@ namespace DataManagement.DAO
                     return Manager.DeleteSuffix;
                 case TransactionTypes.Insert:
                     return Manager.InsertSuffix;
+                case TransactionTypes.InsertList:
+                    return Manager.InsertListSuffix;
                 case TransactionTypes.Update:
                     return Manager.UpdateSuffix;
                 case TransactionTypes.SelectAll:
@@ -167,7 +171,31 @@ namespace DataManagement.DAO
             }
         }
 
-        protected void SetParameters<T>(T obj, TransactionTypes transactionType)
+        protected void SetParameters<T>(T obj, TransactionTypes transactionType) where T : IManageable
+        {
+            Logger.Info(string.Format("Setting parameters in command based on type {0} for transaction type {1}.", typeof(T), transactionType.ToString()));
+            foreach (PropertyInfo propertyInfo in typeof(T).GetProperties())
+            {
+                // Si encontramos el atributo unlinkedProperty o InternalProperty entonces se brinca la propiedad.
+                if (propertyInfo.GetCustomAttribute<UnlinkedProperty>() != null) continue;
+                if (propertyInfo.GetCustomAttribute<UnmanagedProperty>() != null) continue;
+
+                if (transactionType == TransactionTypes.Delete)
+                {
+                    if (propertyInfo.Name == "Id")
+                    {
+                        Command.Parameters.Add(CreateDbParameter("_id", propertyInfo.GetValue(obj)));
+                        break;
+                    }
+                }
+                else
+                {
+                    Command.Parameters.Add(CreateDbParameter("_" + propertyInfo.Name, propertyInfo.GetValue(obj)));
+                }
+            }
+        }
+
+        protected void SetParameters<T>(List<T> obj, TransactionTypes transactionType) where T : IManageable
         {
             Logger.Info(string.Format("Setting parameters in command based on type {0} for transaction type {1}.", typeof(T), transactionType.ToString()));
             foreach (PropertyInfo propertyInfo in typeof(T).GetProperties())

@@ -418,5 +418,10 @@ namespace DataManagement.DAO
                     return "blob";
             }
         }
+
+        public string CreateInsertListStoredProcedure<T>(bool doAlter) where T : IManageable, new()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

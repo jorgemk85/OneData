@@ -29,9 +29,8 @@ namespace DataManagement.DAO
         public Result Evaluate<T>(T obj, TransactionTypes transactionType, Result cache, bool isPartialCache, bool forceQueryDataBase, string connectionToUse) where T : IManageable, new()
         {
             string tableName = obj.DataBaseTableName;
-            Result resultado = new Result();
+            Result resultado = null;
             bool isCached = cache == null ? false : true;
-            bool requiresResult = false;
 
             switch (transactionType)
             {
@@ -42,13 +41,16 @@ namespace DataManagement.DAO
                     EvaluateSelectAll(obj, out resultado, isCached, tableName, cache, forceQueryDataBase, connectionToUse);
                     break;
                 case TransactionTypes.Delete:
-                    requiresResult = true;
+                    resultado = operation.ExecuteProcedure(obj, tableName, connectionToUse, transactionType);
+                    if (isCached && resultado.IsSuccessful) DeleteInCache(obj, cache);
                     break;
                 case TransactionTypes.Insert:
-                    requiresResult = true;
+                    resultado = operation.ExecuteProcedure(obj, tableName, connectionToUse, transactionType);
+                    if (isCached && resultado.IsSuccessful) InsertInCache(obj, cache);
                     break;
                 case TransactionTypes.Update:
-                    requiresResult = true;
+                    resultado = operation.ExecuteProcedure(obj, tableName, connectionToUse, transactionType);
+                    if (isCached && resultado.IsSuccessful) UpdateInCache(obj, cache);
                     break;
                 case TransactionTypes.StoredProcedure:
                     resultado = operation.ExecuteProcedure(obj, tableName, connectionToUse, transactionType);
@@ -57,13 +59,23 @@ namespace DataManagement.DAO
                     break;
             }
 
-            if (requiresResult)
+            return resultado;
+        }
+
+        public Result Evaluate<T>(List<T> list, TransactionTypes transactionType, Result cache, bool isPartialCache, bool forceQueryDataBase, string connectionToUse) where T : IManageable, new()
+        {
+            string tableName = new T().DataBaseTableName;
+            Result resultado = null;
+            bool isCached = cache == null ? false : true;
+
+            switch (transactionType)
             {
-                resultado = operation.ExecuteProcedure(obj, tableName, connectionToUse, transactionType);
-                if (transactionType != TransactionTypes.StoredProcedure)
-                {
-                    if (isCached && resultado.Data.Rows.Count > 0) DeleteInCache(obj, cache);
-                }
+                case TransactionTypes.InsertList:
+                    resultado = operation.ExecuteProcedure(list, tableName, connectionToUse, transactionType);
+                    if (isCached && resultado.IsSuccessful) InsertListInCache(list, cache);
+                    break;
+                default:
+                    break;
             }
 
             return resultado;
@@ -128,7 +140,7 @@ namespace DataManagement.DAO
             else
             {
                 predicate = predicate.Substring(0, predicate.Length - 5);
-                return new Result(DataSerializer.ConvertListToDataTableOfType(DataSerializer.ConvertDataTableToListOfType<T>(cache.Data).Where(predicate, values.ToArray()).ToList()));
+                return new Result(DataSerializer.ConvertListToDataTableOfType(DataSerializer.ConvertDataTableToListOfType<T>(cache.Data).Where(predicate, values.ToArray()).ToList()), true, true);
             }
         }
 
@@ -171,6 +183,15 @@ namespace DataManagement.DAO
         private void InsertInCache<T>(T obj, Result cache) where T : IManageable
         {
             cache.Data.Rows.Add(SetRowData(cache.Data.NewRow(), obj));
+            cache.Data.AcceptChanges();
+        }
+
+        private void InsertListInCache<T>(List<T> list, Result cache) where T : IManageable
+        {
+            foreach (T obj in list)
+            {
+                cache.Data.Rows.Add(SetRowData(cache.Data.NewRow(), obj));
+            }
             cache.Data.AcceptChanges();
         }
 

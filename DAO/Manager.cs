@@ -4,6 +4,7 @@ using DataManagement.Interfaces;
 using DataManagement.Models;
 using DataManagement.Tools;
 using System;
+using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
 using System.Threading.Tasks;
@@ -29,6 +30,7 @@ namespace DataManagement.DAO
         public static bool OverrideOnlyInDebug { get; private set; }
         public static string SelectSuffix { get; private set; }
         public static string InsertSuffix { get; private set; }
+        public static string InsertListSuffix { get; private set; }
         public static string UpdateSuffix { get; private set; }
         public static string DeleteSuffix { get; private set; }
         public static string SelectAllSuffix { get; private set; }
@@ -63,6 +65,7 @@ namespace DataManagement.DAO
             Logger.Info("Getting Manager configuration for prefixes and suffixes.");
             SelectSuffix = ConsolidationTools.GetValueFromConfiguration("SelectSuffix", ConfigurationTypes.AppSetting);
             InsertSuffix = ConsolidationTools.GetValueFromConfiguration("InsertSuffix", ConfigurationTypes.AppSetting);
+            InsertListSuffix = ConsolidationTools.GetValueFromConfiguration("InsertListSuffix", ConfigurationTypes.AppSetting);
             UpdateSuffix = ConsolidationTools.GetValueFromConfiguration("UpdateSuffix", ConfigurationTypes.AppSetting);
             DeleteSuffix = ConsolidationTools.GetValueFromConfiguration("DeleteSuffix", ConfigurationTypes.AppSetting);
             SelectAllSuffix = ConsolidationTools.GetValueFromConfiguration("SelectAllSuffix", ConfigurationTypes.AppSetting);
@@ -131,6 +134,7 @@ namespace DataManagement.DAO
         public static event SelectAllExecutedEventHandler OnSelectAllExecuted;
         public static event DeleteExecutedEventHandler OnDeleteExecuted;
         public static event InsertExecutedEventHandler OnInsertExecuted;
+        public static event InsertListExecutedEventHandler OnInsertListExecuted;
         public static event UpdateExecutedEventHandler OnUpdateExecuted;
         public static event StoredProcedureExecutedEventHandler OnStoredProcedureExecuted;
         #endregion
@@ -149,6 +153,17 @@ namespace DataManagement.DAO
         public static Result Insert(T obj, string connectionToUse = null)
         {
             return Command(obj, TransactionTypes.Insert, connectionToUse);
+        }
+
+        /// <summary>
+        /// Inserta una lista de tipo <typeparamref name="T"/> en la base de datos.
+        /// </summary>
+        /// <param name="list">Objeto que contiene la informacion a insertar.</param>
+        /// <param name="connectionToUse">Especifica cual configuracion de tipo ConectionString se desea utilizar. Si se especifica nulo, o no se especifica, entonces utiliza la conexion especificada en DefaultConnection.</param>
+        /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la insercion.</returns>
+        public static Result InsertList(List<T> list, string connectionToUse = null)
+        {
+            return Command(list, TransactionTypes.InsertList, connectionToUse);
         }
 
         /// <summary>
@@ -262,9 +277,29 @@ namespace DataManagement.DAO
             else
             {
                 // Al mandar TRUE en forceQueryDataBase aseguramos que no se use el cache y al no almacenar el resultado con la funcion SaveCache, anulamos completamente el uso cache.
-                result = queryEvaluation.Evaluate<T>(obj, transactionType, dataCache.Cache, dataCache.IsPartialCache, true, connectionToUse);
+                result = queryEvaluation.Evaluate(obj, transactionType, dataCache.Cache, dataCache.IsPartialCache, true, connectionToUse);
             }
             CallOnExecutedEventHandlers(obj.DataBaseTableName, transactionType, result);
+            return result;
+        }
+
+        private static Result Command(List<T> obj, TransactionTypes transactionType, string connectionToUse = null)
+        {
+            if (connectionToUse == null) connectionToUse = Manager.DefaultConnection;
+            QueryEvaluation queryEvaluation = new QueryEvaluation();
+            Result result;
+            if (dataCache.IsCacheEnabled)
+            {
+                ResetCacheIfExpired();
+                result = queryEvaluation.Evaluate(obj, transactionType, dataCache.Cache, dataCache.IsPartialCache, forceQueryDataBase, connectionToUse);
+                SaveCache(transactionType, result);
+            }
+            else
+            {
+                // Al mandar TRUE en forceQueryDataBase aseguramos que no se use el cache y al no almacenar el resultado con la funcion SaveCache, anulamos completamente el uso cache.
+                result = queryEvaluation.Evaluate(obj, transactionType, dataCache.Cache, dataCache.IsPartialCache, true, connectionToUse);
+            }
+            CallOnExecutedEventHandlers(new T().DataBaseTableName, transactionType, result);
             return result;
         }
 
@@ -302,7 +337,7 @@ namespace DataManagement.DAO
 
                     dataCache.IsPartialCache = true;
                 }
-                else if (transactionType == TransactionTypes.Insert)
+                else if (transactionType == TransactionTypes.Insert || transactionType == TransactionTypes.InsertList)
                 {
                     forceQueryDataBase = true;
                 }
@@ -333,6 +368,9 @@ namespace DataManagement.DAO
                     break;
                 case TransactionTypes.Insert:
                     OnInsertExecuted?.Invoke(new InsertExecutedEventArgs(tableName, result));
+                    break;
+                case TransactionTypes.InsertList:
+                    OnInsertListExecuted?.Invoke(new InsertListExecutedEventArgs(tableName, result));
                     break;
                 case TransactionTypes.Update:
                     OnUpdateExecuted?.Invoke(new UpdateExecutedEventArgs(tableName, result));
