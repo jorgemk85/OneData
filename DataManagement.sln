@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.27703.2047
+VisualStudioVersion = 15.0.28010.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataManagement", "DataManagement.csproj", "{F3130B03-D383-4110-ACA2-1BDF2E7578F2}"
 EndProject
@@ -20,6 +20,6 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {23AE876C-283F-4301-A97D-170A57A2A3B9}
+		SolutionGuid = {7C69157F-6354-4DB0-91A0-BFEAEDEC5A02}
 	EndGlobalSection
 EndGlobal
