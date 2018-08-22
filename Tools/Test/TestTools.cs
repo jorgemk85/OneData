@@ -1,4 +1,6 @@
-﻿using DataManagement.Models;
+﻿using DataManagement.DAO;
+using DataManagement.Enums;
+using DataManagement.Models;
 using DataManagement.Models.Test;
 using System;
 using System.Collections.Generic;
@@ -23,7 +25,46 @@ namespace DataManagement.Tools.Test
         internal static DataTable DataTableTestModel { get; } = ConvertObjectOfTypeToDataTable(CreateNewTestModel());
         internal static List<TestModel> ListTestModel { get; } = ConvertDataTableToListOfType<TestModel>(DataTableTestModel);
         internal static TestModel TestModel { get; } = CreateNewTestModel();
-        internal static Log LogModel { get; } = CreateNewLogModel();
+
+        private static Log CurrentLogModel { get; set; }
+
+        internal static void SetConfigurationForAutoCreate(bool enable)
+        {
+            Manager.AutoCreateTables = enable;
+            Manager.AutoCreateStoredProcedures = enable;
+        }
+
+        internal static void SetConfigurationForAutoAlter(bool enable)
+        {
+            Manager.AutoAlterTables = enable;
+            Manager.AutoAlterStoredProcedures = enable;
+        }
+
+        internal static void SetConfigurationForLogs(bool enable)
+        {
+            Manager.EnableLogInDatabase = enable;
+            Manager.EnableLogInFile = enable;
+        }
+
+        internal static void SetDefaultConfiguration(ConnectionTypes connectionType)
+        {
+            Manager.ConnectionType = connectionType;
+            Manager.DefaultSchema = "operaciones";
+            Manager.DefaultConnection = "Test";
+            Manager.SelectSuffix = "_Select";
+            Manager.InsertSuffix = "_Insert";
+            Manager.InsertListSuffix = "_InsertList";
+            Manager.UpdateSuffix = "_Update";
+            Manager.DeleteSuffix = "_Delete";
+            Manager.SelectAllSuffix = "_SelectAll";
+            Manager.StoredProcedurePrefix = "SP_";
+            Manager.TablePrefix = "TB_";
+        }
+
+        internal static void SetConfigurationForConstantConsolidation(bool enable)
+        {
+            Manager.ConstantTableConsolidation = enable;
+        }
 
         private static TestModel CreateNewTestModel()
         {
@@ -38,17 +79,21 @@ namespace DataManagement.Tools.Test
             return newTestModel;
         }
 
-        private static Log CreateNewLogModel()
+        internal static Log GetLogModel(bool giveNew)
         {
-            Log newLog = new Log()
+            if (giveNew || CurrentLogModel == null)
             {
-                Ip = "192.168.0.1",
-                Parametros = "Sin parametros",
-                TablaAfectada = "logs",
-                Transaccion = "Sin transacciones"
-            };
+                Log newLog = new Log()
+                {
+                    Ip = "192.168.0.1",
+                    Parametros = "Sin parametros",
+                    TablaAfectada = "logs",
+                    Transaccion = "Sin transacciones"
+                };
+                CurrentLogModel = newLog;
+            }
 
-            return newLog;
+            return CurrentLogModel;
         }
 
         private static DataTable ConvertObjectOfTypeToDataTable<T>(T obj)
