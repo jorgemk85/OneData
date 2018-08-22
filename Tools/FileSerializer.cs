@@ -11,7 +11,7 @@ namespace DataManagement.Tools
     public class FileSerializer
     {
         /// <summary>
-        /// Serializa un archivo plano delimitado por un caracter en un objeto del tipo <typeparamref name="T"/>.
+        /// Deserializa un archivo plano delimitado por un caracter en un objeto del tipo <typeparamref name="T"/>.
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="fullyQualifiedFileName">Nombre completo del archivo a serializar incluyendo direccion en disco.</param>
@@ -24,7 +24,7 @@ namespace DataManagement.Tools
         }
 
         /// <summary>
-        /// Serializa un archivo plano delimitado por un caracter en un objeto del tipo <typeparamref name="T"/> usando Async.
+        /// Deserializa un archivo plano delimitado por un caracter en un objeto del tipo <typeparamref name="T"/> usando Async.
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="fullyQualifiedFileName">Nombre completo del archivo a serializar incluyendo direccion en disco.</param>
@@ -36,11 +36,23 @@ namespace DataManagement.Tools
             return await Task.Run(() => DeserializeFile<T>(fullyQualifiedFileName, separator, fileEncoding));
         }
 
+        /// <summary>
+        /// Serializa un objeto de tipo List<typeparamref name="T"/> y lo guarda en un archivo de texto.
+        /// </summary>
+        /// <typeparam name="T">Tipo de objeto.</typeparam>
+        /// <param name="list">Lista de objetos de tipo <typeparamref name="T"/> que se convertira.</param>
+        /// <param name="fullyQualifiedFileName">Directorio completo, incluyendo nombre de archivo y extension. Se utiliza para guardar el producto final.</param>
         public static void SerializeListOfTypeToFile<T>(List<T> list, string fullyQualifiedFileName, char separator)
         {
             SerializeList(list, fullyQualifiedFileName, separator);
         }
 
+        /// <summary>
+        /// Serializa un objeto de tipo List<typeparamref name="T"/> y lo guarda en un archivo de texto utilizando Async.
+        /// </summary>
+        /// <typeparam name="T">Tipo de objeto.</typeparam>
+        /// <param name="list">Lista de objetos de tipo <typeparamref name="T"/> que se convertira.</param>
+        /// <param name="fullyQualifiedFileName">Directorio completo, incluyendo nombre de archivo y extension. Se utiliza para guardar el producto final.</param>
         public static async void SerializeListOfTypeToFileAsync<T>(List<T> list, string fullyQualifiedFileName, char separator)
         {
             await Task.Run(() => SerializeList(list, fullyQualifiedFileName, separator));

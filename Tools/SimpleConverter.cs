@@ -3,6 +3,7 @@ using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
+using System.Globalization;
 
 namespace DataManagement.Tools
 {
@@ -47,9 +48,13 @@ namespace DataManagement.Tools
                     case "DateTime":
                         try
                         {
+                            if (value.EndsWith("AM") || value.EndsWith("PM"))
+                            {
+                                return DateTime.ParseExact(value, "dd/MM/yyyy hh:mm:ss tt", CultureInfo.InvariantCulture);
+                            }
                             return DateTime.Parse(value);
                         }
-                        catch (Exception)
+                        catch (Exception e)
                         {
                             return DateTime.FromOADate(double.Parse(value));
                         }

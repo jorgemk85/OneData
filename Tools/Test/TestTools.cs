@@ -8,6 +8,13 @@ namespace DataManagement.Tools.Test
 {
     internal class TestTools
     {
+        internal static Random Random { get; set; } = new Random();
+        internal static string TestDirectory { get; set; } = "C:\\tests\\";
+        internal static string ExcelFileName { get; set; } = "test.xlsx";
+        internal static string TextFileName { get; set; } = "test.txt";
+        internal static string RandomDirectory { get; set; } = string.Format("C:\\{0}\\", Random.Next() * 100);
+        internal static string ExcelRandomFileName { get; set; } = string.Format("{0}.xlsx", Random.Next() * 100);
+        internal static string TextRandomFileName { get; set; } = string.Format("{0}.txt", Random.Next() * 100);
         internal static string XmlCollectionTestModel { get; } = "<?xml version=\"1.0\" encoding=\"utf-16\"?>\r\n<ArrayOfTestModel xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\">\r\n  <TestModel>\r\n    <Ip>192.168.0.1</Ip>\r\n    <Transaccion>Sin transacciones</Transaccion>\r\n    <TablaAfectada>logs</TablaAfectada>\r\n    <Parametros>Sin parametros</Parametros>\r\n  </TestModel>\r\n</ArrayOfTestModel>";
         internal static string XmlTestModel { get; } = "<?xml version=\"1.0\" encoding=\"utf-16\"?>\r\n<TestModel xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\">\r\n  <Ip>192.168.0.1</Ip>\r\n  <Transaccion>Sin transacciones</Transaccion>\r\n  <TablaAfectada>logs</TablaAfectada>\r\n  <Parametros>Sin parametros</Parametros>\r\n</TestModel>";
         internal static string JsonListTestModel { get; } = "[{\"Ip\":\"192.168.0.1\",\"Transaccion\":\"Sin transacciones\",\"TablaAfectada\":\"logs\",\"Parametros\":\"Sin parametros\"}]";

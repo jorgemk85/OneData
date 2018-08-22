@@ -147,7 +147,10 @@
     <Compile Include="Tools\Test\TestTools.cs" />
     <Compile Include="UnitTests\ConsolidationToolsTests.cs" />
     <Compile Include="UnitTests\DataSerializerTests.cs" />
+    <Compile Include="UnitTests\ExcelSerializerTests.cs" />
+    <Compile Include="UnitTests\FileSerializerTests.cs" />
     <Compile Include="UnitTests\ManagerTests.cs" />
+    <Compile Include="UnitTests\SimpleConverterTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
