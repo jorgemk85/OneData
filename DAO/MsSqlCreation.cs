@@ -99,7 +99,7 @@ namespace DataManagement.DAO
             // Aqui se colocan los parametros segun las propiedades del objeto
             SetStoredProceduresParameters(ref properties, queryBuilder, false);
 
-            queryBuilder.Remove(queryBuilder.Length - 1, 1);
+            queryBuilder.Remove(queryBuilder.Length - 2, 2);
             queryBuilder.Append("\nAS\n");
             queryBuilder.Append("BEGIN\n");
             queryBuilder.Append("DECLARE @actualTime datetime;\n");

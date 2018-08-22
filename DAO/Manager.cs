@@ -16,26 +16,26 @@ namespace DataManagement.DAO
     /// </summary>
     public static class Manager
     {
-        public static string DefaultSchema { get; private set; }
-        public static string DefaultConnection { get; private set; }
-        public static ConnectionTypes ConnectionType { get; set; }
-        public static bool IsDebug { get; private set; }
-        public static bool AutoCreateStoredProcedures { get; private set; }
-        public static bool AutoCreateTables { get; private set; }
-        public static bool AutoAlterStoredProcedures { get; private set; }
-        public static bool AutoAlterTables { get; private set; }
-        public static bool EnableLogInDatabase { get; private set; }
-        public static bool EnableLogInFile { get; private set; }
-        public static bool ConstantTableConsolidation { get; private set; }
-        public static bool OverrideOnlyInDebug { get; private set; }
-        public static string SelectSuffix { get; private set; }
-        public static string InsertSuffix { get; private set; }
-        public static string InsertListSuffix { get; private set; }
-        public static string UpdateSuffix { get; private set; }
-        public static string DeleteSuffix { get; private set; }
-        public static string SelectAllSuffix { get; private set; }
-        public static string StoredProcedurePrefix { get; private set; }
-        public static string TablePrefix { get; private set; }
+        internal static string DefaultSchema { get; set; }
+        internal static string DefaultConnection { get; set; }
+        internal static ConnectionTypes ConnectionType { get; set; }
+        internal static bool IsDebug { get; set; }
+        internal static bool AutoCreateStoredProcedures { get; set; }
+        internal static bool AutoCreateTables { get; set; }
+        internal static bool AutoAlterStoredProcedures { get; set; }
+        internal static bool AutoAlterTables { get; set; }
+        internal static bool EnableLogInDatabase { get; set; }
+        internal static bool EnableLogInFile { get; set; }
+        internal static bool ConstantTableConsolidation { get; set; }
+        internal static bool OverrideOnlyInDebug { get; set; }
+        internal static string SelectSuffix { get; set; }
+        internal static string InsertSuffix { get; set; }
+        internal static string InsertListSuffix { get; set; }
+        internal static string UpdateSuffix { get; set; }
+        internal static string DeleteSuffix { get; set; }
+        internal static string SelectAllSuffix { get; set; }
+        internal static string StoredProcedurePrefix { get; set; }
+        internal static string TablePrefix { get; set; }
 
         static Manager()
         {

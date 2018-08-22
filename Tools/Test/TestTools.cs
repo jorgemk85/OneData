@@ -1,4 +1,5 @@
-﻿using DataManagement.Models.Test;
+﻿using DataManagement.Models;
+using DataManagement.Models.Test;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -8,13 +9,13 @@ namespace DataManagement.Tools.Test
 {
     internal class TestTools
     {
-        internal static Random Random { get; set; } = new Random();
-        internal static string TestDirectory { get; set; } = "C:\\tests\\";
-        internal static string ExcelFileName { get; set; } = "test.xlsx";
-        internal static string TextFileName { get; set; } = "test.txt";
-        internal static string RandomDirectory { get; set; } = string.Format("C:\\{0}\\", Random.Next() * 100);
-        internal static string ExcelRandomFileName { get; set; } = string.Format("{0}.xlsx", Random.Next() * 100);
-        internal static string TextRandomFileName { get; set; } = string.Format("{0}.txt", Random.Next() * 100);
+        internal static Random Random { get; } = new Random();
+        internal static string TestDirectory { get; } = "C:\\tests\\";
+        internal static string ExcelFileName { get; } = "test.xlsx";
+        internal static string TextFileName { get; } = "test.txt";
+        internal static string RandomDirectory { get; } = string.Format("C:\\{0}\\", Random.Next() * 100);
+        internal static string ExcelRandomFileName { get; } = string.Format("{0}.xlsx", Random.Next() * 100);
+        internal static string TextRandomFileName { get; } = string.Format("{0}.txt", Random.Next() * 100);
         internal static string XmlCollectionTestModel { get; } = "<?xml version=\"1.0\" encoding=\"utf-16\"?>\r\n<ArrayOfTestModel xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\">\r\n  <TestModel>\r\n    <Ip>192.168.0.1</Ip>\r\n    <Transaccion>Sin transacciones</Transaccion>\r\n    <TablaAfectada>logs</TablaAfectada>\r\n    <Parametros>Sin parametros</Parametros>\r\n  </TestModel>\r\n</ArrayOfTestModel>";
         internal static string XmlTestModel { get; } = "<?xml version=\"1.0\" encoding=\"utf-16\"?>\r\n<TestModel xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\">\r\n  <Ip>192.168.0.1</Ip>\r\n  <Transaccion>Sin transacciones</Transaccion>\r\n  <TablaAfectada>logs</TablaAfectada>\r\n  <Parametros>Sin parametros</Parametros>\r\n</TestModel>";
         internal static string JsonListTestModel { get; } = "[{\"Ip\":\"192.168.0.1\",\"Transaccion\":\"Sin transacciones\",\"TablaAfectada\":\"logs\",\"Parametros\":\"Sin parametros\"}]";
@@ -22,10 +23,24 @@ namespace DataManagement.Tools.Test
         internal static DataTable DataTableTestModel { get; } = ConvertObjectOfTypeToDataTable(CreateNewTestModel());
         internal static List<TestModel> ListTestModel { get; } = ConvertDataTableToListOfType<TestModel>(DataTableTestModel);
         internal static TestModel TestModel { get; } = CreateNewTestModel();
+        internal static Log LogModel { get; } = CreateNewLogModel();
 
         private static TestModel CreateNewTestModel()
         {
-            TestModel newLog = new TestModel()
+            TestModel newTestModel = new TestModel()
+            {
+                Ip = "192.168.0.1",
+                Parametros = "Sin parametros",
+                TablaAfectada = "logs",
+                Transaccion = "Sin transacciones"
+            };
+
+            return newTestModel;
+        }
+
+        private static Log CreateNewLogModel()
+        {
+            Log newLog = new Log()
             {
                 Ip = "192.168.0.1",
                 Parametros = "Sin parametros",
