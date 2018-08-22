@@ -300,6 +300,7 @@ namespace DataManagement.DAO
                     {
                         // En el caso de que no tenga ya el atributo, significa que dejo de ser una propiedad relacionada con algun modelo foraneo y por ende, debemos de eliminar la llave foranea
                         queryBuilder.AppendFormat("DROP FOREIGN KEY {0},\n", keyDefinition.Constraint_Name);
+                        keyDetails.Remove(property.Name);
                         foundDiference = true;
                     }
                 }

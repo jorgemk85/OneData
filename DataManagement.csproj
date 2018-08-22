@@ -113,6 +113,7 @@
     <Compile Include="Extensions\IManageableExtensions.cs" />
     <Compile Include="Extensions\ListExtensions.cs" />
     <Compile Include="Extensions\ObjectExtensions.cs" />
+    <Compile Include="IntegrationTests\ManagerAutomatedTests.cs" />
     <Compile Include="IntegrationTests\ManagerTests.cs" />
     <Compile Include="Interfaces\ICreatable.cs" />
     <Compile Include="Interfaces\IManageable.cs" />
