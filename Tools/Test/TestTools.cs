@@ -1,6 +1,5 @@
 ﻿using DataManagement.DAO;
 using DataManagement.Enums;
-using DataManagement.Models;
 using DataManagement.Models.Test;
 using System;
 using System.Collections.Generic;
@@ -26,7 +25,7 @@ namespace DataManagement.Tools.Test
         internal static List<TestModel> ListTestModel { get; } = ConvertDataTableToListOfType<TestModel>(DataTableTestModel);
         internal static TestModel TestModel { get; } = CreateNewTestModel();
 
-        private static Log CurrentLogModel { get; set; }
+        private static LogTest CurrentLogTestModel { get; set; }
 
         internal static void SetConfigurationForAutoCreate(bool enable)
         {
@@ -79,21 +78,21 @@ namespace DataManagement.Tools.Test
             return newTestModel;
         }
 
-        internal static Log GetLogModel(bool giveNew)
+        internal static LogTest GetLogTestModel(bool giveNew)
         {
-            if (giveNew || CurrentLogModel == null)
+            if (giveNew || CurrentLogTestModel == null)
             {
-                Log newLog = new Log()
+                LogTest newLogTest = new LogTest()
                 {
                     Ip = "192.168.0.1",
                     Parametros = "Sin parametros",
                     TablaAfectada = "logs",
                     Transaccion = "Sin transacciones"
                 };
-                CurrentLogModel = newLog;
+                CurrentLogTestModel = newLogTest;
             }
 
-            return CurrentLogModel;
+            return CurrentLogTestModel;
         }
 
         private static DataTable ConvertObjectOfTypeToDataTable<T>(T obj)

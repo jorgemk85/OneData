@@ -125,6 +125,7 @@
     <Compile Include="Exceptions\InvalidNumberOfParametersException.cs" />
     <Compile Include="Exceptions\ConfigurationNotFoundException.cs" />
     <Compile Include="Models\KeyDefinition.cs" />
+    <Compile Include="Models\Test\LogTest.cs" />
     <Compile Include="Models\Test\TestModel.cs" />
     <Compile Include="Tools\DataSerializer.cs" />
     <Compile Include="Tools\ExcelSerializer.cs" />
