@@ -256,7 +256,25 @@ namespace DataManagement.Tools
         /// <typeparam name="T">Tipo referencia para serializar.</typeparam>
         /// <param name="list">El contenido a convertir.</param>
         /// <returns>Regresa un nuevo DataTable ya con los objetos incorporados como columnas y filas.</returns>
-        public static DataTable ConvertListToDataTableOfType<T>(List<T> list)
+        public static DataTable ConvertListToDataTableOfGenericType<T>(List<T> list)
+        {
+            return ConvertListToDataTable(list);
+        }
+
+        /// <summary>
+        /// Convierte un objeto de tipo List<typeparamref name="T"/> que implementa IManageable a un objeto de tipo Datatable.
+        /// </summary>
+        /// <typeparam name="T">Tipo referencia para convertir.</typeparam>
+        /// <param name="list">El contenido a convertir.</param>
+        /// <returns>Regresa un nuevo DataTable ya con los objetos incorporados como columnas y filas.</returns>
+        public static DataTable ConvertListToDataTableOfType<T>(List<T> list) where T : IManageable
+        {
+            DataTable dataTable = ConvertListToDataTable(list);
+            dataTable.PrimaryKey = new DataColumn[] { dataTable.Columns["id"] };
+            return dataTable;
+        }
+
+        private static DataTable ConvertListToDataTable<T>(List<T> list)
         {
             DataTable dataTable = new DataTable(typeof(T).Name);
             PropertyInfo[] properties = typeof(T).GetProperties();
@@ -274,7 +292,7 @@ namespace DataManagement.Tools
                 }
                 dataTable.Rows.Add(values);
             }
-            dataTable.PrimaryKey = new DataColumn[] { dataTable.Columns["id"] };
+
             return dataTable;
         }
 

@@ -107,9 +107,9 @@ namespace DataManagement.UnitTests
         }
 
         [Test]
-        public void ConvertListToDataTableOfType_T_SerializationSucceeds_ReturnsEquals()
+        public void ConvertListToDataTableOfGenericType_T_SerializationSucceeds_ReturnsEquals()
         {
-            DataTable dataTableTestModel = DataSerializer.ConvertListToDataTableOfType(TestTools.ListTestModel);
+            DataTable dataTableTestModel = DataSerializer.ConvertListToDataTableOfGenericType(TestTools.ListTestModel);
 
             Assert.AreEqual(dataTableTestModel.Rows[0][0], TestTools.DataTableTestModel.Rows[0][0]);
         }

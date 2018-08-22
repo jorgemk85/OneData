@@ -29,7 +29,7 @@ namespace DataManagement.Extensions
 
         public static DataTable ToDataTable<T>(this List<T> list) where T : new()
         {
-            return DataSerializer.ConvertListToDataTableOfType<T>(list);
+            return DataSerializer.ConvertListToDataTableOfGenericType(list);
         }
     }
 }
