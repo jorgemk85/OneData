@@ -35,6 +35,28 @@ namespace DataManagement.Tools
         }
 
         /// <summary>
+        /// Convierte una cadena en formato JSON a un objeto de tipo <typeparamref name="T"/>.
+        /// </summary>
+        /// <typeparam name="T">Tipo referencia para la deserializacion.</typeparam>
+        /// <param name="json">La cadena JSON a convertir.</param>
+        /// <returns>Regresa un objeto ya procesado del tipo proporcionado.</returns>
+        public static T DeserializeJsonToObjectOfType<T>(string json) where T : new()
+        {
+            return JsonConvert.DeserializeObject<T>(json);
+        }
+
+        /// <summary>
+        /// Convierte una cadena en formato JSON a una lista de objetos de tipo <typeparamref name="T"/>.
+        /// </summary>
+        /// <typeparam name="T">Tipo referencia para la deserializacion.</typeparam>
+        /// <param name="json">La cadena JSON a convertir.</param>
+        /// <returns>Regresa una lista ya con los objetos procesados con del tipo proporcionado.</returns>
+        public static List<T> DeserializeJsonToListOfType<T>(string json) where T : new()
+        {
+            return JsonConvert.DeserializeObject<List<T>>(json);
+        }
+
+        /// <summary>
         /// Convierte un objeto de tipo DataTable en una Lista con formato XML proporcionando un tipo <typeparamref name="T"/> para la serializacion.
         /// </summary>
         /// <typeparam name="T">Tipo referencia para deserializar.</typeparam>
@@ -121,7 +143,7 @@ namespace DataManagement.Tools
         /// <returns>Regresa un nuevo Diccionario alimentado con los valores proporcionados.</returns>
         public static Dictionary<TKey, TValue> ConvertDataTableToDictionary<TKey, TValue>(DataTable dataTable, string keyName, string valueName)
         {
-            if (dataTable.Columns.Count != 2)
+            if (dataTable.Columns.Count < 2)
             {
                 throw new Exception("Esta funcion requiere 2 columnas en el objeto DataTable.");
             }
@@ -253,6 +275,34 @@ namespace DataManagement.Tools
                 dataTable.Rows.Add(values);
             }
             dataTable.PrimaryKey = new DataColumn[] { dataTable.Columns["id"] };
+            return dataTable;
+        }
+
+        /// <summary>
+        /// Convierte un objeto de de tipo <typeparamref name="T"/> a un objeto de tipo Datatable.
+        /// </summary>
+        /// <typeparam name="T">Tipo referencia para convertir.</typeparam>
+        /// <param name="obj">El objeto a convertir.</param>
+        /// <returns>Regresa un nuevo DataTable ya con los objetos incorporados como columnas y filas.</returns>
+        public static DataTable ConvertObjectOfTypeToDataTable<T>(T obj)
+        {
+            DataTable dataTable = new DataTable(typeof(T).Name);
+            PropertyInfo[] properties = typeof(T).GetProperties();
+            foreach (PropertyInfo prop in properties)
+            {
+                Type type = (prop.PropertyType.IsGenericType && prop.PropertyType.GetGenericTypeDefinition() == typeof(Nullable<>) ? Nullable.GetUnderlyingType(prop.PropertyType) : prop.PropertyType);
+                dataTable.Columns.Add(prop.Name, type);
+            }
+
+            var values = new object[properties.Length];
+            for (int i = 0; i < properties.Length; i++)
+            {
+                values[i] = properties[i].GetValue(obj, null);
+            }
+
+            dataTable.Rows.Add(values);
+            dataTable.PrimaryKey = new DataColumn[] { dataTable.Columns["id"] };
+
             return dataTable;
         }
 

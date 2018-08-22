@@ -43,7 +43,7 @@ namespace DataManagement.DAO
             GetPrefixesAndSuffixes();
         }
 
-        private static void GetConfigurationSettings()
+        internal static void GetConfigurationSettings()
         {
             SetIfDebug();
             DefaultConnection = ConsolidationTools.GetValueFromConfiguration("DefaultConnection", ConfigurationTypes.AppSetting);
@@ -60,7 +60,7 @@ namespace DataManagement.DAO
             Logger.Info("Got Manager configuration settings.");
         }
 
-        private static void GetPrefixesAndSuffixes()
+        internal static void GetPrefixesAndSuffixes()
         {
             Logger.Info("Getting Manager configuration for prefixes and suffixes.");
             SelectSuffix = ConsolidationTools.GetValueFromConfiguration("SelectSuffix", ConfigurationTypes.AppSetting);
@@ -73,7 +73,7 @@ namespace DataManagement.DAO
             TablePrefix = ConsolidationTools.GetValueFromConfiguration("TablePrefix", ConfigurationTypes.AppSetting);
         }
 
-        private static void SetIfDebug()
+        internal static void SetIfDebug()
         {
 #if DEBUG
             IsDebug = true;
