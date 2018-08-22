@@ -24,7 +24,7 @@ namespace DataManagement.DAO
         public ConnectionTypes ConnectionType { get; set; }
         public DbCommand Command { get; set; }
 
-        protected object ExecuteScalar(string transaction, string connectionToUse, bool returnDataTable)
+        internal object ExecuteScalar(string transaction, string connectionToUse, bool returnDataTable)
         {
             if (string.IsNullOrWhiteSpace(transaction))
             {
