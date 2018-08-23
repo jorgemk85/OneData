@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("DataManagement")]
-[assembly: AssemblyDescription("Libreria para conectarse a la Base de Datos y ejecutar consultas.")]
+[assembly: AssemblyDescription("Libreria de acceso a datos.")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Jorge Marcos Kawas")]
 [assembly: AssemblyProduct("DataManagement")]
@@ -32,6 +32,6 @@ using System.Runtime.InteropServices;
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("1.1.233.236")]
-[assembly: AssemblyFileVersion("1.1.233.236")]
+[assembly: AssemblyVersion("1.3.63.611")]
+[assembly: AssemblyFileVersion("1.3.63.611")]
 [assembly: log4net.Config.XmlConfigurator(ConfigFile = "log4net.config")]

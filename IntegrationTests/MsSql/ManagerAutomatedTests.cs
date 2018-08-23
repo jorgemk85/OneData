@@ -5,7 +5,7 @@ using DataManagement.Tools.Test;
 using NUnit.Framework;
 using System;
 
-namespace DataManagement.IntegrationTests
+namespace DataManagement.IntegrationTests.MsSql
 {
     [SingleThreaded]
     [TestFixture]

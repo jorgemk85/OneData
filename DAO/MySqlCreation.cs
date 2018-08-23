@@ -277,7 +277,7 @@ namespace DataManagement.DAO
                 if (!sqlDataType.Equals(columnDefinition.Column_Type))
                 {
                     // Si el data type cambio, entonces lo modifica.
-                    queryBuilder.AppendFormat("MODIFY COLUMN {0} {1} {2},\n", property.Name, sqlDataType);
+                    queryBuilder.AppendFormat("MODIFY COLUMN {0} {1},\n", property.Name, sqlDataType);
                     foundDiference = true;
                 }
                 if (columnDefinition.Is_Nullable.Equals("YES") && !isNullable)
