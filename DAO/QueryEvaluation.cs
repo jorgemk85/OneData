@@ -20,9 +20,9 @@ namespace DataManagement.DAO
         IOperable operation;
         ConnectionTypes connectionType;
 
-        public QueryEvaluation()
+        public QueryEvaluation(ConnectionTypes connectionType)
         {
-            connectionType = (ConnectionTypes)Enum.Parse(typeof(ConnectionTypes), ConfigurationManager.AppSettings["ConnectionType"].ToString());
+            this.connectionType = connectionType;
             operation = Operation.GetOperationBasedOnConnectionType(connectionType);
         }
 

@@ -265,28 +265,18 @@ namespace DataManagement.DAO
 
         private static Result Command(T obj, TransactionTypes transactionType, string connectionToUse = null)
         {
-            if (connectionToUse == null) connectionToUse = Manager.DefaultConnection;
-            QueryEvaluation queryEvaluation = new QueryEvaluation();
-            Result result;
-            if (dataCache.IsCacheEnabled)
-            {
-                ResetCacheIfExpired();
-                result = queryEvaluation.Evaluate(obj, transactionType, dataCache.Cache, dataCache.IsPartialCache, forceQueryDataBase, connectionToUse);
-                SaveCache(transactionType, result);
-            }
-            else
-            {
-                // Al mandar TRUE en forceQueryDataBase aseguramos que no se use el cache y al no almacenar el resultado con la funcion SaveCache, anulamos completamente el uso cache.
-                result = queryEvaluation.Evaluate(obj, transactionType, dataCache.Cache, dataCache.IsPartialCache, true, connectionToUse);
-            }
-            CallOnExecutedEventHandlers(obj.DataBaseTableName, transactionType, result);
-            return result;
+            return DynamicCommand(obj, transactionType, connectionToUse);
         }
 
-        private static Result Command(List<T> obj, TransactionTypes transactionType, string connectionToUse = null)
+        private static Result Command(List<T> list, TransactionTypes transactionType, string connectionToUse = null)
+        {
+            return DynamicCommand(list, transactionType,  connectionToUse);
+        }
+
+        private static Result DynamicCommand(dynamic obj, TransactionTypes transactionType, string connectionToUse = null)
         {
             if (connectionToUse == null) connectionToUse = Manager.DefaultConnection;
-            QueryEvaluation queryEvaluation = new QueryEvaluation();
+            QueryEvaluation queryEvaluation = new QueryEvaluation(Manager.ConnectionType);
             Result result;
             if (dataCache.IsCacheEnabled)
             {
@@ -327,7 +317,7 @@ namespace DataManagement.DAO
                     {
                         if (!resultado.IsFromCache)
                         {
-                            QueryEvaluation queryEvaluation = new QueryEvaluation();
+                            QueryEvaluation queryEvaluation = new QueryEvaluation(Manager.ConnectionType);
                             foreach (DataRow row in resultado.Data.Rows)
                             {
                                 queryEvaluation.AlterCache(row, dataCache.Cache);

@@ -49,7 +49,7 @@ namespace DataManagement.Tools.Test
         {
             Manager.ConnectionType = connectionType;
             Manager.DefaultSchema = "operaciones";
-            Manager.DefaultConnection = "Test";
+            Manager.DefaultConnection = connectionType.ToString();
             Manager.SelectSuffix = "_Select";
             Manager.InsertSuffix = "_Insert";
             Manager.InsertListSuffix = "_InsertList";
