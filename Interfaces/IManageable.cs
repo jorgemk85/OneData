@@ -9,7 +9,7 @@ namespace DataManagement.Interfaces
         Guid? Id { get; set; }
         #endregion
 
-        #region Internal Properties
+        #region Unmanaged Properties
         [UnmanagedProperty]
         DateTime? FechaCreacion { get; set; }
         [UnmanagedProperty]
