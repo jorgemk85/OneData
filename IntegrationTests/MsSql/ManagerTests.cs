@@ -1,7 +1,7 @@
 ﻿using DataManagement.Standard.DAO;
+using DataManagement.Standard.Extensions;
 using DataManagement.Standard.Models;
 using DataManagement.Standard.Models.Test;
-using DataManagement.Standard.Tools;
 using DataManagement.Standard.Tools.Test;
 using NUnit.Framework;
 using System;
@@ -24,7 +24,7 @@ namespace DataManagement.Standard.IntegrationTests.MsSql
         [Test]
         public void Select_DataFromCache_ReturnsTrue()
         {
-            List<LogTest> list = DataSerializer.ConvertDataTableToListOfType<LogTest>(Manager<LogTest, Guid>.SelectAll().Data);
+            List<LogTest> list = new List<LogTest>().SelectAll<LogTest, Guid>();
             Result result = Manager<LogTest, Guid>.Select(null, new Parameter(nameof(LogTest.Id), list[0].Id));
 
             Assert.IsTrue(result.IsFromCache);

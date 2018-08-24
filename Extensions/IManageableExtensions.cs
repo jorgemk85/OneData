@@ -1,5 +1,7 @@
 ﻿using DataManagement.Standard.DAO;
 using DataManagement.Standard.Interfaces;
+using DataManagement.Standard.Models;
+using System.Collections.Generic;
 
 namespace DataManagement.Standard.Extensions
 {
@@ -34,6 +36,14 @@ namespace DataManagement.Standard.Extensions
         {
             obj.Validate();
             Manager<T, TKey>.Insert(obj);
+        }
+
+        /// <summary>
+        /// Obtiene un listado completo de los objetos de tipo <typeparamref name="T"/> almacenados en la base de datos o en el cache.
+        /// </summary>
+        public static List<T> SelectAll<T, TKey>(this List<T> obj) where T : IManageable<TKey>, new() where TKey : struct
+        {
+            return Manager<T, TKey>.SelectAll().Data.ToList<T>();
         }
     }
 }
