@@ -1,4 +1,4 @@
-﻿namespace DataManagement.Events
+﻿namespace DataManagement.Standard.Events
 {
     /// <summary>
     /// Provocado despues de ejecutar un comando de tipo STORED PROCEDURE en la base de datos.

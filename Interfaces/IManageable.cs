@@ -1,7 +1,7 @@
-﻿using DataManagement.Attributes;
+﻿using DataManagement.Standard.Attributes;
 using System;
 
-namespace DataManagement.Interfaces
+namespace DataManagement.Standard.Interfaces
 {
     public interface IManageable
     {

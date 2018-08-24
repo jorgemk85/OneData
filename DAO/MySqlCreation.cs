@@ -1,14 +1,14 @@
-﻿using DataManagement.Attributes;
-using DataManagement.Interfaces;
-using DataManagement.Models;
-using DataManagement.Tools;
+﻿using DataManagement.Standard.Attributes;
+using DataManagement.Standard.Interfaces;
+using DataManagement.Standard.Models;
+using DataManagement.Standard.Tools;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
 
-namespace DataManagement.DAO
+namespace DataManagement.Standard.DAO
 {
     internal class MySqlCreation : ICreatable
     {

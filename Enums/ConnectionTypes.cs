@@ -1,4 +1,4 @@
-﻿namespace DataManagement.Enums
+﻿namespace DataManagement.Standard.Enums
 {
     public enum ConnectionTypes
     {

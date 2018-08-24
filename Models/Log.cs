@@ -1,7 +1,7 @@
-﻿using DataManagement.Attributes;
+﻿using DataManagement.Standard.Attributes;
 using System;
 
-namespace DataManagement.Models
+namespace DataManagement.Standard.Models
 {
     public class Log : Main
     {

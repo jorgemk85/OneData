@@ -6,7 +6,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DataManagement.Models
+namespace DataManagement.Standard.Models
 {
     public class Parameter
     {

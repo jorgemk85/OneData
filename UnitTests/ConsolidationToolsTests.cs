@@ -1,12 +1,12 @@
-﻿using DataManagement.Enums;
-using DataManagement.Exceptions;
-using DataManagement.Models.Test;
-using DataManagement.Tools;
-using DataManagement.Tools.Test;
+﻿using DataManagement.Standard.Enums;
+using DataManagement.Standard.Exceptions;
+using DataManagement.Standard.Models.Test;
+using DataManagement.Standard.Tools;
+using DataManagement.Standard.Tools.Test;
 using NUnit.Framework;
 using System;
 
-namespace DataManagement.UnitTests
+namespace DataManagement.Standard.UnitTests
 {
     [TestFixture]
     class ConsolidationToolsTests

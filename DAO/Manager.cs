@@ -1,15 +1,14 @@
-﻿using DataManagement.Enums;
-using DataManagement.Events;
-using DataManagement.Interfaces;
-using DataManagement.Models;
-using DataManagement.Tools;
+﻿using DataManagement.Standard.Enums;
+using DataManagement.Standard.Events;
+using DataManagement.Standard.Interfaces;
+using DataManagement.Standard.Models;
+using DataManagement.Standard.Tools;
 using System;
 using System.Collections.Generic;
-using System.Configuration;
 using System.Data;
 using System.Threading.Tasks;
 
-namespace DataManagement.DAO
+namespace DataManagement.Standard.DAO
 {
     /// <summary>
     /// Clase estatica donde se procesan las ejecuciones de procedimientos almacenados y se almacenan propiedades predeterminadas.

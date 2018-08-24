@@ -1,8 +1,8 @@
-﻿using DataManagement.DAO;
+﻿using DataManagement.Standard.DAO;
 using NUnit.Framework;
 using System.Diagnostics;
 
-namespace DataManagement.UnitTests
+namespace DataManagement.Standard.UnitTests
 {
     [TestFixture]
     class ManagerTests

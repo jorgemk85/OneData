@@ -1,6 +1,6 @@
 ﻿using System.Data;
 
-namespace DataManagement.Models
+namespace DataManagement.Standard.Models
 {
     public class Result
     {

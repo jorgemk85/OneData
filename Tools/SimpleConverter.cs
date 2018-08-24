@@ -1,11 +1,11 @@
-﻿using DataManagement.Exceptions;
+﻿using DataManagement.Standard.Exceptions;
 using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Globalization;
 
-namespace DataManagement.Tools
+namespace DataManagement.Standard.Tools
 {
     public class SimpleConverter
     {

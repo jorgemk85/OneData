@@ -1,4 +1,4 @@
-﻿namespace DataManagement.Models
+﻿namespace DataManagement.Standard.Models
 {
     /// <summary>
     /// Este modelo se usa solo para leer la informacion arrojada por el motor de base de datos al ejecutarle el comando DESCRIBE de una tabla.

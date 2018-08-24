@@ -1,12 +1,12 @@
-﻿using DataManagement.Attributes;
-using DataManagement.DAO;
-using DataManagement.Interfaces;
+﻿using DataManagement.Standard.Attributes;
+using DataManagement.Standard.DAO;
+using DataManagement.Standard.Interfaces;
 using System;
 
-namespace DataManagement.Models
+namespace DataManagement.Standard.Models
 {
     /// <summary>
-    /// Clase principal de la que tienen que heredar todos los objetos de negocio que se desee utilizar con la libreria DataManagement.
+    /// Clase principal de la que tienen que heredar todos los objetos de negocio que se desee utilizar con la libreria DataManagement.Standard.
     /// </summary>
     [Serializable]
     public abstract class Main : IManageable

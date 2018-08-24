@@ -1,9 +1,9 @@
-﻿using DataManagement.Enums;
-using DataManagement.Exceptions;
+﻿using DataManagement.Standard.Enums;
+using DataManagement.Standard.Exceptions;
 using System.Configuration;
 using System.Reflection;
 
-namespace DataManagement.Tools
+namespace DataManagement.Standard.Tools
 {
     public class ConsolidationTools
     {

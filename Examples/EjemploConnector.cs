@@ -1,11 +1,11 @@
-﻿using DataManagement.Models;
-using DataManagement.DAO;
-using DataManagement.Tools;
+﻿using DataManagement.Standard.Models;
+using DataManagement.Standard.DAO;
+using DataManagement.Standard.Tools;
 using System;
 using System.Collections.Generic;
-using DataManagement.Interfaces;
+using DataManagement.Standard.Interfaces;
 
-namespace DataManagement.Examples
+namespace DataManagement.Standard.Examples
 {
     public class Connector
     {

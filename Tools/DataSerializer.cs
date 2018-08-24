@@ -1,5 +1,5 @@
-﻿using DataManagement.Interfaces;
-using DataManagement.Models;
+﻿using DataManagement.Standard.Interfaces;
+using DataManagement.Standard.Models;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -8,7 +8,7 @@ using System.IO;
 using System.Reflection;
 using System.Xml.Serialization;
 
-namespace DataManagement.Tools
+namespace DataManagement.Standard.Tools
 {
     public class DataSerializer
     {
@@ -224,7 +224,7 @@ namespace DataManagement.Tools
         }
 
         /// <summary>
-        /// Convierte un objeto de tipo DataTable a un Diccionario del tipo <typeparamref name="T"/>. Requiere que el tipo sea una clase que herede de la clase abstracta Main del namespace DataManagement.BO ya que utilizara la propiedad Id de la clase como Llave.
+        /// Convierte un objeto de tipo DataTable a un Diccionario del tipo <typeparamref name="T"/>. Requiere que el tipo sea una clase que herede de la clase abstracta Main del namespace DataManagement.Standard.BO ya que utilizara la propiedad Id de la clase como Llave.
         /// </summary>
         /// <typeparam name="T">Tipo referencia para serializar.</typeparam>
         /// <param name="dataTable">El contenido a convertir.</param>

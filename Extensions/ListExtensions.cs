@@ -1,9 +1,9 @@
-﻿using DataManagement.Tools;
+﻿using DataManagement.Standard.Tools;
 using System.Collections.Generic;
 using System.Data;
 using System.Text;
 
-namespace DataManagement.Extensions
+namespace DataManagement.Standard.Extensions
 {
     public static class ListExtensions
     {

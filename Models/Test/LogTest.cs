@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace DataManagement.Models.Test
+namespace DataManagement.Standard.Models.Test
 {
     public class LogTest : Main
     {

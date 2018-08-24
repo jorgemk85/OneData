@@ -1,11 +1,11 @@
-﻿using DataManagement.Models.Test;
-using DataManagement.Tools;
-using DataManagement.Tools.Test;
+﻿using DataManagement.Standard.Models.Test;
+using DataManagement.Standard.Tools;
+using DataManagement.Standard.Tools.Test;
 using NUnit.Framework;
 using System;
 using System.IO;
 
-namespace DataManagement.UnitTests
+namespace DataManagement.Standard.UnitTests
 {
     [TestFixture]
     class ExcelSerializerTests

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DataManagement.Exceptions
+namespace DataManagement.Standard.Exceptions
 {
     public class ConvertionFailedException : Exception
     {

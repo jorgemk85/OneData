@@ -1,19 +1,19 @@
-﻿using DataManagement.Attributes;
-using DataManagement.Enums;
-using DataManagement.Exceptions;
-using DataManagement.Interfaces;
-using DataManagement.Models;
-using DataManagement.Tools;
+﻿using DataManagement.Standard.Attributes;
+using DataManagement.Standard.Enums;
+using DataManagement.Standard.Exceptions;
+using DataManagement.Standard.Interfaces;
+using DataManagement.Standard.Models;
+using DataManagement.Standard.Tools;
 using System;
 using System.Collections.Generic;
-using System.Configuration;
 using System.Data;
 using System.Linq;
-using System.Linq.Dynamic;
+using System.Linq.Dynamic.Core;
+using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
 
-namespace DataManagement.DAO
+namespace DataManagement.Standard.DAO
 {
     internal class QueryEvaluation
     {
@@ -140,7 +140,8 @@ namespace DataManagement.DAO
             else
             {
                 predicate = predicate.Substring(0, predicate.Length - 5);
-                return new Result(DataSerializer.ConvertListToDataTableOfType(DataSerializer.ConvertDataTableToListOfType<T>(cache.Data).Where(predicate, values.ToArray()).ToList()), true, true);
+                return new Result(DataSerializer.ConvertListToDataTableOfType(DataSerializer.ConvertDataTableToListOfType<T>(cache.Data)
+                                                                             .Where(predicate,""), true, true);
             }
         }
 

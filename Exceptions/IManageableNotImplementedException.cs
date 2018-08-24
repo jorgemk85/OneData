@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace DataManagement.Exceptions
+namespace DataManagement.Standard.Exceptions
 {
     public class IManageableNotImplementedException : Exception
     {

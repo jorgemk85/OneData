@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DataManagement.Exceptions
+namespace DataManagement.Standard.Exceptions
 {
     /// <summary>
     /// Ocurre cuando la conexion a la base de datos no esta abierta.

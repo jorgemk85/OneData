@@ -1,7 +1,7 @@
-﻿using DataManagement.Interfaces;
+﻿using DataManagement.Standard.Interfaces;
 using System;
 
-namespace DataManagement.Models
+namespace DataManagement.Standard.Models
 {
     internal class DataCache
     {

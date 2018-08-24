@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace DataManagement.Attributes
+namespace DataManagement.Standard.Attributes
 {
     [AttributeUsage(AttributeTargets.Property)]
     public class UnmanagedProperty : Attribute

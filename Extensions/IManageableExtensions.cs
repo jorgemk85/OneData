@@ -1,7 +1,7 @@
-﻿using DataManagement.DAO;
-using DataManagement.Interfaces;
+﻿using DataManagement.Standard.DAO;
+using DataManagement.Standard.Interfaces;
 
-namespace DataManagement.Extensions
+namespace DataManagement.Standard.Extensions
 {
     public static class IManageableExtensions
     {

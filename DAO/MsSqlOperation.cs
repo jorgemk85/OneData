@@ -1,14 +1,14 @@
-﻿using DataManagement.Enums;
-using DataManagement.Exceptions;
-using DataManagement.Interfaces;
-using DataManagement.Models;
-using DataManagement.Tools;
+﻿using DataManagement.Standard.Enums;
+using DataManagement.Standard.Exceptions;
+using DataManagement.Standard.Interfaces;
+using DataManagement.Standard.Models;
+using DataManagement.Standard.Tools;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 
-namespace DataManagement.DAO
+namespace DataManagement.Standard.DAO
 {
     internal class MsSqlOperation : Operation, IOperable
     {
