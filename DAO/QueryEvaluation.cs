@@ -140,8 +140,10 @@ namespace DataManagement.Standard.DAO
             else
             {
                 predicate = predicate.Substring(0, predicate.Length - 5);
-                return new Result(DataSerializer.ConvertListToDataTableOfType(DataSerializer.ConvertDataTableToListOfType<T>(cache.Data)
-                                                                             .Where(predicate,""), true, true);
+                // TODO: Hay que migrar de la version vieja de Linq.Dynamic a la nueva que trabaja con .net core y standard.
+                return new Result(cache.Data, true, true);
+                //return new Result(DataSerializer.ConvertListToDataTableOfType(DataSerializer.ConvertDataTableToListOfType<T>(cache.Data)
+                //                                                             .Where(predicate,""), true, true);
             }
         }
 
