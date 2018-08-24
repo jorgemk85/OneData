@@ -15,6 +15,9 @@ namespace DataManagement.Standard.DAO
         const int ERR_STORED_PROCEDURE_NOT_FOUND = 2812;
         const int ERR_OBJECT_NOT_FOUND = 208;
         const int ERR_INCORRECT_NUMBER_OF_ARGUMENTS = 8144;
+        const int ERR_EXPECTED_PARAMETER_NOT_SUPPLIED = 201;
+        const int ERR_CANNOT_INSERT_EXPLICIT_VALUE_FOR_IDENTITY = 544;
+        const int ERR_CANNOT_UPDATE_IDENTITY_VALUE = 8102;
 
         public MsSqlOperation() : base()
         {
@@ -77,16 +80,21 @@ namespace DataManagement.Standard.DAO
                     Command.CommandType = CommandType.StoredProcedure;
                     Command.CommandText = string.Format("{0}.{1}{2}{3}", obj.Schema, Manager.StoredProcedurePrefix, tableName, GetFriendlyTransactionSuffix(transactionType));
 
-                    if (transactionType == TransactionTypes.Insert || transactionType == TransactionTypes.Update || transactionType == TransactionTypes.Delete)
+                    if (transactionType == TransactionTypes.Insert )
                     {
-                        SetParameters<T, TKey>(obj, transactionType);
+                        SetParameters<T, TKey>(obj, transactionType, false);
+                        Command.ExecuteNonQuery();
+                    }
+                    else if (transactionType == TransactionTypes.Update || transactionType == TransactionTypes.Delete)
+                    {
+                        SetParameters<T, TKey>(obj, transactionType, true);
                         Command.ExecuteNonQuery();
                     }
                     else
                     {
                         if (transactionType == TransactionTypes.Select)
                         {
-                            SetParameters<T, TKey>(obj, transactionType);
+                            SetParameters<T, TKey>(obj, transactionType, true);
                         }
                         dataTable = new DataTable();
                         dataTable.Load(Command.ExecuteReader());
@@ -119,11 +127,14 @@ namespace DataManagement.Standard.DAO
                 Logger.Error(sqlException);
                 throw;
             }
-            catch (SqlException sqlException) when (sqlException.Number == ERR_INCORRECT_NUMBER_OF_ARGUMENTS)
+            catch (SqlException sqlException) when (sqlException.Number == ERR_INCORRECT_NUMBER_OF_ARGUMENTS || 
+                                                    sqlException.Number == ERR_CANNOT_INSERT_EXPLICIT_VALUE_FOR_IDENTITY || 
+                                                    sqlException.Number == ERR_EXPECTED_PARAMETER_NOT_SUPPLIED ||
+                                                    sqlException.Number == ERR_CANNOT_UPDATE_IDENTITY_VALUE)
             {
                 if (Manager.AutoAlterStoredProcedures)
                 {
-                    Logger.Warn(string.Format("Incorrect number of arguments related to the {0} stored procedure. Modifying...", transactionType.ToString()));
+                    Logger.Warn(string.Format("Incorrect number of arguments or is identity explicit value related to the {0} stored procedure. Modifying...", transactionType.ToString()));
                     PerformTableConsolidation<T, TKey>(connectionToUse, true);
                     ExecuteScalar(GetTransactionTextForProcedure<T, TKey>(transactionType, true), connectionToUse, false);
                     overrideConsolidation = true;

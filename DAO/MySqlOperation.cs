@@ -79,16 +79,21 @@ namespace DataManagement.Standard.DAO
                     Command.CommandType = CommandType.StoredProcedure;
                     Command.CommandText = string.Format("{0}{1}{2}", Manager.StoredProcedurePrefix, tableName, GetFriendlyTransactionSuffix(transactionType));
 
-                    if (transactionType == TransactionTypes.Insert || transactionType == TransactionTypes.Update || transactionType == TransactionTypes.Delete)
+                    if (transactionType == TransactionTypes.Insert)
                     {
-                        SetParameters<T, TKey>(obj, transactionType);
+                        SetParameters<T, TKey>(obj, transactionType, false);
+                        Command.ExecuteNonQuery();
+                    }
+                    else if (transactionType == TransactionTypes.Update || transactionType == TransactionTypes.Delete)
+                    {
+                        SetParameters<T, TKey>(obj, transactionType, true);
                         Command.ExecuteNonQuery();
                     }
                     else
                     {
                         if (transactionType == TransactionTypes.Select)
                         {
-                            SetParameters<T, TKey>(obj, transactionType);
+                            SetParameters<T, TKey>(obj, transactionType, true);
                         }
                         dataTable = new DataTable();
                         dataTable.Load(Command.ExecuteReader());

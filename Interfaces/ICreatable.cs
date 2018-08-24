@@ -8,7 +8,7 @@ namespace DataManagement.Standard.Interfaces
 {
     internal interface ICreatable
     {
-        void SetStoredProceduresParameters(ref PropertyInfo[] properties, StringBuilder queryBuilder, bool setDefaultNull);
+        void SetStoredProceduresParameters<T, TKey>(ref PropertyInfo[] properties, T obj, StringBuilder queryBuilder, bool setDefaultNull, bool considerId) where T : IManageable<TKey>, new() where TKey : struct;
         string CreateInsertStoredProcedure<T, TKey>(bool doAlter) where T : IManageable<TKey>, new() where TKey : struct;
         string CreateInsertListStoredProcedure<T, TKey>(bool doAlter) where T : IManageable<TKey>, new() where TKey : struct;
         string CreateUpdateStoredProcedure<T, TKey>(bool doAlter) where T : IManageable<TKey>, new() where TKey : struct;

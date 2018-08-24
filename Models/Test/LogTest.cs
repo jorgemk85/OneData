@@ -2,15 +2,27 @@
 
 namespace DataManagement.Standard.Models.Test
 {
-    public class LogTest : Main<Guid>
+    public class LogTestGuid : Main<Guid>
     {
         public string Ip { get; set; }
         public string Transaccion { get; set; }
         public string TablaAfectada { get; set; }
         public string Parametros { get; set; }
 
-        public LogTest() : base(Guid.NewGuid(), "LogTests", true, 60) { }
+        public LogTestGuid() : base(Guid.NewGuid(), "LogTestGuids", true, 60) { }
 
-        public LogTest(Guid id) : base(id, "LogTests", true, 60) { }
+        public LogTestGuid(Guid id) : base(id, "LogTestGuids", true, 60) { }
+    }
+
+    public class LogTestInt : Main<int>
+    {
+        public string Ip { get; set; }
+        public string Transaccion { get; set; }
+        public string TablaAfectada { get; set; }
+        public string Parametros { get; set; }
+
+        public LogTestInt() : base(0, "LogTestInts", true, 60) { }
+
+        public LogTestInt(int id) : base(id, "LogTestInts", true, 60) { }
     }
 }

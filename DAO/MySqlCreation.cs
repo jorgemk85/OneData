@@ -12,11 +12,16 @@ namespace DataManagement.Standard.DAO
 {
     internal class MySqlCreation : ICreatable
     {
-        public void SetStoredProceduresParameters(ref PropertyInfo[] properties, StringBuilder queryBuilder, bool setDefaultNull)
+        public void SetStoredProceduresParameters<T, TKey>(ref PropertyInfo[] properties, T obj, StringBuilder queryBuilder, bool setDefaultNull, bool considerId) where T : IManageable<TKey>, new() where TKey : struct
         {
             // Aqui se colocan los parametros segun las propiedades del objeto 
             foreach (PropertyInfo property in properties)
             {
+                if (property.Name == "Id" && Nullable.GetUnderlyingType(obj.KeyType) == typeof(int) && !considerId)
+                {
+                    continue;
+                }
+
                 if (setDefaultNull)
                 {
                     queryBuilder.AppendFormat("    IN _{0} {1} = null,\n", property.Name, GetSqlDataType(property.PropertyType));
@@ -44,7 +49,7 @@ namespace DataManagement.Standard.DAO
             queryBuilder.AppendFormat("CREATE PROCEDURE {0}{1}{2} (\n", Manager.StoredProcedurePrefix, obj.DataBaseTableName, Manager.InsertSuffix);
 
             // Aqui se colocan los parametros segun las propiedades del objeto
-            SetStoredProceduresParameters(ref properties, queryBuilder, false);
+            SetStoredProceduresParameters<T, TKey>(ref properties, obj, queryBuilder, false, false);
 
             queryBuilder.Remove(queryBuilder.Length - 2, 2);
             queryBuilder.Append(")\nBEGIN\n");
@@ -55,6 +60,10 @@ namespace DataManagement.Standard.DAO
             // Seccion para especificar a que columnas se va a insertar.
             foreach (PropertyInfo property in properties)
             {
+                if (property.Name == "Id" && Nullable.GetUnderlyingType(obj.KeyType) == typeof(int))
+                {
+                    continue;
+                }
                 queryBuilder.AppendFormat("    {0},\n", property.Name);
             }
 
@@ -64,6 +73,10 @@ namespace DataManagement.Standard.DAO
             // Especificamos los parametros para insertar en la base de datos.
             foreach (PropertyInfo property in properties)
             {
+                if (property.Name == "Id" && Nullable.GetUnderlyingType(obj.KeyType) == typeof(int))
+                {
+                    continue;
+                }
                 queryBuilder.AppendFormat("    _{0},\n", property.Name);
             }
 
@@ -91,7 +104,7 @@ namespace DataManagement.Standard.DAO
             queryBuilder.AppendFormat("CREATE PROCEDURE {0}{1}{2} (\n", Manager.StoredProcedurePrefix, obj.DataBaseTableName, Manager.UpdateSuffix);
 
             // Aqui se colocan los parametros segun las propiedades del objeto
-            SetStoredProceduresParameters(ref properties, queryBuilder, false);
+            SetStoredProceduresParameters<T, TKey>(ref properties, obj, queryBuilder, false, true);
 
             queryBuilder.Remove(queryBuilder.Length - 2, 2);
             queryBuilder.Append(")\nBEGIN\n");
@@ -103,6 +116,10 @@ namespace DataManagement.Standard.DAO
             // Se especifica el parametro que va en x columna.
             foreach (PropertyInfo property in properties)
             {
+                if (property.Name == "Id")
+                {
+                    continue;
+                }
                 queryBuilder.AppendFormat("    {0} = IFNULL(_{0}, {0}),\n", property.Name);
             }
             queryBuilder.Append("    fechaModificacion = @actualTime\n");
@@ -181,7 +198,7 @@ namespace DataManagement.Standard.DAO
             queryBuilder.AppendFormat("CREATE PROCEDURE {0}{1}{2} (\n", Manager.StoredProcedurePrefix, obj.DataBaseTableName, Manager.SelectSuffix);
 
             // Aqui se colocan los parametros segun las propiedades del objeto
-            SetStoredProceduresParameters(ref properties, queryBuilder, false);
+            SetStoredProceduresParameters<T, TKey>(ref properties, obj, queryBuilder, false, true);
 
             queryBuilder.Remove(queryBuilder.Length - 2, 2);
             queryBuilder.Append(")\nBEGIN\n");
@@ -224,7 +241,21 @@ namespace DataManagement.Standard.DAO
             foreach (PropertyInfo property in properties)
             {
                 string isNullable = Nullable.GetUnderlyingType(property.PropertyType) == null || property.Name.Equals("Id") ? "NOT NULL" : string.Empty;
-                queryBuilder.AppendFormat("{0} {1} {2},\n", property.Name, GetSqlDataType(property.PropertyType), isNullable);
+                if (property.Name.Equals("Id"))
+                {
+                    if (Nullable.GetUnderlyingType(obj.KeyType) == typeof(int))
+                    {
+                        queryBuilder.AppendFormat("{0} {1} NOT NULL AUTO_INCREMENT,\n", property.Name, GetSqlDataType(property.PropertyType));
+                    }
+                    else
+                    {
+                        queryBuilder.AppendFormat("{0} {1} NOT NULL,\n", property.Name, GetSqlDataType(property.PropertyType));
+                    }
+                }
+                else
+                {
+                    queryBuilder.AppendFormat("{0} {1} {2},\n", property.Name, GetSqlDataType(property.PropertyType), isNullable);
+                }
             }
 
             queryBuilder.Append("PRIMARY KEY (Id),\n");

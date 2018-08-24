@@ -12,11 +12,16 @@ namespace DataManagement.Standard.DAO
 {
     internal class MsSqlCreation : ICreatable
     {
-        public void SetStoredProceduresParameters(ref PropertyInfo[] properties, StringBuilder queryBuilder, bool setDefaultNull)
+        public void SetStoredProceduresParameters<T, TKey>(ref PropertyInfo[] properties, T obj, StringBuilder queryBuilder, bool setDefaultNull, bool considerId) where T : IManageable<TKey>, new() where TKey : struct
         {
             // Aqui se colocan los parametros segun las propiedades del objeto 
             foreach (PropertyInfo property in properties)
             {
+                if (property.Name == "Id" && Nullable.GetUnderlyingType(obj.KeyType) == typeof(int) && !considerId)
+                {
+                    continue;
+                }
+
                 if (setDefaultNull)
                 {
                     queryBuilder.AppendFormat("    @_{0} {1} = null,\n", property.Name, GetSqlDataType(property.PropertyType));
@@ -46,7 +51,7 @@ namespace DataManagement.Standard.DAO
             }
 
             // Aqui se colocan los parametros segun las propiedades del objeto
-            SetStoredProceduresParameters(ref properties, queryBuilder, false);
+            SetStoredProceduresParameters<T, TKey>(ref properties, obj, queryBuilder, false, false);
 
             queryBuilder.Remove(queryBuilder.Length - 2, 2);
             queryBuilder.Append("\nAS\n");
@@ -58,6 +63,10 @@ namespace DataManagement.Standard.DAO
             // Seccion para especificar a que columnas se va a insertar.
             foreach (PropertyInfo property in properties)
             {
+                if (property.Name == "Id" && Nullable.GetUnderlyingType(obj.KeyType) == typeof(int))
+                {
+                    continue;
+                }
                 queryBuilder.AppendFormat("    {0}, ", property.Name);
             }
 
@@ -67,6 +76,10 @@ namespace DataManagement.Standard.DAO
             // Especificamos los parametros para insertar en la base de datos.
             foreach (PropertyInfo property in properties)
             {
+                if (property.Name == "Id" && Nullable.GetUnderlyingType(obj.KeyType) == typeof(int))
+                {
+                    continue;
+                }
                 queryBuilder.AppendFormat("    @_{0},\n", property.Name);
             }
 
@@ -97,7 +110,7 @@ namespace DataManagement.Standard.DAO
 
 
             // Aqui se colocan los parametros segun las propiedades del objeto
-            SetStoredProceduresParameters(ref properties, queryBuilder, false);
+            SetStoredProceduresParameters<T, TKey>(ref properties, obj, queryBuilder, false, true);
 
             queryBuilder.Remove(queryBuilder.Length - 2, 2);
             queryBuilder.Append("\nAS\n");
@@ -110,6 +123,10 @@ namespace DataManagement.Standard.DAO
             // Se especifica el parametro que va en x columna.
             foreach (PropertyInfo property in properties)
             {
+                if (property.Name == "Id")
+                {
+                    continue;
+                }
                 queryBuilder.AppendFormat("    {0} = ISNULL(@_{0}, {0}),\n", property.Name);
             }
             queryBuilder.Append("    fechaModificacion = @actualTime\n");
@@ -196,7 +213,7 @@ namespace DataManagement.Standard.DAO
             }
 
             // Aqui se colocan los parametros segun las propiedades del objeto
-            SetStoredProceduresParameters(ref properties, queryBuilder, true);
+            SetStoredProceduresParameters<T, TKey>(ref properties, obj, queryBuilder, true, true);
 
             queryBuilder.Remove(queryBuilder.Length - 2, 2);
             queryBuilder.Append("\nAS\n");
@@ -239,10 +256,17 @@ namespace DataManagement.Standard.DAO
             // Aqui se colocan las propiedades del objeto. Una por columna por su puesto.
             foreach (PropertyInfo property in properties)
             {
-                string isNullable = Nullable.GetUnderlyingType(property.PropertyType) == null ? "NOT NULL" : string.Empty;
+                string isNullable = Nullable.GetUnderlyingType(property.PropertyType) == null || property.Name.Equals("Id") ? "NOT NULL" : string.Empty;
                 if (property.Name.Equals("Id"))
                 {
-                    queryBuilder.AppendFormat("{0} {1} NOT NULL PRIMARY KEY,\n", property.Name, GetSqlDataType(property.PropertyType));
+                    if (Nullable.GetUnderlyingType(obj.KeyType) == typeof(int))
+                    {
+                        queryBuilder.AppendFormat("{0} {1} IDENTITY(1,1) NOT NULL PRIMARY KEY,\n", property.Name, GetSqlDataType(property.PropertyType));
+                    }
+                    else
+                    {
+                        queryBuilder.AppendFormat("{0} {1} NOT NULL PRIMARY KEY,\n", property.Name, GetSqlDataType(property.PropertyType));
+                    }
                 }
                 else
                 {

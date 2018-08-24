@@ -25,7 +25,8 @@ namespace DataManagement.Standard.Tools.Test
         internal static List<TestModel> ListTestModel { get; } = ConvertDataTableToListOfType<TestModel>(DataTableTestModel);
         internal static TestModel TestModel { get; } = CreateNewTestModel();
 
-        private static LogTest CurrentLogTestModel { get; set; }
+        private static LogTestGuid CurrentLogTestGuidModel { get; set; }
+        private static LogTestInt CurrentLogTestIntModel { get; set; }
 
         internal static void SetConfigurationForAutoCreate(bool enable)
         {
@@ -78,21 +79,38 @@ namespace DataManagement.Standard.Tools.Test
             return newTestModel;
         }
 
-        internal static LogTest GetLogTestModel(bool giveNew)
+        internal static LogTestGuid GetLogTestGuidModel(bool giveNew)
         {
-            if (giveNew || CurrentLogTestModel == null)
+            if (giveNew || CurrentLogTestGuidModel == null)
             {
-                LogTest newLogTest = new LogTest()
+                LogTestGuid newLogTest = new LogTestGuid()
                 {
                     Ip = "192.168.0.1",
                     Parametros = "Sin parametros",
                     TablaAfectada = "logs",
                     Transaccion = "Sin transacciones"
                 };
-                CurrentLogTestModel = newLogTest;
+                CurrentLogTestGuidModel = newLogTest;
             }
 
-            return CurrentLogTestModel;
+            return CurrentLogTestGuidModel;
+        }
+
+        internal static LogTestInt GetLogTestIntModel(bool giveNew)
+        {
+            if (giveNew || CurrentLogTestIntModel == null)
+            {
+                LogTestInt newLogTest = new LogTestInt()
+                {
+                    Ip = "192.168.0.1",
+                    Parametros = "Sin parametros",
+                    TablaAfectada = "logs",
+                    Transaccion = "Sin transacciones"
+                };
+                CurrentLogTestIntModel = newLogTest;
+            }
+
+            return CurrentLogTestIntModel;
         }
 
         private static DataTable ConvertObjectOfTypeToDataTable<T>(T obj)

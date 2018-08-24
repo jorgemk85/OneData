@@ -171,7 +171,7 @@ namespace DataManagement.Standard.DAO
             }
         }
 
-        protected void SetParameters<T, TKey>(T obj, TransactionTypes transactionType) where T : IManageable<TKey> where TKey : struct
+        protected void SetParameters<T, TKey>(T obj, TransactionTypes transactionType, bool considerId) where T : IManageable<TKey> where TKey : struct
         {
             Logger.Info(string.Format("Setting parameters in command based on type {0} for transaction type {1}.", typeof(T), transactionType.ToString()));
             foreach (PropertyInfo propertyInfo in typeof(T).GetProperties())
@@ -190,6 +190,10 @@ namespace DataManagement.Standard.DAO
                 }
                 else
                 {
+                    if (propertyInfo.Name == "Id" && Nullable.GetUnderlyingType(obj.KeyType) == typeof(int) && !considerId)
+                    {
+                        continue;
+                    }
                     Command.Parameters.Add(CreateDbParameter("_" + propertyInfo.Name, propertyInfo.GetValue(obj)));
                 }
             }
