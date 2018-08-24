@@ -64,7 +64,7 @@ namespace DataManagement.DAO
             DataTable dataTable = null;
             bool overrideConsolidation = false;
 
-        Start:
+            Start:
             try
             {
                 Logger.Info(string.Format("Starting {0} execution for object {1} using connection {2}", transactionType.ToString(), typeof(T), connectionToUse));
@@ -161,7 +161,7 @@ namespace DataManagement.DAO
             bool overrideConsolidation = false;
             T obj = new T();
 
-        Start:
+            Start:
             try
             {
                 Logger.Info(string.Format("Starting {0} execution for list {1} using connection {2}", transactionType.ToString(), typeof(T), connectionToUse));
@@ -174,7 +174,7 @@ namespace DataManagement.DAO
                     if (connection.State != ConnectionState.Open) throw new BadConnectionStateException();
                     Command = connection.CreateCommand();
                     Command.CommandType = CommandType.StoredProcedure;
-                    Command.CommandText = string.Format("{0}.{1}{2}{3}", obj.Schema, Manager.StoredProcedurePrefix, tableName, GetFriendlyTransactionSuffix(transactionType));
+                    Command.CommandText = string.Format("{0}{1}{2}", Manager.StoredProcedurePrefix, tableName, GetFriendlyTransactionSuffix(transactionType));
 
                     if (transactionType == TransactionTypes.InsertList)
                     {
