@@ -90,7 +90,7 @@ namespace DataManagement.Standard.DAO
             }
         }
 
-        protected string GetTransactionTextForProcedure<T, TKey>(TransactionTypes transactionType, bool doAlter) where T : IManageable<TKey>, new()
+        protected string GetTransactionTextForProcedure<T, TKey>(TransactionTypes transactionType, bool doAlter) where T : IManageable<TKey>, new() where TKey : struct
         {
             Logger.Info(string.Format("Getting {0} transaction for type {1}. DoAlter = {2}", transactionType.ToString(), typeof(T), doAlter));
             switch (transactionType)
@@ -171,7 +171,7 @@ namespace DataManagement.Standard.DAO
             }
         }
 
-        protected void SetParameters<T, TKey>(T obj, TransactionTypes transactionType) where T : IManageable<TKey>
+        protected void SetParameters<T, TKey>(T obj, TransactionTypes transactionType) where T : IManageable<TKey> where TKey : struct
         {
             Logger.Info(string.Format("Setting parameters in command based on type {0} for transaction type {1}.", typeof(T), transactionType.ToString()));
             foreach (PropertyInfo propertyInfo in typeof(T).GetProperties())
@@ -195,7 +195,7 @@ namespace DataManagement.Standard.DAO
             }
         }
 
-        protected void SetParameters<T, TKey>(List<T> obj, TransactionTypes transactionType) where T : IManageable<TKey>
+        protected void SetParameters<T, TKey>(List<T> obj, TransactionTypes transactionType) where T : IManageable<TKey> where TKey : struct
         {
             Logger.Info(string.Format("Setting parameters in command based on type {0} for transaction type {1}.", typeof(T), transactionType.ToString()));
             foreach (PropertyInfo propertyInfo in typeof(T).GetProperties())
@@ -219,7 +219,7 @@ namespace DataManagement.Standard.DAO
             }
         }
 
-        protected void PerformTableConsolidation<T, TKey>(string connectionToUse, bool doAlter) where T : IManageable<TKey>, new()
+        protected void PerformTableConsolidation<T, TKey>(string connectionToUse, bool doAlter) where T : IManageable<TKey>, new() where TKey : struct
         {
             T newObj = new T();
             Logger.Info(string.Format("Starting table consolidation for table {0} using connection {1}. DoAlter = {2}", newObj.DataBaseTableName, connectionToUse, doAlter));
@@ -234,7 +234,7 @@ namespace DataManagement.Standard.DAO
             ExecuteScalar(Creator.GetAlterTableQuery<TKey>(typeof(T), GetColumnDefinition(newObj.DataBaseTableName, connectionToUse), GetKeyDefinition(newObj.DataBaseTableName, connectionToUse)), connectionToUse, false);
         }
 
-        protected void ProcessTable<T, TKey>(string connectionToUse, bool doAlter) where T : IManageable<TKey>, new()
+        protected void ProcessTable<T, TKey>(string connectionToUse, bool doAlter) where T : IManageable<TKey>, new() where TKey : struct
         {
             Logger.Info(string.Format("Processing table {0} using connection {1}. DoAlter = {2}", new T().DataBaseTableName, connectionToUse, doAlter));
             if (doAlter)
@@ -254,7 +254,7 @@ namespace DataManagement.Standard.DAO
             }
         }
 
-        private void VerifyForeignTables<TKey>(Type type, string connectionToUse, bool doAlter)
+        private void VerifyForeignTables<TKey>(Type type, string connectionToUse, bool doAlter) where TKey : struct
         {
             Logger.Info(string.Format("Verifying foreign tables for type {0} using connection {1}. DoAlter = {2}", type.ToString(), connectionToUse, doAlter));
             PropertyInfo[] properties = type.GetProperties().Where(q => q.GetCustomAttribute<UnlinkedProperty>() == null && q.GetCustomAttribute<ForeignModel>() != null).ToArray();
@@ -281,7 +281,7 @@ namespace DataManagement.Standard.DAO
             return ((DataTable)ExecuteScalar(string.Format(QueryForKeyDefinition, tableName), connectionToUse, true)).ToDictionary<string, KeyDefinition>(nameof(KeyDefinition.Column_Name));
         }
 
-        private void CreateOrAlterForeignTables<TKey>(IManageable<TKey> foreignModel, string connectionToUse, bool doAlter)
+        private void CreateOrAlterForeignTables<TKey>(IManageable<TKey> foreignModel, string connectionToUse, bool doAlter) where TKey : struct
         {
             Logger.Info(string.Format("Create or Alter foreign tables of {0} using connection {1}. DoAlter = {2}", foreignModel.DataBaseTableName, connectionToUse, doAlter));
             if (doAlter)

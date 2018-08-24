@@ -9,7 +9,6 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Linq.Dynamic.Core;
-using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
 
@@ -26,7 +25,7 @@ namespace DataManagement.Standard.DAO
             operation = Operation.GetOperationBasedOnConnectionType(connectionType);
         }
 
-        public Result Evaluate<T, TKey>(T obj, TransactionTypes transactionType, Result cache, bool isPartialCache, bool forceQueryDataBase, string connectionToUse) where T : IManageable<TKey>, new()
+        public Result Evaluate<T, TKey>(T obj, TransactionTypes transactionType, Result cache, bool isPartialCache, bool forceQueryDataBase, string connectionToUse) where T : IManageable<TKey>, new() where TKey : struct
         {
             string tableName = obj.DataBaseTableName;
             Result resultado = null;
@@ -62,7 +61,7 @@ namespace DataManagement.Standard.DAO
             return resultado;
         }
 
-        public Result Evaluate<T, TKey>(List<T> list, TransactionTypes transactionType, Result cache, bool isPartialCache, bool forceQueryDataBase, string connectionToUse) where T : IManageable<TKey>, new()
+        public Result Evaluate<T, TKey>(List<T> list, TransactionTypes transactionType, Result cache, bool isPartialCache, bool forceQueryDataBase, string connectionToUse) where T : IManageable<TKey>, new() where TKey : struct
         {
             string tableName = new T().DataBaseTableName;
             Result resultado = null;
@@ -81,7 +80,7 @@ namespace DataManagement.Standard.DAO
             return resultado;
         }
 
-        private void EvaluateSelect<T, TKey>(T obj, out Result resultado, bool isCached, string tableName, Result cache, bool isPartialCache, bool forceQueryDataBase, string connectionToUse) where T : IManageable<TKey>, new()
+        private void EvaluateSelect<T, TKey>(T obj, out Result resultado, bool isCached, string tableName, Result cache, bool isPartialCache, bool forceQueryDataBase, string connectionToUse) where T : IManageable<TKey>, new() where TKey : struct
         {
             if (forceQueryDataBase)
             {
@@ -99,7 +98,7 @@ namespace DataManagement.Standard.DAO
             }
         }
 
-        private void EvaluateSelectAll<T, TKey>(T obj, out Result resultado, bool isCached, string tableName, Result cache, bool forceQueryDataBase, string connectionToUse) where T : IManageable<TKey>, new()
+        private void EvaluateSelectAll<T, TKey>(T obj, out Result resultado, bool isCached, string tableName, Result cache, bool forceQueryDataBase, string connectionToUse) where T : IManageable<TKey>, new() where TKey : struct
         {
             if (forceQueryDataBase)
             {
@@ -112,7 +111,7 @@ namespace DataManagement.Standard.DAO
             }
         }
 
-        private Result SelectInCache<T, TKey>(T obj, Result cache) where T : IManageable<TKey>, new()
+        private Result SelectInCache<T, TKey>(T obj, Result cache) where T : IManageable<TKey>, new() where TKey : struct
         {
             int valueIndex = 0;
             List<object> values = new List<object>();
@@ -141,13 +140,12 @@ namespace DataManagement.Standard.DAO
             {
                 predicate = predicate.Substring(0, predicate.Length - 5);
                 // TODO: Hay que migrar de la version vieja de Linq.Dynamic a la nueva que trabaja con .net core y standard.
-                return new Result(cache.Data, true, true);
-                //return new Result(DataSerializer.ConvertListToDataTableOfType(DataSerializer.ConvertDataTableToListOfType<T, TKey>(cache.Data)
-                //                                                             .Where(predicate,""), true, true);
+                var queryableList = DataSerializer.ConvertDataTableToListOfType<T>(cache.Data).AsQueryable();
+                return new Result(DataSerializer.ConvertListToDataTableOfType<T, TKey>(queryableList.Where(predicate, values).ToList()), true, true);
             }
         }
 
-        private DataRow SetRowData<T, TKey>(DataRow row, T obj) where T : IManageable<TKey>
+        private DataRow SetRowData<T, TKey>(DataRow row, T obj) where T : IManageable<TKey> where TKey : struct
         {
             object value = null;
             Type type;
@@ -178,18 +176,18 @@ namespace DataManagement.Standard.DAO
             return row;
         }
 
-        private void UpdateInCache<T, TKey>(T obj, Result cache) where T : IManageable<TKey>
+        private void UpdateInCache<T, TKey>(T obj, Result cache) where T : IManageable<TKey> where TKey : struct
         {
-            SetRowData<T, TKey>(cache.Data.Rows.Find(obj.Id), obj).AcceptChanges();
+            SetRowData<T, TKey>(cache.Data.Rows.Find(obj.Id.GetValueOrDefault()), obj).AcceptChanges();
         }
 
-        private void InsertInCache<T, TKey>(T obj, Result cache) where T : IManageable<TKey>
+        private void InsertInCache<T, TKey>(T obj, Result cache) where T : IManageable<TKey> where TKey : struct
         {
             cache.Data.Rows.Add(SetRowData<T, TKey>(cache.Data.NewRow(), obj));
             cache.Data.AcceptChanges();
         }
 
-        private void InsertListInCache<T, TKey>(List<T> list, Result cache) where T : IManageable<TKey>
+        private void InsertListInCache<T, TKey>(List<T> list, Result cache) where T : IManageable<TKey> where TKey : struct
         {
             foreach (T obj in list)
             {
@@ -221,12 +219,12 @@ namespace DataManagement.Standard.DAO
             cache.Data.AcceptChanges();
         }
 
-        private void DeleteInCache<T, TKey>(T obj, Result cache) where T : IManageable<TKey>
+        private void DeleteInCache<T, TKey>(T obj, Result cache) where T : IManageable<TKey> where TKey : struct
         {
             for (int i = 0; i < cache.Data.Rows.Count; i++)
             {
                 DataRow row = cache.Data.Rows[i];
-                if (row[row.Table.PrimaryKey[0]].Equals(obj.Id))
+                if (row[row.Table.PrimaryKey[0]].Equals(obj.Id.GetValueOrDefault()))
                 {
                     row.Delete();
                     cache.Data.AcceptChanges();

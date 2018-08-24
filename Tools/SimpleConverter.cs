@@ -48,13 +48,14 @@ namespace DataManagement.Standard.Tools
                     case "DateTime":
                         try
                         {
-                            if (value.EndsWith("AM") || value.EndsWith("PM"))
+                            DateTime newDateTime;
+                            if (!DateTime.TryParse(value, out newDateTime))
                             {
-                                return DateTime.ParseExact(value, "dd/MM/yyyy hh:mm:ss tt", CultureInfo.InvariantCulture);
+                                newDateTime = DateTime.ParseExact(value, "dd/MM/yyyy hh:mm:ss tt", CultureInfo.InvariantCulture);
                             }
-                            return DateTime.Parse(value);
+                            return newDateTime;
                         }
-                        catch (Exception e)
+                        catch
                         {
                             return DateTime.FromOADate(double.Parse(value));
                         }

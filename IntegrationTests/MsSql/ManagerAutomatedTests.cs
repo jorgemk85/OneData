@@ -22,7 +22,7 @@ namespace DataManagement.Standard.IntegrationTests.MsSql
             TestTools.SetConfigurationForAutoCreate(true);
             TestTools.SetConfigurationForAutoAlter(true);
 
-            newLogId = TestTools.GetLogTestModel(true).Id;
+            newLogId = TestTools.GetLogTestModel(true).Id.GetValueOrDefault();
 
             Assert.DoesNotThrow(() => Manager<LogTest, Guid>.Insert(TestTools.GetLogTestModel(false)));
         }

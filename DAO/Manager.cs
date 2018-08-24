@@ -122,7 +122,7 @@ namespace DataManagement.Standard.DAO
     /// </summary>
     /// <typeparam name="T">Tipo de clase que representa este objeto. El tipo tiene que implementar IManageable para poder operar.</typeparam>
     /// <typeparam name="TKey">Tipo que representa la llave utilizada en la propiedad Id del tipo <typeparamref name="T"/>.</typeparam>
-    public abstract class Manager<T, TKey> where T : IManageable<TKey>, new()
+    public abstract class Manager<T, TKey> where T : IManageable<TKey>, new() where TKey : struct
     {
         static DataCache dataCache = new DataCache();
         static bool forceQueryDataBase = false;

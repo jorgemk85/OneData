@@ -9,8 +9,8 @@ namespace DataManagement.Standard.Models.Test
         public string TablaAfectada { get; set; }
         public string Parametros { get; set; }
 
-        public LogTest() : base(Guid.NewGuid(), "LogTests") { }
+        public LogTest() : base(Guid.NewGuid(), "LogTests", true, 60) { }
 
-        public LogTest(Guid id) : base(id, "LogTests") { }
+        public LogTest(Guid id) : base(id, "LogTests", true, 60) { }
     }
 }

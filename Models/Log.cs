@@ -2,7 +2,7 @@
 
 namespace DataManagement.Standard.Models
 {
-    public class Log : Main<Guid?>
+    public class Log : Main<Guid>
     {
         public string Ip { get; set; }
         public string Transaccion { get; set; }
@@ -11,6 +11,6 @@ namespace DataManagement.Standard.Models
 
         public Log() : base(Guid.NewGuid(), "logs") { }
 
-        public Log(Guid? id) : base(id, "logs") { }
+        public Log(Guid id) : base(id, "logs") { }
     }
 }

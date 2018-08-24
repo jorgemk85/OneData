@@ -28,7 +28,7 @@ namespace DataManagement.Standard.DAO
             }
         }
 
-        public string CreateInsertStoredProcedure<T, TKey>(bool doAlter) where T : IManageable<TKey>, new()
+        public string CreateInsertStoredProcedure<T, TKey>(bool doAlter) where T : IManageable<TKey>, new() where TKey : struct
         {
             StringBuilder queryBuilder = new StringBuilder();
             PropertyInfo[] properties = typeof(T).GetProperties().Where(q => q.GetCustomAttribute<UnlinkedProperty>() == null && q.GetCustomAttribute<UnmanagedProperty>() == null).ToArray();
@@ -78,7 +78,7 @@ namespace DataManagement.Standard.DAO
             return queryBuilder.ToString();
         }
 
-        public string CreateUpdateStoredProcedure<T, TKey>(bool doAlter) where T : IManageable<TKey>, new()
+        public string CreateUpdateStoredProcedure<T, TKey>(bool doAlter) where T : IManageable<TKey>, new() where TKey : struct
         {
             StringBuilder queryBuilder = new StringBuilder();
             PropertyInfo[] properties = typeof(T).GetProperties().Where(q => q.GetCustomAttribute<UnlinkedProperty>() == null && q.GetCustomAttribute<UnmanagedProperty>() == null).ToArray();
@@ -121,7 +121,7 @@ namespace DataManagement.Standard.DAO
             return queryBuilder.ToString();
         }
 
-        public string CreateDeleteStoredProcedure<T, TKey>(bool doAlter) where T : IManageable<TKey>, new()
+        public string CreateDeleteStoredProcedure<T, TKey>(bool doAlter) where T : IManageable<TKey>, new() where TKey : struct
         {
             StringBuilder queryBuilder = new StringBuilder();
             PropertyInfo[] properties = typeof(T).GetProperties().Where(q => q.GetCustomAttribute<UnlinkedProperty>() == null && q.GetCustomAttribute<UnmanagedProperty>() == null).ToArray();
@@ -150,7 +150,7 @@ namespace DataManagement.Standard.DAO
             return queryBuilder.ToString();
         }
 
-        public string CreateSelectAllStoredProcedure<T, TKey>(bool doAlter) where T : IManageable<TKey>, new()
+        public string CreateSelectAllStoredProcedure<T, TKey>(bool doAlter) where T : IManageable<TKey>, new() where TKey : struct
         {
             StringBuilder queryBuilder = new StringBuilder();
             PropertyInfo[] properties = typeof(T).GetProperties().Where(q => q.GetCustomAttribute<UnlinkedProperty>() == null && q.GetCustomAttribute<UnmanagedProperty>() == null).ToArray();
@@ -178,7 +178,7 @@ namespace DataManagement.Standard.DAO
             return queryBuilder.ToString();
         }
 
-        public string CreateSelectStoredProcedure<T, TKey>(bool doAlter) where T : IManageable<TKey>, new()
+        public string CreateSelectStoredProcedure<T, TKey>(bool doAlter) where T : IManageable<TKey>, new() where TKey : struct
         {
             StringBuilder queryBuilder = new StringBuilder();
             PropertyInfo[] properties = typeof(T).GetProperties().Where(q => q.GetCustomAttribute<UnlinkedProperty>() == null && q.GetCustomAttribute<UnmanagedProperty>() == null).ToArray();
@@ -219,7 +219,7 @@ namespace DataManagement.Standard.DAO
             return queryBuilder.ToString();
         }
 
-        public string GetCreateTableQuery<TKey>(Type type)
+        public string GetCreateTableQuery<TKey>(Type type) where TKey : struct
         {
             PropertyInfo[] properties = type.GetProperties().Where(q => q.GetCustomAttribute<UnlinkedProperty>() == null).ToArray();
             IManageable<TKey> obj = (IManageable<TKey>)Activator.CreateInstance(type);
@@ -229,7 +229,7 @@ namespace DataManagement.Standard.DAO
             return CreateQueryForTableCreation(obj, ref properties);
         }
 
-        public string CreateQueryForTableCreation<TKey>(IManageable<TKey> obj, ref PropertyInfo[] properties)
+        public string CreateQueryForTableCreation<TKey>(IManageable<TKey> obj, ref PropertyInfo[] properties) where TKey : struct
         {
             StringBuilder queryBuilder = new StringBuilder();
 
@@ -257,7 +257,7 @@ namespace DataManagement.Standard.DAO
             return queryBuilder.ToString();
         }
 
-        public string GetAlterTableQuery<TKey>(Type type, Dictionary<string, ColumnDefinition> columnDetails, Dictionary<string, KeyDefinition> keyDetails)
+        public string GetAlterTableQuery<TKey>(Type type, Dictionary<string, ColumnDefinition> columnDetails, Dictionary<string, KeyDefinition> keyDetails) where TKey : struct
         {
             PropertyInfo[] properties = type.GetProperties().Where(q => q.GetCustomAttribute<UnlinkedProperty>() == null).ToArray();
             IManageable<TKey> obj = (IManageable<TKey>)Activator.CreateInstance(type);
@@ -267,7 +267,7 @@ namespace DataManagement.Standard.DAO
             return CreateQueryForTableAlteration(obj, ref properties, columnDetails, keyDetails);
         }
 
-        public string CreateQueryForTableAlteration<TKey>(IManageable<TKey> obj, ref PropertyInfo[] properties, Dictionary<string, ColumnDefinition> columnDetails, Dictionary<string, KeyDefinition> keyDetails)
+        public string CreateQueryForTableAlteration<TKey>(IManageable<TKey> obj, ref PropertyInfo[] properties, Dictionary<string, ColumnDefinition> columnDetails, Dictionary<string, KeyDefinition> keyDetails) where TKey : struct
         {
             StringBuilder queryBuilder = new StringBuilder();
             List<string> columnsFound = new List<string>();
@@ -371,7 +371,7 @@ namespace DataManagement.Standard.DAO
             return null;
         }
 
-        public string GetCreateForeignKeysQuery<TKey>(Type type, Dictionary<string, KeyDefinition> keyDetails = null)
+        public string GetCreateForeignKeysQuery<TKey>(Type type, Dictionary<string, KeyDefinition> keyDetails = null) where TKey : struct
         {
             StringBuilder queryBuilder = new StringBuilder();
             PropertyInfo[] properties = type.GetProperties().Where(q => q.GetCustomAttribute<UnlinkedProperty>() == null && q.GetCustomAttribute<ForeignModel>() != null && !keyDetails.ContainsKey(q.Name)).ToArray();
@@ -458,7 +458,7 @@ namespace DataManagement.Standard.DAO
             }
         }
 
-        public string CreateInsertListStoredProcedure<T, TKey>(bool doAlter) where T : IManageable<TKey>, new()
+        public string CreateInsertListStoredProcedure<T, TKey>(bool doAlter) where T : IManageable<TKey>, new() where TKey : struct
         {
             throw new NotImplementedException();
         }

@@ -10,10 +10,10 @@ namespace DataManagement.Standard.Models
     /// </summary>
     /// <typeparam name="TKey">Representa el tipo a utilizar para la llave primaria del Id.</typeparam>
     [Serializable]
-    public abstract class Main<TKey> : IManageable<TKey> 
+    public abstract class Main<TKey> : IManageable<TKey> where TKey : struct
     {
         #region Properties
-        public TKey Id { get; set; }
+        public TKey? Id { get; set; }
         #endregion
 
         #region Internal Properties

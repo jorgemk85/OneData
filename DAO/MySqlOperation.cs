@@ -59,7 +59,7 @@ namespace DataManagement.Standard.DAO
             return new Result(dataTable, false, true);
         }
 
-        public Result ExecuteProcedure<T, TKey>(T obj, string tableName, string connectionToUse, TransactionTypes transactionType, bool logTransaction = true) where T : IManageable<TKey>, new()
+        public Result ExecuteProcedure<T, TKey>(T obj, string tableName, string connectionToUse, TransactionTypes transactionType, bool logTransaction = true) where T : IManageable<TKey>, new() where TKey : struct
         {
             DataTable dataTable = null;
             bool overrideConsolidation = false;
@@ -155,7 +155,7 @@ namespace DataManagement.Standard.DAO
             return new Result(dataTable, false, true);
         }
 
-        public Result ExecuteProcedure<T, TKey>(List<T> list, string tableName, string connectionToUse, TransactionTypes transactionType, bool logTransaction = true) where T : IManageable<TKey>, new()
+        public Result ExecuteProcedure<T, TKey>(List<T> list, string tableName, string connectionToUse, TransactionTypes transactionType, bool logTransaction = true) where T : IManageable<TKey>, new() where TKey : struct 
         {
             DataTable dataTable = null;
             bool overrideConsolidation = false;
@@ -251,7 +251,7 @@ namespace DataManagement.Standard.DAO
 
             Logger.Info(string.Format("Saving log information into the database."));
             Log newLog = NewLog(dataBaseTableName, transactionType);
-            ExecuteProcedure<Log, Guid?>(newLog, newLog.DataBaseTableName, connectionToUse, TransactionTypes.Insert, false);
+            ExecuteProcedure<Log, Guid>(newLog, newLog.DataBaseTableName, connectionToUse, TransactionTypes.Insert, false);
         }
     }
 }
