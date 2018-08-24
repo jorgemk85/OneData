@@ -28,6 +28,8 @@ namespace DataManagement.Standard.IntegrationTests.MsSql
             Result result = Manager<LogTest, Guid>.Select(null, new Parameter(nameof(LogTest.Id), list[0].Id));
 
             Assert.IsTrue(result.IsFromCache);
+            Assert.IsTrue(result.IsSuccessful);
+            Assert.AreNotEqual(result.Data.Rows.Count, 0);
         }
     }
 }

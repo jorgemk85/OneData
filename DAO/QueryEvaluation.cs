@@ -1,6 +1,7 @@
 ﻿using DataManagement.Standard.Attributes;
 using DataManagement.Standard.Enums;
 using DataManagement.Standard.Exceptions;
+using DataManagement.Standard.Extensions;
 using DataManagement.Standard.Interfaces;
 using DataManagement.Standard.Models;
 using DataManagement.Standard.Tools;
@@ -118,13 +119,13 @@ namespace DataManagement.Standard.DAO
             string predicate = string.Empty;
             StringBuilder builder = new StringBuilder();
 
-            foreach (PropertyInfo property in typeof(T).GetProperties())
+            foreach (PropertyInfo property in typeof(T).GetProperties().Where(q => q.GetCustomAttribute<UnlinkedProperty>() == null && q.GetCustomAttribute<UnmanagedProperty>() == null).ToArray())
             {
                 if (property.GetCustomAttribute<UnlinkedProperty>() == null)
                 {
                     if (property.GetValue(obj) != null)
                     {
-                        builder.AppendFormat("{0}== @{1} and ", property.Name, valueIndex);
+                        builder.AppendFormat("{0} == @{1} and ", property.Name, valueIndex);
                         values.Add(property.GetValue(obj));
                         valueIndex++;
                     }
@@ -139,9 +140,9 @@ namespace DataManagement.Standard.DAO
             else
             {
                 predicate = predicate.Substring(0, predicate.Length - 5);
-                // TODO: Hay que migrar de la version vieja de Linq.Dynamic a la nueva que trabaja con .net core y standard.
-                var queryableList = DataSerializer.ConvertDataTableToListOfType<T>(cache.Data).AsQueryable();
-                return new Result(DataSerializer.ConvertListToDataTableOfType<T, TKey>(queryableList.Where(predicate, values).ToList()), true, true);
+                var queryableList = cache.Data.ToList<T>().AsQueryable();
+                var resultList = queryableList.Where(predicate, values.ToArray()).ToList();
+                return new Result(resultList.ToDataTable<T, TKey>(), true, true);
             }
         }
 

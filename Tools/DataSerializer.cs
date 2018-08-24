@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Xml.Serialization;
 
@@ -270,7 +271,7 @@ namespace DataManagement.Standard.Tools
         public static DataTable ConvertListToDataTableOfType<T, TKey>(List<T> list) where T : IManageable<TKey> where TKey : struct
         {
             DataTable dataTable = ConvertListToDataTable(list);
-            dataTable.PrimaryKey = new DataColumn[] { dataTable.Columns["id"] };
+            dataTable.PrimaryKey = new DataColumn[] { dataTable.Columns["Id"] };
             return dataTable;
         }
 

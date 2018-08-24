@@ -1,4 +1,5 @@
-﻿using DataManagement.Standard.Tools;
+﻿using DataManagement.Standard.Interfaces;
+using DataManagement.Standard.Tools;
 using System.Collections.Generic;
 using System.Data;
 using System.Text;
@@ -30,6 +31,11 @@ namespace DataManagement.Standard.Extensions
         public static DataTable ToDataTable<T>(this List<T> list) where T : new()
         {
             return DataSerializer.ConvertListToDataTableOfGenericType(list);
+        }
+
+        public static DataTable ToDataTable<T, TKey>(this List<T> list) where T : IManageable<TKey> where TKey : struct
+        {
+            return DataSerializer.ConvertListToDataTableOfType<T, TKey>(list);
         }
     }
 }
