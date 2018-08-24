@@ -90,23 +90,23 @@ namespace DataManagement.Standard.DAO
             }
         }
 
-        protected string GetTransactionTextForProcedure<T>(TransactionTypes transactionType, bool doAlter) where T : IManageable, new()
+        protected string GetTransactionTextForProcedure<T, TKey>(TransactionTypes transactionType, bool doAlter) where T : IManageable<TKey>, new()
         {
             Logger.Info(string.Format("Getting {0} transaction for type {1}. DoAlter = {2}", transactionType.ToString(), typeof(T), doAlter));
             switch (transactionType)
             {
                 case TransactionTypes.Select:
-                    return Creator.CreateSelectStoredProcedure<T>(doAlter);
+                    return Creator.CreateSelectStoredProcedure<T, TKey>(doAlter);
                 case TransactionTypes.SelectAll:
-                    return Creator.CreateSelectAllStoredProcedure<T>(doAlter);
+                    return Creator.CreateSelectAllStoredProcedure<T, TKey>(doAlter);
                 case TransactionTypes.Delete:
-                    return Creator.CreateDeleteStoredProcedure<T>(doAlter);
+                    return Creator.CreateDeleteStoredProcedure<T, TKey>(doAlter);
                 case TransactionTypes.Insert:
-                    return Creator.CreateInsertStoredProcedure<T>(doAlter);
+                    return Creator.CreateInsertStoredProcedure<T, TKey>(doAlter);
                 case TransactionTypes.InsertList:
-                    return Creator.CreateInsertListStoredProcedure<T>(doAlter);
+                    return Creator.CreateInsertListStoredProcedure<T, TKey>(doAlter);
                 case TransactionTypes.Update:
-                    return Creator.CreateUpdateStoredProcedure<T>(doAlter);
+                    return Creator.CreateUpdateStoredProcedure<T, TKey>(doAlter);
                 default:
                     ArgumentException argumentException = new ArgumentException("El tipo de transaccion no es valido para generar un nuevo procedimiento almacenado.");
                     Logger.Error(argumentException);
@@ -171,7 +171,7 @@ namespace DataManagement.Standard.DAO
             }
         }
 
-        protected void SetParameters<T>(T obj, TransactionTypes transactionType) where T : IManageable
+        protected void SetParameters<T, TKey>(T obj, TransactionTypes transactionType) where T : IManageable<TKey>
         {
             Logger.Info(string.Format("Setting parameters in command based on type {0} for transaction type {1}.", typeof(T), transactionType.ToString()));
             foreach (PropertyInfo propertyInfo in typeof(T).GetProperties())
@@ -195,7 +195,7 @@ namespace DataManagement.Standard.DAO
             }
         }
 
-        protected void SetParameters<T>(List<T> obj, TransactionTypes transactionType) where T : IManageable
+        protected void SetParameters<T, TKey>(List<T> obj, TransactionTypes transactionType) where T : IManageable<TKey>
         {
             Logger.Info(string.Format("Setting parameters in command based on type {0} for transaction type {1}.", typeof(T), transactionType.ToString()));
             foreach (PropertyInfo propertyInfo in typeof(T).GetProperties())
@@ -219,7 +219,7 @@ namespace DataManagement.Standard.DAO
             }
         }
 
-        protected void PerformTableConsolidation<T>(string connectionToUse, bool doAlter) where T : IManageable, new()
+        protected void PerformTableConsolidation<T, TKey>(string connectionToUse, bool doAlter) where T : IManageable<TKey>, new()
         {
             T newObj = new T();
             Logger.Info(string.Format("Starting table consolidation for table {0} using connection {1}. DoAlter = {2}", newObj.DataBaseTableName, connectionToUse, doAlter));
@@ -227,41 +227,41 @@ namespace DataManagement.Standard.DAO
             {
                 if (!CheckIfTableExists(newObj.DataBaseTableName, connectionToUse))
                 {
-                    ProcessTable<T>(connectionToUse, false);
+                    ProcessTable<T, TKey>(connectionToUse, false);
                     return;
                 }
             }
-            ExecuteScalar(Creator.GetAlterTableQuery(typeof(T), GetColumnDefinition(newObj.DataBaseTableName, connectionToUse), GetKeyDefinition(newObj.DataBaseTableName, connectionToUse)), connectionToUse, false);
+            ExecuteScalar(Creator.GetAlterTableQuery<TKey>(typeof(T), GetColumnDefinition(newObj.DataBaseTableName, connectionToUse), GetKeyDefinition(newObj.DataBaseTableName, connectionToUse)), connectionToUse, false);
         }
 
-        protected void ProcessTable<T>(string connectionToUse, bool doAlter) where T : IManageable, new()
+        protected void ProcessTable<T, TKey>(string connectionToUse, bool doAlter) where T : IManageable<TKey>, new()
         {
             Logger.Info(string.Format("Processing table {0} using connection {1}. DoAlter = {2}", new T().DataBaseTableName, connectionToUse, doAlter));
             if (doAlter)
             {
-                PerformTableConsolidation<T>(connectionToUse, doAlter);
+                PerformTableConsolidation<T, TKey>(connectionToUse, doAlter);
             }
             else
             {
-                ExecuteScalar(Creator.GetCreateTableQuery(typeof(T)), connectionToUse, false);
-                VerifyForeignTables(typeof(T), connectionToUse, doAlter);
-                string foreignKeyQuery = Creator.GetCreateForeignKeysQuery(typeof(T));
+                ExecuteScalar(Creator.GetCreateTableQuery<TKey>(typeof(T)), connectionToUse, false);
+                VerifyForeignTables<TKey>(typeof(T), connectionToUse, doAlter);
+                string foreignKeyQuery = Creator.GetCreateForeignKeysQuery<TKey>(typeof(T));
 
                 if (!string.IsNullOrWhiteSpace(foreignKeyQuery))
                 {
-                    ExecuteScalar(Creator.GetCreateForeignKeysQuery(typeof(T)), connectionToUse, false);
+                    ExecuteScalar(Creator.GetCreateForeignKeysQuery<TKey>(typeof(T)), connectionToUse, false);
                 }
             }
         }
 
-        private void VerifyForeignTables(Type type, string connectionToUse, bool doAlter)
+        private void VerifyForeignTables<TKey>(Type type, string connectionToUse, bool doAlter)
         {
             Logger.Info(string.Format("Verifying foreign tables for type {0} using connection {1}. DoAlter = {2}", type.ToString(), connectionToUse, doAlter));
             PropertyInfo[] properties = type.GetProperties().Where(q => q.GetCustomAttribute<UnlinkedProperty>() == null && q.GetCustomAttribute<ForeignModel>() != null).ToArray();
 
             foreach (PropertyInfo property in properties)
             {
-                IManageable foreignModel = (IManageable)Activator.CreateInstance(property.GetCustomAttribute<ForeignModel>().Model);
+                IManageable<TKey> foreignModel = (IManageable<TKey>)Activator.CreateInstance(property.GetCustomAttribute<ForeignModel>().Model);
                 if (!CheckIfTableExists(foreignModel.DataBaseTableName, connectionToUse))
                 {
                     CreateOrAlterForeignTables(foreignModel, connectionToUse, false);
@@ -281,22 +281,22 @@ namespace DataManagement.Standard.DAO
             return ((DataTable)ExecuteScalar(string.Format(QueryForKeyDefinition, tableName), connectionToUse, true)).ToDictionary<string, KeyDefinition>(nameof(KeyDefinition.Column_Name));
         }
 
-        private void CreateOrAlterForeignTables(IManageable foreignModel, string connectionToUse, bool doAlter)
+        private void CreateOrAlterForeignTables<TKey>(IManageable<TKey> foreignModel, string connectionToUse, bool doAlter)
         {
             Logger.Info(string.Format("Create or Alter foreign tables of {0} using connection {1}. DoAlter = {2}", foreignModel.DataBaseTableName, connectionToUse, doAlter));
             if (doAlter)
             {
-                ExecuteScalar(Creator.GetAlterTableQuery(foreignModel.GetType(),
+                ExecuteScalar(Creator.GetAlterTableQuery<TKey>(foreignModel.GetType(),
                                                          GetColumnDefinition(foreignModel.DataBaseTableName, connectionToUse),
                                                          GetKeyDefinition(foreignModel.DataBaseTableName, connectionToUse)), connectionToUse, false);
             }
             else
             {
-                ExecuteScalar(Creator.GetCreateTableQuery(foreignModel.GetType()), connectionToUse, false);
+                ExecuteScalar(Creator.GetCreateTableQuery<TKey>(foreignModel.GetType()), connectionToUse, false);
             }
 
-            VerifyForeignTables(foreignModel.GetType(), connectionToUse, false);
-            string foreignKeyQuery = Creator.GetCreateForeignKeysQuery(foreignModel.GetType());
+            VerifyForeignTables<TKey>(foreignModel.GetType(), connectionToUse, false);
+            string foreignKeyQuery = Creator.GetCreateForeignKeysQuery<TKey>(foreignModel.GetType());
 
             if (!string.IsNullOrWhiteSpace(foreignKeyQuery))
             {

@@ -1,9 +1,8 @@
-﻿using DataManagement.Standard.Models;
-using DataManagement.Standard.DAO;
-using DataManagement.Standard.Tools;
-using System;
-using System.Collections.Generic;
+﻿using DataManagement.Standard.DAO;
 using DataManagement.Standard.Interfaces;
+using DataManagement.Standard.Models;
+using DataManagement.Standard.Tools;
+using System.Collections.Generic;
 
 namespace DataManagement.Standard.Examples
 {
@@ -16,39 +15,39 @@ namespace DataManagement.Standard.Examples
             return Manager.StoredProcedure(tableName, storedProcedure, CONNECTION_TO_USE, parameters);
         }
 
-        public static T Select<T>(params Parameter[] parameters) where T : IManageable, new()
+        public static T Select<T, TKey>(params Parameter[] parameters) where T : IManageable<TKey>, new()
         {
-            return DataSerializer.ConvertDataTableToObjectOfType<T>(Manager<T>.Select(CONNECTION_TO_USE, parameters).Data);
+            return DataSerializer.ConvertDataTableToObjectOfType<T>(Manager<T, TKey>.Select(CONNECTION_TO_USE, parameters).Data);
         }
 
-        public static Dictionary<Guid, T> SelectDictionary<T>(params Parameter[] parameters) where T : IManageable, new()
+        //public static Dictionary<Guid, T> SelectDictionary<T, TKey>(params Parameter[] parameters) where T : IManageable<TKey>, new()
+        //{
+        //    return DataSerializer.ConvertDataTableToDictionaryOfType<T>(Manager<T, TKey>.Select(CONNECTION_TO_USE, parameters).Data);
+        //}
+
+        public static List<T> SelectList<T, TKey>(params Parameter[] parameters) where T : IManageable<TKey>, new()
         {
-            return DataSerializer.ConvertDataTableToDictionaryOfType<T>(Manager<T>.Select(CONNECTION_TO_USE, parameters).Data);
+            return DataSerializer.ConvertDataTableToListOfType<T>(Manager<T, TKey>.Select(CONNECTION_TO_USE, parameters).Data);
         }
 
-        public static List<T> SelectList<T>(params Parameter[] parameters) where T : IManageable, new()
+        public static string SelectJson<T, TKey>(params Parameter[] parameters) where T : IManageable<TKey>, new()
         {
-            return DataSerializer.ConvertDataTableToListOfType<T>(Manager<T>.Select(CONNECTION_TO_USE, parameters).Data);
+            return DataSerializer.SerializeDataTableToJsonObjectOfType<T>(Manager<T, TKey>.Select(CONNECTION_TO_USE, parameters).Data);
         }
 
-        public static string SelectJson<T>(params Parameter[] parameters) where T : IManageable, new()
+        //public static Dictionary<Guid, T> SelectAllDictionary<T, TKey>() where T : IManageable<TKey>, new()
+        //{
+        //    return DataSerializer.ConvertDataTableToDictionaryOfType<T>(Manager<T, TKey>.SelectAll(CONNECTION_TO_USE).Data);
+        //}
+
+        public static List<T> SelectAllList<T, TKey>() where T : IManageable<TKey>, new()
         {
-            return DataSerializer.SerializeDataTableToJsonObjectOfType<T>(Manager<T>.Select(CONNECTION_TO_USE, parameters).Data);
+            return DataSerializer.ConvertDataTableToListOfType<T>(Manager<T, TKey>.SelectAll(CONNECTION_TO_USE).Data);
         }
 
-        public static Dictionary<Guid, T> SelectAllDictionary<T>() where T : IManageable, new()
+        public static string SelectAllJson<T, TKey>() where T : IManageable<TKey>, new()
         {
-            return DataSerializer.ConvertDataTableToDictionaryOfType<T>(Manager<T>.SelectAll(CONNECTION_TO_USE).Data);
-        }
-
-        public static List<T> SelectAllList<T>() where T : IManageable, new()
-        {
-            return DataSerializer.ConvertDataTableToListOfType<T>(Manager<T>.SelectAll(CONNECTION_TO_USE).Data);
-        }
-
-        public static string SelectAllJson<T>() where T : IManageable, new()
-        {
-            return DataSerializer.SerializeDataTableToJsonListOfType<T>(Manager<T>.SelectAll(CONNECTION_TO_USE).Data);
+            return DataSerializer.SerializeDataTableToJsonListOfType<T>(Manager<T, TKey>.SelectAll(CONNECTION_TO_USE).Data);
         }
     }
 }

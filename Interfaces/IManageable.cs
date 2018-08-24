@@ -3,10 +3,10 @@ using System;
 
 namespace DataManagement.Standard.Interfaces
 {
-    public interface IManageable
+    public interface IManageable<TKey>
     {
         #region Properties
-        Guid? Id { get; set; }
+        TKey Id { get; set; }
         #endregion
 
         #region Unmanaged Properties

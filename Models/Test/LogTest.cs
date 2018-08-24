@@ -2,7 +2,7 @@
 
 namespace DataManagement.Standard.Models.Test
 {
-    public class LogTest : Main
+    public class LogTest : Main<Guid>
     {
         public string Ip { get; set; }
         public string Transaccion { get; set; }

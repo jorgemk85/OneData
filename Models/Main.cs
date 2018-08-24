@@ -8,11 +8,12 @@ namespace DataManagement.Standard.Models
     /// <summary>
     /// Clase principal de la que tienen que heredar todos los objetos de negocio que se desee utilizar con la libreria DataManagement.Standard.
     /// </summary>
+    /// <typeparam name="TKey">Representa el tipo a utilizar para la llave primaria del Id.</typeparam>
     [Serializable]
-    public abstract class Main : IManageable
+    public abstract class Main<TKey> : IManageable<TKey> 
     {
         #region Properties
-        public Guid? Id { get; set; }
+        public TKey Id { get; set; }
         #endregion
 
         #region Internal Properties
@@ -51,7 +52,7 @@ namespace DataManagement.Standard.Models
         /// </summary>
         /// <param name="id">El identificador unico del objeto.</param>
         /// <param name="dbTableName">Nombre de la tabla en la base de datos.</param>
-        public Main(Guid id, string dbTableName)
+        public Main(TKey id, string dbTableName)
         {
             Id = id;
             DataBaseTableName = dbTableName;
@@ -66,7 +67,7 @@ namespace DataManagement.Standard.Models
         /// <param name="id">El identificador unico del objeto.</param>
         /// <param name="dbTableName">Nombre de la tabla en la base de datos.</param>
         /// <param name="schema">Nombre del esquema de la tabla en la base de datos.</param>
-        public Main(Guid id, string dbTableName, string schema)
+        public Main(TKey id, string dbTableName, string schema)
         {
             Id = id;
             DataBaseTableName = dbTableName;
@@ -82,7 +83,7 @@ namespace DataManagement.Standard.Models
         /// <param name="dbTableName">Nombre de la tabla en la base de datos.</param>
         /// <param name="isCacheEnabled">Indica si se desea utilizar las funciones de cache en esta clase.</param>
         /// <param name="cacheExpiration">Se especifica la expiracion o vigencia del cache en segundos.</param>
-        public Main(Guid id, string dbTableName, bool isCacheEnabled, int cacheExpiration)
+        public Main(TKey id, string dbTableName, bool isCacheEnabled, int cacheExpiration)
         {
             Id = id;
             DataBaseTableName = dbTableName;
@@ -99,7 +100,7 @@ namespace DataManagement.Standard.Models
         /// <param name="schema">Nombre del esquema de la tabla en la base de datos.</param>
         /// <param name="isCacheEnabled">Indica si se desea utilizar las funciones de cache en esta clase.</param>
         /// <param name="cacheExpiration">Se especifica la expiracion o vigencia del cache en segundos.</param>
-        public Main(Guid id, string dbTableName, string schema, bool isCacheEnabled, int cacheExpiration)
+        public Main(TKey id, string dbTableName, string schema, bool isCacheEnabled, int cacheExpiration)
         {
             Id = id;
             DataBaseTableName = dbTableName;

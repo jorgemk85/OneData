@@ -121,9 +121,9 @@ namespace DataManagement.Standard.DAO
     /// Clase abstracta donde se procesan las consultas a la base de datos y se administra el cache.
     /// </summary>
     /// <typeparam name="T">Tipo de clase que representa este objeto. El tipo tiene que implementar IManageable para poder operar.</typeparam>
-    public abstract class Manager<T> where T : IManageable, new()
+    /// <typeparam name="TKey">Tipo que representa la llave utilizada en la propiedad Id del tipo <typeparamref name="T"/>.</typeparam>
+    public abstract class Manager<T, TKey> where T : IManageable<TKey>, new()
     {
-
         static DataCache dataCache = new DataCache();
         static bool forceQueryDataBase = false;
 
@@ -140,7 +140,7 @@ namespace DataManagement.Standard.DAO
 
         static Manager()
         {
-            dataCache.Initialize(new T());
+            dataCache.Initialize<T, TKey>(new T());
         }
 
         /// <summary>
@@ -228,7 +228,7 @@ namespace DataManagement.Standard.DAO
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la seleccion.</returns>
         public static Result Select(string connectionToUse = null, params Parameter[] parameters)
         {
-            return Command(DataSerializer.SetParametersInObject<T>(parameters), TransactionTypes.Select, connectionToUse);
+            return Command(DataSerializer.SetParametersInObject<T, TKey>(parameters), TransactionTypes.Select, connectionToUse);
         }
 
         /// <summary>
@@ -239,7 +239,7 @@ namespace DataManagement.Standard.DAO
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la seleccion.</returns>
         public static async Task<Result> SelectAsync(string connectionToUse = null, params Parameter[] parameters)
         {
-            return await Task.Run(() => Command(DataSerializer.SetParametersInObject<T>(parameters), TransactionTypes.Select, connectionToUse));
+            return await Task.Run(() => Command(DataSerializer.SetParametersInObject<T, TKey>(parameters), TransactionTypes.Select, connectionToUse));
         }
 
         /// <summary>
@@ -269,7 +269,7 @@ namespace DataManagement.Standard.DAO
 
         private static Result Command(List<T> list, TransactionTypes transactionType, string connectionToUse = null)
         {
-            return DynamicCommand(list, transactionType,  connectionToUse);
+            return DynamicCommand(list, transactionType, connectionToUse);
         }
 
         private static Result DynamicCommand(dynamic obj, TransactionTypes transactionType, string connectionToUse = null)
@@ -280,13 +280,13 @@ namespace DataManagement.Standard.DAO
             if (dataCache.IsCacheEnabled)
             {
                 ResetCacheIfExpired();
-                result = queryEvaluation.Evaluate(obj, transactionType, dataCache.Cache, dataCache.IsPartialCache, forceQueryDataBase, connectionToUse);
+                result = queryEvaluation.Evaluate<T, TKey>(obj, transactionType, dataCache.Cache, dataCache.IsPartialCache, forceQueryDataBase, connectionToUse);
                 SaveCache(transactionType, result);
             }
             else
             {
                 // Al mandar TRUE en forceQueryDataBase aseguramos que no se use el cache y al no almacenar el resultado con la funcion SaveCache, anulamos completamente el uso cache.
-                result = queryEvaluation.Evaluate(obj, transactionType, dataCache.Cache, dataCache.IsPartialCache, true, connectionToUse);
+                result = queryEvaluation.Evaluate<T, TKey>(obj, transactionType, dataCache.Cache, dataCache.IsPartialCache, true, connectionToUse);
             }
             CallOnExecutedEventHandlers(new T().DataBaseTableName, transactionType, result);
             return result;
@@ -338,7 +338,7 @@ namespace DataManagement.Standard.DAO
             if (DateTime.Now.Ticks > dataCache.LastCacheUpdate + dataCache.CacheExpiration)
             {
                 // Elimina el cache ya que esta EXPIRADO y de debe de refrescar.
-                dataCache.Reset(new T());
+                dataCache.Reset<T, TKey>(new T());
             }
         }
 

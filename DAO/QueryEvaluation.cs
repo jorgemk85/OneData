@@ -26,7 +26,7 @@ namespace DataManagement.Standard.DAO
             operation = Operation.GetOperationBasedOnConnectionType(connectionType);
         }
 
-        public Result Evaluate<T>(T obj, TransactionTypes transactionType, Result cache, bool isPartialCache, bool forceQueryDataBase, string connectionToUse) where T : IManageable, new()
+        public Result Evaluate<T, TKey>(T obj, TransactionTypes transactionType, Result cache, bool isPartialCache, bool forceQueryDataBase, string connectionToUse) where T : IManageable<TKey>, new()
         {
             string tableName = obj.DataBaseTableName;
             Result resultado = null;
@@ -35,25 +35,25 @@ namespace DataManagement.Standard.DAO
             switch (transactionType)
             {
                 case TransactionTypes.Select:
-                    EvaluateSelect(obj, out resultado, isCached, tableName, cache, isPartialCache, forceQueryDataBase, connectionToUse);
+                    EvaluateSelect<T, TKey>(obj, out resultado, isCached, tableName, cache, isPartialCache, forceQueryDataBase, connectionToUse);
                     break;
                 case TransactionTypes.SelectAll:
-                    EvaluateSelectAll(obj, out resultado, isCached, tableName, cache, forceQueryDataBase, connectionToUse);
+                    EvaluateSelectAll<T, TKey>(obj, out resultado, isCached, tableName, cache, forceQueryDataBase, connectionToUse);
                     break;
                 case TransactionTypes.Delete:
-                    resultado = operation.ExecuteProcedure(obj, tableName, connectionToUse, transactionType);
-                    if (isCached && resultado.IsSuccessful) DeleteInCache(obj, cache);
+                    resultado = operation.ExecuteProcedure<T, TKey>(obj, tableName, connectionToUse, transactionType);
+                    if (isCached && resultado.IsSuccessful) DeleteInCache<T, TKey>(obj, cache);
                     break;
                 case TransactionTypes.Insert:
-                    resultado = operation.ExecuteProcedure(obj, tableName, connectionToUse, transactionType);
-                    if (isCached && resultado.IsSuccessful) InsertInCache(obj, cache);
+                    resultado = operation.ExecuteProcedure<T, TKey>(obj, tableName, connectionToUse, transactionType);
+                    if (isCached && resultado.IsSuccessful) InsertInCache<T, TKey>(obj, cache);
                     break;
                 case TransactionTypes.Update:
-                    resultado = operation.ExecuteProcedure(obj, tableName, connectionToUse, transactionType);
-                    if (isCached && resultado.IsSuccessful) UpdateInCache(obj, cache);
+                    resultado = operation.ExecuteProcedure<T, TKey>(obj, tableName, connectionToUse, transactionType);
+                    if (isCached && resultado.IsSuccessful) UpdateInCache<T, TKey>(obj, cache);
                     break;
                 case TransactionTypes.StoredProcedure:
-                    resultado = operation.ExecuteProcedure(obj, tableName, connectionToUse, transactionType);
+                    resultado = operation.ExecuteProcedure<T, TKey>(obj, tableName, connectionToUse, transactionType);
                     break;
                 default:
                     break;
@@ -62,7 +62,7 @@ namespace DataManagement.Standard.DAO
             return resultado;
         }
 
-        public Result Evaluate<T>(List<T> list, TransactionTypes transactionType, Result cache, bool isPartialCache, bool forceQueryDataBase, string connectionToUse) where T : IManageable, new()
+        public Result Evaluate<T, TKey>(List<T> list, TransactionTypes transactionType, Result cache, bool isPartialCache, bool forceQueryDataBase, string connectionToUse) where T : IManageable<TKey>, new()
         {
             string tableName = new T().DataBaseTableName;
             Result resultado = null;
@@ -71,8 +71,8 @@ namespace DataManagement.Standard.DAO
             switch (transactionType)
             {
                 case TransactionTypes.InsertList:
-                    resultado = operation.ExecuteProcedure(list, tableName, connectionToUse, transactionType);
-                    if (isCached && resultado.IsSuccessful) InsertListInCache(list, cache);
+                    resultado = operation.ExecuteProcedure<T, TKey>(list, tableName, connectionToUse, transactionType);
+                    if (isCached && resultado.IsSuccessful) InsertListInCache<T, TKey>(list, cache);
                     break;
                 default:
                     break;
@@ -81,38 +81,38 @@ namespace DataManagement.Standard.DAO
             return resultado;
         }
 
-        private void EvaluateSelect<T>(T obj, out Result resultado, bool isCached, string tableName, Result cache, bool isPartialCache, bool forceQueryDataBase, string connectionToUse) where T : IManageable, new()
+        private void EvaluateSelect<T, TKey>(T obj, out Result resultado, bool isCached, string tableName, Result cache, bool isPartialCache, bool forceQueryDataBase, string connectionToUse) where T : IManageable<TKey>, new()
         {
             if (forceQueryDataBase)
             {
-                resultado = operation.ExecuteProcedure(obj, tableName, connectionToUse, TransactionTypes.Select);
+                resultado = operation.ExecuteProcedure<T, TKey>(obj, tableName, connectionToUse, TransactionTypes.Select);
             }
             else
             {
-                resultado = isCached == true ? SelectInCache(obj, cache) : operation.ExecuteProcedure(obj, tableName, connectionToUse, TransactionTypes.Select);
+                resultado = isCached == true ? SelectInCache<T, TKey>(obj, cache) : operation.ExecuteProcedure<T, TKey>(obj, tableName, connectionToUse, TransactionTypes.Select);
 
                 resultado.IsFromCache = isCached == true ? true : false;
                 if (isCached && isPartialCache && resultado.Data.Rows.Count == 0)
                 {
-                    resultado = operation.ExecuteProcedure(obj, tableName, connectionToUse, TransactionTypes.Select);
+                    resultado = operation.ExecuteProcedure<T, TKey>(obj, tableName, connectionToUse, TransactionTypes.Select);
                 }
             }
         }
 
-        private void EvaluateSelectAll<T>(T obj, out Result resultado, bool isCached, string tableName, Result cache, bool forceQueryDataBase, string connectionToUse) where T : IManageable, new()
+        private void EvaluateSelectAll<T, TKey>(T obj, out Result resultado, bool isCached, string tableName, Result cache, bool forceQueryDataBase, string connectionToUse) where T : IManageable<TKey>, new()
         {
             if (forceQueryDataBase)
             {
-                resultado = operation.ExecuteProcedure(obj, tableName, connectionToUse, TransactionTypes.SelectAll);
+                resultado = operation.ExecuteProcedure<T, TKey>(obj, tableName, connectionToUse, TransactionTypes.SelectAll);
             }
             else
             {
-                resultado = isCached == true ? cache : operation.ExecuteProcedure(obj, tableName, connectionToUse, TransactionTypes.SelectAll);
+                resultado = isCached == true ? cache : operation.ExecuteProcedure<T, TKey>(obj, tableName, connectionToUse, TransactionTypes.SelectAll);
                 resultado.IsFromCache = isCached == true ? true : false;
             }
         }
 
-        private Result SelectInCache<T>(T obj, Result cache) where T : IManageable, new()
+        private Result SelectInCache<T, TKey>(T obj, Result cache) where T : IManageable<TKey>, new()
         {
             int valueIndex = 0;
             List<object> values = new List<object>();
@@ -142,12 +142,12 @@ namespace DataManagement.Standard.DAO
                 predicate = predicate.Substring(0, predicate.Length - 5);
                 // TODO: Hay que migrar de la version vieja de Linq.Dynamic a la nueva que trabaja con .net core y standard.
                 return new Result(cache.Data, true, true);
-                //return new Result(DataSerializer.ConvertListToDataTableOfType(DataSerializer.ConvertDataTableToListOfType<T>(cache.Data)
+                //return new Result(DataSerializer.ConvertListToDataTableOfType(DataSerializer.ConvertDataTableToListOfType<T, TKey>(cache.Data)
                 //                                                             .Where(predicate,""), true, true);
             }
         }
 
-        private DataRow SetRowData<T>(DataRow row, T obj) where T : IManageable
+        private DataRow SetRowData<T, TKey>(DataRow row, T obj) where T : IManageable<TKey>
         {
             object value = null;
             Type type;
@@ -178,22 +178,22 @@ namespace DataManagement.Standard.DAO
             return row;
         }
 
-        private void UpdateInCache<T>(T obj, Result cache) where T : IManageable
+        private void UpdateInCache<T, TKey>(T obj, Result cache) where T : IManageable<TKey>
         {
-            SetRowData(cache.Data.Rows.Find(obj.Id), obj).AcceptChanges();
+            SetRowData<T, TKey>(cache.Data.Rows.Find(obj.Id), obj).AcceptChanges();
         }
 
-        private void InsertInCache<T>(T obj, Result cache) where T : IManageable
+        private void InsertInCache<T, TKey>(T obj, Result cache) where T : IManageable<TKey>
         {
-            cache.Data.Rows.Add(SetRowData(cache.Data.NewRow(), obj));
+            cache.Data.Rows.Add(SetRowData<T, TKey>(cache.Data.NewRow(), obj));
             cache.Data.AcceptChanges();
         }
 
-        private void InsertListInCache<T>(List<T> list, Result cache) where T : IManageable
+        private void InsertListInCache<T, TKey>(List<T> list, Result cache) where T : IManageable<TKey>
         {
             foreach (T obj in list)
             {
-                cache.Data.Rows.Add(SetRowData(cache.Data.NewRow(), obj));
+                cache.Data.Rows.Add(SetRowData<T, TKey>(cache.Data.NewRow(), obj));
             }
             cache.Data.AcceptChanges();
         }
@@ -221,12 +221,12 @@ namespace DataManagement.Standard.DAO
             cache.Data.AcceptChanges();
         }
 
-        private void DeleteInCache<T>(T obj, Result cache) where T : IManageable
+        private void DeleteInCache<T, TKey>(T obj, Result cache) where T : IManageable<TKey>
         {
             for (int i = 0; i < cache.Data.Rows.Count; i++)
             {
                 DataRow row = cache.Data.Rows[i];
-                if (row[row.Table.PrimaryKey[0]].Equals(obj.Id.GetValueOrDefault()))
+                if (row[row.Table.PrimaryKey[0]].Equals(obj.Id))
                 {
                     row.Delete();
                     cache.Data.AcceptChanges();

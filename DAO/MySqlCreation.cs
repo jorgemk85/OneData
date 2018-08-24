@@ -28,7 +28,7 @@ namespace DataManagement.Standard.DAO
             }
         }
 
-        public string CreateInsertStoredProcedure<T>(bool doAlter) where T : IManageable, new()
+        public string CreateInsertStoredProcedure<T, TKey>(bool doAlter) where T : IManageable<TKey>, new()
         {
             StringBuilder queryBuilder = new StringBuilder();
             PropertyInfo[] properties = typeof(T).GetProperties().Where(q => q.GetCustomAttribute<UnlinkedProperty>() == null && q.GetCustomAttribute<UnmanagedProperty>() == null).ToArray();
@@ -75,7 +75,7 @@ namespace DataManagement.Standard.DAO
             return queryBuilder.ToString();
         }
 
-        public string CreateUpdateStoredProcedure<T>(bool doAlter) where T : IManageable, new()
+        public string CreateUpdateStoredProcedure<T, TKey>(bool doAlter) where T : IManageable<TKey>, new()
         {
             StringBuilder queryBuilder = new StringBuilder();
             PropertyInfo[] properties = typeof(T).GetProperties().Where(q => q.GetCustomAttribute<UnlinkedProperty>() == null && q.GetCustomAttribute<UnmanagedProperty>() == null).ToArray();
@@ -114,7 +114,7 @@ namespace DataManagement.Standard.DAO
             return queryBuilder.ToString();
         }
 
-        public string CreateDeleteStoredProcedure<T>(bool doAlter) where T : IManageable, new()
+        public string CreateDeleteStoredProcedure<T, TKey>(bool doAlter) where T : IManageable<TKey>, new()
         {
             StringBuilder queryBuilder = new StringBuilder();
             PropertyInfo[] properties = typeof(T).GetProperties().Where(q => q.GetCustomAttribute<UnlinkedProperty>() == null && q.GetCustomAttribute<UnmanagedProperty>() == null).ToArray();
@@ -129,7 +129,7 @@ namespace DataManagement.Standard.DAO
 
             queryBuilder.AppendFormat("CREATE PROCEDURE {0}{1}{2} (\n", Manager.StoredProcedurePrefix, obj.DataBaseTableName, Manager.DeleteSuffix);
 
-            queryBuilder.Append("    IN _Id char(36))\n");
+            queryBuilder.Append(string.Format("    IN _Id {0})\n", GetSqlDataType(typeof(TKey))));
             queryBuilder.Append("BEGIN\n");
             queryBuilder.AppendFormat("DELETE FROM {0}{1}\n", Manager.TablePrefix, obj.DataBaseTableName);
             queryBuilder.AppendFormat("WHERE Id = _Id;\n");
@@ -140,7 +140,7 @@ namespace DataManagement.Standard.DAO
             return queryBuilder.ToString();
         }
 
-        public string CreateSelectAllStoredProcedure<T>(bool doAlter) where T : IManageable, new()
+        public string CreateSelectAllStoredProcedure<T, TKey>(bool doAlter) where T : IManageable<TKey>, new()
         {
             StringBuilder queryBuilder = new StringBuilder();
             PropertyInfo[] properties = typeof(T).GetProperties().Where(q => q.GetCustomAttribute<UnlinkedProperty>() == null && q.GetCustomAttribute<UnmanagedProperty>() == null).ToArray();
@@ -165,7 +165,7 @@ namespace DataManagement.Standard.DAO
             return queryBuilder.ToString();
         }
 
-        public string CreateSelectStoredProcedure<T>(bool doAlter) where T : IManageable, new()
+        public string CreateSelectStoredProcedure<T, TKey>(bool doAlter) where T : IManageable<TKey>, new()
         {
             StringBuilder queryBuilder = new StringBuilder();
             PropertyInfo[] properties = typeof(T).GetProperties().Where(q => q.GetCustomAttribute<UnlinkedProperty>() == null && q.GetCustomAttribute<UnmanagedProperty>() == null).ToArray();
@@ -204,17 +204,17 @@ namespace DataManagement.Standard.DAO
             return queryBuilder.ToString();
         }
 
-        public string GetCreateTableQuery(Type type)
+        public string GetCreateTableQuery<TKey>(Type type)
         {
             PropertyInfo[] properties = type.GetProperties().Where(q => q.GetCustomAttribute<UnlinkedProperty>() == null).ToArray();
-            IManageable obj = (IManageable)Activator.CreateInstance(type);
+            IManageable<TKey> obj = (IManageable<TKey>)Activator.CreateInstance(type);
 
             if (properties.Length == 0) return string.Empty;
 
             return CreateQueryForTableCreation(obj, ref properties);
         }
 
-        public string CreateQueryForTableCreation(IManageable obj, ref PropertyInfo[] properties)
+        public string CreateQueryForTableCreation<TKey>(IManageable<TKey> obj, ref PropertyInfo[] properties)
         {
             StringBuilder queryBuilder = new StringBuilder();
 
@@ -236,17 +236,17 @@ namespace DataManagement.Standard.DAO
             return queryBuilder.ToString();
         }
 
-        public string GetAlterTableQuery(Type type, Dictionary<string, ColumnDefinition> columnDetails, Dictionary<string, KeyDefinition> keyDetails)
+        public string GetAlterTableQuery<TKey>(Type type, Dictionary<string, ColumnDefinition> columnDetails, Dictionary<string, KeyDefinition> keyDetails)
         {
             PropertyInfo[] properties = type.GetProperties().Where(q => q.GetCustomAttribute<UnlinkedProperty>() == null).ToArray();
-            IManageable obj = (IManageable)Activator.CreateInstance(type);
+            IManageable<TKey> obj = (IManageable<TKey>)Activator.CreateInstance(type);
 
             if (properties.Length == 0) return string.Empty;
 
             return CreateQueryForTableAlteration(obj, ref properties, columnDetails, keyDetails);
         }
 
-        public string CreateQueryForTableAlteration(IManageable obj, ref PropertyInfo[] properties, Dictionary<string, ColumnDefinition> columnDetails, Dictionary<string, KeyDefinition> keyDetails)
+        public string CreateQueryForTableAlteration<TKey>(IManageable<TKey> obj, ref PropertyInfo[] properties, Dictionary<string, ColumnDefinition> columnDetails, Dictionary<string, KeyDefinition> keyDetails)
         {
             StringBuilder queryBuilder = new StringBuilder();
             List<string> columnsFound = new List<string>();
@@ -261,12 +261,6 @@ namespace DataManagement.Standard.DAO
                 bool isNullable = Nullable.GetUnderlyingType(property.PropertyType) == null ? false : true;
                 string nullable = isNullable == true ? string.Empty : "NOT NULL";
 
-                if (property.Name.Equals("Id"))
-                {
-                    columnsFound.Add(property.Name);
-                    continue;
-                }
-
                 if (columnDefinition == null)
                 {
                     // Agregar propiedad a tabla ya que no existe.
@@ -280,13 +274,13 @@ namespace DataManagement.Standard.DAO
                     queryBuilder.AppendFormat("MODIFY COLUMN {0} {1},\n", property.Name, sqlDataType);
                     foundDiference = true;
                 }
-                if (columnDefinition.Is_Nullable.Equals("YES") && !isNullable)
+                if (columnDefinition.Is_Nullable.Equals("YES") && !isNullable && !property.Name.Equals("Id"))
                 {
                     // Si la propiedad ya no es nullable, entonces la cambia en la base de datos
                     queryBuilder.AppendFormat("MODIFY COLUMN {0} {1} NOT NULL,\n", property.Name, sqlDataType);
                     foundDiference = true;
                 }
-                if (columnDefinition.Is_Nullable.Equals("NO") && isNullable)
+                if (columnDefinition.Is_Nullable.Equals("NO") && isNullable && !property.Name.Equals("Id"))
                 {
                     // Si la propiedad ES nullable, entonces la cambia en la base de datos
                     queryBuilder.AppendFormat("MODIFY COLUMN {0} {1},\n", property.Name, sqlDataType);
@@ -328,16 +322,16 @@ namespace DataManagement.Standard.DAO
                 Logger.Info(queryBuilder.ToString());
             }
 
-            queryBuilder.Append(GetCreateForeignKeysQuery(obj.GetType(), keyDetails));
+            queryBuilder.Append(GetCreateForeignKeysQuery<TKey>(obj.GetType(), keyDetails));
 
             return queryBuilder.ToString();
         }
 
-        public string GetCreateForeignKeysQuery(Type type, Dictionary<string, KeyDefinition> keyDetails = null)
+        public string GetCreateForeignKeysQuery<TKey>(Type type, Dictionary<string, KeyDefinition> keyDetails = null)
         {
             StringBuilder queryBuilder = new StringBuilder();
             PropertyInfo[] properties = type.GetProperties().Where(q => q.GetCustomAttribute<UnlinkedProperty>() == null && q.GetCustomAttribute<ForeignModel>() != null && !keyDetails.ContainsKey(q.Name)).ToArray();
-            IManageable obj = (IManageable)Activator.CreateInstance(type);
+            IManageable<TKey> obj = (IManageable<TKey>)Activator.CreateInstance(type);
 
             if (properties.Length == 0) return string.Empty;
 
@@ -346,7 +340,7 @@ namespace DataManagement.Standard.DAO
             foreach (PropertyInfo property in properties)
             {
                 ForeignModel foreignAttribute = property.GetCustomAttribute<ForeignModel>();
-                IManageable foreignModel = (IManageable)Activator.CreateInstance(foreignAttribute.Model);
+                IManageable<TKey> foreignModel = (IManageable<TKey>)Activator.CreateInstance(foreignAttribute.Model);
                 queryBuilder.AppendFormat("ADD CONSTRAINT FK_{0}_{1}\n", obj.DataBaseTableName, foreignModel.DataBaseTableName);
                 queryBuilder.AppendFormat("FOREIGN KEY({0}) REFERENCES {1}{2}(Id) ON DELETE {3} ON UPDATE NO ACTION;\n", property.Name, Manager.TablePrefix, foreignModel.DataBaseTableName, foreignAttribute.Action.ToString().Replace("_", " "));
             }
@@ -420,7 +414,7 @@ namespace DataManagement.Standard.DAO
             }
         }
 
-        public string CreateInsertListStoredProcedure<T>(bool doAlter) where T : IManageable, new()
+        public string CreateInsertListStoredProcedure<T, TKey>(bool doAlter) where T : IManageable<TKey>, new()
         {
             throw new NotImplementedException();
         }

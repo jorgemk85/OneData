@@ -21,9 +21,9 @@ namespace DataManagement.Standard.IntegrationTests.MySql
             TestTools.SetConfigurationForAutoCreate(true);
             TestTools.SetConfigurationForAutoAlter(true);
 
-            newLogId = TestTools.GetLogTestModel(true).Id.GetValueOrDefault();
+            newLogId = TestTools.GetLogTestModel(true).Id;
 
-            Assert.DoesNotThrow(() => Manager<LogTest>.Insert(TestTools.GetLogTestModel(false)));
+            Assert.DoesNotThrow(() => Manager<LogTest, Guid>.Insert(TestTools.GetLogTestModel(false)));
         }
 
         [Test, Order(1)]
@@ -31,19 +31,19 @@ namespace DataManagement.Standard.IntegrationTests.MySql
         {
             TestTools.GetLogTestModel(true).Parametros = "Parametros Editados";
 
-            Assert.DoesNotThrow(() => Manager<LogTest>.Update(TestTools.GetLogTestModel(false)));
+            Assert.DoesNotThrow(() => Manager<LogTest, Guid>.Update(TestTools.GetLogTestModel(false)));
         }
 
         [Test, Order(2)]
         public void Select_FullAutomation_DoesNotThrow()
         {
-            Assert.DoesNotThrow(() => Manager<LogTest>.Select(null, new Parameter(nameof(LogTest.Id), newLogId)));
+            Assert.DoesNotThrow(() => Manager<LogTest, Guid>.Select(null, new Parameter(nameof(LogTest.Id), newLogId)));
         }
 
         [Test, Order(3)]
         public void SelectAll_FullAutomation_DoesNotThrow()
         {
-            Assert.DoesNotThrow(() => Manager<LogTest>.SelectAll());
+            Assert.DoesNotThrow(() => Manager<LogTest, Guid>.SelectAll());
         }
 
         [Test, Order(4)]
@@ -51,7 +51,7 @@ namespace DataManagement.Standard.IntegrationTests.MySql
         {
             TestTools.GetLogTestModel(true).Id = newLogId;
 
-            Assert.DoesNotThrow(() => Manager<LogTest>.Delete(TestTools.GetLogTestModel(false)));
+            Assert.DoesNotThrow(() => Manager<LogTest, Guid>.Delete(TestTools.GetLogTestModel(false)));
         }
 
         [OneTimeTearDown]
