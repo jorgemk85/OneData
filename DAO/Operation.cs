@@ -257,7 +257,7 @@ namespace DataManagement.Standard.DAO
         private void VerifyForeignTables<TKey>(Type type, string connectionToUse, bool doAlter) where TKey : struct
         {
             Logger.Info(string.Format("Verifying foreign tables for type {0} using connection {1}. DoAlter = {2}", type.ToString(), connectionToUse, doAlter));
-            PropertyInfo[] properties = type.GetProperties().Where(q => q.GetCustomAttribute<UnlinkedProperty>() == null && q.GetCustomAttribute<ForeignModel>() != null).ToArray();
+            PropertyInfo[] properties = type.GetProperties().Where(q => q.GetCustomAttribute<UnmanagedProperty>() == null && q.GetCustomAttribute<ForeignModel>() != null).ToArray();
 
             foreach (PropertyInfo property in properties)
             {

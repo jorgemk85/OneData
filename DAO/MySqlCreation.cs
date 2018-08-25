@@ -44,7 +44,7 @@ namespace DataManagement.Standard.DAO
 
             T obj = new T();
 
-            if (properties.LinkedProperties.Count == 0) return string.Empty;
+            if (properties.ManagedProperties.Count == 0) return string.Empty;
 
             if (doAlter)
             {
@@ -62,7 +62,7 @@ namespace DataManagement.Standard.DAO
             queryBuilder.AppendFormat("INSERT INTO {0}{1} (\n", Manager.TablePrefix, obj.DataBaseTableName);
 
             // Seccion para especificar a que columnas se va a insertar y sus valores.
-            foreach (KeyValuePair<string, PropertyInfo> property in properties.LinkedProperties)
+            foreach (KeyValuePair<string, PropertyInfo> property in properties.ManagedProperties)
             {
                 if (property.Value.Equals(properties.PrimaryProperty) && property.Value.PropertyType.Equals(typeof(int?)))
                 {
@@ -100,7 +100,7 @@ namespace DataManagement.Standard.DAO
 
             T obj = new T();
 
-            if (properties.LinkedProperties.Count == 0) return string.Empty;
+            if (properties.ManagedProperties.Count == 0) return string.Empty;
 
             if (doAlter)
             {
@@ -119,7 +119,7 @@ namespace DataManagement.Standard.DAO
             queryBuilder.Append("SET\n");
 
             // Se especifica el parametro que va en x columna.
-            foreach (KeyValuePair<string, PropertyInfo> property in properties.LinkedProperties)
+            foreach (KeyValuePair<string, PropertyInfo> property in properties.ManagedProperties)
             {
                 if (property.Equals(properties.PrimaryProperty) || property.Value.Name.Equals(properties.DateCreatedProperty.Name))
                 {
@@ -229,7 +229,7 @@ namespace DataManagement.Standard.DAO
 
         public string GetCreateTableQuery<TKey>(Type type) where TKey : struct
         {
-            PropertyInfo[] properties = type.GetProperties().Where(q => q.GetCustomAttribute<UnlinkedProperty>() == null).ToArray();
+            PropertyInfo[] properties = type.GetProperties().Where(q => q.GetCustomAttribute<UnmanagedProperty>() == null).ToArray();
             IManageable<TKey> obj = (IManageable<TKey>)Activator.CreateInstance(type);
 
             if (properties.Length == 0) return string.Empty;
@@ -275,7 +275,7 @@ namespace DataManagement.Standard.DAO
 
         public string GetAlterTableQuery<TKey>(Type type, Dictionary<string, ColumnDefinition> columnDetails, Dictionary<string, KeyDefinition> keyDetails) where TKey : struct
         {
-            PropertyInfo[] properties = type.GetProperties().Where(q => q.GetCustomAttribute<UnlinkedProperty>() == null).ToArray();
+            PropertyInfo[] properties = type.GetProperties().Where(q => q.GetCustomAttribute<UnmanagedProperty>() == null).ToArray();
             IManageable<TKey> obj = (IManageable<TKey>)Activator.CreateInstance(type);
 
             if (properties.Length == 0) return string.Empty;
@@ -367,7 +367,7 @@ namespace DataManagement.Standard.DAO
         public string GetCreateForeignKeysQuery<TKey>(Type type, Dictionary<string, KeyDefinition> keyDetails = null) where TKey : struct
         {
             StringBuilder queryBuilder = new StringBuilder();
-            PropertyInfo[] properties = type.GetProperties().Where(q => q.GetCustomAttribute<UnlinkedProperty>() == null && q.GetCustomAttribute<ForeignModel>() != null && !keyDetails.ContainsKey(q.Name)).ToArray();
+            PropertyInfo[] properties = type.GetProperties().Where(q => q.GetCustomAttribute<UnmanagedProperty>() == null && q.GetCustomAttribute<ForeignModel>() != null && !keyDetails.ContainsKey(q.Name)).ToArray();
             IManageable<TKey> obj = (IManageable<TKey>)Activator.CreateInstance(type);
 
             if (properties.Length == 0) return string.Empty;

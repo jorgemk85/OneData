@@ -12,20 +12,20 @@ namespace DataManagement.Standard.Models
         /// </summary>
         public PropertyInfo[] Properties { get; set; }
         /// <summary>
-        /// Controla las propiedades que NO estan marcadas como UnlinkedProperty.
+        /// Controla las propiedades que NO estan marcadas como UnmanagedProperty.
         /// </summary>
-        public Dictionary<string, PropertyInfo> LinkedProperties { get; set; } = new Dictionary<string, PropertyInfo>();
+        public Dictionary<string, PropertyInfo> ManagedProperties { get; set; } = new Dictionary<string, PropertyInfo>();
         /// <summary>
-        /// Son aquellas propiedades marcadas con el atributo UnlinkedProperty.
+        /// Son aquellas propiedades marcadas con el atributo UnmanagedProperty.
         /// </summary>
-        public Dictionary<string, PropertyInfo> UnlinkedProperties { get; set; } = new Dictionary<string, PropertyInfo>();
+        public Dictionary<string, PropertyInfo> UnmanagedProperties { get; set; } = new Dictionary<string, PropertyInfo>();
         /// <summary>
         /// Las propiedades contenidas en este diccionario son aquellas marcadas como AutoProperties, las cuales se usan para ser
         /// alimentada desde la base de datos, en el procedimiento almacenado.
         /// </summary>
         public Dictionary<string, PropertyInfo> AutoProperties { get; set; } = new Dictionary<string, PropertyInfo>();
         /// <summary>
-        /// Esta propiedad controla las propiedades del objeto que NO estan marcadas con el atributo UnlinkedProperty NI AutoProperty.
+        /// Esta propiedad controla las propiedades del objeto que NO estan marcadas con el atributo UnmanagedProperty NI AutoProperty.
         /// </summary>
         public Dictionary<string, PropertyInfo> FilteredProperties { get; set; } = new Dictionary<string, PropertyInfo>();
         public Dictionary<string, AutoPropertyTypes> AutoPropertyTypes { get; set; } = new Dictionary<string, AutoPropertyTypes>();
@@ -44,16 +44,16 @@ namespace DataManagement.Standard.Models
             IEnumerable<CustomAttributeData> attributes = null;
             foreach (PropertyInfo property in Properties)
             {
-                LinkedProperties.Add(property.Name, property);
+                ManagedProperties.Add(property.Name, property);
                 FilteredProperties.Add(property.Name, property);
                 attributes = property.CustomAttributes;
                 foreach (CustomAttributeData attribute in attributes)
                 {
                     switch (attribute.AttributeType.Name)
                     {
-                        case "UnlinkedProperty":
-                            UnlinkedProperties.Add(property.Name, property);
-                            LinkedProperties.Remove(property.Name);
+                        case "UnmanagedProperty":
+                            UnmanagedProperties.Add(property.Name, property);
+                            ManagedProperties.Remove(property.Name);
                             FilteredProperties.Remove(property.Name);
                             break;
                         case "AutoProperty":

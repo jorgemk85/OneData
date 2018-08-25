@@ -18,39 +18,39 @@ namespace DataManagement.Standard.Models
         public TKey? Id { get; set; }
         #endregion
 
-        #region Internal Properties
+        #region Auto Properties
         [DateCreatedProperty, AutoProperty(AutoPropertyTypes.DateTime)]
         public DateTime? FechaCreacion { get; set; } = DateTime.Now;
         [DateModifiedProperty, AutoProperty(AutoPropertyTypes.DateTime)]
         public DateTime? FechaModificacion { get; set; } = DateTime.Now;
         #endregion
 
-        #region Unlinked Properties
+        #region Unmanaged Properties
         /// <summary>
         /// Almacena el nombre de la tabla en la base de datos SIN prefijos ni sufijos.
         /// </summary>
-        [UnlinkedProperty]
+        [UnmanagedProperty]
         public string DataBaseTableName { get; }
         /// <summary>
         /// Almacena el nombre del schema de la tabla en la base de datos.
         /// </summary>
-        [UnlinkedProperty]
+        [UnmanagedProperty]
         public string Schema { get; }
         /// <summary>
         /// Especifica si se desea utilizar las funciones de cache en la clase actual.
         /// </summary>
-        [UnlinkedProperty]
+        [UnmanagedProperty]
         public bool IsCacheEnabled { get; }
         /// <summary>
         /// Si se estan utilizando las funciones de cache, se puede especificar la expiracion o vigencia del mismo en segundos.
         /// </summary>
-        [UnlinkedProperty]
+        [UnmanagedProperty]
         public int CacheExpiration { get; }
 
         /// <summary>
         /// Se utiliza para facilitar el acceso al tipo de la llave primaria del objeto.
         /// </summary>
-        [UnlinkedProperty]
+        [UnmanagedProperty]
         public Type KeyType { get; } = typeof(TKey?);
         #endregion
 
