@@ -1,4 +1,6 @@
-﻿using System;
+﻿using DataManagement.Standard.Attributes;
+using DataManagement.Standard.Enums;
+using System;
 
 namespace DataManagement.Standard.Models.Test
 {

@@ -1,4 +1,5 @@
 ﻿using DataManagement.Standard.Attributes;
+using DataManagement.Standard.Enums;
 using DataManagement.Standard.Interfaces;
 using DataManagement.Standard.Models;
 using DataManagement.Standard.Tools;
@@ -12,23 +13,30 @@ namespace DataManagement.Standard.DAO
 {
     internal class MsSqlCreation : ICreatable
     {
-        public void SetStoredProceduresParameters<T, TKey>(ref PropertyInfo[] properties, T obj, StringBuilder queryBuilder, bool setDefaultNull, bool considerId) where T : IManageable<TKey>, new() where TKey : struct
+        public void SetStoredProceduresParameters<T, TKey>(PropertiesData<T> properties, T obj, StringBuilder queryBuilder, bool setDefaultNull, bool considerPrimary) where T : IManageable<TKey>, new() where TKey : struct
         {
             // Aqui se colocan los parametros segun las propiedades del objeto 
-            foreach (PropertyInfo property in properties)
+            foreach (KeyValuePair<string, PropertyInfo> property in properties.LinkedProperties)
             {
-                if (property.Name == "Id" && Nullable.GetUnderlyingType(obj.KeyType) == typeof(int) && !considerId)
+                // Si la propiedad actual es la primaria y esta es del tipo int? y no se debe considerar para estos parametros, entonces se salta a la sig propiedad.
+                // Esto significa que la propiedad primaria es Identity o Auto Increment y no se debe de mandar como parametro en un Insert.
+                if (property.Value.Equals(properties.PrimaryProperty) && property.Value.PropertyType.Equals(typeof(int?)) && !considerPrimary)
                 {
                     continue;
                 }
-
+                // Si la propiedad es DateCreated o DateModified o AutoProperty, no se debe mandar como parametro
+                // Esto es por que estos valores se alimentan desde el procedimiento almacenado.
+                if (properties.AutoProperties.ContainsKey(property.Value.Name))
+                {
+                    continue;
+                }
                 if (setDefaultNull)
                 {
-                    queryBuilder.AppendFormat("    @_{0} {1} = null,\n", property.Name, GetSqlDataType(property.PropertyType));
+                    queryBuilder.AppendFormat("    @_{0} {1} = null,\n", property.Value.Name, GetSqlDataType(property.Value.PropertyType));
                 }
                 else
                 {
-                    queryBuilder.AppendFormat("    @_{0} {1},\n", property.Name, GetSqlDataType(property.PropertyType));
+                    queryBuilder.AppendFormat("    @_{0} {1},\n", property.Value.Name, GetSqlDataType(property.Value.PropertyType));
                 }
             }
         }
@@ -36,10 +44,12 @@ namespace DataManagement.Standard.DAO
         public string CreateInsertStoredProcedure<T, TKey>(bool doAlter) where T : IManageable<TKey>, new() where TKey : struct
         {
             StringBuilder queryBuilder = new StringBuilder();
-            PropertyInfo[] properties = typeof(T).GetProperties().Where(q => q.GetCustomAttribute<UnlinkedProperty>() == null && q.GetCustomAttribute<UnmanagedProperty>() == null).ToArray();
+            StringBuilder insertsBuilder = new StringBuilder();
+            StringBuilder valuesBuilder = new StringBuilder();
+            PropertiesData<T> properties = new PropertiesData<T>();
             T obj = new T();
 
-            if (properties.Length == 0) return string.Empty;
+            if (properties.LinkedProperties.Count == 0) return string.Empty;
 
             if (doAlter)
             {
@@ -51,7 +61,7 @@ namespace DataManagement.Standard.DAO
             }
 
             // Aqui se colocan los parametros segun las propiedades del objeto
-            SetStoredProceduresParameters<T, TKey>(ref properties, obj, queryBuilder, false, false);
+            SetStoredProceduresParameters<T, TKey>(properties, obj, queryBuilder, false, false);
 
             queryBuilder.Remove(queryBuilder.Length - 2, 2);
             queryBuilder.Append("\nAS\n");
@@ -60,31 +70,32 @@ namespace DataManagement.Standard.DAO
             queryBuilder.Append("SET @actualTime = getdate();\n");
             queryBuilder.AppendFormat("INSERT INTO {0}.{1}{2} (\n", obj.Schema, Manager.TablePrefix, obj.DataBaseTableName);
 
-            // Seccion para especificar a que columnas se va a insertar.
-            foreach (PropertyInfo property in properties)
+            // Seccion para especificar a que columnas se va a insertar y sus valores.
+            foreach (KeyValuePair<string, PropertyInfo> property in properties.LinkedProperties)
             {
-                if (property.Name == "Id" && Nullable.GetUnderlyingType(obj.KeyType) == typeof(int))
+                if (property.Value.Equals(properties.PrimaryProperty) && property.Value.PropertyType.Equals(typeof(int?)))
                 {
                     continue;
                 }
-                queryBuilder.AppendFormat("    {0}, ", property.Name);
+                else
+                {
+                    insertsBuilder.AppendFormat("    {0},\n", property.Value.Name);
+                    if (properties.AutoProperties.TryGetValue(property.Value.Name, out PropertyInfo autoProperty))
+                    {
+                        valuesBuilder.AppendFormat("    {0},\n", GetAutoPropertyValue(properties.AutoPropertyTypes[property.Value.Name]));
+                    }
+                    else
+                    {
+                        valuesBuilder.AppendFormat("    @_{0},\n", property.Value.Name);
+                    }
+                }
             }
-
-            queryBuilder.Append("    fechaCreacion,\n    fechaModificacion");
+            insertsBuilder.Remove(insertsBuilder.Length - 2, 2);
+            queryBuilder.Append(insertsBuilder);
             queryBuilder.Append(")\nVALUES (\n");
-
-            // Especificamos los parametros para insertar en la base de datos.
-            foreach (PropertyInfo property in properties)
-            {
-                if (property.Name == "Id" && Nullable.GetUnderlyingType(obj.KeyType) == typeof(int))
-                {
-                    continue;
-                }
-                queryBuilder.AppendFormat("    @_{0},\n", property.Name);
-            }
-
-            queryBuilder.Append("    @actualTime,\n    @actualTime);\n");
-            queryBuilder.Append("END");
+            valuesBuilder.Remove(valuesBuilder.Length - 2, 2);
+            queryBuilder.Append(valuesBuilder);
+            queryBuilder.Append(");\nEND");
 
             Logger.Info("Created a new query for Insert Stored Procedure:");
             Logger.Info(queryBuilder.ToString());
@@ -94,10 +105,10 @@ namespace DataManagement.Standard.DAO
         public string CreateUpdateStoredProcedure<T, TKey>(bool doAlter) where T : IManageable<TKey>, new() where TKey : struct
         {
             StringBuilder queryBuilder = new StringBuilder();
-            PropertyInfo[] properties = typeof(T).GetProperties().Where(q => q.GetCustomAttribute<UnlinkedProperty>() == null && q.GetCustomAttribute<UnmanagedProperty>() == null).ToArray();
+            PropertiesData<T> properties = new PropertiesData<T>();
             T obj = new T();
 
-            if (properties.Length == 0) return string.Empty;
+            if (properties.LinkedProperties.Count == 0) return string.Empty;
 
             if (doAlter)
             {
@@ -110,7 +121,7 @@ namespace DataManagement.Standard.DAO
 
 
             // Aqui se colocan los parametros segun las propiedades del objeto
-            SetStoredProceduresParameters<T, TKey>(ref properties, obj, queryBuilder, false, true);
+            SetStoredProceduresParameters<T, TKey>(properties, obj, queryBuilder, false, true);
 
             queryBuilder.Remove(queryBuilder.Length - 2, 2);
             queryBuilder.Append("\nAS\n");
@@ -121,15 +132,22 @@ namespace DataManagement.Standard.DAO
             queryBuilder.Append("SET\n");
 
             // Se especifica el parametro que va en x columna.
-            foreach (PropertyInfo property in properties)
+            foreach (KeyValuePair<string, PropertyInfo> property in properties.LinkedProperties)
             {
-                if (property.Name == "Id")
+                if (property.Equals(properties.PrimaryProperty) || property.Value.Name.Equals(properties.DateCreatedProperty.Name))
                 {
                     continue;
                 }
-                queryBuilder.AppendFormat("    {0} = ISNULL(@_{0}, {0}),\n", property.Name);
+                if (properties.AutoProperties.TryGetValue(property.Value.Name, out PropertyInfo autoProperty))
+                {
+                    queryBuilder.AppendFormat("    {0} = {1},\n", property.Value.Name, GetAutoPropertyValue(properties.AutoPropertyTypes[property.Value.Name]));
+                }
+                else
+                {
+                    queryBuilder.AppendFormat("    {0} = ISNULL(@_{0}, {0}),\n", property.Value.Name);
+                }
             }
-            queryBuilder.Append("    fechaModificacion = @actualTime\n");
+            queryBuilder.Remove(queryBuilder.Length - 2, 2);
             queryBuilder.AppendFormat("WHERE Id = @_Id;\n");
             queryBuilder.Append("END");
 
@@ -141,10 +159,7 @@ namespace DataManagement.Standard.DAO
         public string CreateDeleteStoredProcedure<T, TKey>(bool doAlter) where T : IManageable<TKey>, new() where TKey : struct
         {
             StringBuilder queryBuilder = new StringBuilder();
-            PropertyInfo[] properties = typeof(T).GetProperties().Where(q => q.GetCustomAttribute<UnlinkedProperty>() == null && q.GetCustomAttribute<UnmanagedProperty>() == null).ToArray();
             T obj = new T();
-
-            if (properties.Length == 0) return string.Empty;
 
             if (doAlter)
             {
@@ -170,10 +185,7 @@ namespace DataManagement.Standard.DAO
         public string CreateSelectAllStoredProcedure<T, TKey>(bool doAlter) where T : IManageable<TKey>, new() where TKey : struct
         {
             StringBuilder queryBuilder = new StringBuilder();
-            PropertyInfo[] properties = typeof(T).GetProperties().Where(q => q.GetCustomAttribute<UnlinkedProperty>() == null && q.GetCustomAttribute<UnmanagedProperty>() == null).ToArray();
             T obj = new T();
-
-            if (properties.Length == 0) return string.Empty;
 
             if (doAlter)
             {
@@ -198,10 +210,10 @@ namespace DataManagement.Standard.DAO
         public string CreateSelectStoredProcedure<T, TKey>(bool doAlter) where T : IManageable<TKey>, new() where TKey : struct
         {
             StringBuilder queryBuilder = new StringBuilder();
-            PropertyInfo[] properties = typeof(T).GetProperties().Where(q => q.GetCustomAttribute<UnlinkedProperty>() == null && q.GetCustomAttribute<UnmanagedProperty>() == null).ToArray();
+            PropertiesData<T> properties = new PropertiesData<T>();
             T obj = new T();
 
-            if (properties.Length == 0) return string.Empty;
+            if (properties.FilteredProperties.Count == 0) return string.Empty;
 
             if (doAlter)
             {
@@ -213,7 +225,7 @@ namespace DataManagement.Standard.DAO
             }
 
             // Aqui se colocan los parametros segun las propiedades del objeto
-            SetStoredProceduresParameters<T, TKey>(ref properties, obj, queryBuilder, true, true);
+            SetStoredProceduresParameters<T, TKey>(properties, obj, queryBuilder, true, true);
 
             queryBuilder.Remove(queryBuilder.Length - 2, 2);
             queryBuilder.Append("\nAS\n");
@@ -222,13 +234,13 @@ namespace DataManagement.Standard.DAO
             queryBuilder.Append("WHERE\n");
 
             // Se especifica el parametro que va en x columna.
-            foreach (PropertyInfo property in properties)
+            foreach (KeyValuePair<string, PropertyInfo> property in properties.FilteredProperties)
             {
-                queryBuilder.AppendFormat("    {0} LIKE ISNULL(CONCAT('%', @_{0}, '%'), {0}) AND\n", property.Name);
+                queryBuilder.AppendFormat("    {0} LIKE ISNULL(CONCAT('%', @_{0}, '%'), {0}) AND\n", property.Value.Name);
             }
 
             queryBuilder.Remove(queryBuilder.Length - 4, 4);
-            queryBuilder.AppendFormat("\nORDER BY FechaCreacion desc;\n");
+            queryBuilder.AppendFormat("\nORDER BY {0} desc;\n", properties.DateCreatedProperty.Name);
             queryBuilder.Append("END");
 
             Logger.Info("Created a new query for Select Stored Procedure:");
@@ -479,6 +491,19 @@ namespace DataManagement.Standard.DAO
                     return "numeric(20)";
                 default:
                     return "varbinary(1024)";
+            }
+        }
+
+        private string GetAutoPropertyValue(AutoPropertyTypes type)
+        {
+            switch (type)
+            {
+                case AutoPropertyTypes.Date:
+                    return "CONVERT(DATE, GETDATE()) ";
+                case AutoPropertyTypes.DateTime:
+                    return "GETDATE()";
+                default:
+                    return "GETDATE()";
             }
         }
 

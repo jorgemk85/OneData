@@ -1,5 +1,6 @@
 ﻿using DataManagement.Standard.Attributes;
 using DataManagement.Standard.DAO;
+using DataManagement.Standard.Enums;
 using DataManagement.Standard.Interfaces;
 using System;
 
@@ -12,14 +13,15 @@ namespace DataManagement.Standard.Models
     [Serializable]
     public abstract class Main<TKey> : IManageable<TKey> where TKey : struct
     {
-        #region Properties
+        #region Primary Property
+        [PrimaryProperty]
         public TKey? Id { get; set; }
         #endregion
 
         #region Internal Properties
-        [UnmanagedProperty]
+        [DateCreatedProperty, AutoProperty(AutoPropertyTypes.DateTime)]
         public DateTime? FechaCreacion { get; set; } = DateTime.Now;
-        [UnmanagedProperty]
+        [DateModifiedProperty, AutoProperty(AutoPropertyTypes.DateTime)]
         public DateTime? FechaModificacion { get; set; } = DateTime.Now;
         #endregion
 

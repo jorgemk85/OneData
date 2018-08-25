@@ -1,18 +1,20 @@
 ﻿using DataManagement.Standard.Attributes;
+using DataManagement.Standard.Enums;
 using System;
 
 namespace DataManagement.Standard.Interfaces
 {
     public interface IManageable<TKey> where TKey : struct
     {
-        #region Properties
+        #region Primary Property
+        [PrimaryProperty]
         TKey? Id { get; set; }
         #endregion
 
-        #region Unmanaged Properties
-        [UnmanagedProperty]
+        #region Internal Properties
+        [DateCreatedProperty, AutoProperty(AutoPropertyTypes.DateTime)]
         DateTime? FechaCreacion { get; set; }
-        [UnmanagedProperty]
+        [DateModifiedProperty, AutoProperty(AutoPropertyTypes.DateTime)]
         DateTime? FechaModificacion { get; set; }
         #endregion
 

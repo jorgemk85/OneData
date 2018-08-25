@@ -4,7 +4,6 @@ using DataManagement.Standard.Exceptions;
 using DataManagement.Standard.Extensions;
 using DataManagement.Standard.Interfaces;
 using DataManagement.Standard.Models;
-using DataManagement.Standard.Tools;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -118,17 +117,15 @@ namespace DataManagement.Standard.DAO
             List<object> values = new List<object>();
             string predicate = string.Empty;
             StringBuilder builder = new StringBuilder();
+            PropertiesData<T> properties = new PropertiesData<T>();
 
-            foreach (PropertyInfo property in typeof(T).GetProperties().Where(q => q.GetCustomAttribute<UnlinkedProperty>() == null && q.GetCustomAttribute<UnmanagedProperty>() == null).ToArray())
+            foreach (KeyValuePair<string, PropertyInfo> property in properties.FilteredProperties)
             {
-                if (property.GetCustomAttribute<UnlinkedProperty>() == null)
+                if (property.Value.GetValue(obj) != null)
                 {
-                    if (property.GetValue(obj) != null)
-                    {
-                        builder.AppendFormat("{0} == @{1} and ", property.Name, valueIndex);
-                        values.Add(property.GetValue(obj));
-                        valueIndex++;
-                    }
+                    builder.AppendFormat("{0} == @{1} and ", property.Value.Name, valueIndex);
+                    values.Add(property.Value.GetValue(obj));
+                    valueIndex++;
                 }
             }
 

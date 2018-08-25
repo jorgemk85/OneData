@@ -63,6 +63,7 @@ namespace DataManagement.Standard.DAO
         {
             DataTable dataTable = null;
             bool overrideConsolidation = false;
+            bool nextTryRepairStoredProcedure = false;
 
         Start:
             try
@@ -126,11 +127,12 @@ namespace DataManagement.Standard.DAO
                 Logger.Error(mySqlException);
                 throw;
             }
-            catch (MySqlException mySqlException) when (mySqlException.Number == ERR_INCORRECT_NUMBER_OF_ARGUMENTS)
+            catch (MySqlException mySqlException) when (mySqlException.Number == ERR_INCORRECT_NUMBER_OF_ARGUMENTS || (mySqlException.Number == ERR_UNKOWN_COLUMN && nextTryRepairStoredProcedure))
             {
+                nextTryRepairStoredProcedure = false;
                 if (Manager.AutoAlterStoredProcedures)
                 {
-                    Logger.Warn(string.Format("Incorrect number of arguments related to the {0} stored procedure. Modifying...", transactionType.ToString()));
+                    Logger.Warn(string.Format("Incorrect number of arguments or unkown column related to the {0} stored procedure. Modifying...", transactionType.ToString()));
                     ExecuteScalar(GetTransactionTextForProcedure<T, TKey>(transactionType, true), connectionToUse, false);
                     overrideConsolidation = true;
                     goto Start;
@@ -140,6 +142,7 @@ namespace DataManagement.Standard.DAO
             }
             catch (MySqlException mySqlException) when (mySqlException.Number == ERR_UNKOWN_COLUMN || mySqlException.Number == ERR_NO_DEFAULT_VALUE_IN_FIELD)
             {
+                nextTryRepairStoredProcedure = true;
                 if (Manager.AutoAlterTables)
                 {
                     ProcessTable<T, TKey>(connectionToUse, true);

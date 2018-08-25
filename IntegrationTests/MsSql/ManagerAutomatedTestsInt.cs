@@ -10,8 +10,6 @@ namespace DataManagement.Standard.IntegrationTests.MsSql
     [TestFixture]
     class ManagerAutomatedTestsInt
     {
-        Guid newLogId;
-
         [OneTimeSetUp]
         public void PerformSetupForTesting_DoesNotThrow()
         {
@@ -19,8 +17,6 @@ namespace DataManagement.Standard.IntegrationTests.MsSql
             TestTools.SetConfigurationForConstantConsolidation(true);
             TestTools.SetConfigurationForAutoCreate(true);
             TestTools.SetConfigurationForAutoAlter(true);
-
-            newLogId = TestTools.GetLogTestGuidModel(true).Id.GetValueOrDefault();
 
             Assert.DoesNotThrow(() => Manager<LogTestInt, int>.Insert(TestTools.GetLogTestIntModel(false)));
         }
@@ -36,7 +32,7 @@ namespace DataManagement.Standard.IntegrationTests.MsSql
         [Test, Order(2)]
         public void Select_FullAutomation_DoesNotThrow()
         {
-            Assert.DoesNotThrow(() => Manager<LogTestInt, int>.Select(null, new Parameter(nameof(LogTestGuid.Id), newLogId)));
+            Assert.DoesNotThrow(() => Manager<LogTestInt, int>.Select(null, new Parameter(nameof(LogTestGuid.Id), 0)));
         }
 
         [Test, Order(3)]
@@ -48,9 +44,7 @@ namespace DataManagement.Standard.IntegrationTests.MsSql
         [Test, Order(4)]
         public void Delete_FullAutomation_DoesNotThrow()
         {
-            TestTools.GetLogTestGuidModel(false).Id = newLogId;
-
-            Assert.DoesNotThrow(() => Manager<LogTestInt, int>.Delete(TestTools.GetLogTestIntModel(false)));
+            Assert.DoesNotThrow(() => Manager<LogTestInt, int>.Delete(TestTools.GetLogTestIntModel(true)));
         }
 
         [OneTimeTearDown]

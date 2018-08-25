@@ -171,30 +171,28 @@ namespace DataManagement.Standard.DAO
             }
         }
 
-        protected void SetParameters<T, TKey>(T obj, TransactionTypes transactionType, bool considerId) where T : IManageable<TKey> where TKey : struct
+        protected void SetParameters<T, TKey>(T obj, TransactionTypes transactionType, bool considerPrimary) where T : IManageable<TKey> where TKey : struct
         {
             Logger.Info(string.Format("Setting parameters in command based on type {0} for transaction type {1}.", typeof(T), transactionType.ToString()));
-            foreach (PropertyInfo propertyInfo in typeof(T).GetProperties())
-            {
-                // Si encontramos el atributo unlinkedProperty o InternalProperty entonces se brinca la propiedad.
-                if (propertyInfo.GetCustomAttribute<UnlinkedProperty>() != null) continue;
-                if (propertyInfo.GetCustomAttribute<UnmanagedProperty>() != null) continue;
 
+            PropertiesData<T> properties = new PropertiesData<T>();
+            foreach (KeyValuePair<string, PropertyInfo> property in properties.FilteredProperties)
+            {
                 if (transactionType == TransactionTypes.Delete)
                 {
-                    if (propertyInfo.Name == "Id")
+                    if (property.Value.Name.Equals(properties.PrimaryProperty.Name))
                     {
-                        Command.Parameters.Add(CreateDbParameter("_id", propertyInfo.GetValue(obj)));
+                        Command.Parameters.Add(CreateDbParameter(string.Format("_{0}", properties.PrimaryProperty.Name), property.Value.GetValue(obj)));
                         break;
                     }
                 }
                 else
                 {
-                    if (propertyInfo.Name == "Id" && Nullable.GetUnderlyingType(obj.KeyType) == typeof(int) && !considerId)
+                    if (property.Value.Equals(properties.PrimaryProperty) && property.Value.PropertyType.Equals(typeof(int?)) && !considerPrimary)
                     {
                         continue;
                     }
-                    Command.Parameters.Add(CreateDbParameter("_" + propertyInfo.Name, propertyInfo.GetValue(obj)));
+                    Command.Parameters.Add(CreateDbParameter("_" + property.Value.Name, property.Value.GetValue(obj)));
                 }
             }
         }
@@ -202,23 +200,21 @@ namespace DataManagement.Standard.DAO
         protected void SetParameters<T, TKey>(List<T> obj, TransactionTypes transactionType) where T : IManageable<TKey> where TKey : struct
         {
             Logger.Info(string.Format("Setting parameters in command based on type {0} for transaction type {1}.", typeof(T), transactionType.ToString()));
-            foreach (PropertyInfo propertyInfo in typeof(T).GetProperties())
-            {
-                // Si encontramos el atributo unlinkedProperty o InternalProperty entonces se brinca la propiedad.
-                if (propertyInfo.GetCustomAttribute<UnlinkedProperty>() != null) continue;
-                if (propertyInfo.GetCustomAttribute<UnmanagedProperty>() != null) continue;
+            PropertiesData<T> properties = new PropertiesData<T>();
 
+            foreach (KeyValuePair<string, PropertyInfo> propertyInfo in properties.FilteredProperties)
+            {
                 if (transactionType == TransactionTypes.Delete)
                 {
-                    if (propertyInfo.Name == "Id")
+                    if (propertyInfo.Value.Name.Equals(properties.PrimaryProperty.Name))
                     {
-                        Command.Parameters.Add(CreateDbParameter("_id", propertyInfo.GetValue(obj)));
+                        Command.Parameters.Add(CreateDbParameter(string.Format("_{0}", properties.PrimaryProperty.Name), propertyInfo.Value.GetValue(obj)));
                         break;
                     }
                 }
                 else
                 {
-                    Command.Parameters.Add(CreateDbParameter("_" + propertyInfo.Name, propertyInfo.GetValue(obj)));
+                    Command.Parameters.Add(CreateDbParameter("_" + propertyInfo.Value.Name, propertyInfo.Value.GetValue(obj)));
                 }
             }
         }

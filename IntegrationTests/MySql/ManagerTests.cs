@@ -1,10 +1,37 @@
-﻿using NUnit.Framework;
+﻿using DataManagement.Standard.DAO;
+using DataManagement.Standard.Extensions;
+using DataManagement.Standard.Models;
+using DataManagement.Standard.Models.Test;
+using DataManagement.Standard.Tools.Test;
+using NUnit.Framework;
+using System;
+using System.Collections.Generic;
 
 namespace DataManagement.Standard.IntegrationTests.MySql
 {
     [TestFixture]
     class ManagerTests
     {
-        
+        [OneTimeSetUp]
+        public void PerformSetupForTesting_DoesNotThrow()
+        {
+            TestTools.SetDefaultConfiguration(Enums.ConnectionTypes.MySQL);
+            TestTools.SetConfigurationForConstantConsolidation(false);
+            TestTools.SetConfigurationForAutoCreate(true);
+            TestTools.SetConfigurationForAutoAlter(true);
+        }
+
+        [Test]
+        public void Select_DataFromCache_ReturnsTrue()
+        {
+            TestTools.GetLogTestGuidModel(true).Insert<LogTestGuid, Guid>();
+            List<LogTestGuid> list = new List<LogTestGuid>().SelectAll<LogTestGuid, Guid>();
+            Result result = Manager<LogTestGuid, Guid>.Select(null, new Parameter(nameof(LogTestGuid.Id), list[0].Id));
+            TestTools.GetLogTestGuidModel(false).Delete<LogTestGuid, Guid>();
+
+            Assert.IsTrue(result.IsFromCache);
+            Assert.IsTrue(result.IsSuccessful);
+            Assert.AreNotEqual(result.Data.Rows.Count, 0);
+        }
     }
 }

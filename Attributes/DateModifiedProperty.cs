@@ -3,8 +3,8 @@
 namespace DataManagement.Standard.Attributes
 {
     [AttributeUsage(AttributeTargets.Property)]
-    public class UnmanagedProperty : Attribute
+    class DateModifiedProperty : Attribute
     {
-        public UnmanagedProperty() { }
+
     }
 }
