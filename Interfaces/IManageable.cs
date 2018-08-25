@@ -39,12 +39,6 @@ namespace DataManagement.Standard.Interfaces
         /// </summary>
         [UnmanagedProperty]
         int CacheExpiration { get; }
-
-        /// <summary>
-        /// Se utiliza para facilitar el acceso al tipo de la llave primaria del objeto.
-        /// </summary>
-        [UnmanagedProperty]
-        Type KeyType { get; } 
         #endregion
     }
 }

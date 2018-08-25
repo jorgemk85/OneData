@@ -28,6 +28,10 @@ namespace DataManagement.Standard.Models
         /// Esta propiedad controla las propiedades del objeto que NO estan marcadas con el atributo UnmanagedProperty NI AutoProperty.
         /// </summary>
         public Dictionary<string, PropertyInfo> FilteredProperties { get; set; } = new Dictionary<string, PropertyInfo>();
+        /// <summary>
+        /// Esta propiedad controla las propiedades del objeto que NO estan marcadas con el atributo UnmanagedProperty NI AutoProperty.
+        /// </summary>
+        public Dictionary<string, PropertyInfo> ForeignModels { get; set; } = new Dictionary<string, PropertyInfo>();
         public Dictionary<string, AutoPropertyTypes> AutoPropertyTypes { get; set; } = new Dictionary<string, AutoPropertyTypes>();
         public PropertyInfo PrimaryProperty { get; set; }
         public PropertyInfo DateCreatedProperty { get; set; }
@@ -69,6 +73,9 @@ namespace DataManagement.Standard.Models
                             break;
                         case "DateModifiedProperty":
                             DateModifiedProperty = property;
+                            break;
+                        case "ForeignModel":
+                            ForeignModels.Add(property.Name, property);
                             break;
                         default:
                             break;

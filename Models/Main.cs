@@ -46,12 +46,6 @@ namespace DataManagement.Standard.Models
         /// </summary>
         [UnmanagedProperty]
         public int CacheExpiration { get; }
-
-        /// <summary>
-        /// Se utiliza para facilitar el acceso al tipo de la llave primaria del objeto.
-        /// </summary>
-        [UnmanagedProperty]
-        public Type KeyType { get; } = typeof(TKey?);
         #endregion
 
         #region Constructor

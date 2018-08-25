@@ -248,41 +248,35 @@ namespace DataManagement.Standard.DAO
             return queryBuilder.ToString();
         }
 
-        public string GetCreateTableQuery<TKey>(Type type) where TKey : struct
-        {
-            PropertyInfo[] properties = type.GetProperties().Where(q => q.GetCustomAttribute<UnmanagedProperty>() == null).ToArray();
-            IManageable<TKey> obj = (IManageable<TKey>)Activator.CreateInstance(type);
-
-            if (properties.Length == 0) return string.Empty;
-
-            return CreateQueryForTableCreation(obj, ref properties);
-        }
-
-        public string CreateQueryForTableCreation<TKey>(IManageable<TKey> obj, ref PropertyInfo[] properties) where TKey : struct
+        public string CreateQueryForTableCreation<T, TKey>() where T : IManageable<TKey>, new() where TKey : struct
         {
             StringBuilder queryBuilder = new StringBuilder();
+            PropertiesData<T> properties = new PropertiesData<T>();
+            T obj = new T();
+
+            if (properties.ManagedProperties.Count == 0) return string.Empty;
 
             queryBuilder.AppendFormat("CREATE TABLE {0}.{1}{2}\n", obj.Schema, Manager.TablePrefix, obj.DataBaseTableName);
 
             queryBuilder.Append("(");
             // Aqui se colocan las propiedades del objeto. Una por columna por su puesto.
-            foreach (PropertyInfo property in properties)
+            foreach (KeyValuePair<string, PropertyInfo> property in properties.ManagedProperties)
             {
-                string isNullable = Nullable.GetUnderlyingType(property.PropertyType) == null || property.Name.Equals("Id") ? "NOT NULL" : string.Empty;
-                if (property.Name.Equals("Id"))
+                string isNullable = Nullable.GetUnderlyingType(property.Value.PropertyType) == null || property.Equals(properties.PrimaryProperty) ? "NOT NULL" : string.Empty;
+                if (property.Equals(properties.PrimaryProperty))
                 {
-                    if (Nullable.GetUnderlyingType(obj.KeyType) == typeof(int))
+                    if (property.Value.PropertyType.Equals(typeof(int?)))
                     {
-                        queryBuilder.AppendFormat("{0} {1} IDENTITY(1,1) NOT NULL PRIMARY KEY,\n", property.Name, GetSqlDataType(property.PropertyType));
+                        queryBuilder.AppendFormat("{0} {1} IDENTITY(1,1) NOT NULL PRIMARY KEY,\n", property.Value.Name, GetSqlDataType(property.Value.PropertyType));
                     }
                     else
                     {
-                        queryBuilder.AppendFormat("{0} {1} NOT NULL PRIMARY KEY,\n", property.Name, GetSqlDataType(property.PropertyType));
+                        queryBuilder.AppendFormat("{0} {1} NOT NULL PRIMARY KEY,\n", property.Value.Name, GetSqlDataType(property.Value.PropertyType));
                     }
                 }
                 else
                 {
-                    queryBuilder.AppendFormat("{0} {1} {2},\n", property.Name, GetSqlDataType(property.PropertyType), isNullable);
+                    queryBuilder.AppendFormat("{0} {1} {2},\n", property.Value.Name, GetSqlDataType(property.Value.PropertyType), isNullable);
                 }
             }
             queryBuilder.Remove(queryBuilder.Length - 2, 2);
@@ -293,41 +287,30 @@ namespace DataManagement.Standard.DAO
             return queryBuilder.ToString();
         }
 
-        public string GetAlterTableQuery<TKey>(Type type, Dictionary<string, ColumnDefinition> columnDetails, Dictionary<string, KeyDefinition> keyDetails) where TKey : struct
-        {
-            PropertyInfo[] properties = type.GetProperties().Where(q => q.GetCustomAttribute<UnmanagedProperty>() == null).ToArray();
-            IManageable<TKey> obj = (IManageable<TKey>)Activator.CreateInstance(type);
-
-            if (properties.Length == 0) return string.Empty;
-
-            return CreateQueryForTableAlteration(obj, ref properties, columnDetails, keyDetails);
-        }
-
-        public string CreateQueryForTableAlteration<TKey>(IManageable<TKey> obj, ref PropertyInfo[] properties, Dictionary<string, ColumnDefinition> columnDetails, Dictionary<string, KeyDefinition> keyDetails) where TKey : struct
+        public string CreateQueryForTableAlteration<T, TKey>(Dictionary<string, ColumnDefinition> columnDetails, Dictionary<string, KeyDefinition> keyDetails) where T : IManageable<TKey>, new() where TKey : struct
         {
             StringBuilder queryBuilder = new StringBuilder();
             List<string> columnsFound = new List<string>();
             bool foundDiference = false;
+            PropertiesData<T> properties = new PropertiesData<T>();
+            T obj = new T();
+
+            if (properties.ManagedProperties.Count == 0) return string.Empty;
+
             string fullyQualifiedTableName = string.Format("{0}.{1}{2}", obj.Schema, Manager.TablePrefix, obj.DataBaseTableName);
 
-            foreach (PropertyInfo property in properties)
+            foreach (KeyValuePair<string, PropertyInfo> property in properties.ManagedProperties)
             {
-                columnDetails.TryGetValue(property.Name, out ColumnDefinition columnDefinition);
-                string sqlDataType = GetSqlDataType(property.PropertyType);
-                bool isNullable = Nullable.GetUnderlyingType(property.PropertyType) == null ? false : true;
-                string nullWithDefault = isNullable == true ? string.Empty : string.Format("NOT NULL DEFAULT {0}", GetDefault(property.PropertyType));
-
-                //if (property.Name.Equals("Id"))
-                //{
-                //    columnsFound.Add(property.Name);
-                //    continue;
-                //}
+                columnDetails.TryGetValue(property.Value.Name, out ColumnDefinition columnDefinition);
+                string sqlDataType = GetSqlDataType(property.Value.PropertyType);
+                bool isNullable = Nullable.GetUnderlyingType(property.Value.PropertyType) == null ? false : true;
+                string nullWithDefault = isNullable == true ? string.Empty : string.Format("NOT NULL DEFAULT {0}", GetDefault(property.Value.PropertyType));
 
                 if (columnDefinition == null)
                 {
                     // Agregar propiedad a tabla ya que no existe.
                     queryBuilder.AppendFormat("ALTER TABLE {0} \n", fullyQualifiedTableName);
-                    queryBuilder.AppendFormat("ADD {0} {1} {2};\n", property.Name, sqlDataType, nullWithDefault);
+                    queryBuilder.AppendFormat("ADD {0} {1} {2};\n", property.Value.Name, sqlDataType, nullWithDefault);
                     foundDiference = true;
                     continue;
                 }
@@ -336,37 +319,37 @@ namespace DataManagement.Standard.DAO
                 {
                     // Si el data type cambio, entonces lo modifica.
                     queryBuilder.AppendFormat("ALTER TABLE {0} \n", fullyQualifiedTableName);
-                    queryBuilder.AppendFormat("ALTER COLUMN {0} {1};\n", property.Name, sqlDataType);
+                    queryBuilder.AppendFormat("ALTER COLUMN {0} {1};\n", property.Value.Name, sqlDataType);
                     foundDiference = true;
                 }
-                if (columnDefinition.Is_Nullable.Equals("YES") && !isNullable && !property.Name.Equals("Id"))
+                if (columnDefinition.Is_Nullable.Equals("YES") && !isNullable && !property.Equals(properties.PrimaryProperty))
                 {
                     // Si la propiedad ya no es nullable, entonces la cambia en la base de datos
                     queryBuilder.AppendFormat("ALTER TABLE {0} \n", fullyQualifiedTableName);
-                    queryBuilder.AppendFormat("ALTER COLUMN {0} {1} NOT NULL;\n", property.Name, sqlDataType);
+                    queryBuilder.AppendFormat("ALTER COLUMN {0} {1} NOT NULL;\n", property.Value.Name, sqlDataType);
                     foundDiference = true;
                 }
-                if (columnDefinition.Is_Nullable.Equals("NO") && isNullable && !property.Name.Equals("Id"))
+                if (columnDefinition.Is_Nullable.Equals("NO") && isNullable && !property.Equals(properties.PrimaryProperty))
                 {
                     // Si la propiedad ES nullable, entonces la cambia en la base de datos
                     queryBuilder.AppendFormat("ALTER TABLE {0} \n", fullyQualifiedTableName);
-                    queryBuilder.AppendFormat("ALTER COLUMN {0} {1};\n", property.Name, sqlDataType);
+                    queryBuilder.AppendFormat("ALTER COLUMN {0} {1};\n", property.Value.Name, sqlDataType);
                     foundDiference = true;
                 }
-                if (keyDetails.TryGetValue(property.Name, out KeyDefinition keyDefinition))
+                if (keyDetails.TryGetValue(property.Value.Name, out KeyDefinition keyDefinition))
                 {
                     // Si existe una llave en la base de datos relacionada a esta propiedad entonces...
-                    ForeignModel foreignAttribute = property.GetCustomAttribute<ForeignModel>();
+                    ForeignModel foreignAttribute = property.Value.GetCustomAttribute<ForeignModel>();
                     if (foreignAttribute == null)
                     {
                         // En el caso de que no tenga ya el atributo, significa que dejo de ser una propiedad relacionada con algun modelo foraneo y por ende, debemos de eliminar la llave foranea
                         queryBuilder.AppendFormat("ALTER TABLE {0} \n", fullyQualifiedTableName);
                         queryBuilder.AppendFormat("DROP FOREIGN KEY {0};\n", keyDefinition.Constraint_Name);
-                        keyDetails.Remove(property.Name);
+                        keyDetails.Remove(property.Value.Name);
                         foundDiference = true;
                     }
                 }
-                columnsFound.Add(property.Name);
+                columnsFound.Add(property.Value.Name);
             }
 
             // Extraemos las columnas en la tabla que ya no estan en las propiedades del modelo para quitarlas.
@@ -388,7 +371,7 @@ namespace DataManagement.Standard.DAO
                 Logger.Info(queryBuilder.ToString());
             }
 
-            queryBuilder.Append(GetCreateForeignKeysQuery<TKey>(obj.GetType(), keyDetails));
+            queryBuilder.Append(GetCreateForeignKeysQuery<T, TKey>(keyDetails));
 
             return queryBuilder.ToString();
         }
@@ -407,11 +390,11 @@ namespace DataManagement.Standard.DAO
             return null;
         }
 
-        public string GetCreateForeignKeysQuery<TKey>(Type type, Dictionary<string, KeyDefinition> keyDetails = null) where TKey : struct
+        public string GetCreateForeignKeysQuery<T, TKey>(Dictionary<string, KeyDefinition> keyDetails = null) where T : IManageable<TKey>, new() where TKey : struct
         {
             StringBuilder queryBuilder = new StringBuilder();
-            PropertyInfo[] properties = type.GetProperties().Where(q => q.GetCustomAttribute<UnmanagedProperty>() == null && q.GetCustomAttribute<ForeignModel>() != null && !keyDetails.ContainsKey(q.Name)).ToArray();
-            IManageable<TKey> obj = (IManageable<TKey>)Activator.CreateInstance(type);
+            PropertyInfo[] properties = typeof(T).GetProperties().Where(q => q.GetCustomAttribute<UnmanagedProperty>() == null && q.GetCustomAttribute<ForeignModel>() != null && !keyDetails.ContainsKey(q.Name)).ToArray();
+            T obj = new T();
 
             if (properties.Length == 0) return string.Empty;
 

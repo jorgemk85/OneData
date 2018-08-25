@@ -231,7 +231,7 @@ namespace DataManagement.Standard.DAO
                     return;
                 }
             }
-            ExecuteScalar(Creator.GetAlterTableQuery<TKey>(typeof(T), GetColumnDefinition(newObj.DataBaseTableName, connectionToUse), GetKeyDefinition(newObj.DataBaseTableName, connectionToUse)), connectionToUse, false);
+            ExecuteScalar(Creator.CreateQueryForTableAlteration<T, TKey>(GetColumnDefinition(newObj.DataBaseTableName, connectionToUse), GetKeyDefinition(newObj.DataBaseTableName, connectionToUse)), connectionToUse, false);
         }
 
         protected void ProcessTable<T, TKey>(string connectionToUse, bool doAlter) where T : IManageable<TKey>, new() where TKey : struct
@@ -243,28 +243,28 @@ namespace DataManagement.Standard.DAO
             }
             else
             {
-                ExecuteScalar(Creator.GetCreateTableQuery<TKey>(typeof(T)), connectionToUse, false);
-                VerifyForeignTables<TKey>(typeof(T), connectionToUse, doAlter);
-                string foreignKeyQuery = Creator.GetCreateForeignKeysQuery<TKey>(typeof(T));
+                ExecuteScalar(Creator.CreateQueryForTableCreation<T, TKey>(), connectionToUse, false);
+                VerifyForeignTables<T, TKey>(connectionToUse, doAlter);
+                string foreignKeyQuery = Creator.GetCreateForeignKeysQuery<T, TKey>();
 
                 if (!string.IsNullOrWhiteSpace(foreignKeyQuery))
                 {
-                    ExecuteScalar(Creator.GetCreateForeignKeysQuery<TKey>(typeof(T)), connectionToUse, false);
+                    ExecuteScalar(Creator.GetCreateForeignKeysQuery<T, TKey>(), connectionToUse, false);
                 }
             }
         }
 
-        private void VerifyForeignTables<TKey>(Type type, string connectionToUse, bool doAlter) where TKey : struct
+        private void VerifyForeignTables<T, TKey>(string connectionToUse, bool doAlter) where T : IManageable<TKey>, new() where TKey : struct
         {
-            Logger.Info(string.Format("Verifying foreign tables for type {0} using connection {1}. DoAlter = {2}", type.ToString(), connectionToUse, doAlter));
-            PropertyInfo[] properties = type.GetProperties().Where(q => q.GetCustomAttribute<UnmanagedProperty>() == null && q.GetCustomAttribute<ForeignModel>() != null).ToArray();
+            Logger.Info(string.Format("Verifying foreign tables for type {0} using connection {1}. DoAlter = {2}", typeof(T).ToString(), connectionToUse, doAlter));
+            PropertyInfo[] properties = typeof(T).GetProperties().Where(q => q.GetCustomAttribute<UnmanagedProperty>() == null && q.GetCustomAttribute<ForeignModel>() != null).ToArray();
 
             foreach (PropertyInfo property in properties)
             {
                 IManageable<TKey> foreignModel = (IManageable<TKey>)Activator.CreateInstance(property.GetCustomAttribute<ForeignModel>().Model);
                 if (!CheckIfTableExists(foreignModel.DataBaseTableName, connectionToUse))
                 {
-                    CreateOrAlterForeignTables(foreignModel, connectionToUse, false);
+                    CreateOrAlterForeignTables<T, TKey>(foreignModel, connectionToUse, false);
                 }
             }
         }
@@ -281,22 +281,22 @@ namespace DataManagement.Standard.DAO
             return ((DataTable)ExecuteScalar(string.Format(QueryForKeyDefinition, tableName), connectionToUse, true)).ToDictionary<string, KeyDefinition>(nameof(KeyDefinition.Column_Name));
         }
 
-        private void CreateOrAlterForeignTables<TKey>(IManageable<TKey> foreignModel, string connectionToUse, bool doAlter) where TKey : struct
+        private void CreateOrAlterForeignTables<T, TKey>(IManageable<TKey> foreignModel, string connectionToUse, bool doAlter) where T : IManageable<TKey>, new() where TKey : struct
         {
             Logger.Info(string.Format("Create or Alter foreign tables of {0} using connection {1}. DoAlter = {2}", foreignModel.DataBaseTableName, connectionToUse, doAlter));
             if (doAlter)
             {
-                ExecuteScalar(Creator.GetAlterTableQuery<TKey>(foreignModel.GetType(),
+                ExecuteScalar(Creator.CreateQueryForTableAlteration<T, TKey>(
                                                          GetColumnDefinition(foreignModel.DataBaseTableName, connectionToUse),
                                                          GetKeyDefinition(foreignModel.DataBaseTableName, connectionToUse)), connectionToUse, false);
             }
             else
             {
-                ExecuteScalar(Creator.GetCreateTableQuery<TKey>(foreignModel.GetType()), connectionToUse, false);
+                ExecuteScalar(Creator.CreateQueryForTableCreation<T, TKey>(), connectionToUse, false);
             }
 
-            VerifyForeignTables<TKey>(foreignModel.GetType(), connectionToUse, false);
-            string foreignKeyQuery = Creator.GetCreateForeignKeysQuery<TKey>(foreignModel.GetType());
+            VerifyForeignTables<T, TKey>(connectionToUse, false);
+            string foreignKeyQuery = Creator.GetCreateForeignKeysQuery<T, TKey>();
 
             if (!string.IsNullOrWhiteSpace(foreignKeyQuery))
             {
