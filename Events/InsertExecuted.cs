@@ -1,4 +1,4 @@
-﻿namespace DataManagement.Standard.Events
+﻿namespace DataManagement.Events
 {
     /// <summary>
     /// Provocado despues de ejecutar un comando de tipo INSERT en la base de datos.

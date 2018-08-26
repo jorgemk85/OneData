@@ -1,4 +1,4 @@
-﻿namespace DataManagement.Standard.Models.Test
+﻿namespace DataManagement.Models.Test
 {
     public sealed class TestModel
     {

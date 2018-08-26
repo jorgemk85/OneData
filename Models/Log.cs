@@ -1,7 +1,7 @@
-﻿using DataManagement.Standard.Attributes;
+﻿using DataManagement.Attributes;
 using System;
 
-namespace DataManagement.Standard.Models
+namespace DataManagement.Models
 {
     [DataTableName("logs")]
     public class Log : Cope<Log, Guid>

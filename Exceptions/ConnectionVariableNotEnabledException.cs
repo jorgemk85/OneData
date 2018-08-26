@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace DataManagement.Standard.Exceptions
+namespace DataManagement.Exceptions
 {
     public class ConnectionVariableNotEnabledException : Exception
     {

@@ -1,7 +1,7 @@
-﻿using DataManagement.Standard.Models;
+﻿using DataManagement.Models;
 using System;
 
-namespace DataManagement.Standard.Events
+namespace DataManagement.Events
 {
     public class ExecutedEventArgs : EventArgs
     {

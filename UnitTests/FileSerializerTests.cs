@@ -1,6 +1,6 @@
-﻿using DataManagement.Standard.Models.Test;
-using DataManagement.Standard.Tools;
-using DataManagement.Standard.Tools.Test;
+﻿using DataManagement.Models.Test;
+using DataManagement.Tools;
+using DataManagement.Tools.Test;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
@@ -9,7 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DataManagement.Standard.UnitTests
+namespace DataManagement.UnitTests
 {
     [TestFixture]
     class FileSerializerTests

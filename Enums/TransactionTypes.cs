@@ -1,4 +1,4 @@
-﻿namespace DataManagement.Standard.Enums
+﻿namespace DataManagement.Enums
 {
     public enum TransactionTypes
     {

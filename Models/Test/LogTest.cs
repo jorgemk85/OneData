@@ -1,7 +1,7 @@
-﻿using DataManagement.Standard.Attributes;
+﻿using DataManagement.Attributes;
 using System;
 
-namespace DataManagement.Standard.Models.Test
+namespace DataManagement.Models.Test
 {
     [DataTableName("LogTestGuids"), CacheEnabled(60)]
     public class LogTestGuid : Cope<LogTestGuid, Guid>

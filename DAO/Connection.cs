@@ -1,11 +1,11 @@
-﻿using DataManagement.Standard.Enums;
-using DataManagement.Standard.Exceptions;
-using DataManagement.Standard.Tools;
+﻿using DataManagement.Enums;
+using DataManagement.Exceptions;
+using DataManagement.Tools;
 using MySql.Data.MySqlClient;
 using System.Configuration;
 using System.Data.SqlClient;
 
-namespace DataManagement.Standard.DAO
+namespace DataManagement.DAO
 {
     internal class Connection
     {

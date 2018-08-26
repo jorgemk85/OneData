@@ -1,11 +1,11 @@
-﻿using DataManagement.Standard.Interfaces;
-using DataManagement.Standard.Models;
-using DataManagement.Standard.Tools;
+﻿using DataManagement.Interfaces;
+using DataManagement.Models;
+using DataManagement.Tools;
 using System.Collections.Generic;
 using System.Data;
 using System.Text;
 
-namespace DataManagement.Standard.Extensions
+namespace DataManagement.Extensions
 {
     public static class ListExtensions
     {

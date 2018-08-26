@@ -1,10 +1,10 @@
-﻿using DataManagement.Standard.Attributes;
-using DataManagement.Standard.DAO;
+﻿using DataManagement.Attributes;
+using DataManagement.DAO;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
 
-namespace DataManagement.Standard.Models
+namespace DataManagement.Models
 {
     public class ModelComposition
     {

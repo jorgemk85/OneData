@@ -1,8 +1,8 @@
-﻿using DataManagement.Standard.Enums;
-using DataManagement.Standard.Models;
+﻿using DataManagement.Enums;
+using DataManagement.Models;
 using System.Collections.Generic;
 
-namespace DataManagement.Standard.Interfaces
+namespace DataManagement.Interfaces
 {
     public interface IOperable
     {

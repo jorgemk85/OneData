@@ -1,4 +1,4 @@
-﻿using DataManagement.Standard.Attributes;
+﻿using DataManagement.Attributes;
 using OfficeOpenXml;
 using System;
 using System.Collections.Generic;
@@ -7,7 +7,7 @@ using System.IO;
 using System.Reflection;
 using System.Threading.Tasks;
 
-namespace DataManagement.Standard.Tools
+namespace DataManagement.Tools
 {
     public class ExcelSerializer
     {

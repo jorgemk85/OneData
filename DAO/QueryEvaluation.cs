@@ -1,18 +1,17 @@
-﻿using DataManagement.Standard.Enums;
-using DataManagement.Standard.Exceptions;
-using DataManagement.Standard.Extensions;
-using DataManagement.Standard.Interfaces;
-using DataManagement.Standard.Models;
+﻿using DataManagement.Enums;
+using DataManagement.Exceptions;
+using DataManagement.Extensions;
+using DataManagement.Interfaces;
+using DataManagement.Models;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Linq.Dynamic.Core;
-using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
 
-namespace DataManagement.Standard.DAO
+namespace DataManagement.DAO
 {
     internal class QueryEvaluation
     {
@@ -25,7 +24,7 @@ namespace DataManagement.Standard.DAO
             operation = Operation.GetOperationBasedOnConnectionType(connectionType);
         }
 
-        public Result Evaluate<T, TKey>(T obj, TransactionTypes transactionType, DataCache dataCache, bool forceQueryDataBase, string connectionToUse) where T : Cope<T, TKey>, new() where TKey : struct
+        public Result Evaluate<T, TKey>(T obj, TransactionTypes transactionType, DataCache dataCache, string connectionToUse) where T : Cope<T, TKey>, new() where TKey : struct
         {
             Result resultado = null;
             bool hasCache = dataCache.Cache == null ? false : true;
@@ -33,10 +32,10 @@ namespace DataManagement.Standard.DAO
             switch (transactionType)
             {
                 case TransactionTypes.Select:
-                    EvaluateSelect<T, TKey>(obj, out resultado, hasCache, ref dataCache, forceQueryDataBase, connectionToUse);
+                    EvaluateSelect<T, TKey>(obj, out resultado, hasCache, ref dataCache, connectionToUse);
                     break;
                 case TransactionTypes.SelectAll:
-                    EvaluateSelectAll<T, TKey>(obj, out resultado, hasCache, ref dataCache, forceQueryDataBase, connectionToUse);
+                    EvaluateSelectAll<T, TKey>(obj, out resultado, hasCache, ref dataCache, connectionToUse);
                     break;
                 case TransactionTypes.Delete:
                     EvaluateDelete<T, TKey>(obj, out resultado, hasCache, ref dataCache, connectionToUse);
@@ -57,7 +56,7 @@ namespace DataManagement.Standard.DAO
             return resultado;
         }
 
-        public Result Evaluate<T, TKey>(List<T> list, TransactionTypes transactionType, ref DataCache cache, bool forceQueryDataBase, string connectionToUse) where T : Cope<T, TKey>, new() where TKey : struct
+        public Result Evaluate<T, TKey>(List<T> list, TransactionTypes transactionType, ref DataCache dataCache, string connectionToUse) where T : Cope<T, TKey>, new() where TKey : struct
         {
             throw new NotImplementedException();
         }
@@ -89,12 +88,11 @@ namespace DataManagement.Standard.DAO
             }
         }
 
-        private void EvaluateSelect<T, TKey>(T obj, out Result resultado, bool hasCache, ref DataCache dataCache, bool forceQueryDataBase, string connectionToUse) where T : Cope<T, TKey>, new() where TKey : struct
+        private void EvaluateSelect<T, TKey>(T obj, out Result resultado, bool hasCache, ref DataCache dataCache, string connectionToUse) where T : Cope<T, TKey>, new() where TKey : struct
         {
-            if (forceQueryDataBase)
+            if (!dataCache.IsEnabled)
             {
                 resultado = operation.ExecuteProcedure<T, TKey>(obj, connectionToUse, TransactionTypes.Select);
-                AlterCache(resultado, ref dataCache);
             }
             else
             {
@@ -117,12 +115,11 @@ namespace DataManagement.Standard.DAO
             }
         }
 
-        private void EvaluateSelectAll<T, TKey>(T obj, out Result resultado, bool hasCache, ref DataCache dataCache, bool forceQueryDataBase, string connectionToUse) where T : Cope<T, TKey>, new() where TKey : struct
+        private void EvaluateSelectAll<T, TKey>(T obj, out Result resultado, bool hasCache, ref DataCache dataCache, string connectionToUse) where T : Cope<T, TKey>, new() where TKey : struct
         {
-            if (forceQueryDataBase)
+            if (!dataCache.IsEnabled)
             {
                 resultado = operation.ExecuteProcedure<T, TKey>(obj, connectionToUse, TransactionTypes.SelectAll);
-                dataCache.Cache = resultado;
             }
             else
             {
@@ -138,7 +135,7 @@ namespace DataManagement.Standard.DAO
                 }
             }
 
-            if (resultado.IsSuccessful && resultado.Data.Rows.Count > 0)
+            if (dataCache.IsEnabled && resultado.IsSuccessful && resultado.Data.Rows.Count > 0)
             {
                 dataCache.IsPartialCache = false;
             }
@@ -169,7 +166,7 @@ namespace DataManagement.Standard.DAO
             else
             {
                 predicate = predicate.Substring(0, predicate.Length - 5);
-                var queryableList = dataCache.Cache.Data.ToList<T>().AsQueryable();                
+                var queryableList = dataCache.Cache.Data.ToList<T>().AsQueryable();
                 // Procedimiento LENTO en la primera ejecucion por el compilado del query.
                 var resultList = queryableList.Where(predicate, values.ToArray()).ToList().ToDataTable<T, TKey>();
                 return new Result(resultList, true, true);

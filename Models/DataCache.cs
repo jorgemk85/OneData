@@ -1,21 +1,22 @@
-﻿using DataManagement.Standard.Interfaces;
-using System;
+﻿using System;
 
-namespace DataManagement.Standard.Models
+namespace DataManagement.Models
 {
     internal class DataCache
     {
+        public bool IsEnabled { get; set; }
         public Result Cache { get; set; }
         public bool IsPartialCache { get; set; } = false;
         public long LastCacheUpdate { get; set; }
 
-        public void Initialize()
+        public void Initialize(bool isEnabled)
         {
-            Reset();
+            Reset(isEnabled);
         }
 
-        public void Reset()
+        public void Reset(bool isEnabled)
         {
+            IsEnabled = isEnabled;
             Cache = null;
             IsPartialCache = false;
             LastCacheUpdate = DateTime.Now.Ticks;

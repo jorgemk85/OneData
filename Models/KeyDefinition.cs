@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DataManagement.Standard.Models
+namespace DataManagement.Models
 {
     internal sealed class KeyDefinition
     {

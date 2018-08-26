@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace DataManagement.Standard.Attributes
+namespace DataManagement.Attributes
 {
     [AttributeUsage(AttributeTargets.Class)]
     public class CacheEnabled : Attribute

@@ -1,9 +1,9 @@
-﻿using DataManagement.Standard.Enums;
-using DataManagement.Standard.Exceptions;
-using DataManagement.Standard.Extensions;
-using DataManagement.Standard.Interfaces;
-using DataManagement.Standard.Models;
-using DataManagement.Standard.Tools;
+﻿using DataManagement.Enums;
+using DataManagement.Exceptions;
+using DataManagement.Extensions;
+using DataManagement.Interfaces;
+using DataManagement.Models;
+using DataManagement.Tools;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -12,7 +12,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 
-namespace DataManagement.Standard.DAO
+namespace DataManagement.DAO
 {
     internal abstract class Operation
     {

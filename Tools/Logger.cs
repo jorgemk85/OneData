@@ -1,9 +1,9 @@
-﻿using DataManagement.Standard.DAO;
+﻿using DataManagement.DAO;
 using log4net;
 using System;
 using System.Runtime.CompilerServices;
 
-namespace DataManagement.Standard.Tools
+namespace DataManagement.Tools
 {
     internal static class Logger
     {
@@ -11,7 +11,7 @@ namespace DataManagement.Standard.Tools
         {
             if (Manager.EnableLogInFile)
             {
-                LogManager.GetLogger("DataManagement.Standard.Standard", callerName).Error(ex);
+                LogManager.GetLogger("DataManagement.Standard", callerName).Error(ex);
             }
         }
 
@@ -19,7 +19,7 @@ namespace DataManagement.Standard.Tools
         {
             if (Manager.EnableLogInFile)
             {
-                LogManager.GetLogger("DataManagement.Standard.Standard", callerName).Warn(message);
+                LogManager.GetLogger("DataManagement.Standard", callerName).Warn(message);
             }
         }
 
@@ -27,7 +27,7 @@ namespace DataManagement.Standard.Tools
         {
             if (Manager.EnableLogInFile)
             {
-                LogManager.GetLogger("DataManagement.Standard.Standard", callerName).Info(message);
+                LogManager.GetLogger("DataManagement.Standard", callerName).Info(message);
             }
         }
 
@@ -35,7 +35,7 @@ namespace DataManagement.Standard.Tools
         {
             if (Manager.EnableLogInFile)
             {
-                LogManager.GetLogger("DataManagement.Standard.Standard", callerName).Debug(message);
+                LogManager.GetLogger("DataManagement.Standard", callerName).Debug(message);
             }
         }
     }

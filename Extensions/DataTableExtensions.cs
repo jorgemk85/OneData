@@ -1,8 +1,8 @@
-﻿using DataManagement.Standard.Tools;
+﻿using DataManagement.Tools;
 using System.Collections.Generic;
 using System.Data;
 
-namespace DataManagement.Standard.Extensions
+namespace DataManagement.Extensions
 {
     public static class DataTableExtensions
     {

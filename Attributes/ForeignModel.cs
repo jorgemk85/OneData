@@ -1,7 +1,7 @@
-﻿using DataManagement.Standard.Enums;
+﻿using DataManagement.Enums;
 using System;
 
-namespace DataManagement.Standard.Attributes
+namespace DataManagement.Attributes
 {
     /// <summary>
     /// Atributo usado para establecer relacion entre la propiedad y el Id de una clase foranea. Ambas clases deben implementar IManageable.

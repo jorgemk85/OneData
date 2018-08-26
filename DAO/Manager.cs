@@ -1,14 +1,13 @@
-﻿using DataManagement.Standard.Enums;
-using DataManagement.Standard.Events;
-using DataManagement.Standard.Interfaces;
-using DataManagement.Standard.Models;
-using DataManagement.Standard.Tools;
+﻿using DataManagement.Enums;
+using DataManagement.Events;
+using DataManagement.Interfaces;
+using DataManagement.Models;
+using DataManagement.Tools;
 using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Threading.Tasks;
 
-namespace DataManagement.Standard.DAO
+namespace DataManagement.DAO
 {
     /// <summary>
     /// Clase estatica donde se procesan las ejecuciones de procedimientos almacenados y se almacenan propiedades predeterminadas.
@@ -125,7 +124,6 @@ namespace DataManagement.Standard.DAO
     public abstract class Manager<T, TKey> where T : Cope<T, TKey>, new() where TKey : struct
     {
         static DataCache dataCache = new DataCache();
-        static bool forceQueryDataBase = false;
 
         public static ModelComposition ModelComposition { get; set; } = new ModelComposition(typeof(T));
 
@@ -142,7 +140,7 @@ namespace DataManagement.Standard.DAO
 
         static Manager()
         {
-            dataCache.Initialize();
+            dataCache.Initialize(ModelComposition.IsCacheEnabled);
         }
 
         /// <summary>
@@ -278,18 +276,15 @@ namespace DataManagement.Standard.DAO
         {
             if (connectionToUse == null) connectionToUse = Manager.DefaultConnection;
             QueryEvaluation queryEvaluation = new QueryEvaluation(Manager.ConnectionType);
-            Result result;
+
             if (ModelComposition.IsCacheEnabled)
             {
                 ResetCacheIfExpired();
-                result = queryEvaluation.Evaluate<T, TKey>(obj, transactionType, dataCache, forceQueryDataBase, connectionToUse);
             }
-            else
-            {
-                // Al mandar TRUE en forceQueryDataBase aseguramos que no se use el cache y al no almacenar el resultado con la funcion SaveCache, anulamos completamente el uso cache.
-                result = queryEvaluation.Evaluate<T, TKey>(obj, transactionType, dataCache, true, connectionToUse);
-            }
+
+            Result result = queryEvaluation.Evaluate<T, TKey>(obj, transactionType, dataCache, connectionToUse);
             CallOnExecutedEventHandlers(ModelComposition.TableName, transactionType, result);
+
             return result;
         }
 
@@ -298,7 +293,7 @@ namespace DataManagement.Standard.DAO
             if (DateTime.Now.Ticks > dataCache.LastCacheUpdate + ModelComposition.CacheExpiration)
             {
                 // Elimina el cache ya que esta EXPIRADO y de debe de refrescar.
-                dataCache.Reset();
+                dataCache.Reset(ModelComposition.IsCacheEnabled);
             }
         }
 

@@ -1,9 +1,9 @@
-﻿using DataManagement.Standard.DAO;
-using DataManagement.Standard.Interfaces;
-using DataManagement.Standard.Models;
+﻿using DataManagement.DAO;
+using DataManagement.Interfaces;
+using DataManagement.Models;
 using System.Collections.Generic;
 
-namespace DataManagement.Standard.Extensions
+namespace DataManagement.Extensions
 {
     public static class IManageableExtensions
     {

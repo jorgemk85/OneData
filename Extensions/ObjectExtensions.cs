@@ -1,6 +1,6 @@
-﻿using DataManagement.Standard.Tools;
+﻿using DataManagement.Tools;
 
-namespace DataManagement.Standard.Extensions
+namespace DataManagement.Extensions
 {
     public static class ObjectExtensions
     {

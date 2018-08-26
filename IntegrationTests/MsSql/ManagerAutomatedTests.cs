@@ -1,12 +1,12 @@
-﻿using DataManagement.Standard.DAO;
-using DataManagement.Standard.Interfaces;
-using DataManagement.Standard.Models;
-using DataManagement.Standard.Models.Test;
-using DataManagement.Standard.Tools.Test;
+﻿using DataManagement.DAO;
+using DataManagement.Interfaces;
+using DataManagement.Models;
+using DataManagement.Models.Test;
+using DataManagement.Tools.Test;
 using NUnit.Framework;
 using System;
 
-namespace DataManagement.Standard.IntegrationTests.MsSql
+namespace DataManagement.IntegrationTests.MsSql
 {
     [SingleThreaded]
     [TestFixture]

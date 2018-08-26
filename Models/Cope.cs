@@ -1,12 +1,12 @@
-﻿using DataManagement.Standard.Attributes;
-using DataManagement.Standard.DAO;
-using DataManagement.Standard.Enums;
+﻿using DataManagement.Attributes;
+using DataManagement.DAO;
+using DataManagement.Enums;
 using System;
 
-namespace DataManagement.Standard.Models
+namespace DataManagement.Models
 {
     /// <summary>
-    /// Clase principal de la que tienen que heredar todos los objetos de negocio que se desee utilizar con la libreria DataManagement.Standard.
+    /// Clase principal de la que tienen que heredar todos los objetos de negocio que se desee utilizar con la libreria DataManagement.
     /// </summary>
     /// <typeparam name="T">Representa el tipo de la clase que esta heredando de Cope<T, TKey>.</typeparam>
     /// <typeparam name="TKey">Representa el tipo a utilizar para la llave primaria del Id.</typeparam>

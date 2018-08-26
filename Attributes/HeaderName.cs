@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace DataManagement.Standard.Attributes
+namespace DataManagement.Attributes
 {
     /// <summary>
     /// Utilizar este atributo en las propiedades que se desee especificar el nombre de la columna que la representa y si es o no importante su presencia en el archivo.

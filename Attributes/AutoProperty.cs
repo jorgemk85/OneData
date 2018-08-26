@@ -1,7 +1,7 @@
-﻿using DataManagement.Standard.Enums;
+﻿using DataManagement.Enums;
 using System;
 
-namespace DataManagement.Standard.Attributes
+namespace DataManagement.Attributes
 {
     [AttributeUsage(AttributeTargets.Property)]
     public class AutoProperty : Attribute
