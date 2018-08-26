@@ -3,11 +3,8 @@
   <PropertyGroup>
     <TargetFrameworks>net461;netstandard2.0</TargetFrameworks>
     <LangVersion>7.1</LangVersion>
+    <Authors>Jorge Marcos Kawas</Authors>
   </PropertyGroup>
-
-  <ItemGroup>
-    <Compile Remove="Interfaces\IManageable.cs" />
-  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="EPPlus" Version="4.5.2.1" />
