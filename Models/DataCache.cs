@@ -7,21 +7,17 @@ namespace DataManagement.Standard.Models
     {
         public Result Cache { get; set; }
         public bool IsPartialCache { get; set; } = false;
-        public bool IsCacheEnabled { get; set; }
-        public long CacheExpiration { get; set; }
         public long LastCacheUpdate { get; set; }
 
-        public void Initialize(bool isCacheEnabled, long cacheExpiration)
+        public void Initialize()
         {
-            Reset(isCacheEnabled, cacheExpiration);
+            Reset();
         }
 
-        public void Reset(bool isCacheEnabled, long cacheExpiration)
+        public void Reset()
         {
             Cache = null;
             IsPartialCache = false;
-            IsCacheEnabled = isCacheEnabled;
-            CacheExpiration = cacheExpiration * TimeSpan.TicksPerSecond;
             LastCacheUpdate = DateTime.Now.Ticks;
         }
     }

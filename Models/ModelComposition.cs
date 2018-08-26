@@ -66,7 +66,7 @@ namespace DataManagement.Standard.Models
                     case "CacheEnabled":
                         CacheEnabledAttribute = type.GetCustomAttribute<CacheEnabled>();
                         IsCacheEnabled = true;
-                        CacheExpiration = CacheEnabledAttribute.Expiration;
+                        CacheExpiration = CacheEnabledAttribute.Expiration * TimeSpan.TicksPerSecond;
                         break;
                     default:
                         break;

@@ -24,30 +24,27 @@ namespace DataManagement.Standard.DAO
             operation = Operation.GetOperationBasedOnConnectionType(connectionType);
         }
 
-        public Result Evaluate<T, TKey>(T obj, TransactionTypes transactionType, Result cache, bool isPartialCache, bool forceQueryDataBase, string connectionToUse) where T : Cope<T, TKey>, new() where TKey : struct
+        public Result Evaluate<T, TKey>(T obj, TransactionTypes transactionType, DataCache dataCache, bool forceQueryDataBase, string connectionToUse) where T : Cope<T, TKey>, new() where TKey : struct
         {
             Result resultado = null;
-            bool isCached = cache == null ? false : true;
+            bool hasCache = dataCache.Cache == null ? false : true;
 
             switch (transactionType)
             {
                 case TransactionTypes.Select:
-                    EvaluateSelect<T, TKey>(obj, out resultado, isCached, cache, isPartialCache, forceQueryDataBase, connectionToUse);
+                    EvaluateSelect<T, TKey>(obj, out resultado, hasCache, ref dataCache, forceQueryDataBase, connectionToUse);
                     break;
                 case TransactionTypes.SelectAll:
-                    EvaluateSelectAll<T, TKey>(obj, out resultado, isCached, cache, forceQueryDataBase, connectionToUse);
+                    EvaluateSelectAll<T, TKey>(obj, out resultado, hasCache, ref dataCache, forceQueryDataBase, connectionToUse);
                     break;
                 case TransactionTypes.Delete:
-                    resultado = operation.ExecuteProcedure<T, TKey>(obj, connectionToUse, transactionType);
-                    if (isCached && resultado.IsSuccessful) DeleteInCache<T, TKey>(obj, cache);
+                    EvaluateDelete<T, TKey>(obj, out resultado, hasCache, ref dataCache, connectionToUse);
                     break;
                 case TransactionTypes.Insert:
-                    resultado = operation.ExecuteProcedure<T, TKey>(obj, connectionToUse, transactionType);
-                    if (isCached && resultado.IsSuccessful) InsertInCache<T, TKey>(obj, cache);
+                    EvaluateInsert<T, TKey>(obj, out resultado, hasCache, ref dataCache, connectionToUse);
                     break;
                 case TransactionTypes.Update:
-                    resultado = operation.ExecuteProcedure<T, TKey>(obj, connectionToUse, transactionType);
-                    if (isCached && resultado.IsSuccessful) UpdateInCache<T, TKey>(obj, cache);
+                    EvaluateUpdate<T, TKey>(obj, out resultado, hasCache, ref dataCache, connectionToUse);
                     break;
                 case TransactionTypes.StoredProcedure:
                     resultado = operation.ExecuteProcedure<T, TKey>(obj, connectionToUse, transactionType);
@@ -59,56 +56,94 @@ namespace DataManagement.Standard.DAO
             return resultado;
         }
 
-        public Result Evaluate<T, TKey>(List<T> list, TransactionTypes transactionType, Result cache, bool isPartialCache, bool forceQueryDataBase, string connectionToUse) where T : Cope<T, TKey>, new() where TKey : struct
+        public Result Evaluate<T, TKey>(List<T> list, TransactionTypes transactionType, ref DataCache cache, bool forceQueryDataBase, string connectionToUse) where T : Cope<T, TKey>, new() where TKey : struct
         {
-            Result resultado = null;
-            bool isCached = cache == null ? false : true;
-
-            switch (transactionType)
-            {
-                case TransactionTypes.InsertList:
-                    resultado = operation.ExecuteProcedure<T, TKey>(list, connectionToUse, transactionType);
-                    if (isCached && resultado.IsSuccessful) InsertListInCache<T, TKey>(list, cache);
-                    break;
-                default:
-                    break;
-            }
-
-            return resultado;
+            throw new NotImplementedException();
         }
 
-        private void EvaluateSelect<T, TKey>(T obj, out Result resultado, bool isCached, Result cache, bool isPartialCache, bool forceQueryDataBase, string connectionToUse) where T : Cope<T, TKey>, new() where TKey : struct
+        private void EvaluateInsert<T, TKey>(T obj, out Result resultado, bool hasCache, ref DataCache dataCache, string connectionToUse) where T : Cope<T, TKey>, new() where TKey : struct
+        {
+            resultado = operation.ExecuteProcedure<T, TKey>(obj, connectionToUse, TransactionTypes.Insert);
+            if (hasCache && resultado.IsSuccessful)
+            {
+                InsertInCache<T, TKey>(obj, ref dataCache);
+            }
+        }
+
+        private void EvaluateUpdate<T, TKey>(T obj, out Result resultado, bool hasCache, ref DataCache dataCache, string connectionToUse) where T : Cope<T, TKey>, new() where TKey : struct
+        {
+            resultado = operation.ExecuteProcedure<T, TKey>(obj, connectionToUse, TransactionTypes.Update);
+            if (hasCache && resultado.IsSuccessful)
+            {
+                UpdateInCache<T, TKey>(obj, ref dataCache);
+            }
+        }
+
+        private void EvaluateDelete<T, TKey>(T obj, out Result resultado, bool hasCache, ref DataCache dataCache, string connectionToUse) where T : Cope<T, TKey>, new() where TKey : struct
+        {
+            resultado = operation.ExecuteProcedure<T, TKey>(obj, connectionToUse, TransactionTypes.Delete);
+            if (hasCache && resultado.IsSuccessful)
+            {
+                DeleteInCache<T, TKey>(obj, ref dataCache);
+            }
+        }
+
+        private void EvaluateSelect<T, TKey>(T obj, out Result resultado, bool hasCache, ref DataCache dataCache, bool forceQueryDataBase, string connectionToUse) where T : Cope<T, TKey>, new() where TKey : struct
         {
             if (forceQueryDataBase)
             {
                 resultado = operation.ExecuteProcedure<T, TKey>(obj, connectionToUse, TransactionTypes.Select);
+                AlterCache(resultado, ref dataCache);
             }
             else
             {
-                resultado = isCached == true ? SelectInCache<T, TKey>(obj, cache) : operation.ExecuteProcedure<T, TKey>(obj, connectionToUse, TransactionTypes.Select);
+                resultado = hasCache == true ? SelectInCache<T, TKey>(obj, dataCache) : operation.ExecuteProcedure<T, TKey>(obj, connectionToUse, TransactionTypes.Select);
 
-                resultado.IsFromCache = isCached == true ? true : false;
-                if (isCached && isPartialCache && resultado.Data.Rows.Count == 0)
+                resultado.IsFromCache = hasCache == true ? true : false;
+                if (hasCache && dataCache.IsPartialCache && resultado.Data.Rows.Count == 0)
                 {
                     resultado = operation.ExecuteProcedure<T, TKey>(obj, connectionToUse, TransactionTypes.Select);
+                    AlterCache(resultado, ref dataCache);
+                }
+                if (!resultado.IsFromCache && hasCache)
+                {
+                    AlterCache(resultado, ref dataCache);
+                }
+                if (!hasCache && resultado.IsSuccessful)
+                {
+                    dataCache.Cache = resultado;
                 }
             }
         }
 
-        private void EvaluateSelectAll<T, TKey>(T obj, out Result resultado, bool isCached, Result cache, bool forceQueryDataBase, string connectionToUse) where T : Cope<T, TKey>, new() where TKey : struct
+        private void EvaluateSelectAll<T, TKey>(T obj, out Result resultado, bool hasCache, ref DataCache dataCache, bool forceQueryDataBase, string connectionToUse) where T : Cope<T, TKey>, new() where TKey : struct
         {
             if (forceQueryDataBase)
             {
                 resultado = operation.ExecuteProcedure<T, TKey>(obj, connectionToUse, TransactionTypes.SelectAll);
+                dataCache.Cache = resultado;
             }
             else
             {
-                resultado = isCached == true ? cache : operation.ExecuteProcedure<T, TKey>(obj, connectionToUse, TransactionTypes.SelectAll);
-                resultado.IsFromCache = isCached == true ? true : false;
+                if (hasCache && !dataCache.IsPartialCache)
+                {
+                    resultado = dataCache.Cache;
+                    resultado.IsFromCache = true;
+                }
+                else
+                {
+                    resultado = operation.ExecuteProcedure<T, TKey>(obj, connectionToUse, TransactionTypes.SelectAll);
+                    dataCache.Cache = resultado;
+                }
+            }
+
+            if (resultado.IsSuccessful && resultado.Data.Rows.Count > 0)
+            {
+                dataCache.IsPartialCache = false;
             }
         }
 
-        private Result SelectInCache<T, TKey>(T obj, Result cache) where T : Cope<T, TKey>, new() where TKey : struct
+        private Result SelectInCache<T, TKey>(T obj, DataCache dataCache) where T : Cope<T, TKey>, new() where TKey : struct
         {
             int valueIndex = 0;
             List<object> values = new List<object>();
@@ -132,8 +167,9 @@ namespace DataManagement.Standard.DAO
             }
             else
             {
+                // TODO: Procedimiento LENTO, necesita revision y optimizacion.
                 predicate = predicate.Substring(0, predicate.Length - 5);
-                var queryableList = cache.Data.ToList<T>().AsQueryable();
+                var queryableList = dataCache.Cache.Data.ToList<T>().AsQueryable();
                 var resultList = queryableList.Where(predicate, values.ToArray()).ToList();
                 return new Result(resultList.ToDataTable<T, TKey>(), true, true);
             }
@@ -151,36 +187,44 @@ namespace DataManagement.Standard.DAO
             return row;
         }
 
-        private void UpdateInCache<T, TKey>(T obj, Result cache) where T : Cope<T, TKey>, new() where TKey : struct
+        private void UpdateInCache<T, TKey>(T obj, ref DataCache dataCache) where T : Cope<T, TKey>, new() where TKey : struct
         {
-            SetRowData<T, TKey>(cache.Data.Rows.Find(obj.Id.GetValueOrDefault()), obj).AcceptChanges();
+            SetRowData<T, TKey>(dataCache.Cache.Data.Rows.Find(obj.Id.GetValueOrDefault()), obj).AcceptChanges();
         }
 
-        private void InsertInCache<T, TKey>(T obj, Result cache) where T : Cope<T, TKey>, new() where TKey : struct
+        private void InsertInCache<T, TKey>(T obj, ref DataCache dataCache) where T : Cope<T, TKey>, new() where TKey : struct
         {
-            cache.Data.Rows.Add(SetRowData<T, TKey>(cache.Data.NewRow(), obj));
-            cache.Data.AcceptChanges();
+            dataCache.Cache.Data.Rows.Add(SetRowData<T, TKey>(dataCache.Cache.Data.NewRow(), obj));
+            dataCache.Cache.Data.AcceptChanges();
         }
 
-        private void InsertListInCache<T, TKey>(List<T> list, Result cache) where T : Cope<T, TKey>, new() where TKey : struct
+        private void InsertListInCache<T, TKey>(List<T> list, DataCache dataCache) where T : Cope<T, TKey>, new() where TKey : struct
         {
             foreach (T obj in list)
             {
-                cache.Data.Rows.Add(SetRowData<T, TKey>(cache.Data.NewRow(), obj));
+                dataCache.Cache.Data.Rows.Add(SetRowData<T, TKey>(dataCache.Cache.Data.NewRow(), obj));
             }
-            cache.Data.AcceptChanges();
+            dataCache.Cache.Data.AcceptChanges();
         }
 
-        public void AlterCache(DataRow row, Result cache)
+        private void AlterCache(Result resultado, ref DataCache dataCache)
         {
-            DataRow cacheRow = cache.Data.Rows.Find(row[row.Table.PrimaryKey[0]]);
+            foreach (DataRow row in resultado.Data.Rows)
+            {
+                AlterCache(row, ref dataCache);
+            }
+        }
+
+        public void AlterCache(DataRow row, ref DataCache dataCache)
+        {
+            DataRow cacheRow = dataCache.Cache.Data.Rows.Find(row[row.Table.PrimaryKey[0]]);
             string columnName = string.Empty;
 
             if (cacheRow == null)
             {
                 // NO existe la fila: la agrega.
-                cache.Data.Rows.Add(row.ItemArray);
-                cache.Data.AcceptChanges();
+                dataCache.Cache.Data.Rows.Add(row.ItemArray);
+                dataCache.Cache.Data.AcceptChanges();
             }
             else
             {
@@ -191,18 +235,18 @@ namespace DataManagement.Standard.DAO
                     cacheRow[columnName] = row[columnName];
                 }
             }
-            cache.Data.AcceptChanges();
+            dataCache.Cache.Data.AcceptChanges();
         }
 
-        private void DeleteInCache<T, TKey>(T obj, Result cache) where T : Cope<T, TKey>, new() where TKey : struct
+        private void DeleteInCache<T, TKey>(T obj, ref DataCache dataCache) where T : Cope<T, TKey>, new() where TKey : struct
         {
-            for (int i = 0; i < cache.Data.Rows.Count; i++)
+            for (int i = 0; i < dataCache.Cache.Data.Rows.Count; i++)
             {
-                DataRow row = cache.Data.Rows[i];
+                DataRow row = dataCache.Cache.Data.Rows[i];
                 if (row[row.Table.PrimaryKey[0]].Equals(obj.Id.GetValueOrDefault()))
                 {
                     row.Delete();
-                    cache.Data.AcceptChanges();
+                    dataCache.Cache.Data.AcceptChanges();
                     break;
                 }
             }

@@ -142,7 +142,7 @@ namespace DataManagement.Standard.DAO
 
         static Manager()
         {
-            dataCache.Initialize(ModelComposition.IsCacheEnabled, ModelComposition.CacheExpiration);
+            dataCache.Initialize();
         }
 
         /// <summary>
@@ -279,68 +279,26 @@ namespace DataManagement.Standard.DAO
             if (connectionToUse == null) connectionToUse = Manager.DefaultConnection;
             QueryEvaluation queryEvaluation = new QueryEvaluation(Manager.ConnectionType);
             Result result;
-            if (dataCache.IsCacheEnabled)
+            if (ModelComposition.IsCacheEnabled)
             {
                 ResetCacheIfExpired();
-                result = queryEvaluation.Evaluate<T, TKey>(obj, transactionType, dataCache.Cache, dataCache.IsPartialCache, forceQueryDataBase, connectionToUse);
-                SaveCache(transactionType, result);
+                result = queryEvaluation.Evaluate<T, TKey>(obj, transactionType, dataCache, forceQueryDataBase, connectionToUse);
             }
             else
             {
                 // Al mandar TRUE en forceQueryDataBase aseguramos que no se use el cache y al no almacenar el resultado con la funcion SaveCache, anulamos completamente el uso cache.
-                result = queryEvaluation.Evaluate<T, TKey>(obj, transactionType, dataCache.Cache, dataCache.IsPartialCache, true, connectionToUse);
+                result = queryEvaluation.Evaluate<T, TKey>(obj, transactionType, dataCache, true, connectionToUse);
             }
             CallOnExecutedEventHandlers(ModelComposition.TableName, transactionType, result);
             return result;
         }
 
-        private static void SaveCache(TransactionTypes transactionType, Result resultado)
-        {
-            if (dataCache.Cache == null || dataCache.IsPartialCache)
-            {
-                // Cada vez que actualizamos el cache se debe de actualizar la variable para determinar cuando fue la ultima vez que se actualizo el cache
-                dataCache.LastCacheUpdate = DateTime.Now.Ticks;
-
-                forceQueryDataBase = false;
-
-                if (transactionType == TransactionTypes.SelectAll)
-                {
-                    dataCache.Cache = resultado;
-                    dataCache.IsPartialCache = false;
-                }
-                else if (resultado.Data.Rows.Count > 0 && transactionType == TransactionTypes.Select)
-                {
-                    if (dataCache.Cache == null)
-                    {
-                        dataCache.Cache = resultado;
-                    }
-                    else
-                    {
-                        if (!resultado.IsFromCache)
-                        {
-                            QueryEvaluation queryEvaluation = new QueryEvaluation(Manager.ConnectionType);
-                            foreach (DataRow row in resultado.Data.Rows)
-                            {
-                                queryEvaluation.AlterCache(row, dataCache.Cache);
-                            }
-                        }
-                    }
-
-                    dataCache.IsPartialCache = true;
-                }
-                else if (transactionType == TransactionTypes.Insert || transactionType == TransactionTypes.InsertList)
-                {
-                    forceQueryDataBase = true;
-                }
-            }
-        }
-
         private static void ResetCacheIfExpired()
         {
-            if (DateTime.Now.Ticks > dataCache.LastCacheUpdate + dataCache.CacheExpiration)
+            if (DateTime.Now.Ticks > dataCache.LastCacheUpdate + ModelComposition.CacheExpiration)
             {
                 // Elimina el cache ya que esta EXPIRADO y de debe de refrescar.
-                dataCache.Reset(ModelComposition.IsCacheEnabled, ModelComposition.CacheExpiration);
+                dataCache.Reset();
             }
         }
 
