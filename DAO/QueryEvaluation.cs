@@ -141,30 +141,11 @@ namespace DataManagement.Standard.DAO
 
         private DataRow SetRowData<T, TKey>(DataRow row, T obj) where T : Cope<T, TKey>, new() where TKey : struct
         {
-            object value = null;
-            Type type;
-
-            foreach (PropertyInfo property in typeof(T).GetProperties())
+            foreach (PropertyInfo property in Manager<T, TKey>.ModelComposition.Properties)
             {
                 if (row.Table.Columns.Contains(property.Name))
                 {
-                    value = property.GetValue(obj);
-                    // La base de datos no acepta nulls, entonces verifica si es para asignarle un valor
-                    if (value == null)
-                    {
-                        type = Nullable.GetUnderlyingType(property.PropertyType) != null ? type = Nullable.GetUnderlyingType(property.PropertyType) : type = property.PropertyType;
-
-                        switch (type.Name)
-                        {
-                            case "String":
-                                value = string.Empty;
-                                break;
-                            default:
-                                value = Activator.CreateInstance(type);
-                                break;
-                        }
-                    }
-                    row[property.Name] = value;
+                    row[property.Name] = property.GetValue(obj);
                 }
             }
             return row;

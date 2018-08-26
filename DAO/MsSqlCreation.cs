@@ -132,7 +132,7 @@ namespace DataManagement.Standard.DAO
             // Se especifica el parametro que va en x columna.
             foreach (KeyValuePair<string, PropertyInfo> property in Manager<T, TKey>.ModelComposition.ManagedProperties)
             {
-                if (property.Equals(Manager<T, TKey>.ModelComposition.PrimaryProperty) || property.Value.Name.Equals(Manager<T, TKey>.ModelComposition.DateCreatedProperty.Name))
+                if (property.Value.Equals(Manager<T, TKey>.ModelComposition.PrimaryProperty) || property.Value.Name.Equals(Manager<T, TKey>.ModelComposition.DateCreatedProperty.Name))
                 {
                     continue;
                 }
@@ -258,8 +258,8 @@ namespace DataManagement.Standard.DAO
             // Aqui se colocan las propiedades del objeto. Una por columna por su puesto.
             foreach (KeyValuePair<string, PropertyInfo> property in Manager<T, TKey>.ModelComposition.ManagedProperties)
             {
-                string isNullable = Nullable.GetUnderlyingType(property.Value.PropertyType) == null || property.Equals(Manager<T, TKey>.ModelComposition.PrimaryProperty) ? "NOT NULL" : string.Empty;
-                if (property.Equals(Manager<T, TKey>.ModelComposition.PrimaryProperty))
+                string isNullable = Nullable.GetUnderlyingType(property.Value.PropertyType) == null || property.Value.Equals(Manager<T, TKey>.ModelComposition.PrimaryProperty) ? "NOT NULL" : string.Empty;
+                if (property.Value.Equals(Manager<T, TKey>.ModelComposition.PrimaryProperty))
                 {
                     if (property.Value.PropertyType.Equals(typeof(int?)))
                     {
@@ -317,14 +317,14 @@ namespace DataManagement.Standard.DAO
                     queryBuilder.AppendFormat("ALTER COLUMN {0} {1};\n", property.Value.Name, sqlDataType);
                     foundDiference = true;
                 }
-                if (columnDefinition.Is_Nullable.Equals("YES") && !isNullable && !property.Equals(Manager<T, TKey>.ModelComposition.PrimaryProperty))
+                if (columnDefinition.Is_Nullable.Equals("YES") && !isNullable && !property.Value.Equals(Manager<T, TKey>.ModelComposition.PrimaryProperty))
                 {
                     // Si la propiedad ya no es nullable, entonces la cambia en la base de datos
                     queryBuilder.AppendFormat("ALTER TABLE {0} \n", fullyQualifiedTableName);
                     queryBuilder.AppendFormat("ALTER COLUMN {0} {1} NOT NULL;\n", property.Value.Name, sqlDataType);
                     foundDiference = true;
                 }
-                if (columnDefinition.Is_Nullable.Equals("NO") && isNullable && !property.Equals(Manager<T, TKey>.ModelComposition.PrimaryProperty))
+                if (columnDefinition.Is_Nullable.Equals("NO") && isNullable && !property.Value.Equals(Manager<T, TKey>.ModelComposition.PrimaryProperty))
                 {
                     // Si la propiedad ES nullable, entonces la cambia en la base de datos
                     queryBuilder.AppendFormat("ALTER TABLE {0} \n", fullyQualifiedTableName);
@@ -388,18 +388,18 @@ namespace DataManagement.Standard.DAO
         public string GetCreateForeignKeysQuery<T, TKey>(Dictionary<string, KeyDefinition> keyDetails = null) where T : Cope<T, TKey>, new() where TKey : struct
         {
             StringBuilder queryBuilder = new StringBuilder();
-            PropertyInfo[] properties = typeof(T).GetProperties().Where(q => q.GetCustomAttribute<UnmanagedProperty>() == null && q.GetCustomAttribute<ForeignModel>() != null && !keyDetails.ContainsKey(q.Name)).ToArray();
+            Dictionary<string, PropertyInfo> properties = Manager<T, TKey>.ModelComposition.ForeignModelProperties.Where(q => !keyDetails.ContainsKey(q.Value.Name)).ToDictionary(q => q.Key, q => q.Value);
 
-            if (properties.Length == 0) return string.Empty;
+            if (properties.Count == 0) return string.Empty;
 
             queryBuilder.AppendFormat("ALTER TABLE {0}.{1}{2}\n", Manager<T, TKey>.ModelComposition.Schema, Manager.TablePrefix, Manager<T, TKey>.ModelComposition.TableName);
 
-            foreach (PropertyInfo property in properties)
+            foreach (KeyValuePair<string, PropertyInfo> property in properties)
             {
-                ForeignModel foreignAttribute = property.GetCustomAttribute<ForeignModel>();
+                ForeignModel foreignAttribute = property.Value.GetCustomAttribute<ForeignModel>();
                 Cope<T, TKey> foreignModel = (Cope<T, TKey>)Activator.CreateInstance(foreignAttribute.Model);
                 queryBuilder.AppendFormat("ADD CONSTRAINT FK_{0}_{1}\n", Manager<T, TKey>.ModelComposition.TableName, foreignModel.ModelComposition.TableName);
-                queryBuilder.AppendFormat("FOREIGN KEY({0}) REFERENCES {1}.{2}{3}(Id) ON DELETE {4} ON UPDATE NO ACTION;\n", property.Name, Manager<T, TKey>.ModelComposition.Schema, Manager.TablePrefix, foreignModel.ModelComposition.TableName, foreignAttribute.Action.ToString().Replace("_", " "));
+                queryBuilder.AppendFormat("FOREIGN KEY({0}) REFERENCES {1}.{2}{3}(Id) ON DELETE {4} ON UPDATE NO ACTION;\n", property.Value.Name, Manager<T, TKey>.ModelComposition.Schema, Manager.TablePrefix, foreignModel.ModelComposition.TableName, foreignAttribute.Action.ToString().Replace("_", " "));
             }
 
             Logger.Info("Created a new query for Create Foreign Keys:");
