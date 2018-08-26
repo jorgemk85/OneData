@@ -24,7 +24,7 @@ namespace DataManagement.Models.Test
         public string TablaAfectada { get; set; }
         public string Parametros { get; set; }
 
-        public LogTestInt() : base(0) { }
+        public LogTestInt() : base() { }
 
         public LogTestInt(int id) : base(id) { }
     }

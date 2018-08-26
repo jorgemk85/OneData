@@ -174,24 +174,19 @@ namespace DataManagement.DAO
         {
             Logger.Info(string.Format("Setting parameters in command based on type {0} for transaction type {1}.", typeof(T), transactionType.ToString()));
 
+            if (transactionType == TransactionTypes.Delete)
+            {
+                Command.Parameters.Add(CreateDbParameter(string.Format("_{0}", Manager<T, TKey>.ModelComposition.PrimaryProperty.Name), Manager<T, TKey>.ModelComposition.PrimaryProperty.GetValue(obj)));
+                return;
+            }
+
             foreach (KeyValuePair<string, PropertyInfo> property in Manager<T, TKey>.ModelComposition.FilteredProperties)
             {
-                if (transactionType == TransactionTypes.Delete)
+                if (property.Value.Equals(Manager<T, TKey>.ModelComposition.PrimaryProperty) && property.Value.PropertyType.Equals(typeof(int?)) && !considerPrimary)
                 {
-                    if (property.Value.Name.Equals(Manager<T, TKey>.ModelComposition.PrimaryProperty.Name))
-                    {
-                        Command.Parameters.Add(CreateDbParameter(string.Format("_{0}", Manager<T, TKey>.ModelComposition.PrimaryProperty.Name), property.Value.GetValue(obj)));
-                        break;
-                    }
+                    continue;
                 }
-                else
-                {
-                    if (property.Value.Equals(Manager<T, TKey>.ModelComposition.PrimaryProperty) && property.Value.PropertyType.Equals(typeof(int?)) && !considerPrimary)
-                    {
-                        continue;
-                    }
-                    Command.Parameters.Add(CreateDbParameter("_" + property.Value.Name, property.Value.GetValue(obj)));
-                }
+                Command.Parameters.Add(CreateDbParameter("_" + property.Value.Name, property.Value.GetValue(obj)));
             }
         }
 
@@ -199,26 +194,20 @@ namespace DataManagement.DAO
         {
             Logger.Info(string.Format("Setting parameters in command based on type {0} for transaction type {1}.", typeof(T), transactionType.ToString()));
 
+            if (transactionType == TransactionTypes.Delete)
+            {
+                Command.Parameters.Add(CreateDbParameter(string.Format("_{0}", Manager<T, TKey>.ModelComposition.PrimaryProperty.Name), Manager<T, TKey>.ModelComposition.PrimaryProperty.GetValue(obj)));
+                return;
+            }
+
             foreach (KeyValuePair<string, PropertyInfo> propertyInfo in Manager<T, TKey>.ModelComposition.FilteredProperties)
             {
-                if (transactionType == TransactionTypes.Delete)
-                {
-                    if (propertyInfo.Value.Name.Equals(Manager<T, TKey>.ModelComposition.PrimaryProperty.Name))
-                    {
-                        Command.Parameters.Add(CreateDbParameter(string.Format("_{0}", Manager<T, TKey>.ModelComposition.PrimaryProperty.Name), propertyInfo.Value.GetValue(obj)));
-                        break;
-                    }
-                }
-                else
-                {
-                    Command.Parameters.Add(CreateDbParameter("_" + propertyInfo.Value.Name, propertyInfo.Value.GetValue(obj)));
-                }
+                Command.Parameters.Add(CreateDbParameter("_" + propertyInfo.Value.Name, propertyInfo.Value.GetValue(obj)));
             }
         }
 
         protected void PerformTableConsolidation<T, TKey>(string connectionToUse, bool doAlter) where T : Cope<T, TKey>, new() where TKey : struct
         {
-            T newObj = new T();
             Logger.Info(string.Format("Starting table consolidation for table {0} using connection {1}. DoAlter = {2}", Manager<T, TKey>.ModelComposition.TableName, connectionToUse, doAlter));
             if (!doAlter)
             {
@@ -264,11 +253,6 @@ namespace DataManagement.DAO
                 }
             }
         }
-
-        //public Manager<I, IKey> GetModelCompositionOfType<I, IKey>(Manager<I, IKey> type) where I : IManageable<IKey>, new() where IKey : struct
-        //{
-
-        //}
 
         private Dictionary<string, ColumnDefinition> GetColumnDefinition(string tableName, string connectionToUse)
         {

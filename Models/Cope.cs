@@ -31,6 +31,12 @@ namespace DataManagement.Models
         #endregion
 
         #region Constructors
+        public Cope()
+        {
+            // TODO: Necesitamos encontrar una manera mas facil de instanciar objetos con nuevos Ids irrepetibles. 
+            Id = (TKey?)Activator.CreateInstance(typeof(TKey));
+        }
+
         public Cope(TKey id)
         {
             Id = id;
