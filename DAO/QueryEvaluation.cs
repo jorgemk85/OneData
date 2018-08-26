@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Linq.Dynamic.Core;
+using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
 
@@ -167,11 +168,11 @@ namespace DataManagement.Standard.DAO
             }
             else
             {
-                // TODO: Procedimiento LENTO, necesita revision y optimizacion.
                 predicate = predicate.Substring(0, predicate.Length - 5);
-                var queryableList = dataCache.Cache.Data.ToList<T>().AsQueryable();
-                var resultList = queryableList.Where(predicate, values.ToArray()).ToList();
-                return new Result(resultList.ToDataTable<T, TKey>(), true, true);
+                var queryableList = dataCache.Cache.Data.ToList<T>().AsQueryable();                
+                // Procedimiento LENTO en la primera ejecucion por el compilado del query.
+                var resultList = queryableList.Where(predicate, values.ToArray()).ToList().ToDataTable<T, TKey>();
+                return new Result(resultList, true, true);
             }
         }
 
