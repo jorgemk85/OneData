@@ -8,10 +8,10 @@ namespace DataManagement.Standard.Interfaces
     {
         Result ExecuteProcedure(string tableName, string storedProcedure, string connectionToUse, Parameter[] parameters, bool logTransaction = true);
 
-        Result ExecuteProcedure<T, TKey>(T obj, string tableName, string connectionToUse, TransactionTypes transactionType, bool logTransaction = true) where T : IManageable<TKey>, new() where TKey : struct; 
+        Result ExecuteProcedure<T, TKey>(T obj, string connectionToUse, TransactionTypes transactionType, bool logTransaction = true) where T : Cope<T, TKey>, new() where TKey : struct; 
 
-        Result ExecuteProcedure<T, TKey>(List<T> list, string tableName, string connectionToUse, TransactionTypes transactionType, bool logTransaction = true) where T : IManageable<TKey>, new() where TKey : struct;
+        Result ExecuteProcedure<T, TKey>(List<T> list, string connectionToUse, TransactionTypes transactionType, bool logTransaction = true) where T : Cope<T, TKey>, new() where TKey : struct;
 
-        void LogTransaction(string dataBaseTableName, TransactionTypes transactionType, string connectionToUse);
+        void LogTransaction(string tableName, TransactionTypes transactionType, string connectionToUse);
     }
 }

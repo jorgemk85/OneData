@@ -11,17 +11,17 @@ namespace DataManagement.Standard.Models
         public long CacheExpiration { get; set; }
         public long LastCacheUpdate { get; set; }
 
-        public void Initialize<T, TKey>(T mainObj) where T : IManageable<TKey> where TKey : struct
+        public void Initialize(bool isCacheEnabled, long cacheExpiration)
         {
-            Reset<T, TKey>(mainObj);
+            Reset(isCacheEnabled, cacheExpiration);
         }
 
-        public void Reset<T, TKey>(T mainObj) where T : IManageable<TKey> where TKey : struct
+        public void Reset(bool isCacheEnabled, long cacheExpiration)
         {
             Cache = null;
             IsPartialCache = false;
-            IsCacheEnabled = mainObj.IsCacheEnabled;
-            CacheExpiration = long.Parse(mainObj.CacheExpiration.ToString()) * TimeSpan.TicksPerSecond;
+            IsCacheEnabled = isCacheEnabled;
+            CacheExpiration = cacheExpiration * TimeSpan.TicksPerSecond;
             LastCacheUpdate = DateTime.Now.Ticks;
         }
     }

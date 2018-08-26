@@ -10,7 +10,7 @@ namespace DataManagement.Standard.Extensions
         /// <summary>
         /// Borra el objeto en la base de datos segun su Id y en su supuesto, tambien en el cache.
         /// </summary>
-        public static void Delete<T, TKey>(this T obj) where T : IManageable<TKey>, new() where TKey : struct
+        public static void Delete<T, TKey>(this T obj) where T : Cope<T, TKey>, new() where TKey : struct
         {
             Manager<T, TKey>.Delete(obj);
         }
@@ -20,7 +20,7 @@ namespace DataManagement.Standard.Extensions
         /// </summary>
         /// <param name="doValidation">Indica si se desea realizar la validacion de nulos.</param>
         /// <returns></returns>
-        public static void Update<T, TKey>(this T obj, bool doValidation = false) where T : IManageable<TKey>, new() where TKey : struct
+        public static void Update<T, TKey>(this T obj, bool doValidation = false) where T : Cope<T, TKey>, new() where TKey : struct
         {
             if (doValidation)
             {
@@ -32,7 +32,7 @@ namespace DataManagement.Standard.Extensions
         /// <summary>
         /// Inserta el objeto en la base de datos y en su supuesto, tambien en el cache. Esta funcion realiza la validacion de nulos por default.
         /// </summary>
-        public static void Insert<T, TKey>(this T obj) where T : IManageable<TKey>, new() where TKey : struct
+        public static void Insert<T, TKey>(this T obj) where T : Cope<T, TKey>, new() where TKey : struct
         {
             obj.Validate();
             Manager<T, TKey>.Insert(obj);
@@ -41,7 +41,7 @@ namespace DataManagement.Standard.Extensions
         /// <summary>
         /// Obtiene un listado completo de los objetos de tipo <typeparamref name="T"/> almacenados en la base de datos o en el cache.
         /// </summary>
-        public static List<T> SelectAll<T, TKey>(this List<T> obj) where T : IManageable<TKey>, new() where TKey : struct
+        public static List<T> SelectAll<T, TKey>(this List<T> obj) where T : Cope<T, TKey>, new() where TKey : struct
         {
             return Manager<T, TKey>.SelectAll().Data.ToList<T>();
         }

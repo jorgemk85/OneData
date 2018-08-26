@@ -230,7 +230,7 @@ namespace DataManagement.Standard.Tools
         /// <typeparam name="T">Tipo referencia para serializar.</typeparam>
         /// <param name="dataTable">El contenido a convertir.</param>
         /// <returns>Regresa un nuevo Diccionario del tipo <typeparamref name="T"/> ya con los objetos incorporados.</returns>
-        public static Dictionary<TKey, T> ConvertDataTableToDictionaryOfType<TKey, T>(DataTable dataTable) where T : IManageable<TKey>, new() where TKey : struct
+        public static Dictionary<TKey, T> ConvertDataTableToDictionaryOfType<TKey, T>(DataTable dataTable) where T : Cope<T, TKey>, new() where TKey : struct
         {
             Dictionary<TKey, T> newDictionary = new Dictionary<TKey, T>();
             foreach (DataRow row in dataTable.Rows)
@@ -268,7 +268,7 @@ namespace DataManagement.Standard.Tools
         /// <typeparam name="T">Tipo referencia para convertir.</typeparam>
         /// <param name="list">El contenido a convertir.</param>
         /// <returns>Regresa un nuevo DataTable ya con los objetos incorporados como columnas y filas.</returns>
-        public static DataTable ConvertListToDataTableOfType<T, TKey>(List<T> list) where T : IManageable<TKey> where TKey : struct
+        public static DataTable ConvertListToDataTableOfType<T, TKey>(List<T> list) where T : Cope<T, TKey>, new() where TKey : struct
         {
             DataTable dataTable = ConvertListToDataTable(list);
             dataTable.PrimaryKey = new DataColumn[] { dataTable.Columns["Id"] };
@@ -331,7 +331,7 @@ namespace DataManagement.Standard.Tools
         /// <typeparam name="T">Tipo referencia para el nuevo Objeto.</typeparam>
         /// <param name="parameters">Array del objeto Parameter que contiene la informacion a colocar.</param>
         /// <returns>Regresa un nuevo objeto del tipo <typeparamref name="T"/> ya con las propiedades correspondientes alimentadas.</returns>
-        internal static T SetParametersInObject<T, TKey>(Parameter[] parameters) where T : IManageable<TKey>, new() where TKey : struct
+        internal static T SetParametersInObject<T, TKey>(Parameter[] parameters) where T : Cope<T, TKey>, new() where TKey : struct
         {
             T newObj = new T
             {

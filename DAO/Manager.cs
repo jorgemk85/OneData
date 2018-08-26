@@ -122,10 +122,12 @@ namespace DataManagement.Standard.DAO
     /// </summary>
     /// <typeparam name="T">Tipo de clase que representa este objeto. El tipo tiene que implementar IManageable para poder operar.</typeparam>
     /// <typeparam name="TKey">Tipo que representa la llave utilizada en la propiedad Id del tipo <typeparamref name="T"/>.</typeparam>
-    public abstract class Manager<T, TKey> where T : IManageable<TKey>, new() where TKey : struct
+    public abstract class Manager<T, TKey> where T : Cope<T, TKey>, new() where TKey : struct
     {
         static DataCache dataCache = new DataCache();
         static bool forceQueryDataBase = false;
+
+        public static ModelComposition ModelComposition { get; set; } = new ModelComposition(typeof(T));
 
         #region Events
         public static event CommandExecutedEventHandler OnCommandExecuted;
@@ -140,7 +142,7 @@ namespace DataManagement.Standard.DAO
 
         static Manager()
         {
-            dataCache.Initialize<T, TKey>(new T());
+            dataCache.Initialize(ModelComposition.IsCacheEnabled, ModelComposition.CacheExpiration);
         }
 
         /// <summary>
@@ -288,7 +290,7 @@ namespace DataManagement.Standard.DAO
                 // Al mandar TRUE en forceQueryDataBase aseguramos que no se use el cache y al no almacenar el resultado con la funcion SaveCache, anulamos completamente el uso cache.
                 result = queryEvaluation.Evaluate<T, TKey>(obj, transactionType, dataCache.Cache, dataCache.IsPartialCache, true, connectionToUse);
             }
-            CallOnExecutedEventHandlers(new T().DataBaseTableName, transactionType, result);
+            CallOnExecutedEventHandlers(ModelComposition.TableName, transactionType, result);
             return result;
         }
 
@@ -338,7 +340,7 @@ namespace DataManagement.Standard.DAO
             if (DateTime.Now.Ticks > dataCache.LastCacheUpdate + dataCache.CacheExpiration)
             {
                 // Elimina el cache ya que esta EXPIRADO y de debe de refrescar.
-                dataCache.Reset<T, TKey>(new T());
+                dataCache.Reset(ModelComposition.IsCacheEnabled, ModelComposition.CacheExpiration);
             }
         }
 

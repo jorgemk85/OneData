@@ -13,14 +13,14 @@ namespace DataManagement.Standard.DAO
 {
     internal class MySqlCreation : ICreatable
     {
-        public void SetStoredProceduresParameters<T, TKey>(PropertiesData<T> properties, T obj, StringBuilder queryBuilder, bool setDefaultNull, bool considerPrimary) where T : IManageable<TKey>, new() where TKey : struct
+        public void SetStoredProceduresParameters<T, TKey>(StringBuilder queryBuilder, bool setDefaultNull, bool considerPrimary) where T : Cope<T, TKey>, new() where TKey : struct
         {
             // Aqui se colocan los parametros segun las propiedades del objeto 
-            foreach (KeyValuePair<string, PropertyInfo> property in properties.FilteredProperties)
+            foreach (KeyValuePair<string, PropertyInfo> property in Manager<T, TKey>.ModelComposition.FilteredProperties)
             {
                 // Si la propiedad actual es la primaria y esta es del tipo int? y no se debe considerar para estos parametros, entonces se salta a la sig propiedad.
                 // Esto significa que la propiedad primaria es Identity o Auto Increment y no se debe de mandar como parametro en un Insert.
-                if (property.Value.Equals(properties.PrimaryProperty) && property.Value.PropertyType.Equals(typeof(int?)) && !considerPrimary)
+                if (property.Value.Equals(Manager<T, TKey>.ModelComposition.PrimaryProperty) && property.Value.PropertyType.Equals(typeof(int?)) && !considerPrimary)
                 {
                     continue;
                 }
@@ -35,45 +35,44 @@ namespace DataManagement.Standard.DAO
             }
         }
 
-        public string CreateInsertStoredProcedure<T, TKey>(bool doAlter) where T : IManageable<TKey>, new() where TKey : struct
+        public string CreateInsertStoredProcedure<T, TKey>(bool doAlter) where T : Cope<T, TKey>, new() where TKey : struct
         {
             StringBuilder queryBuilder = new StringBuilder();
             StringBuilder insertsBuilder = new StringBuilder();
             StringBuilder valuesBuilder = new StringBuilder();
-            PropertiesData<T> properties = new PropertiesData<T>();
 
             T obj = new T();
 
-            if (properties.ManagedProperties.Count == 0) return string.Empty;
+            if (Manager<T, TKey>.ModelComposition.ManagedProperties.Count == 0) return string.Empty;
 
             if (doAlter)
             {
-                queryBuilder.AppendFormat("DROP PROCEDURE {0}{1}{2};\n", Manager.StoredProcedurePrefix, obj.DataBaseTableName, Manager.InsertSuffix);
+                queryBuilder.AppendFormat("DROP PROCEDURE {0}{1}{2};\n", Manager.StoredProcedurePrefix, Manager<T, TKey>.ModelComposition.TableName, Manager.InsertSuffix);
             }
 
-            queryBuilder.AppendFormat("CREATE PROCEDURE {0}{1}{2} (\n", Manager.StoredProcedurePrefix, obj.DataBaseTableName, Manager.InsertSuffix);
+            queryBuilder.AppendFormat("CREATE PROCEDURE {0}{1}{2} (\n", Manager.StoredProcedurePrefix, Manager<T, TKey>.ModelComposition.TableName, Manager.InsertSuffix);
 
             // Aqui se colocan los parametros segun las propiedades del objeto
-            SetStoredProceduresParameters<T, TKey>(properties, obj, queryBuilder, false, false);
+            SetStoredProceduresParameters<T, TKey>(queryBuilder, false, false);
 
             queryBuilder.Remove(queryBuilder.Length - 2, 2);
             queryBuilder.Append(")\nBEGIN\n");
             queryBuilder.Append("SET @@sql_mode:=TRADITIONAL;\n");
-            queryBuilder.AppendFormat("INSERT INTO {0}{1} (\n", Manager.TablePrefix, obj.DataBaseTableName);
+            queryBuilder.AppendFormat("INSERT INTO {0}{1} (\n", Manager.TablePrefix, Manager<T, TKey>.ModelComposition.TableName);
 
             // Seccion para especificar a que columnas se va a insertar y sus valores.
-            foreach (KeyValuePair<string, PropertyInfo> property in properties.ManagedProperties)
+            foreach (KeyValuePair<string, PropertyInfo> property in Manager<T, TKey>.ModelComposition.ManagedProperties)
             {
-                if (property.Value.Equals(properties.PrimaryProperty) && property.Value.PropertyType.Equals(typeof(int?)))
+                if (property.Value.Equals(Manager<T, TKey>.ModelComposition.PrimaryProperty) && property.Value.PropertyType.Equals(typeof(int?)))
                 {
                     continue;
                 }
                 else
                 {
                     insertsBuilder.AppendFormat("    {0},\n", property.Value.Name);
-                    if (properties.AutoProperties.TryGetValue(property.Value.Name, out PropertyInfo autoProperty))
+                    if (Manager<T, TKey>.ModelComposition.AutoProperties.TryGetValue(property.Value.Name, out PropertyInfo autoProperty))
                     {
-                        valuesBuilder.AppendFormat("    {0},\n", GetAutoPropertyValue(properties.AutoPropertyTypes[property.Value.Name]));
+                        valuesBuilder.AppendFormat("    {0},\n", GetAutoPropertyValue(Manager<T, TKey>.ModelComposition.AutoPropertyAttributes[property.Value.Name].AutoPropertyType));
                     }
                     else
                     {
@@ -93,41 +92,40 @@ namespace DataManagement.Standard.DAO
             return queryBuilder.ToString();
         }
 
-        public string CreateUpdateStoredProcedure<T, TKey>(bool doAlter) where T : IManageable<TKey>, new() where TKey : struct
+        public string CreateUpdateStoredProcedure<T, TKey>(bool doAlter) where T : Cope<T, TKey>, new() where TKey : struct
         {
             StringBuilder queryBuilder = new StringBuilder();
-            PropertiesData<T> properties = new PropertiesData<T>();
 
             T obj = new T();
 
-            if (properties.ManagedProperties.Count == 0) return string.Empty;
+            if (Manager<T, TKey>.ModelComposition.ManagedProperties.Count == 0) return string.Empty;
 
             if (doAlter)
             {
-                queryBuilder.AppendFormat("DROP PROCEDURE {0}{1}{2};\n", Manager.StoredProcedurePrefix, obj.DataBaseTableName, Manager.UpdateSuffix);
+                queryBuilder.AppendFormat("DROP PROCEDURE {0}{1}{2};\n", Manager.StoredProcedurePrefix, Manager<T, TKey>.ModelComposition.TableName, Manager.UpdateSuffix);
             }
 
-            queryBuilder.AppendFormat("CREATE PROCEDURE {0}{1}{2} (\n", Manager.StoredProcedurePrefix, obj.DataBaseTableName, Manager.UpdateSuffix);
+            queryBuilder.AppendFormat("CREATE PROCEDURE {0}{1}{2} (\n", Manager.StoredProcedurePrefix, Manager<T, TKey>.ModelComposition.TableName, Manager.UpdateSuffix);
 
             // Aqui se colocan los parametros segun las propiedades del objeto
-            SetStoredProceduresParameters<T, TKey>(properties, obj, queryBuilder, false, true);
+            SetStoredProceduresParameters<T, TKey>(queryBuilder, false, true);
 
             queryBuilder.Remove(queryBuilder.Length - 2, 2);
             queryBuilder.Append(")\nBEGIN\n");
             queryBuilder.Append("SET @@sql_mode:=TRADITIONAL;\n");
-            queryBuilder.AppendFormat("UPDATE {0}{1}\n", Manager.TablePrefix, obj.DataBaseTableName);
+            queryBuilder.AppendFormat("UPDATE {0}{1}\n", Manager.TablePrefix, Manager<T, TKey>.ModelComposition.TableName);
             queryBuilder.Append("SET\n");
 
             // Se especifica el parametro que va en x columna.
-            foreach (KeyValuePair<string, PropertyInfo> property in properties.ManagedProperties)
+            foreach (KeyValuePair<string, PropertyInfo> property in Manager<T, TKey>.ModelComposition.ManagedProperties)
             {
-                if (property.Equals(properties.PrimaryProperty) || property.Value.Name.Equals(properties.DateCreatedProperty.Name))
+                if (property.Equals(Manager<T, TKey>.ModelComposition.PrimaryProperty) || property.Value.Name.Equals(Manager<T, TKey>.ModelComposition.DateCreatedProperty.Name))
                 {
                     continue;
                 }
-                if (properties.AutoProperties.TryGetValue(property.Value.Name, out PropertyInfo autoProperty))
+                if (Manager<T, TKey>.ModelComposition.AutoProperties.TryGetValue(property.Value.Name, out PropertyInfo autoProperty))
                 {
-                    queryBuilder.AppendFormat("    {0} = {1},\n", property.Value.Name, GetAutoPropertyValue(properties.AutoPropertyTypes[property.Value.Name]));
+                    queryBuilder.AppendFormat("    {0} = {1},\n", property.Value.Name, GetAutoPropertyValue(Manager<T, TKey>.ModelComposition.AutoPropertyAttributes[property.Value.Name].AutoPropertyType));
                 }
                 else
                 {
@@ -143,21 +141,21 @@ namespace DataManagement.Standard.DAO
             return queryBuilder.ToString();
         }
 
-        public string CreateDeleteStoredProcedure<T, TKey>(bool doAlter) where T : IManageable<TKey>, new() where TKey : struct
+        public string CreateDeleteStoredProcedure<T, TKey>(bool doAlter) where T : Cope<T, TKey>, new() where TKey : struct
         {
             StringBuilder queryBuilder = new StringBuilder();
             T obj = new T();
 
             if (doAlter)
             {
-                queryBuilder.AppendFormat("DROP PROCEDURE {0}{1}{2};\n", Manager.StoredProcedurePrefix, obj.DataBaseTableName, Manager.DeleteSuffix);
+                queryBuilder.AppendFormat("DROP PROCEDURE {0}{1}{2};\n", Manager.StoredProcedurePrefix, Manager<T, TKey>.ModelComposition.TableName, Manager.DeleteSuffix);
             }
 
-            queryBuilder.AppendFormat("CREATE PROCEDURE {0}{1}{2} (\n", Manager.StoredProcedurePrefix, obj.DataBaseTableName, Manager.DeleteSuffix);
+            queryBuilder.AppendFormat("CREATE PROCEDURE {0}{1}{2} (\n", Manager.StoredProcedurePrefix, Manager<T, TKey>.ModelComposition.TableName, Manager.DeleteSuffix);
 
             queryBuilder.Append(string.Format("    IN _Id {0})\n", GetSqlDataType(typeof(TKey))));
             queryBuilder.Append("BEGIN\n");
-            queryBuilder.AppendFormat("DELETE FROM {0}{1}\n", Manager.TablePrefix, obj.DataBaseTableName);
+            queryBuilder.AppendFormat("DELETE FROM {0}{1}\n", Manager.TablePrefix, Manager<T, TKey>.ModelComposition.TableName);
             queryBuilder.AppendFormat("WHERE Id = _Id;\n");
             queryBuilder.Append("END");
 
@@ -166,20 +164,20 @@ namespace DataManagement.Standard.DAO
             return queryBuilder.ToString();
         }
 
-        public string CreateSelectAllStoredProcedure<T, TKey>(bool doAlter) where T : IManageable<TKey>, new() where TKey : struct
+        public string CreateSelectAllStoredProcedure<T, TKey>(bool doAlter) where T : Cope<T, TKey>, new() where TKey : struct
         {
             StringBuilder queryBuilder = new StringBuilder();
             T obj = new T();
 
             if (doAlter)
             {
-                queryBuilder.AppendFormat("DROP PROCEDURE {0}{1}{2};\n", Manager.StoredProcedurePrefix, obj.DataBaseTableName, Manager.SelectAllSuffix);
+                queryBuilder.AppendFormat("DROP PROCEDURE {0}{1}{2};\n", Manager.StoredProcedurePrefix, Manager<T, TKey>.ModelComposition.TableName, Manager.SelectAllSuffix);
             }
 
-            queryBuilder.AppendFormat("CREATE PROCEDURE {0}{1}{2} (\n", Manager.StoredProcedurePrefix, obj.DataBaseTableName, Manager.SelectAllSuffix);
+            queryBuilder.AppendFormat("CREATE PROCEDURE {0}{1}{2} (\n", Manager.StoredProcedurePrefix, Manager<T, TKey>.ModelComposition.TableName, Manager.SelectAllSuffix);
 
             queryBuilder.Append(")\nBEGIN\n");
-            queryBuilder.AppendFormat("SELECT * FROM {0}{1}\n", Manager.TablePrefix, obj.DataBaseTableName);
+            queryBuilder.AppendFormat("SELECT * FROM {0}{1}\n", Manager.TablePrefix, Manager<T, TKey>.ModelComposition.TableName);
             queryBuilder.Append("ORDER BY FechaCreacion DESC;\n");
             queryBuilder.Append("END");
 
@@ -188,32 +186,31 @@ namespace DataManagement.Standard.DAO
             return queryBuilder.ToString();
         }
 
-        public string CreateSelectStoredProcedure<T, TKey>(bool doAlter) where T : IManageable<TKey>, new() where TKey : struct
+        public string CreateSelectStoredProcedure<T, TKey>(bool doAlter) where T : Cope<T, TKey>, new() where TKey : struct
         {
             StringBuilder queryBuilder = new StringBuilder();
-            PropertiesData<T> properties = new PropertiesData<T>();
             T obj = new T();
 
-            if (properties.FilteredProperties.Count == 0) return string.Empty;
+            if (Manager<T, TKey>.ModelComposition.FilteredProperties.Count == 0) return string.Empty;
 
             if (doAlter)
             {
-                queryBuilder.AppendFormat("DROP PROCEDURE {0}{1}{2};\n", Manager.StoredProcedurePrefix, obj.DataBaseTableName, Manager.SelectSuffix);
+                queryBuilder.AppendFormat("DROP PROCEDURE {0}{1}{2};\n", Manager.StoredProcedurePrefix, Manager<T, TKey>.ModelComposition.TableName, Manager.SelectSuffix);
             }
 
-            queryBuilder.AppendFormat("CREATE PROCEDURE {0}{1}{2} (\n", Manager.StoredProcedurePrefix, obj.DataBaseTableName, Manager.SelectSuffix);
+            queryBuilder.AppendFormat("CREATE PROCEDURE {0}{1}{2} (\n", Manager.StoredProcedurePrefix, Manager<T, TKey>.ModelComposition.TableName, Manager.SelectSuffix);
 
             // Aqui se colocan los parametros segun las propiedades del objeto
-            SetStoredProceduresParameters<T, TKey>(properties, obj, queryBuilder, false, true);
+            SetStoredProceduresParameters<T, TKey>(queryBuilder, false, true);
 
             queryBuilder.Remove(queryBuilder.Length - 2, 2);
             queryBuilder.Append(")\nBEGIN\n");
             queryBuilder.Append("SET @@sql_mode:=TRADITIONAL;\n");
-            queryBuilder.AppendFormat("SELECT * FROM {0}{1}\n", Manager.TablePrefix, obj.DataBaseTableName);
+            queryBuilder.AppendFormat("SELECT * FROM {0}{1}\n", Manager.TablePrefix, Manager<T, TKey>.ModelComposition.TableName);
             queryBuilder.Append("WHERE\n");
 
             // Se especifica el parametro que va en x columna.
-            foreach (KeyValuePair<string, PropertyInfo> property in properties.FilteredProperties)
+            foreach (KeyValuePair<string, PropertyInfo> property in Manager<T, TKey>.ModelComposition.FilteredProperties)
             {
                 queryBuilder.AppendFormat("    {0} LIKE IFNULL(CONCAT('%', _{0}, '%'), {0}) AND\n", property.Value.Name);
             }
@@ -227,21 +224,20 @@ namespace DataManagement.Standard.DAO
             return queryBuilder.ToString();
         }
 
-        public string CreateQueryForTableCreation<T, TKey>() where T : IManageable<TKey>, new() where TKey : struct
+        public string CreateQueryForTableCreation<T, TKey>() where T : Cope<T, TKey>, new() where TKey : struct
         {
             StringBuilder queryBuilder = new StringBuilder();
-            PropertiesData<T> properties = new PropertiesData<T>();
             T obj = new T();
 
-            if (properties.ManagedProperties.Count == 0) return string.Empty;
+            if (Manager<T, TKey>.ModelComposition.ManagedProperties.Count == 0) return string.Empty;
 
-            queryBuilder.AppendFormat("CREATE TABLE {0}{1} (\n", Manager.TablePrefix, obj.DataBaseTableName);
+            queryBuilder.AppendFormat("CREATE TABLE {0}{1} (\n", Manager.TablePrefix, Manager<T, TKey>.ModelComposition.TableName);
 
             // Aqui se colocan las propiedades del objeto. Una por columna por supuesto.
-            foreach (KeyValuePair<string, PropertyInfo> property in properties.ManagedProperties)
+            foreach (KeyValuePair<string, PropertyInfo> property in Manager<T, TKey>.ModelComposition.ManagedProperties)
             {
-                string isNullable = Nullable.GetUnderlyingType(property.Value.PropertyType) == null || property.Equals(properties.PrimaryProperty) ? "NOT NULL" : string.Empty;
-                if (property.Equals(properties.PrimaryProperty))
+                string isNullable = Nullable.GetUnderlyingType(property.Value.PropertyType) == null || property.Equals(Manager<T, TKey>.ModelComposition.PrimaryProperty) ? "NOT NULL" : string.Empty;
+                if (property.Equals(Manager<T, TKey>.ModelComposition.PrimaryProperty))
                 {
                     if (property.Value.PropertyType.Equals(typeof(int?)))
                     {
@@ -267,19 +263,18 @@ namespace DataManagement.Standard.DAO
             return queryBuilder.ToString();
         }
 
-        public string CreateQueryForTableAlteration<T, TKey>(Dictionary<string, ColumnDefinition> columnDetails, Dictionary<string, KeyDefinition> keyDetails) where T : IManageable<TKey>, new() where TKey : struct
+        public string CreateQueryForTableAlteration<T, TKey>(Dictionary<string, ColumnDefinition> columnDetails, Dictionary<string, KeyDefinition> keyDetails) where T : Cope<T, TKey>, new() where TKey : struct
         {
             StringBuilder queryBuilder = new StringBuilder();
             List<string> columnsFound = new List<string>();
             bool foundDiference = false;
-            PropertiesData<T> properties = new PropertiesData<T>();
             T obj = new T();
 
-            if (properties.ManagedProperties.Count == 0) return string.Empty;
+            if (Manager<T, TKey>.ModelComposition.ManagedProperties.Count == 0) return string.Empty;
 
-            queryBuilder.AppendFormat("ALTER TABLE {0}{1} \n", Manager.TablePrefix, obj.DataBaseTableName);
+            queryBuilder.AppendFormat("ALTER TABLE {0}{1} \n", Manager.TablePrefix, Manager<T, TKey>.ModelComposition.TableName);
 
-            foreach (KeyValuePair<string, PropertyInfo> property in properties.ManagedProperties)
+            foreach (KeyValuePair<string, PropertyInfo> property in Manager<T, TKey>.ModelComposition.ManagedProperties)
             {
                 columnDetails.TryGetValue(property.Value.Name, out ColumnDefinition columnDefinition);
                 string sqlDataType = GetSqlDataType(property.Value.PropertyType);
@@ -299,13 +294,13 @@ namespace DataManagement.Standard.DAO
                     queryBuilder.AppendFormat("MODIFY COLUMN {0} {1},\n", property.Value.Name, sqlDataType);
                     foundDiference = true;
                 }
-                if (columnDefinition.Is_Nullable.Equals("YES") && !isNullable && !property.Equals(properties.PrimaryProperty))
+                if (columnDefinition.Is_Nullable.Equals("YES") && !isNullable && !property.Equals(Manager<T, TKey>.ModelComposition.PrimaryProperty))
                 {
                     // Si la propiedad ya no es nullable, entonces la cambia en la base de datos
                     queryBuilder.AppendFormat("MODIFY COLUMN {0} {1} NOT NULL,\n", property.Value.Name, sqlDataType);
                     foundDiference = true;
                 }
-                if (columnDefinition.Is_Nullable.Equals("NO") && isNullable && !property.Equals(properties.PrimaryProperty))
+                if (columnDefinition.Is_Nullable.Equals("NO") && isNullable && !property.Equals(Manager<T, TKey>.ModelComposition.PrimaryProperty))
                 {
                     // Si la propiedad ES nullable, entonces la cambia en la base de datos
                     queryBuilder.AppendFormat("MODIFY COLUMN {0} {1},\n", property.Value.Name, sqlDataType);
@@ -352,7 +347,7 @@ namespace DataManagement.Standard.DAO
             return queryBuilder.ToString();
         }
 
-        public string GetCreateForeignKeysQuery<T, TKey>(Dictionary<string, KeyDefinition> keyDetails = null) where T : IManageable<TKey>, new() where TKey : struct
+        public string GetCreateForeignKeysQuery<T, TKey>(Dictionary<string, KeyDefinition> keyDetails = null) where T : Cope<T, TKey>, new() where TKey : struct
         {
             StringBuilder queryBuilder = new StringBuilder();
             PropertyInfo[] properties = typeof(T).GetProperties().Where(q => q.GetCustomAttribute<UnmanagedProperty>() == null && q.GetCustomAttribute<ForeignModel>() != null && !keyDetails.ContainsKey(q.Name)).ToArray();
@@ -360,14 +355,14 @@ namespace DataManagement.Standard.DAO
 
             if (properties.Length == 0) return string.Empty;
 
-            queryBuilder.AppendFormat("ALTER TABLE {0}{1}\n", Manager.TablePrefix, obj.DataBaseTableName);
+            queryBuilder.AppendFormat("ALTER TABLE {0}{1}\n", Manager.TablePrefix, Manager<T, TKey>.ModelComposition.TableName);
 
             foreach (PropertyInfo property in properties)
             {
                 ForeignModel foreignAttribute = property.GetCustomAttribute<ForeignModel>();
-                IManageable<TKey> foreignModel = (IManageable<TKey>)Activator.CreateInstance(foreignAttribute.Model);
-                queryBuilder.AppendFormat("ADD CONSTRAINT FK_{0}_{1}\n", obj.DataBaseTableName, foreignModel.DataBaseTableName);
-                queryBuilder.AppendFormat("FOREIGN KEY({0}) REFERENCES {1}{2}(Id) ON DELETE {3} ON UPDATE NO ACTION;\n", property.Name, Manager.TablePrefix, foreignModel.DataBaseTableName, foreignAttribute.Action.ToString().Replace("_", " "));
+                Cope<T, TKey> foreignModel = (Cope<T, TKey>)Activator.CreateInstance(foreignAttribute.Model);
+                queryBuilder.AppendFormat("ADD CONSTRAINT FK_{0}_{1}\n", Manager<T, TKey>.ModelComposition.TableName, foreignModel.ModelComposition.TableName);
+                queryBuilder.AppendFormat("FOREIGN KEY({0}) REFERENCES {1}{2}(Id) ON DELETE {3} ON UPDATE NO ACTION;\n", property.Name, Manager.TablePrefix, foreignModel.ModelComposition.TableName, foreignAttribute.Action.ToString().Replace("_", " "));
             }
 
             Logger.Info("(MySql) Created a new query for Create Foreign Keys:");
@@ -453,7 +448,7 @@ namespace DataManagement.Standard.DAO
             }
         }
 
-        public string CreateInsertListStoredProcedure<T, TKey>(bool doAlter) where T : IManageable<TKey>, new() where TKey : struct
+        public string CreateInsertListStoredProcedure<T, TKey>(bool doAlter) where T : Cope<T, TKey>, new() where TKey : struct
         {
             throw new NotImplementedException();
         }

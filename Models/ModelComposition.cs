@@ -1,11 +1,12 @@
 ﻿using DataManagement.Standard.Attributes;
-using DataManagement.Standard.Enums;
+using DataManagement.Standard.DAO;
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 
 namespace DataManagement.Standard.Models
 {
-    internal class PropertiesData<T>
+    public class ModelComposition
     {
         /// <summary>
         /// Arreglo completo de las propiedades sin filtrar.
@@ -29,29 +30,57 @@ namespace DataManagement.Standard.Models
         /// </summary>
         public Dictionary<string, PropertyInfo> FilteredProperties { get; set; } = new Dictionary<string, PropertyInfo>();
         /// <summary>
-        /// Esta propiedad controla las propiedades del objeto que NO estan marcadas con el atributo UnmanagedProperty NI AutoProperty.
+        /// Esta propiedad controla las propiedades del objeto que estan marcadas como ForeignModel.
         /// </summary>
-        public Dictionary<string, PropertyInfo> ForeignModels { get; set; } = new Dictionary<string, PropertyInfo>();
-        public Dictionary<string, AutoPropertyTypes> AutoPropertyTypes { get; set; } = new Dictionary<string, AutoPropertyTypes>();
+        public Dictionary<string, PropertyInfo> ForeignModelProperties { get; set; } = new Dictionary<string, PropertyInfo>();
+        public Dictionary<string, ForeignModel> ForeignModelAttributes { get; set; } = new Dictionary<string, ForeignModel>();
+        public Dictionary<string, AutoProperty> AutoPropertyAttributes { get; set; } = new Dictionary<string, AutoProperty>();
         public PropertyInfo PrimaryProperty { get; set; }
         public PropertyInfo DateCreatedProperty { get; set; }
         public PropertyInfo DateModifiedProperty { get; set; }
+        public DataTableName DataTableNameAttribute { get; set; }
+        public CacheEnabled CacheEnabledAttribute { get; set; }
+        public string TableName { get; set; }
+        public string Schema { get; set; }
+        public bool IsCacheEnabled { get; set; }
+        public long CacheExpiration { get; set; }
 
-        public PropertiesData()
+        public ModelComposition(Type type)
         {
-            Properties = typeof(T).GetProperties();
+            Properties = type.GetProperties();
+            SetClass(type);
             SetProperties();
+        }
+
+        private void SetClass(Type type)
+        {
+            foreach (CustomAttributeData attribute in type.CustomAttributes)
+            {
+                switch (attribute.AttributeType.Name)
+                {
+                    case "DataTableName":
+                        DataTableNameAttribute = type.GetCustomAttribute<DataTableName>();
+                        TableName = DataTableNameAttribute.TableName;
+                        Schema = DataTableNameAttribute.Schema;
+                        break;
+                    case "CacheEnabled":
+                        CacheEnabledAttribute = type.GetCustomAttribute<CacheEnabled>();
+                        IsCacheEnabled = true;
+                        CacheExpiration = CacheEnabledAttribute.Expiration;
+                        break;
+                    default:
+                        break;
+                }
+            }
         }
 
         private void SetProperties()
         {
-            IEnumerable<CustomAttributeData> attributes = null;
             foreach (PropertyInfo property in Properties)
             {
                 ManagedProperties.Add(property.Name, property);
                 FilteredProperties.Add(property.Name, property);
-                attributes = property.CustomAttributes;
-                foreach (CustomAttributeData attribute in attributes)
+                foreach (CustomAttributeData attribute in property.CustomAttributes)
                 {
                     switch (attribute.AttributeType.Name)
                     {
@@ -62,7 +91,7 @@ namespace DataManagement.Standard.Models
                             break;
                         case "AutoProperty":
                             AutoProperties.Add(property.Name, property);
-                            AutoPropertyTypes.Add(property.Name, property.GetCustomAttribute<AutoProperty>().AutoPropertyType);
+                            AutoPropertyAttributes.Add(property.Name, property.GetCustomAttribute<AutoProperty>());
                             FilteredProperties.Remove(property.Name);
                             break;
                         case "PrimaryProperty":
@@ -75,7 +104,8 @@ namespace DataManagement.Standard.Models
                             DateModifiedProperty = property;
                             break;
                         case "ForeignModel":
-                            ForeignModels.Add(property.Name, property);
+                            ForeignModelProperties.Add(property.Name, property);
+                            ForeignModelAttributes.Add(property.Name, property.GetCustomAttribute<ForeignModel>());
                             break;
                         default:
                             break;

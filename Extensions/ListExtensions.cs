@@ -1,4 +1,5 @@
 ﻿using DataManagement.Standard.Interfaces;
+using DataManagement.Standard.Models;
 using DataManagement.Standard.Tools;
 using System.Collections.Generic;
 using System.Data;
@@ -33,7 +34,7 @@ namespace DataManagement.Standard.Extensions
             return DataSerializer.ConvertListToDataTableOfGenericType(list);
         }
 
-        public static DataTable ToDataTable<T, TKey>(this List<T> list) where T : IManageable<TKey> where TKey : struct
+        public static DataTable ToDataTable<T, TKey>(this List<T> list) where T : Cope<T, TKey>, new() where TKey : struct
         {
             return DataSerializer.ConvertListToDataTableOfType<T, TKey>(list);
         }
