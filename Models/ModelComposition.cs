@@ -1,5 +1,6 @@
 ﻿using DataManagement.Attributes;
 using DataManagement.DAO;
+using DataManagement.Exceptions;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -52,6 +53,14 @@ namespace DataManagement.Models
             SetProperties();
         }
 
+        private void PerformClassValidation(Type type)
+        {
+            if (string.IsNullOrWhiteSpace(TableName))
+            {
+                throw new RequiredAttributeNotFound("DataTableName", type.FullName);
+            }
+        }
+
         private void SetClass(Type type)
         {
             foreach (CustomAttributeData attribute in type.CustomAttributes)
@@ -72,6 +81,7 @@ namespace DataManagement.Models
                         break;
                 }
             }
+            PerformClassValidation(type);
         }
 
         private void SetProperties()
