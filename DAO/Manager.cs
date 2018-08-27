@@ -282,7 +282,7 @@ namespace DataManagement.DAO
                 ResetCacheIfExpired();
             }
 
-            Result result = queryEvaluation.Evaluate<T, TKey>(obj, transactionType, dataCache, connectionToUse);
+            Result result = queryEvaluation.Evaluate<T, TKey>(obj, transactionType, ref dataCache, connectionToUse);
             CallOnExecutedEventHandlers(ModelComposition.TableName, transactionType, result);
 
             return result;

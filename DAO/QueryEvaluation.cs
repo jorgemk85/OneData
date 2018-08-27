@@ -24,7 +24,7 @@ namespace DataManagement.DAO
             operation = Operation.GetOperationBasedOnConnectionType(connectionType);
         }
 
-        public Result Evaluate<T, TKey>(T obj, TransactionTypes transactionType, DataCache dataCache, string connectionToUse) where T : Cope<T, TKey>, new() where TKey : struct
+        public Result Evaluate<T, TKey>(T obj, TransactionTypes transactionType, ref DataCache dataCache, string connectionToUse) where T : Cope<T, TKey>, new() where TKey : struct
         {
             Result resultado = null;
             bool hasCache = dataCache.Cache == null ? false : true;
@@ -111,6 +111,7 @@ namespace DataManagement.DAO
                 if (!hasCache && resultado.IsSuccessful)
                 {
                     dataCache.Cache = resultado;
+                    dataCache.LastCacheUpdate = DateTime.Now.Ticks;
                 }
             }
         }
@@ -132,6 +133,7 @@ namespace DataManagement.DAO
                 {
                     resultado = operation.ExecuteProcedure<T, TKey>(obj, connectionToUse, TransactionTypes.SelectAll);
                     dataCache.Cache = resultado;
+                    dataCache.LastCacheUpdate = DateTime.Now.Ticks;
                 }
             }
 
@@ -211,6 +213,7 @@ namespace DataManagement.DAO
             {
                 AlterCache(row, ref dataCache);
             }
+            dataCache.LastCacheUpdate = DateTime.Now.Ticks;
         }
 
         public void AlterCache(DataRow row, ref DataCache dataCache)
