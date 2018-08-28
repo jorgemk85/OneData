@@ -37,28 +37,28 @@ namespace DataManagement.Tools
         }
 
         /// <summary>
-        /// Serializa un objeto de tipo List<typeparamref name="T"/> y lo guarda en un archivo de texto.
+        /// Serializa un objeto de tipo IEnumerable <typeparamref name="T"/> y lo guarda en un archivo de texto.
         /// </summary>
         /// <typeparam name="T">Tipo de objeto.</typeparam>
         /// <param name="list">Lista de objetos de tipo <typeparamref name="T"/> que se convertira.</param>
         /// <param name="fullyQualifiedFileName">Directorio completo, incluyendo nombre de archivo y extension. Se utiliza para guardar el producto final.</param>
-        public static void SerializeListOfTypeToFile<T>(List<T> list, string fullyQualifiedFileName, char separator)
+        public static void SerializeIEnumerableOfTypeToFile<T>(IEnumerable<T> list, string fullyQualifiedFileName, char separator)
         {
-            SerializeList(list, fullyQualifiedFileName, separator);
+            SerializeIEnumerable(list, fullyQualifiedFileName, separator);
         }
 
         /// <summary>
-        /// Serializa un objeto de tipo List<typeparamref name="T"/> y lo guarda en un archivo de texto utilizando Async.
+        /// Serializa un objeto de tipo IEnumerable <typeparamref name="T"/> y lo guarda en un archivo de texto utilizando Async.
         /// </summary>
         /// <typeparam name="T">Tipo de objeto.</typeparam>
         /// <param name="list">Lista de objetos de tipo <typeparamref name="T"/> que se convertira.</param>
         /// <param name="fullyQualifiedFileName">Directorio completo, incluyendo nombre de archivo y extension. Se utiliza para guardar el producto final.</param>
-        public static async void SerializeListOfTypeToFileAsync<T>(List<T> list, string fullyQualifiedFileName, char separator)
+        public static async void SerializeIEnumerableOfTypeToFileAsync<T>(IEnumerable<T> list, string fullyQualifiedFileName, char separator)
         {
-            await Task.Run(() => SerializeList(list, fullyQualifiedFileName, separator));
+            await Task.Run(() => SerializeIEnumerable(list, fullyQualifiedFileName, separator));
         }
 
-        private static void SerializeList<T>(List<T> list, string fullyQualifiedFileName, char separator)
+        private static void SerializeIEnumerable<T>(IEnumerable<T> list, string fullyQualifiedFileName, char separator)
         {
             try
             {

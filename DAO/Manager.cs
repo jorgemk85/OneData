@@ -28,7 +28,7 @@ namespace DataManagement.DAO
         internal static bool OverrideOnlyInDebug { get; set; }
         internal static string SelectSuffix { get; set; }
         internal static string InsertSuffix { get; set; }
-        internal static string InsertListSuffix { get; set; }
+        internal static string InsertMassiveSuffix { get; set; }
         internal static string UpdateSuffix { get; set; }
         internal static string DeleteSuffix { get; set; }
         internal static string SelectAllSuffix { get; set; }
@@ -63,7 +63,7 @@ namespace DataManagement.DAO
             Logger.Info("Getting Manager configuration for prefixes and suffixes.");
             SelectSuffix = ConsolidationTools.GetValueFromConfiguration("SelectSuffix", ConfigurationTypes.AppSetting);
             InsertSuffix = ConsolidationTools.GetValueFromConfiguration("InsertSuffix", ConfigurationTypes.AppSetting);
-            InsertListSuffix = ConsolidationTools.GetValueFromConfiguration("InsertListSuffix", ConfigurationTypes.AppSetting);
+            InsertMassiveSuffix = ConsolidationTools.GetValueFromConfiguration("InsertMassiveSuffix", ConfigurationTypes.AppSetting);
             UpdateSuffix = ConsolidationTools.GetValueFromConfiguration("UpdateSuffix", ConfigurationTypes.AppSetting);
             DeleteSuffix = ConsolidationTools.GetValueFromConfiguration("DeleteSuffix", ConfigurationTypes.AppSetting);
             SelectAllSuffix = ConsolidationTools.GetValueFromConfiguration("SelectAllSuffix", ConfigurationTypes.AppSetting);
@@ -134,7 +134,7 @@ namespace DataManagement.DAO
         public static event SelectAllExecutedEventHandler OnSelectAllExecuted;
         public static event DeleteExecutedEventHandler OnDeleteExecuted;
         public static event InsertExecutedEventHandler OnInsertExecuted;
-        public static event InsertListExecutedEventHandler OnInsertListExecuted;
+        public static event InsertMassiveExecutedEventHandler OnInsertMassiveExecuted;
         public static event UpdateExecutedEventHandler OnUpdateExecuted;
         public static event StoredProcedureExecutedEventHandler OnStoredProcedureExecuted;
         #endregion
@@ -161,9 +161,9 @@ namespace DataManagement.DAO
         /// <param name="list">Objeto que contiene la informacion a insertar.</param>
         /// <param name="connectionToUse">Especifica cual configuracion de tipo ConectionString se desea utilizar. Si se especifica nulo, o no se especifica, entonces utiliza la conexion especificada en DefaultConnection.</param>
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la insercion.</returns>
-        public static Result InsertList(List<T> list, string connectionToUse = null)
+        public static Result InsertMassive(IEnumerable<T> list, string connectionToUse = null)
         {
-            return Command(list, TransactionTypes.InsertList, connectionToUse);
+            return Command(list, TransactionTypes.InsertMassive, connectionToUse);
         }
 
         /// <summary>
@@ -268,7 +268,7 @@ namespace DataManagement.DAO
             return DynamicCommand(obj, transactionType, connectionToUse);
         }
 
-        private static Result Command(List<T> list, TransactionTypes transactionType, string connectionToUse = null)
+        private static Result Command(IEnumerable<T> list, TransactionTypes transactionType, string connectionToUse = null)
         {
             return DynamicCommand(list, transactionType, connectionToUse);
         }
@@ -314,8 +314,8 @@ namespace DataManagement.DAO
                 case TransactionTypes.Insert:
                     OnInsertExecuted?.Invoke(new InsertExecutedEventArgs(tableName, result));
                     break;
-                case TransactionTypes.InsertList:
-                    OnInsertListExecuted?.Invoke(new InsertListExecutedEventArgs(tableName, result));
+                case TransactionTypes.InsertMassive:
+                    OnInsertMassiveExecuted?.Invoke(new InsertMassiveExecutedEventArgs(tableName, result));
                     break;
                 case TransactionTypes.Update:
                     OnUpdateExecuted?.Invoke(new UpdateExecutedEventArgs(tableName, result));

@@ -12,28 +12,28 @@ namespace DataManagement.Tools
     public class ExcelSerializer
     {
         /// <summary>
-        /// Serializa un objeto de tipo List<typeparamref name="T"/> y lo guarda en un archivo Excel.
+        /// Serializa un objeto de tipo IEnumerable <typeparamref name="T"/> y lo guarda en un archivo Excel.
         /// </summary>
         /// <typeparam name="T">Tipo de objeto.</typeparam>
         /// <param name="list">Lista de objetos de tipo <typeparamref name="T"/> que se convertira.</param>
         /// <param name="fullyQualifiedFileName">Directorio completo, incluyendo nombre de archivo y extension. Se utiliza para guardar el producto final.</param>
-        public static void SerializeListOfTypeToExcel<T>(List<T> list, string fullyQualifiedFileName)
+        public static void SerializeIEnumerableOfTypeToExcel<T>(IEnumerable<T> list, string fullyQualifiedFileName)
         {
-            SerializeList(list, fullyQualifiedFileName);
+            SerializeIEnumerable(list, fullyQualifiedFileName);
         }
 
         /// <summary>
-        /// Serializa un objeto de tipo List<typeparamref name="T"/> y lo guarda en un archivo Excel utilizando Async.
+        /// Serializa un objeto de tipo IEnumerable <typeparamref name="T"/> y lo guarda en un archivo Excel utilizando Async.
         /// </summary>
         /// <typeparam name="T">Tipo de objeto.</typeparam>
         /// <param name="list">Lista de objetos de tipo <typeparamref name="T"/> que se convertira.</param>
         /// <param name="fullyQualifiedFileName">Directorio completo, incluyendo nombre de archivo y extension. Se utiliza para guardar el producto final.</param>
-        public static async void SerializeListOfTypeToExcelAsync<T>(List<T> list, string fullyQualifiedFileName)
+        public static async void SerializeIEnumerableOfTypeToExcelAsync<T>(IEnumerable<T> list, string fullyQualifiedFileName)
         {
-            await Task.Run(() => SerializeList(list, fullyQualifiedFileName));
+            await Task.Run(() => SerializeIEnumerable(list, fullyQualifiedFileName));
         }
 
-        private static void SerializeList<T>(List<T> list, string fullyQualifiedFileName)
+        private static void SerializeIEnumerable<T>(IEnumerable<T> list, string fullyQualifiedFileName)
         {
             PropertyInfo[] properties = typeof(T).GetProperties();
 
@@ -168,15 +168,17 @@ namespace DataManagement.Tools
             }
         }
 
-        private static void SetExcelContent<T>(ExcelWorksheet excelWorksheet, List<T> list, ref PropertyInfo[] properties)
+        private static void SetExcelContent<T>(ExcelWorksheet excelWorksheet, IEnumerable<T> list, ref PropertyInfo[] properties)
         {
             // Content
-            for (int y = 0; y < list.Count; y++)
+            int y = 0;
+            foreach (T item in list)
             {
                 for (int x = 0; x < properties.Length; x++)
                 {
-                    excelWorksheet.Cells[y + 2, x + 1].Value = properties[x].GetValue(list[y]);
+                    excelWorksheet.Cells[y + 2, x + 1].Value = properties[x].GetValue(item);
                 }
+                y++;
             }
         }
 

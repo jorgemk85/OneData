@@ -10,7 +10,7 @@ namespace DataManagement.Interfaces
 
         Result ExecuteProcedure<T, TKey>(T obj, string connectionToUse, TransactionTypes transactionType, bool logTransaction = true) where T : Cope<T, TKey>, new() where TKey : struct; 
 
-        Result ExecuteProcedure<T, TKey>(List<T> list, string connectionToUse, TransactionTypes transactionType, bool logTransaction = true) where T : Cope<T, TKey>, new() where TKey : struct;
+        Result ExecuteProcedure<T, TKey>(IEnumerable<T> list, string connectionToUse, TransactionTypes transactionType, bool logTransaction = true) where T : Cope<T, TKey>, new() where TKey : struct;
 
         void LogTransaction(string tableName, TransactionTypes transactionType, string connectionToUse);
     }

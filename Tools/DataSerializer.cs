@@ -80,12 +80,12 @@ namespace DataManagement.Tools
         }
 
         /// <summary>
-        /// Convierte un objeto de tipo List<typeparamref name="T"/> en formato XML.
+        /// Convierte un objeto de tipo IEnumerable<typeparamref name="T"/> en formato XML.
         /// </summary>
         /// <typeparam name="T">Tipo referencia para deserializar.</typeparam>
-        /// <param name="list">Lista a deserializar</param>
+        /// <param name="list">Arreglo a deserializar</param>
         /// <returns>Regresa un objeto string ya procesado en formato XML.</returns>
-        public static string SerializeListOfTypeToXml<T>(List<T> list)
+        public static string SerializeIEnumerableOfTypeToXml<T>(IEnumerable<T> list)
         {
             return SerializeObjectOfTypeToXml(list);
         }
@@ -107,7 +107,7 @@ namespace DataManagement.Tools
         }
 
         /// <summary>
-        /// Convierte un objeto de tipo DataTable a un Objeto del tipo <typeparamref name="T"/>.
+        /// Convierte la primer fila DataRow dentro del DataTable a un Objeto del tipo <typeparamref name="T"/>.
         /// </summary>
         /// <typeparam name="T">Tipo referencia para serializar.</typeparam>
         /// <param name="dataTable">El contenido a convertir.</param>
@@ -136,8 +136,8 @@ namespace DataManagement.Tools
         /// <summary>
         /// Convierte un objeto de tipo DataTable a un Diccionario con el tipo de la llave <typeparamref name="TKey"/> y valor <typeparamref name="TValue"/>.
         /// </summary>
-        /// <typeparam name="TKey">El tipo que se usara como llave.</typeparam>
-        /// <typeparam name="TValue">El tipo que se usara como valor.</typeparam>
+        /// <typeparam name="TKey">El tipo que se usara como Llave.</typeparam>
+        /// <typeparam name="TValue">El tipo que se usara como Valor.</typeparam>
         /// <param name="dataTable">El contenido a convertir.</param>
         /// <param name="keyName">El nombre de la columna dentro del objeto DataTable.Columns que se usara como Llave.</param>
         /// <param name="valueName">El nombre de la columna dentro del objeto DataTable.Columns que se usara como Valor.</param>
@@ -146,7 +146,7 @@ namespace DataManagement.Tools
         {
             if (dataTable.Columns.Count < 2)
             {
-                throw new Exception("Esta funcion requiere 2 columnas en el objeto DataTable.");
+                throw new ArgumentException("Esta funcion requiere 2 columnas en el objeto DataTable.");
             }
 
             Dictionary<TKey, TValue> newDictionary = new Dictionary<TKey, TValue>();
@@ -252,30 +252,31 @@ namespace DataManagement.Tools
         }
 
         /// <summary>
-        /// Convierte un objeto de tipo List<typeparamref name="T"/> a un objeto de tipo Datatable.
+        /// Convierte un objeto de tipo IEnumerable <typeparamref name="T"/> a un objeto de tipo DataTable.
         /// </summary>
         /// <typeparam name="T">Tipo referencia para serializar.</typeparam>
         /// <param name="list">El contenido a convertir.</param>
         /// <returns>Regresa un nuevo DataTable ya con los objetos incorporados como columnas y filas.</returns>
-        public static DataTable ConvertListToDataTableOfGenericType<T>(List<T> list)
+        public static DataTable ConvertIEnumerableToDataTableOfGenericType<T>(IEnumerable<T> list)
         {
-            return ConvertListToDataTable(list);
+            return ConvertIEnumerableToDataTable(list);
         }
 
         /// <summary>
-        /// Convierte un objeto de tipo List<typeparamref name="T"/> que implementa IManageable a un objeto de tipo Datatable.
+        /// Convierte un objeto de tipo IEnumerable <typeparamref name="T"/> que implementa la clase Cope a un objeto de tipo Datatable.
         /// </summary>
         /// <typeparam name="T">Tipo referencia para convertir.</typeparam>
+        /// <typeparam name="TKey">El tipo de la llave del tipo <typeparamref name="T"/> referencia para convertir.</typeparam>
         /// <param name="list">El contenido a convertir.</param>
         /// <returns>Regresa un nuevo DataTable ya con los objetos incorporados como columnas y filas.</returns>
-        public static DataTable ConvertListToDataTableOfType<T, TKey>(List<T> list) where T : Cope<T, TKey>, new() where TKey : struct
+        public static DataTable ConvertIEnumerableToDataTableOfType<T, TKey>(IEnumerable<T> list) where T : Cope<T, TKey>, new() where TKey : struct
         {
-            DataTable dataTable = ConvertListToDataTable(list);
+            DataTable dataTable = ConvertIEnumerableToDataTable(list);
             dataTable.PrimaryKey = new DataColumn[] { dataTable.Columns["Id"] };
             return dataTable;
         }
 
-        private static DataTable ConvertListToDataTable<T>(List<T> list)
+        private static DataTable ConvertIEnumerableToDataTable<T>(IEnumerable<T> list)
         {
             DataTable dataTable = new DataTable(typeof(T).Name);
             PropertyInfo[] properties = typeof(T).GetProperties();

@@ -56,7 +56,7 @@ namespace DataManagement.DAO
             return resultado;
         }
 
-        public Result Evaluate<T, TKey>(List<T> list, TransactionTypes transactionType, ref DataCache dataCache, string connectionToUse) where T : Cope<T, TKey>, new() where TKey : struct
+        public Result Evaluate<T, TKey>(IEnumerable<T> list, TransactionTypes transactionType, ref DataCache dataCache, string connectionToUse) where T : Cope<T, TKey>, new() where TKey : struct
         {
             throw new NotImplementedException();
         }
@@ -198,7 +198,7 @@ namespace DataManagement.DAO
             dataCache.Cache.Data.AcceptChanges();
         }
 
-        private void InsertListInCache<T, TKey>(List<T> list, DataCache dataCache) where T : Cope<T, TKey>, new() where TKey : struct
+        private void InsertMassiveInCache<T, TKey>(IEnumerable<T> list, DataCache dataCache) where T : Cope<T, TKey>, new() where TKey : struct
         {
             foreach (T obj in list)
             {

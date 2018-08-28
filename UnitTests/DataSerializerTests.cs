@@ -61,7 +61,7 @@ namespace DataManagement.UnitTests
         [Test]
         public void SerializeListOfTypeToXml_SerializationSucceeds_ReturnsEquals()
         {
-            string xml = DataSerializer.SerializeListOfTypeToXml(TestTools.ListTestModel);
+            string xml = DataSerializer.SerializeIEnumerableOfTypeToXml(TestTools.ListTestModel);
 
             Assert.AreEqual(xml, TestTools.XmlCollectionTestModel);
         }
@@ -109,7 +109,7 @@ namespace DataManagement.UnitTests
         [Test]
         public void ConvertListToDataTableOfGenericType_T_SerializationSucceeds_ReturnsEquals()
         {
-            DataTable dataTableTestModel = DataSerializer.ConvertListToDataTableOfGenericType(TestTools.ListTestModel);
+            DataTable dataTableTestModel = DataSerializer.ConvertIEnumerableToDataTableOfGenericType(TestTools.ListTestModel);
 
             Assert.AreEqual(dataTableTestModel.Rows[0][0], TestTools.DataTableTestModel.Rows[0][0]);
         }

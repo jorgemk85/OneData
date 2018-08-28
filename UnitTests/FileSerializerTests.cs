@@ -19,13 +19,13 @@ namespace DataManagement.UnitTests
         {
             Directory.CreateDirectory(TestTools.TestDirectory);
 
-            Assert.DoesNotThrow(() => FileSerializer.SerializeListOfTypeToFile(TestTools.ListTestModel, TestTools.TestDirectory + TestTools.TextFileName, '|'));
+            Assert.DoesNotThrow(() => FileSerializer.SerializeIEnumerableOfTypeToFile(TestTools.ListTestModel, TestTools.TestDirectory + TestTools.TextFileName, '|'));
         }
 
         [Test]
         public void SerializeListOfTypeToFile_FolderDoesNotExist_ReturnsError()
         {
-            Assert.Throws<DirectoryNotFoundException>(() => FileSerializer.SerializeListOfTypeToFile(TestTools.ListTestModel, TestTools.RandomDirectory + TestTools.TextRandomFileName, '|'));
+            Assert.Throws<DirectoryNotFoundException>(() => FileSerializer.SerializeIEnumerableOfTypeToFile(TestTools.ListTestModel, TestTools.RandomDirectory + TestTools.TextRandomFileName, '|'));
         }
 
         [Test, Order(2)]

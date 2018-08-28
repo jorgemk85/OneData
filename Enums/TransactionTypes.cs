@@ -6,7 +6,7 @@
         SelectAll,
         Delete,
         Insert,
-        InsertList,
+        InsertMassive,
         Update,
         StoredProcedure
     }

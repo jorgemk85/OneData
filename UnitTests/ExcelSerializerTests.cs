@@ -15,13 +15,13 @@ namespace DataManagement.UnitTests
         {
             Directory.CreateDirectory(TestTools.TestDirectory);
 
-            Assert.DoesNotThrow(() => ExcelSerializer.SerializeListOfTypeToExcel(TestTools.ListTestModel, TestTools.TestDirectory + TestTools.ExcelFileName));
+            Assert.DoesNotThrow(() => ExcelSerializer.SerializeIEnumerableOfTypeToExcel(TestTools.ListTestModel, TestTools.TestDirectory + TestTools.ExcelFileName));
         }
 
         [Test]
         public void SerializeListOfTypeToExcel_FolderDoesNotExist_ReturnsError()
         {
-            Assert.Throws<InvalidOperationException>(() => ExcelSerializer.SerializeListOfTypeToExcel(TestTools.ListTestModel, TestTools.RandomDirectory + TestTools.ExcelRandomFileName));
+            Assert.Throws<InvalidOperationException>(() => ExcelSerializer.SerializeIEnumerableOfTypeToExcel(TestTools.ListTestModel, TestTools.RandomDirectory + TestTools.ExcelRandomFileName));
         }
 
         [Test, Order(2)]

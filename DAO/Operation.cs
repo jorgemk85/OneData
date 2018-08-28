@@ -102,8 +102,8 @@ namespace DataManagement.DAO
                     return Creator.CreateDeleteStoredProcedure<T, TKey>(doAlter);
                 case TransactionTypes.Insert:
                     return Creator.CreateInsertStoredProcedure<T, TKey>(doAlter);
-                case TransactionTypes.InsertList:
-                    return Creator.CreateInsertListStoredProcedure<T, TKey>(doAlter);
+                case TransactionTypes.InsertMassive:
+                    return Creator.CreateInsertMassiveStoredProcedure<T, TKey>(doAlter);
                 case TransactionTypes.Update:
                     return Creator.CreateUpdateStoredProcedure<T, TKey>(doAlter);
                 default:
@@ -140,8 +140,8 @@ namespace DataManagement.DAO
                     return Manager.DeleteSuffix;
                 case TransactionTypes.Insert:
                     return Manager.InsertSuffix;
-                case TransactionTypes.InsertList:
-                    return Manager.InsertListSuffix;
+                case TransactionTypes.InsertMassive:
+                    return Manager.InsertMassiveSuffix;
                 case TransactionTypes.Update:
                     return Manager.UpdateSuffix;
                 case TransactionTypes.SelectAll:
@@ -190,7 +190,7 @@ namespace DataManagement.DAO
             }
         }
 
-        protected void SetParameters<T, TKey>(List<T> obj, TransactionTypes transactionType) where T : Cope<T, TKey>, new() where TKey : struct
+        protected void SetParameters<T, TKey>(IEnumerable<T> obj, TransactionTypes transactionType) where T : Cope<T, TKey>, new() where TKey : struct
         {
             Logger.Info(string.Format("Setting parameters in command based on type {0} for transaction type {1}.", typeof(T), transactionType.ToString()));
 

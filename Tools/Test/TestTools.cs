@@ -53,7 +53,7 @@ namespace DataManagement.Tools.Test
             Manager.DefaultConnection = connectionType.ToString();
             Manager.SelectSuffix = "_Select";
             Manager.InsertSuffix = "_Insert";
-            Manager.InsertListSuffix = "_InsertList";
+            Manager.InsertMassiveSuffix = "_InsertList";
             Manager.UpdateSuffix = "_Update";
             Manager.DeleteSuffix = "_Delete";
             Manager.SelectAllSuffix = "_SelectAll";

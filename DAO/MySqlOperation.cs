@@ -163,7 +163,7 @@ namespace DataManagement.DAO
             return new Result(dataTable, false, true);
         }
 
-        public Result ExecuteProcedure<T, TKey>(List<T> list, string connectionToUse, TransactionTypes transactionType, bool logTransaction = true) where T : Cope<T, TKey>, new() where TKey : struct 
+        public Result ExecuteProcedure<T, TKey>(IEnumerable<T> list, string connectionToUse, TransactionTypes transactionType, bool logTransaction = true) where T : Cope<T, TKey>, new() where TKey : struct 
         {
             DataTable dataTable = null;
             bool overrideConsolidation = false;
@@ -184,7 +184,7 @@ namespace DataManagement.DAO
                     Command.CommandType = CommandType.StoredProcedure;
                     Command.CommandText = string.Format("{0}{1}{2}", Manager.StoredProcedurePrefix, Manager<T, TKey>.ModelComposition.TableName, GetFriendlyTransactionSuffix(transactionType));
 
-                    if (transactionType == TransactionTypes.InsertList)
+                    if (transactionType == TransactionTypes.InsertMassive)
                     {
                         SetParameters<T, TKey>(list, transactionType);
                         Command.ExecuteNonQuery();

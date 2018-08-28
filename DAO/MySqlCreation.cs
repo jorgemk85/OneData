@@ -447,7 +447,7 @@ namespace DataManagement.DAO
             }
         }
 
-        public string CreateInsertListStoredProcedure<T, TKey>(bool doAlter) where T : Cope<T, TKey>, new() where TKey : struct
+        public string CreateInsertMassiveStoredProcedure<T, TKey>(bool doAlter) where T : Cope<T, TKey>, new() where TKey : struct
         {
             throw new NotImplementedException();
         }
