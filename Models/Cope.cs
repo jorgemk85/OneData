@@ -56,12 +56,15 @@ namespace DataManagement.Models
         }
 
         /// <summary>
-        /// Inserta el objeto en la base de datos y en su supuesto, tambien en el cache. Esta funcion realiza la validacion de nulos por default.
+        /// Inserta el objeto en la base de datos y en su supuesto, tambien en el cache. 
         /// Este metodo usa la conexion predeterminada a la base de datos.
         /// </summary>
-        public static void Insert(T obj)
+        public static void Insert(T obj, bool doValidation = false)
         {
-            obj.Validate();
+            if (doValidation)
+            {
+                obj.Validate();
+            }
             Manager<T, TKey>.Insert(obj);
         }
 
@@ -105,6 +108,7 @@ namespace DataManagement.Models
             return Manager<T, TKey>.Select(null, parameters).Data.ToList<T>();
         }
         #endregion
+        
         #region Constructors
         // TODO: Necesitamos encontrar una manera mas facil de instanciar objetos con nuevos Ids irrepetibles. 
         public Cope(TKey id)
