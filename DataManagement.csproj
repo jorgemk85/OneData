@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;net461</TargetFrameworks>
-    <LangVersion>7.1</LangVersion>
+    <LangVersion>7.2</LangVersion>
     <Authors>Jorge Marcos Kawas</Authors>
     <AssemblyVersion>1.3.6814.23</AssemblyVersion>
     <FileVersion>1.3.6814.23</FileVersion>

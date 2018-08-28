@@ -124,9 +124,9 @@ namespace DataManagement.DAO
     public sealed class Manager<T, TKey> where T : Cope<T, TKey>, new() where TKey : struct
     {
         static DataCache dataCache = new DataCache();
-        static ModelComposition _modelComposition = new ModelComposition(typeof(T));
+        static readonly ModelComposition _modelComposition = new ModelComposition(typeof(T));
 
-        public static ref ModelComposition ModelComposition => ref _modelComposition;
+        public static ref readonly ModelComposition ModelComposition => ref _modelComposition;
 
         #region Events
         public static event CommandExecutedEventHandler OnCommandExecuted;

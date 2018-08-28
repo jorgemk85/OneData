@@ -24,10 +24,10 @@ namespace DataManagement.IntegrationTests.MySql
         [Test]
         public void SelectGuid_DataFromCache_ReturnsTrue()
         {
-            TestTools.GetLogTestGuidModel(true).Insert<LogTestGuid, Guid>();
-            List<LogTestGuid> list = new List<LogTestGuid>().SelectAll<LogTestGuid, Guid>();
-            Result result = Manager<LogTestGuid, Guid>.Select(null, new Parameter(nameof(LogTestGuid.Id), list[0].Id));
-            TestTools.GetLogTestGuidModel(false).Delete<LogTestGuid, Guid>();
+            LogTestGuid.Insert(TestTools.GetLogTestGuidModel(true));
+            List<LogTestGuid> list = LogTestGuid.SelectAll();
+            Result result = LogTestGuid.SelectResult(new Parameter(nameof(LogTestGuid.Id), list[0].Id));
+            LogTestGuid.Delete(TestTools.GetLogTestGuidModel(false));
 
             Assert.IsTrue(result.IsFromCache);
             Assert.IsTrue(result.IsSuccessful);
@@ -37,10 +37,10 @@ namespace DataManagement.IntegrationTests.MySql
         [Test]
         public void SelectInt_DataFromCache_ReturnsTrue()
         {
-            TestTools.GetLogTestIntModel(true).Insert<LogTestInt, int>();
-            List<LogTestInt> list = new List<LogTestInt>().SelectAll<LogTestInt, int>();
-            Result result = Manager<LogTestInt, int>.Select(null, new Parameter(nameof(LogTestInt.Id), list[0].Id));
-            TestTools.GetLogTestIntModel(false).Delete<LogTestInt, int>();
+            LogTestInt.Insert(TestTools.GetLogTestIntModel(true));
+            List<LogTestInt> list = LogTestInt.SelectAll();
+            Result result = LogTestInt.SelectResult(new Parameter(nameof(LogTestInt.Id), list[0].Id));
+            LogTestInt.Delete(TestTools.GetLogTestIntModel(false));
 
             Assert.IsTrue(result.IsFromCache);
             Assert.IsTrue(result.IsSuccessful);
