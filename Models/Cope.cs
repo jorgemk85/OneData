@@ -26,8 +26,7 @@ namespace DataManagement.Models
         #endregion
 
         #region Unmanaged Properties
-        [UnmanagedProperty]
-        public ModelComposition ModelComposition { get; } = Manager<T, TKey>.ModelComposition;
+        public ref ModelComposition ModelComposition => ref Manager<T, TKey>.ModelComposition;
         #endregion
 
         #region Constructors

@@ -3,7 +3,7 @@ using System;
 
 namespace DataManagement.Models
 {
-    [DataTableName("logs")]
+    [DataTable("logs")]
     public class Log : Cope<Log, Guid>
     {
         public string Ip { get; set; }

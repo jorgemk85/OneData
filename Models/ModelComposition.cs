@@ -1,5 +1,4 @@
 ﻿using DataManagement.Attributes;
-using DataManagement.DAO;
 using DataManagement.Exceptions;
 using System;
 using System.Collections.Generic;
@@ -7,44 +6,44 @@ using System.Reflection;
 
 namespace DataManagement.Models
 {
-    public class ModelComposition
+    public sealed class ModelComposition
     {
         /// <summary>
         /// Arreglo completo de las propiedades sin filtrar.
         /// </summary>
-        public PropertyInfo[] Properties { get; set; }
+        public PropertyInfo[] Properties { get; private set; }
         /// <summary>
         /// Controla las propiedades que NO estan marcadas como UnmanagedProperty.
         /// </summary>
-        public Dictionary<string, PropertyInfo> ManagedProperties { get; set; } = new Dictionary<string, PropertyInfo>();
+        public Dictionary<string, PropertyInfo> ManagedProperties { get; private set; } = new Dictionary<string, PropertyInfo>();
         /// <summary>
         /// Son aquellas propiedades marcadas con el atributo UnmanagedProperty.
         /// </summary>
-        public Dictionary<string, PropertyInfo> UnmanagedProperties { get; set; } = new Dictionary<string, PropertyInfo>();
+        public Dictionary<string, PropertyInfo> UnmanagedProperties { get; private set; } = new Dictionary<string, PropertyInfo>();
         /// <summary>
         /// Las propiedades contenidas en este diccionario son aquellas marcadas como AutoProperties, las cuales se usan para ser
         /// alimentada desde la base de datos, en el procedimiento almacenado.
         /// </summary>
-        public Dictionary<string, PropertyInfo> AutoProperties { get; set; } = new Dictionary<string, PropertyInfo>();
+        public Dictionary<string, PropertyInfo> AutoProperties { get; private set; } = new Dictionary<string, PropertyInfo>();
         /// <summary>
         /// Esta propiedad controla las propiedades del objeto que NO estan marcadas con el atributo UnmanagedProperty NI AutoProperty.
         /// </summary>
-        public Dictionary<string, PropertyInfo> FilteredProperties { get; set; } = new Dictionary<string, PropertyInfo>();
+        public Dictionary<string, PropertyInfo> FilteredProperties { get; private set; } = new Dictionary<string, PropertyInfo>();
         /// <summary>
         /// Esta propiedad controla las propiedades del objeto que estan marcadas como ForeignModel.
         /// </summary>
-        public Dictionary<string, PropertyInfo> ForeignModelProperties { get; set; } = new Dictionary<string, PropertyInfo>();
-        public Dictionary<string, ForeignModel> ForeignModelAttributes { get; set; } = new Dictionary<string, ForeignModel>();
-        public Dictionary<string, AutoProperty> AutoPropertyAttributes { get; set; } = new Dictionary<string, AutoProperty>();
-        public PropertyInfo PrimaryProperty { get; set; }
-        public PropertyInfo DateCreatedProperty { get; set; }
-        public PropertyInfo DateModifiedProperty { get; set; }
-        public DataTableName DataTableNameAttribute { get; set; }
-        public CacheEnabled CacheEnabledAttribute { get; set; }
-        public string TableName { get; set; }
-        public string Schema { get; set; }
-        public bool IsCacheEnabled { get; set; }
-        public long CacheExpiration { get; set; }
+        public Dictionary<string, PropertyInfo> ForeignModelProperties { get; private set; } = new Dictionary<string, PropertyInfo>();
+        public Dictionary<string, ForeignModel> ForeignModelAttributes { get; private set; } = new Dictionary<string, ForeignModel>();
+        public Dictionary<string, AutoProperty> AutoPropertyAttributes { get; private set; } = new Dictionary<string, AutoProperty>();
+        public PropertyInfo PrimaryProperty { get; private set; }
+        public PropertyInfo DateCreatedProperty { get; private set; }
+        public PropertyInfo DateModifiedProperty { get; private set; }
+        public DataTable DataTableAttribute { get; private set; }
+        public CacheEnabled CacheEnabledAttribute { get; private set; }
+        public string TableName { get; private set; }
+        public string Schema { get; private set; }
+        public bool IsCacheEnabled { get; private set; }
+        public long CacheExpiration { get; private set; }
 
         public ModelComposition(Type type)
         {
@@ -68,9 +67,9 @@ namespace DataManagement.Models
                 switch (attribute.AttributeType.Name)
                 {
                     case "DataTableName":
-                        DataTableNameAttribute = type.GetCustomAttribute<DataTableName>();
-                        TableName = DataTableNameAttribute.TableName;
-                        Schema = DataTableNameAttribute.Schema;
+                        DataTableAttribute = type.GetCustomAttribute<DataTable>();
+                        TableName = DataTableAttribute.TableName;
+                        Schema = DataTableAttribute.Schema;
                         break;
                     case "CacheEnabled":
                         CacheEnabledAttribute = type.GetCustomAttribute<CacheEnabled>();

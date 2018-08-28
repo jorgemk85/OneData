@@ -3,7 +3,7 @@ using System;
 
 namespace DataManagement.Models.Test
 {
-    [DataTableName("LogTestGuids"), CacheEnabled(60)]
+    [DataTable("LogTestGuids"), CacheEnabled(60)]
     public class LogTestGuid : Cope<LogTestGuid, Guid>
     {
         public string Ip { get; set; }
@@ -16,7 +16,7 @@ namespace DataManagement.Models.Test
         public LogTestGuid(Guid id) : base(id) { }
     }
 
-    [DataTableName("LogTestInts"), CacheEnabled(60)]
+    [DataTable("LogTestInts"), CacheEnabled(60)]
     public class LogTestInt : Cope<LogTestInt, int>
     {
         public string Ip { get; set; }
