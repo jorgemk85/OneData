@@ -114,9 +114,9 @@ namespace DataManagement.Tools
         /// <returns>Regresa un objeto ya convertido al tipo <typeparamref name="T"/>.</returns>
         public static T ConvertDataTableToObjectOfType<T>(DataTable dataTable) where T : new()
         {
-            T newObject = new T();
             if (dataTable.Rows.Count > 0)
             {
+                T newObject = new T();
                 foreach (PropertyInfo property in typeof(T).GetProperties())
                 {
                     if (dataTable.Columns.Contains(property.Name) && property.CanWrite)
@@ -124,13 +124,12 @@ namespace DataManagement.Tools
                         property.SetValue(newObject, SimpleConverter.ConvertStringToType(dataTable.Rows[0][property.Name].ToString(), property.PropertyType));
                     }
                 }
+                return newObject;
             }
             else
             {
-                return default;
+                throw new ArgumentException(string.Format("No se puede convetir el DataTable proporcionado al objeto de tipo '{0}'. No hay filas en el DataTable.", typeof(T).FullName));
             }
-
-            return newObject;
         }
 
         /// <summary>
@@ -149,9 +148,9 @@ namespace DataManagement.Tools
                 throw new ArgumentException("Esta funcion requiere 2 columnas en el objeto DataTable.");
             }
 
-            Dictionary<TKey, TValue> newDictionary = new Dictionary<TKey, TValue>();
             if (dataTable.Rows.Count > 0)
             {
+                Dictionary<TKey, TValue> newDictionary = new Dictionary<TKey, TValue>();
                 TKey key;
                 TValue value;
 
@@ -162,9 +161,12 @@ namespace DataManagement.Tools
 
                     newDictionary.Add(key, value);
                 }
+                return newDictionary;
             }
-
-            return newDictionary;
+            else
+            {
+                throw new ArgumentException(string.Format("No se puede convetir el DataTable proporcionado a un Diccionario<{0},{1}>. No hay filas en el DataTable.", typeof(TKey).FullName, typeof(TValue).FullName));
+            }
         }
 
         /// <summary>
@@ -177,24 +179,30 @@ namespace DataManagement.Tools
         /// <returns>Regresa un nuevo Diccionario alimentado con los valores proporcionados.</returns>
         public static Dictionary<TKey, T> ConvertDataTableToDictionary<TKey, T>(DataTable dataTable, string keyName) where T : new()
         {
-            Dictionary<TKey, T> newDictionary = new Dictionary<TKey, T>();
-            foreach (DataRow row in dataTable.Rows)
+            if (dataTable.Rows.Count > 0)
             {
-                T newObject = new T();
-                PropertyInfo[] properties = typeof(T).GetProperties();
-                TKey key = (TKey)SimpleConverter.ConvertStringToType(row[keyName].ToString(), typeof(TKey));
-
-                foreach (PropertyInfo property in properties)
+                Dictionary<TKey, T> newDictionary = new Dictionary<TKey, T>();
+                foreach (DataRow row in dataTable.Rows)
                 {
-                    if (dataTable.Columns.Contains(property.Name) && property.CanWrite)
-                    {
-                        property.SetValue(newObject, SimpleConverter.ConvertStringToType(row[property.Name].ToString(), property.PropertyType));
-                    }
-                }
-                newDictionary.Add(key, newObject);
-            }
+                    T newObject = new T();
+                    PropertyInfo[] properties = typeof(T).GetProperties();
+                    TKey key = (TKey)SimpleConverter.ConvertStringToType(row[keyName].ToString(), typeof(TKey));
 
-            return newDictionary;
+                    foreach (PropertyInfo property in properties)
+                    {
+                        if (dataTable.Columns.Contains(property.Name) && property.CanWrite)
+                        {
+                            property.SetValue(newObject, SimpleConverter.ConvertStringToType(row[property.Name].ToString(), property.PropertyType));
+                        }
+                    }
+                    newDictionary.Add(key, newObject);
+                }
+                return newDictionary;
+            }
+            else
+            {
+                throw new ArgumentException(string.Format("No se puede convetir el DataTable proporcionado a un Diccionario<{0},{1}>. No hay filas en el DataTable.", typeof(TKey).FullName, typeof(T).FullName));
+            }
         }
 
         /// <summary>
@@ -205,23 +213,64 @@ namespace DataManagement.Tools
         /// <returns>Regresa una nueva Lista del tipo <typeparamref name="T"/> ya con los objetos incorporados.</returns>
         public static List<T> ConvertDataTableToListOfType<T>(DataTable dataTable) where T : new()
         {
-            List<T> newList = new List<T>();
-
-            foreach (DataRow row in dataTable.Rows)
+            if (dataTable.Rows.Count > 0)
             {
-                PropertyInfo[] properties = typeof(T).GetProperties();
-                T newObject = new T();
-                foreach (PropertyInfo property in properties)
-                {
-                    if (dataTable.Columns.Contains(property.Name) && property.CanWrite)
-                    {
-                        property.SetValue(newObject, SimpleConverter.ConvertStringToType(row[property.Name].ToString(), property.PropertyType));
-                    }
-                }
-                newList.Add(newObject);
-            }
+                List<T> newList = new List<T>();
 
-            return newList;
+                foreach (DataRow row in dataTable.Rows)
+                {
+                    PropertyInfo[] properties = typeof(T).GetProperties();
+                    T newObject = new T();
+                    foreach (PropertyInfo property in properties)
+                    {
+                        if (dataTable.Columns.Contains(property.Name) && property.CanWrite)
+                        {
+                            property.SetValue(newObject, SimpleConverter.ConvertStringToType(row[property.Name].ToString(), property.PropertyType));
+                        }
+                    }
+                    newList.Add(newObject);
+                }
+
+                return newList;
+            }
+            else
+            {
+                throw new ArgumentException(string.Format("No se puede convetir el DataTable proporcionado a una Lista<{0}>. No hay filas en el DataTable.", typeof(T).FullName));
+            }
+        }
+
+        /// <summary>
+        /// Convierte un objeto de tipo DataTable a un HashSet del tipo <typeparamref name="T"/>.
+        /// </summary>
+        /// <typeparam name="T">Tipo referencia para serializar.</typeparam>
+        /// <param name="dataTable">El contenido a convertir.</param>
+        /// <returns>Regresa un nuevo HashSet del tipo <typeparamref name="T"/> ya con los objetos incorporados.</returns>
+        public static HashSet<T> ConvertDataTableToHashSetOfType<T>(DataTable dataTable) where T : new()
+        {
+            if (dataTable.Rows.Count > 0)
+            {
+                HashSet<T> newSet = new HashSet<T>();
+
+                foreach (DataRow row in dataTable.Rows)
+                {
+                    PropertyInfo[] properties = typeof(T).GetProperties();
+                    T newObject = new T();
+                    foreach (PropertyInfo property in properties)
+                    {
+                        if (dataTable.Columns.Contains(property.Name) && property.CanWrite)
+                        {
+                            property.SetValue(newObject, SimpleConverter.ConvertStringToType(row[property.Name].ToString(), property.PropertyType));
+                        }
+                    }
+                    newSet.Add(newObject);
+                }
+
+                return newSet;
+            }
+            else
+            {
+                throw new ArgumentException(string.Format("No se puede convetir el DataTable proporcionado a un HashSet<{0}>. No hay filas en el DataTable.", typeof(T).FullName));
+            }
         }
 
         /// <summary>
@@ -232,23 +281,30 @@ namespace DataManagement.Tools
         /// <returns>Regresa un nuevo Diccionario del tipo <typeparamref name="T"/> ya con los objetos incorporados.</returns>
         public static Dictionary<TKey, T> ConvertDataTableToDictionaryOfType<TKey, T>(DataTable dataTable) where T : Cope<T, TKey>, new() where TKey : struct
         {
-            Dictionary<TKey, T> newDictionary = new Dictionary<TKey, T>();
-            foreach (DataRow row in dataTable.Rows)
+            if (dataTable.Rows.Count > 0)
             {
-                T newObject = new T();
-                PropertyInfo[] properties = typeof(T).GetProperties();
-
-                foreach (PropertyInfo property in properties)
+                Dictionary<TKey, T> newDictionary = new Dictionary<TKey, T>();
+                foreach (DataRow row in dataTable.Rows)
                 {
-                    if (dataTable.Columns.Contains(property.Name) && property.CanWrite)
-                    {
-                        property.SetValue(newObject, SimpleConverter.ConvertStringToType(row[property.Name].ToString(), property.PropertyType));
-                    }
-                }
-                newDictionary.Add(newObject.Id.GetValueOrDefault(), newObject);
-            }
+                    T newObject = new T();
+                    PropertyInfo[] properties = typeof(T).GetProperties();
 
-            return newDictionary;
+                    foreach (PropertyInfo property in properties)
+                    {
+                        if (dataTable.Columns.Contains(property.Name) && property.CanWrite)
+                        {
+                            property.SetValue(newObject, SimpleConverter.ConvertStringToType(row[property.Name].ToString(), property.PropertyType));
+                        }
+                    }
+                    newDictionary.Add(newObject.Id.GetValueOrDefault(), newObject);
+                }
+
+                return newDictionary;
+            }
+            else
+            {
+                throw new ArgumentException(string.Format("No se puede convetir el DataTable proporcionado a un Diccionario<{0},{1}>. No hay filas en el DataTable.", typeof(TKey).FullName, typeof(T).FullName));
+            }
         }
 
         /// <summary>

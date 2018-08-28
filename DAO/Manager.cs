@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 namespace DataManagement.DAO
 {
     /// <summary>
-    /// Clase estatica donde se procesan las ejecuciones de procedimientos almacenados y se almacenan propiedades predeterminadas.
+    /// Clase estatica donde se procesan las ejecuciones de procedimientos almacenados y se guardan propiedades predeterminadas de uso interno.
     /// </summary>
     public static class Manager
     {
