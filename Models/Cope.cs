@@ -35,6 +35,9 @@ namespace DataManagement.Models
         #region Unmanaged Properties
         [UnmanagedProperty]
         public ModelComposition ModelComposition { get; } = Manager<T, TKey>.ModelComposition;
+
+        [UnmanagedProperty]
+        public string ForeignIdName { get; } = string.Format("{0}Id", typeof(T).Name);
         #endregion
 
         #region Methods
@@ -52,7 +55,7 @@ namespace DataManagement.Models
         /// Este metodo usa la conexion predeterminada a la base de datos.
         /// </summary>
         /// <param name="doValidation">Indica si se desea realizar la validacion de nulos.</param>
-        public static void Update(T obj, bool doValidation = false)
+        public void Update(T obj, bool doValidation = false)
         {
             if (doValidation)
             {
@@ -65,7 +68,7 @@ namespace DataManagement.Models
         /// Inserta el objeto en la base de datos y en su supuesto, tambien en el cache. 
         /// Este metodo usa la conexion predeterminada a la base de datos.
         /// </summary>
-        public static void Insert(T obj, bool doValidation = false)
+        public void Insert(T obj, bool doValidation = false)
         {
             if (doValidation)
             {
@@ -79,7 +82,7 @@ namespace DataManagement.Models
         /// Este metodo usa la conexion predeterminada a la base de datos.
         /// </summary>
         /// <returns>Regresa la coleccion obtenida ya convertida en una lista del tipo <typeparamref name="T"/></returns>
-        public static List<T> SelectAll()
+        public List<T> SelectAll()
         {
             return Manager<T, TKey>.SelectAll().Data.ToList<T>();
         }
@@ -89,7 +92,7 @@ namespace DataManagement.Models
         /// Este metodo usa la conexion predeterminada a la base de datos.
         /// </summary>
         /// <returns>Regresa el resultado que incluye la coleccion obtenida por la consulta.</returns>
-        public static T Select(params Parameter[] parameters)
+        public T Select(params Parameter[] parameters)
         {
             return Manager<T, TKey>.Select(null, parameters).Data.ToObject<T>();
         }
@@ -99,7 +102,7 @@ namespace DataManagement.Models
         /// Este metodo usa la conexion predeterminada a la base de datos.
         /// </summary>
         /// <returns>Regresa el resultado que incluye la coleccion obtenida por la consulta.</returns>
-        public static Result SelectResult(params Parameter[] parameters)
+        public Result SelectResult(params Parameter[] parameters)
         {
             return Manager<T, TKey>.Select(null, parameters);
         }
@@ -109,19 +112,9 @@ namespace DataManagement.Models
         /// Este metodo usa la conexion predeterminada a la base de datos.
         /// </summary>
         /// <returns>Regresa la coleccion obtenida ya convertida en una lista del tipo <typeparamref name="T"/></returns>
-        public static List<T> SelectList(params Parameter[] parameters)
+        public List<T> SelectList(params Parameter[] parameters)
         {
             return Manager<T, TKey>.Select(null, parameters).Data.ToList<T>();
-        }
-
-        public static ICollection<TForeign> Include<TForeign>(IEnumerable<Cope<TForeign, TKey>> fromEnumerator) where TForeign : Cope<TForeign, TKey>, new()
-        {
-            List<TForeign> newList = new List<TForeign>();
-
-            TForeign foreignObject = (TForeign)Activator.CreateInstance(typeof(TForeign));
-
-
-            return newList;
         }
         #endregion
 

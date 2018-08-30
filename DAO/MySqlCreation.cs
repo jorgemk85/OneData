@@ -359,7 +359,7 @@ namespace DataManagement.DAO
             foreach (KeyValuePair<string, PropertyInfo> property in properties)
             {
                 ForeignKey foreignAttribute = property.Value.GetCustomAttribute<ForeignKey>();
-                Cope<T, TKey> foreignKey = (Cope<T, TKey>)Activator.CreateInstance(foreignAttribute.Model);
+                IManageable<TKey> foreignKey = (IManageable<TKey>)Activator.CreateInstance(foreignAttribute.Model);
                 queryBuilder.AppendFormat("ADD CONSTRAINT FK_{0}_{1}\n", Manager<T, TKey>.ModelComposition.TableName, foreignKey.ModelComposition.TableName);
                 queryBuilder.AppendFormat("FOREIGN KEY({0}) REFERENCES {1}{2}(Id) ON DELETE {3} ON UPDATE NO ACTION;\n", property.Value.Name, Manager.TablePrefix, foreignKey.ModelComposition.TableName, foreignAttribute.Action.ToString().Replace("_", " "));
             }

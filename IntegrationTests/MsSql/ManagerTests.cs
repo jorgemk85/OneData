@@ -24,8 +24,9 @@ namespace DataManagement.IntegrationTests.MsSql
         [Test]
         public void Select_DataFromCache_ReturnsTrue()
         {
-            List<LogTestGuid> list = LogTestGuid.SelectAll();
-            Result result = LogTestGuid.SelectResult(new Parameter(nameof(LogTestGuid.Id), list[0].Id));
+            LogTestGuid newObj = new LogTestGuid();
+            List<LogTestGuid> list = newObj.SelectAll();
+            Result result = newObj.SelectResult(new Parameter(nameof(LogTestGuid.Id), list[0].Id));
 
             Assert.IsTrue(result.IsFromCache);
             Assert.IsTrue(result.IsSuccessful);
@@ -35,24 +36,37 @@ namespace DataManagement.IntegrationTests.MsSql
         [Test]
         public void InsertBlog_NewObject_ReturnsNoError()
         {
-            Assert.DoesNotThrow(() => Blog.Insert(TestTools.GetBlogModel(true)));
+            Blog newObj = new Blog();
+            Assert.DoesNotThrow(() => newObj.Insert(TestTools.GetBlogModel(true)));
         }
 
         [Test]
         public void InsertPost_NewObject_ReturnsNoError()
         {
-            List<Blog> blogs = Blog.SelectAll();
-            List<Author> authors = Author.SelectAll();
+            Blog newBlog = new Blog();
+            Author newAuthor = new Author();
+            Post newPost = new Post();
+            List<Blog> blogs = newBlog.SelectAll();
+            List<Author> authors = newAuthor.SelectAll();
 
             TestTools.GetPostModel(true).BlogId = blogs[0].Id;
             TestTools.GetPostModel(false).AuthorId = authors[0].Id;
-            Assert.DoesNotThrow(() => Post.Insert(TestTools.GetPostModel(false)));
+            Assert.DoesNotThrow(() => newPost.Insert(TestTools.GetPostModel(false)));
         }
 
         [Test]
         public void InsertAuthor_NewObject_ReturnsNoError()
         {
-            Assert.DoesNotThrow(() => Author.Insert(TestTools.GetAuthorModel(true)));
+            Author newAuthor = new Author();
+            Assert.DoesNotThrow(() => newAuthor.Insert(TestTools.GetAuthorModel(true)));
+        }
+
+        [Test]
+        public void SelectBlog_DataFromDB_ReturnsNoError()
+        {
+            Blog newBlog = new Blog();
+            var result = newBlog.Select(new Parameter(nameof(Blog.Id), Guid.Parse("8B4870AC-2D19-4D1C-B6FB-6CE2C46C974A"))).Include<Post, Guid>();
+            Assert.IsTrue(true);
         }
 
     }

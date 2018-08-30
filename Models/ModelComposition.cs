@@ -35,6 +35,7 @@ namespace DataManagement.Models
         public Dictionary<string, PropertyInfo> ForeignKeyProperties { get; private set; } = new Dictionary<string, PropertyInfo>();
 
         public Dictionary<string, PropertyInfo> ForeignCollectionProperties { get; private set; } = new Dictionary<string, PropertyInfo>();
+        public Dictionary<string, ForeignCollection> ForeignCollectionAttributes { get; private set; } = new Dictionary<string, ForeignCollection>();
 
         public Dictionary<string, ForeignKey> ForeignKeyAttributes { get; private set; } = new Dictionary<string, ForeignKey>();
         public Dictionary<string, AutoProperty> AutoPropertyAttributes { get; private set; } = new Dictionary<string, AutoProperty>();
@@ -121,6 +122,7 @@ namespace DataManagement.Models
                             break;
                         case "ForeignCollection":
                             ForeignCollectionProperties.Add(property.Name, property);
+                            ForeignCollectionAttributes.Add(property.Name, property.GetCustomAttribute<ForeignCollection>());
                             ManagedProperties.Remove(property.Name);
                             FilteredProperties.Remove(property.Name);
                             break;

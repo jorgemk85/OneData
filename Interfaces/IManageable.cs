@@ -6,5 +6,8 @@ namespace DataManagement.Interfaces
     {
         TKey? Id { get; set; }
         ModelComposition ModelComposition { get; }
+        string ForeignIdName { get; }
+
+        Result SelectResult(params Parameter[] parameters);
     }
 }
