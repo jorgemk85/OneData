@@ -26,6 +26,8 @@ namespace DataManagement.Tools.Test
         internal static TestModel TestModel { get; } = CreateNewTestModel();
 
         private static Blog CurrentBlogModel { get; set; }
+        private static Post CurrentPostModel { get; set; }
+        private static Author CurrentAuthorModel { get; set; }
         private static LogTestInt CurrentLogTestIntModel { get; set; }
 
         internal static void SetConfigurationForAutoCreate(bool enable)
@@ -92,6 +94,36 @@ namespace DataManagement.Tools.Test
             }
 
             return CurrentBlogModel;
+        }
+
+        internal static Post GetPostModel(bool giveNew)
+        {
+            if (giveNew || CurrentPostModel == null)
+            {
+                Random random = new Random();
+                Post newObj = new Post()
+                {
+                    Name = string.Format("New Post {0}", random.Next())
+                };
+                CurrentPostModel = newObj;
+            }
+
+            return CurrentPostModel;
+        }
+
+        internal static Author GetAuthorModel(bool giveNew)
+        {
+            if (giveNew || CurrentAuthorModel == null)
+            {
+                Random random = new Random();
+                Author newObj = new Author()
+                {
+                    Name = string.Format("New Author {0}", random.Next())
+                };
+                CurrentAuthorModel = newObj;
+            }
+
+            return CurrentAuthorModel;
         }
 
         internal static LogTestInt GetLogTestIntModel(bool giveNew)

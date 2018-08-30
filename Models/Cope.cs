@@ -2,6 +2,7 @@
 using DataManagement.DAO;
 using DataManagement.Enums;
 using DataManagement.Extensions;
+using DataManagement.Interfaces;
 using System;
 using System.Collections.Generic;
 
@@ -13,7 +14,7 @@ namespace DataManagement.Models
     /// <typeparam name="T">Representa el tipo de la clase que esta heredando de Cope<T, TKey>.</typeparam>
     /// <typeparam name="TKey">Representa el tipo a utilizar para la llave primaria del Id.</typeparam>
     [Serializable]
-    public abstract class Cope<T, TKey> where T : Cope<T, TKey>, new() where TKey : struct
+    public abstract class Cope<T, TKey> : IManageable<TKey> where T : Cope<T, TKey>, new() where TKey : struct
     {
         #region Fields
         private readonly string _foreignIdName = string.Format("{0}Id", typeof(T).Name);

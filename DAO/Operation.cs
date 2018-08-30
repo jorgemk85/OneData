@@ -235,7 +235,7 @@ namespace DataManagement.DAO
 
                 if (!string.IsNullOrWhiteSpace(foreignKeyQuery))
                 {
-                    ExecuteScalar(Creator.GetCreateForeignKeysQuery<T, TKey>(), connectionToUse, false);
+                    ExecuteScalar(foreignKeyQuery, connectionToUse, false);
                 }
             }
         }
@@ -246,7 +246,7 @@ namespace DataManagement.DAO
 
             foreach (KeyValuePair<string, PropertyInfo> property in Manager<T, TKey>.ModelComposition.ForeignKeyProperties)
             {
-                Cope<T, TKey> foreignKey = (Cope<T, TKey>)Activator.CreateInstance(Manager<T, TKey>.ModelComposition.ForeignKeyAttributes[property.Value.Name].Model);
+                IManageable<TKey> foreignKey = (IManageable<TKey>)Activator.CreateInstance(Manager<T, TKey>.ModelComposition.ForeignKeyAttributes[property.Value.Name].Model);
                 if (!CheckIfTableExists(foreignKey.ModelComposition.TableName, connectionToUse))
                 {
                     CreateOrAlterForeignTables<T, TKey>(foreignKey, connectionToUse, false);
@@ -266,7 +266,7 @@ namespace DataManagement.DAO
             return ((DataTable)ExecuteScalar(string.Format(QueryForKeyDefinition, tableName), connectionToUse, true)).ToDictionary<string, KeyDefinition>(nameof(KeyDefinition.Column_Name));
         }
 
-        private void CreateOrAlterForeignTables<T, TKey>(Cope<T, TKey> foreignKey, string connectionToUse, bool doAlter) where T : Cope<T, TKey>, new() where TKey : struct
+        private void CreateOrAlterForeignTables<T, TKey>(IManageable<TKey> foreignKey, string connectionToUse, bool doAlter) where T : Cope<T, TKey>, new() where TKey : struct
         {
             Logger.Info(string.Format("Create or Alter foreign tables of {0} using connection {1}. DoAlter = {2}", foreignKey.ModelComposition.TableName, connectionToUse, doAlter));
             if (doAlter)

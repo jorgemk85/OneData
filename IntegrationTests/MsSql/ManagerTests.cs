@@ -32,5 +32,28 @@ namespace DataManagement.IntegrationTests.MsSql
             Assert.AreNotEqual(result.Data.Rows.Count, 0);
         }
 
+        [Test]
+        public void InsertBlog_NewObject_ReturnsNoError()
+        {
+            Assert.DoesNotThrow(() => Blog.Insert(TestTools.GetBlogModel(true)));
+        }
+
+        [Test]
+        public void InsertPost_NewObject_ReturnsNoError()
+        {
+            List<Blog> blogs = Blog.SelectAll();
+            List<Author> authors = Author.SelectAll();
+
+            TestTools.GetPostModel(true).BlogId = blogs[0].Id;
+            TestTools.GetPostModel(false).AuthorId = authors[0].Id;
+            Assert.DoesNotThrow(() => Post.Insert(TestTools.GetPostModel(false)));
+        }
+
+        [Test]
+        public void InsertAuthor_NewObject_ReturnsNoError()
+        {
+            Assert.DoesNotThrow(() => Author.Insert(TestTools.GetAuthorModel(true)));
+        }
+
     }
 }

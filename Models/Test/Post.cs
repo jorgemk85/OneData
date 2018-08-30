@@ -7,7 +7,11 @@ namespace DataManagement.Models.Test
     public class Post : Cope<Post, Guid>
     {
         public string Name { get; set; }
+
+        [ForeignKey(typeof(Blog))]
         public Guid? BlogId { get; set; }
+
+        [ForeignKey(typeof(Author))]
         public Guid? AuthorId { get; set; }
 
         public Post() : base(Guid.NewGuid()) { }

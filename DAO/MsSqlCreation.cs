@@ -388,16 +388,23 @@ namespace DataManagement.DAO
         public string GetCreateForeignKeysQuery<T, TKey>(Dictionary<string, KeyDefinition> keyDetails = null) where T : Cope<T, TKey>, new() where TKey : struct
         {
             StringBuilder queryBuilder = new StringBuilder();
-            Dictionary<string, PropertyInfo> properties = Manager<T, TKey>.ModelComposition.ForeignKeyProperties.Where(q => !keyDetails.ContainsKey(q.Value.Name)).ToDictionary(q => q.Key, q => q.Value);
+            Dictionary<string, PropertyInfo> properties;
+            if (keyDetails == null)
+            {
+                properties = Manager<T, TKey>.ModelComposition.ForeignKeyProperties;
+            }
+            else
+            {
+                properties = Manager<T, TKey>.ModelComposition.ForeignKeyProperties.Where(q => !keyDetails.ContainsKey(q.Value.Name)).ToDictionary(q => q.Key, q => q.Value);
+            }
 
             if (properties.Count == 0) return string.Empty;
 
-            queryBuilder.AppendFormat("ALTER TABLE {0}.{1}{2}\n", Manager<T, TKey>.ModelComposition.Schema, Manager.TablePrefix, Manager<T, TKey>.ModelComposition.TableName);
-
             foreach (KeyValuePair<string, PropertyInfo> property in properties)
             {
+                queryBuilder.AppendFormat("ALTER TABLE {0}.{1}{2}\n", Manager<T, TKey>.ModelComposition.Schema, Manager.TablePrefix, Manager<T, TKey>.ModelComposition.TableName);
                 ForeignKey foreignAttribute = property.Value.GetCustomAttribute<ForeignKey>();
-                Cope<T, TKey> foreignKey = (Cope<T, TKey>)Activator.CreateInstance(foreignAttribute.Model);
+                IManageable<TKey> foreignKey = (IManageable<TKey>)Activator.CreateInstance(foreignAttribute.Model);
                 queryBuilder.AppendFormat("ADD CONSTRAINT FK_{0}_{1}\n", Manager<T, TKey>.ModelComposition.TableName, foreignKey.ModelComposition.TableName);
                 queryBuilder.AppendFormat("FOREIGN KEY({0}) REFERENCES {1}.{2}{3}(Id) ON DELETE {4} ON UPDATE NO ACTION;\n", property.Value.Name, Manager<T, TKey>.ModelComposition.Schema, Manager.TablePrefix, foreignKey.ModelComposition.TableName, foreignAttribute.Action.ToString().Replace("_", " "));
             }
