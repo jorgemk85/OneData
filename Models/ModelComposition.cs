@@ -26,14 +26,17 @@ namespace DataManagement.Models
         /// </summary>
         public Dictionary<string, PropertyInfo> AutoProperties { get; private set; } = new Dictionary<string, PropertyInfo>();
         /// <summary>
-        /// Esta propiedad controla las propiedades del objeto que NO estan marcadas con el atributo UnmanagedProperty NI AutoProperty.
+        /// Esta propiedad controla las propiedades del objeto que NO estan marcadas con el atributo UnmanagedProperty NI AutoProperty NI ForeignCollection.
         /// </summary>
         public Dictionary<string, PropertyInfo> FilteredProperties { get; private set; } = new Dictionary<string, PropertyInfo>();
         /// <summary>
-        /// Esta propiedad controla las propiedades del objeto que estan marcadas como ForeignModel.
+        /// Esta propiedad controla las propiedades del objeto que estan marcadas como ForeignKey.
         /// </summary>
-        public Dictionary<string, PropertyInfo> ForeignModelProperties { get; private set; } = new Dictionary<string, PropertyInfo>();
-        public Dictionary<string, ForeignModel> ForeignModelAttributes { get; private set; } = new Dictionary<string, ForeignModel>();
+        public Dictionary<string, PropertyInfo> ForeignKeyProperties { get; private set; } = new Dictionary<string, PropertyInfo>();
+
+        public Dictionary<string, PropertyInfo> ForeignCollectionProperties { get; private set; } = new Dictionary<string, PropertyInfo>();
+
+        public Dictionary<string, ForeignKey> ForeignKeyAttributes { get; private set; } = new Dictionary<string, ForeignKey>();
         public Dictionary<string, AutoProperty> AutoPropertyAttributes { get; private set; } = new Dictionary<string, AutoProperty>();
         public PropertyInfo PrimaryProperty { get; private set; }
         public PropertyInfo DateCreatedProperty { get; private set; }
@@ -56,7 +59,7 @@ namespace DataManagement.Models
         {
             if (string.IsNullOrWhiteSpace(TableName))
             {
-                throw new RequiredAttributeNotFound("DataTableName", type.FullName);
+                throw new RequiredAttributeNotFound("DataTable", type.FullName);
             }
         }
 
@@ -66,7 +69,7 @@ namespace DataManagement.Models
             {
                 switch (attribute.AttributeType.Name)
                 {
-                    case "DataTableName":
+                    case "DataTable":
                         DataTableAttribute = type.GetCustomAttribute<DataTable>();
                         TableName = DataTableAttribute.TableName;
                         Schema = DataTableAttribute.Schema;
@@ -112,9 +115,14 @@ namespace DataManagement.Models
                         case "DateModifiedProperty":
                             DateModifiedProperty = property;
                             break;
-                        case "ForeignModel":
-                            ForeignModelProperties.Add(property.Name, property);
-                            ForeignModelAttributes.Add(property.Name, property.GetCustomAttribute<ForeignModel>());
+                        case "ForeignKey":
+                            ForeignKeyProperties.Add(property.Name, property);
+                            ForeignKeyAttributes.Add(property.Name, property.GetCustomAttribute<ForeignKey>());
+                            break;
+                        case "ForeignCollection":
+                            ForeignCollectionProperties.Add(property.Name, property);
+                            ManagedProperties.Remove(property.Name);
+                            FilteredProperties.Remove(property.Name);
                             break;
                         default:
                             break;

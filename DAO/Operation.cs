@@ -244,12 +244,12 @@ namespace DataManagement.DAO
         {
             Logger.Info(string.Format("Verifying foreign tables for type {0} using connection {1}. DoAlter = {2}", typeof(T).ToString(), connectionToUse, doAlter));
 
-            foreach (KeyValuePair<string, PropertyInfo> property in Manager<T, TKey>.ModelComposition.ForeignModelProperties)
+            foreach (KeyValuePair<string, PropertyInfo> property in Manager<T, TKey>.ModelComposition.ForeignKeyProperties)
             {
-                Cope<T, TKey> foreignModel = (Cope<T, TKey>)Activator.CreateInstance(Manager<T, TKey>.ModelComposition.ForeignModelAttributes[property.Value.Name].Model);
-                if (!CheckIfTableExists(foreignModel.ModelComposition.TableName, connectionToUse))
+                Cope<T, TKey> foreignKey = (Cope<T, TKey>)Activator.CreateInstance(Manager<T, TKey>.ModelComposition.ForeignKeyAttributes[property.Value.Name].Model);
+                if (!CheckIfTableExists(foreignKey.ModelComposition.TableName, connectionToUse))
                 {
-                    CreateOrAlterForeignTables<T, TKey>(foreignModel, connectionToUse, false);
+                    CreateOrAlterForeignTables<T, TKey>(foreignKey, connectionToUse, false);
                 }
             }
         }
@@ -266,14 +266,14 @@ namespace DataManagement.DAO
             return ((DataTable)ExecuteScalar(string.Format(QueryForKeyDefinition, tableName), connectionToUse, true)).ToDictionary<string, KeyDefinition>(nameof(KeyDefinition.Column_Name));
         }
 
-        private void CreateOrAlterForeignTables<T, TKey>(Cope<T, TKey> foreignModel, string connectionToUse, bool doAlter) where T : Cope<T, TKey>, new() where TKey : struct
+        private void CreateOrAlterForeignTables<T, TKey>(Cope<T, TKey> foreignKey, string connectionToUse, bool doAlter) where T : Cope<T, TKey>, new() where TKey : struct
         {
-            Logger.Info(string.Format("Create or Alter foreign tables of {0} using connection {1}. DoAlter = {2}", foreignModel.ModelComposition.TableName, connectionToUse, doAlter));
+            Logger.Info(string.Format("Create or Alter foreign tables of {0} using connection {1}. DoAlter = {2}", foreignKey.ModelComposition.TableName, connectionToUse, doAlter));
             if (doAlter)
             {
                 ExecuteScalar(Creator.CreateQueryForTableAlteration<T, TKey>(
-                                                         GetColumnDefinition(foreignModel.ModelComposition.TableName, connectionToUse),
-                                                         GetKeyDefinition(foreignModel.ModelComposition.TableName, connectionToUse)), connectionToUse, false);
+                                                         GetColumnDefinition(foreignKey.ModelComposition.TableName, connectionToUse),
+                                                         GetKeyDefinition(foreignKey.ModelComposition.TableName, connectionToUse)), connectionToUse, false);
             }
             else
             {

@@ -24,7 +24,7 @@ namespace DataManagement.IntegrationTests.MySql
         [Test, Order(1)]
         public void Update_FullAutomation_DoesNotThrow()
         {
-            TestTools.GetLogTestGuidModel(false).Parametros = "Parametros Editados";
+            TestTools.GetLogTestIntModel(false).Parametros = "Parametros Editados";
 
             Assert.DoesNotThrow(() => Manager<LogTestInt, int>.Update(TestTools.GetLogTestIntModel(false)));
         }

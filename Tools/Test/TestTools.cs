@@ -25,7 +25,7 @@ namespace DataManagement.Tools.Test
         internal static List<TestModel> ListTestModel { get; } = ConvertDataTableToListOfType<TestModel>(DataTableTestModel);
         internal static TestModel TestModel { get; } = CreateNewTestModel();
 
-        private static LogTestGuid CurrentLogTestGuidModel { get; set; }
+        private static Blog CurrentBlogModel { get; set; }
         private static LogTestInt CurrentLogTestIntModel { get; set; }
 
         internal static void SetConfigurationForAutoCreate(bool enable)
@@ -79,21 +79,19 @@ namespace DataManagement.Tools.Test
             return newTestModel;
         }
 
-        internal static LogTestGuid GetLogTestGuidModel(bool giveNew)
+        internal static Blog GetBlogModel(bool giveNew)
         {
-            if (giveNew || CurrentLogTestGuidModel == null)
+            if (giveNew || CurrentBlogModel == null)
             {
-                LogTestGuid newLogTest = new LogTestGuid()
+                Random random = new Random();
+                Blog newBlog = new Blog()
                 {
-                    Ip = "192.168.0.1",
-                    Parametros = "Sin parametros",
-                    TablaAfectada = "logs",
-                    Transaccion = "Sin transacciones"
+                    Name = string.Format("New Blog {0}", random.Next())
                 };
-                CurrentLogTestGuidModel = newLogTest;
+                CurrentBlogModel = newBlog;
             }
 
-            return CurrentLogTestGuidModel;
+            return CurrentBlogModel;
         }
 
         internal static LogTestInt GetLogTestIntModel(bool giveNew)

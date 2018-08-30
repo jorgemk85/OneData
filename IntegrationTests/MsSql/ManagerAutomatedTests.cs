@@ -12,7 +12,7 @@ namespace DataManagement.IntegrationTests.MsSql
     [TestFixture]
     class ManagerAutomatedTests
     {
-        Guid newLogId;
+        Guid newObjId;
 
         [OneTimeSetUp]
         public void PerformSetupForTesting_DoesNotThrow()
@@ -22,37 +22,37 @@ namespace DataManagement.IntegrationTests.MsSql
             TestTools.SetConfigurationForAutoCreate(true);
             TestTools.SetConfigurationForAutoAlter(true);
 
-            newLogId = TestTools.GetLogTestGuidModel(true).Id.GetValueOrDefault();
+            newObjId = TestTools.GetBlogModel(true).Id.GetValueOrDefault();
 
-            Assert.DoesNotThrow(() => Manager<LogTestGuid, Guid>.Insert(TestTools.GetLogTestGuidModel(false)));
+            Assert.DoesNotThrow(() => Manager<Blog, Guid>.Insert(TestTools.GetBlogModel(false)));
         }
 
         [Test, Order(1)]
         public void Update_FullAutomation_DoesNotThrow()
         {
-            TestTools.GetLogTestGuidModel(false).Parametros = "Parametros Editados";
+            TestTools.GetBlogModel(false).Name = "Parametros Editados";
 
-            Assert.DoesNotThrow(() => Manager<LogTestGuid, Guid>.Update(TestTools.GetLogTestGuidModel(false)));
+            Assert.DoesNotThrow(() => Manager<Blog, Guid>.Update(TestTools.GetBlogModel(false)));
         }
 
         [Test, Order(2)]
         public void Select_FullAutomation_DoesNotThrow()
         {
-            Assert.DoesNotThrow(() => Manager<LogTestGuid, Guid>.Select(null, new Parameter(nameof(LogTestGuid.Id), newLogId)));
+            Assert.DoesNotThrow(() => Manager<Blog, Guid>.Select(null, new Parameter(nameof(Blog.Id), newObjId)));
         }
 
         [Test, Order(3)]
         public void SelectAll_FullAutomation_DoesNotThrow()
         {
-            Assert.DoesNotThrow(() => Manager<LogTestGuid, Guid>.SelectAll());
+            Assert.DoesNotThrow(() => Manager<Blog, Guid>.SelectAll());
         }
 
         [Test, Order(4)]
         public void Delete_FullAutomation_DoesNotThrow()
         {
-            TestTools.GetLogTestGuidModel(false).Id = newLogId;
+            TestTools.GetBlogModel(false).Id = newObjId;
 
-            Assert.DoesNotThrow(() => Manager<LogTestGuid, Guid>.Delete(TestTools.GetLogTestGuidModel(false)));
+            Assert.DoesNotThrow(() => Manager<Blog, Guid>.Delete(TestTools.GetBlogModel(false)));
         }
 
         [OneTimeTearDown]

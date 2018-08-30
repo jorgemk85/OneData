@@ -24,10 +24,10 @@ namespace DataManagement.IntegrationTests.MySql
         [Test]
         public void SelectGuid_DataFromCache_ReturnsTrue()
         {
-            LogTestGuid.Insert(TestTools.GetLogTestGuidModel(true));
-            List<LogTestGuid> list = LogTestGuid.SelectAll();
-            Result result = LogTestGuid.SelectResult(new Parameter(nameof(LogTestGuid.Id), list[0].Id));
-            LogTestGuid.Delete(TestTools.GetLogTestGuidModel(false));
+            Blog.Insert(TestTools.GetBlogModel(true));
+            List<Blog> list = Blog.SelectAll();
+            Result result = Blog.SelectResult(new Parameter(nameof(Blog.Id), list[0].Id));
+            Blog.Delete(TestTools.GetBlogModel(false));
 
             Assert.IsTrue(result.IsFromCache);
             Assert.IsTrue(result.IsSuccessful);

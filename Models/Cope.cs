@@ -15,6 +15,10 @@ namespace DataManagement.Models
     [Serializable]
     public abstract class Cope<T, TKey> where T : Cope<T, TKey>, new() where TKey : struct
     {
+        #region Fields
+        private readonly string _foreignIdName = string.Format("{0}Id", typeof(T).Name);
+        #endregion
+
         #region Primary Property
         [PrimaryProperty]
         public TKey? Id { get; set; }
@@ -28,7 +32,8 @@ namespace DataManagement.Models
         #endregion
 
         #region Unmanaged Properties
-        public ref readonly ModelComposition ModelComposition => ref Manager<T, TKey>.ModelComposition;
+        [UnmanagedProperty]
+        public ModelComposition ModelComposition { get; } = Manager<T, TKey>.ModelComposition;
         #endregion
 
         #region Methods
@@ -107,8 +112,18 @@ namespace DataManagement.Models
         {
             return Manager<T, TKey>.Select(null, parameters).Data.ToList<T>();
         }
+
+        public static ICollection<TForeign> Include<TForeign>(IEnumerable<Cope<TForeign, TKey>> fromEnumerator) where TForeign : Cope<TForeign, TKey>, new()
+        {
+            List<TForeign> newList = new List<TForeign>();
+
+            TForeign foreignObject = (TForeign)Activator.CreateInstance(typeof(TForeign));
+
+
+            return newList;
+        }
         #endregion
-        
+
         #region Constructors
         // TODO: Necesitamos encontrar una manera mas facil de instanciar objetos con nuevos Ids irrepetibles. 
         public Cope(TKey id)

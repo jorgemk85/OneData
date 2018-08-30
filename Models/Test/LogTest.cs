@@ -1,5 +1,6 @@
 ﻿using DataManagement.Attributes;
 using System;
+using System.Collections.Generic;
 
 namespace DataManagement.Models.Test
 {
@@ -10,6 +11,9 @@ namespace DataManagement.Models.Test
         public string Transaccion { get; set; }
         public string TablaAfectada { get; set; }
         public string Parametros { get; set; }
+
+        [ForeignCollection(typeof(UserTest))]
+        public ICollection<UserTest> UserTests { get; set; }
 
         public LogTestGuid() : base(Guid.NewGuid()) { }
 

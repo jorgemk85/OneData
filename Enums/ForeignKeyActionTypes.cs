@@ -1,6 +1,6 @@
 ﻿namespace DataManagement.Enums
 {
-    public enum ForeignModelActionTypes
+    public enum ForeignKeyActionTypes
     {
         NO_ACTION,
         CASCADE,
