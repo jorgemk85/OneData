@@ -152,7 +152,7 @@ namespace DataManagement.DAO
 
             if (logTransaction) LogTransaction(Manager<T, TKey>.ModelComposition.TableName, transactionType, connectionToUse);
 
-            return new Result<T, TKey>(dataTable.ToDictionary<TKey, T>(), false, true);
+            return new Result<T, TKey>(dataTable.ToManageableCollection<TKey, T>(), false, true);
         }
 
         public Result ExecuteProcedure<T, TKey>(IEnumerable<T> list, string connectionToUse, TransactionTypes transactionType, bool logTransaction = true) where T : Cope<T, TKey>, new() where TKey : struct

@@ -99,7 +99,7 @@ namespace DataManagement.DAO
                 resultado = hasCache == true ? SelectInCache(obj, dataCache) : operation.ExecuteProcedure<T, TKey>(obj, connectionToUse, TransactionTypes.Select);
 
                 resultado.IsFromCache = hasCache == true ? true : false;
-                if (hasCache && dataCache.IsPartialCache && resultado.Dictionary.Count == 0)
+                if (hasCache && dataCache.IsPartialCache && resultado.Collection.Count == 0)
                 {
                     resultado = operation.ExecuteProcedure<T, TKey>(obj, connectionToUse, TransactionTypes.Select);
                     AlterCache(resultado, ref dataCache);
@@ -137,7 +137,7 @@ namespace DataManagement.DAO
                 }
             }
 
-            if (dataCache.IsEnabled && resultado.IsSuccessful && resultado.Dictionary.Count > 0)
+            if (dataCache.IsEnabled && resultado.IsSuccessful && resultado.Collection.Count > 0)
             {
                 dataCache.IsPartialCache = false;
             }
@@ -168,34 +168,34 @@ namespace DataManagement.DAO
             else
             {
                 predicate = predicate.Substring(0, predicate.Length - 5);
-                var queryableList = dataCache.Cache.Dictionary.AsQueryable();
+                var queryableList = dataCache.Cache.Collection.AsQueryable();
                 // Procedimiento LENTO en la primera ejecucion por el compilado del query.
                 var resultList = queryableList.Where(predicate, values.ToArray()).ToDictionary(k => k.Key, v => v.Value);
-                return new Result<T, TKey>(resultList, true, true);
+                return new Result<T, TKey>((ManageableCollection<TKey, T>)resultList, true, true);
             }
         }
 
         private void UpdateInCache<T, TKey>(T obj, ref DataCache<T, TKey> dataCache) where T : Cope<T, TKey>, new() where TKey : struct
         {
-            dataCache.Cache.Dictionary[obj.Id.GetValueOrDefault()] = obj;
+            dataCache.Cache.Collection[obj.Id.GetValueOrDefault()] = obj;
         }
 
         private void InsertInCache<T, TKey>(T obj, ref DataCache<T, TKey> dataCache) where T : Cope<T, TKey>, new() where TKey : struct
         {
-            dataCache.Cache.Dictionary.Add(obj.Id.GetValueOrDefault(), obj);
+            dataCache.Cache.Collection.Add(obj.Id.GetValueOrDefault(), obj);
         }
 
         private void InsertMassiveInCache<T, TKey>(IEnumerable<T> list, ref DataCache<T, TKey> dataCache) where T : Cope<T, TKey>, new() where TKey : struct
         {
             foreach (T obj in list)
             {
-                dataCache.Cache.Dictionary.Add(obj.Id.GetValueOrDefault(), obj);
+                dataCache.Cache.Collection.Add(obj.Id.GetValueOrDefault(), obj);
             }
         }
 
         private void AlterCache<T, TKey>(Result<T, TKey> resultado, ref DataCache<T, TKey> dataCache)
         {
-            foreach (KeyValuePair<TKey, T> row in resultado.Dictionary)
+            foreach (KeyValuePair<TKey, T> row in resultado.Collection)
             {
                 AlterCache(row, ref dataCache);
             }
@@ -204,23 +204,23 @@ namespace DataManagement.DAO
 
         public void AlterCache<T, TKey>(KeyValuePair<TKey, T> row, ref DataCache<T, TKey> dataCache)
         {
-            dataCache.Cache.Dictionary.TryGetValue(row.Key, out T cachedObj);
+            dataCache.Cache.Collection.TryGetValue(row.Key, out T cachedObj);
 
             if (cachedObj == null)
             {
                 // NO existe la fila: la agrega.
-                dataCache.Cache.Dictionary.Add(row.Key, row.Value);
+                dataCache.Cache.Collection.Add(row.Key, row.Value);
             }
             else
             {
                 // SI existe la fila: la actualiza.
-                dataCache.Cache.Dictionary[row.Key] = row.Value;
+                dataCache.Cache.Collection[row.Key] = row.Value;
             }
         }
 
         private void DeleteInCache<T, TKey>(T obj, ref DataCache<T, TKey> dataCache) where T : Cope<T, TKey>, new() where TKey : struct
         {
-            dataCache.Cache.Dictionary.Remove(obj.Id.GetValueOrDefault());
+            dataCache.Cache.Collection.Remove(obj.Id.GetValueOrDefault());
         }
     }
 }

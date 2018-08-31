@@ -1,4 +1,5 @@
-﻿using DataManagement.Models;
+﻿using DataManagement.Interfaces;
+using DataManagement.Models;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -219,7 +220,26 @@ namespace DataManagement.Tools
             return enumerator.Current.Value;
         }
 
+        public static T ConvertManageableCollectionToObjectOfType<TKey, T>(ManageableCollection<TKey, T> dictionary) where T : new()
+        {
+            var enumerator = dictionary.GetEnumerator();
+            enumerator.MoveNext();
+
+            return enumerator.Current.Value;
+        }
+
         public static List<T> ConvertDictionaryToListOfType<TKey, T>(Dictionary<TKey, T> dictionary) where T : new()
+        {
+            List<T> newList = new List<T>();
+            foreach (KeyValuePair<TKey, T> row in dictionary)
+            {
+                newList.Add(row.Value);
+            }
+
+            return newList;
+        }
+
+        public static List<T> ConvertManageableCollectionToListOfType<TKey, T>(ManageableCollection<TKey, T> dictionary) where T : new()
         {
             List<T> newList = new List<T>();
             foreach (KeyValuePair<TKey, T> row in dictionary)
@@ -287,22 +307,49 @@ namespace DataManagement.Tools
         public static Dictionary<TKey, T> ConvertDataTableToDictionaryOfType<TKey, T>(DataTable dataTable) where T : Cope<T, TKey>, new() where TKey : struct
         {
             Dictionary<TKey, T> newDictionary = new Dictionary<TKey, T>();
-            foreach (DataRow row in dataTable.Rows)
+            if (dataTable != null)
             {
-                T newObject = new T();
-                PropertyInfo[] properties = typeof(T).GetProperties();
-
-                foreach (PropertyInfo property in properties)
+                foreach (DataRow row in dataTable.Rows)
                 {
-                    if (dataTable.Columns.Contains(property.Name) && property.CanWrite)
+                    T newObject = new T();
+                    PropertyInfo[] properties = typeof(T).GetProperties();
+
+                    foreach (PropertyInfo property in properties)
                     {
-                        property.SetValue(newObject, SimpleConverter.ConvertStringToType(row[property.Name].ToString(), property.PropertyType));
+                        if (dataTable.Columns.Contains(property.Name) && property.CanWrite)
+                        {
+                            property.SetValue(newObject, SimpleConverter.ConvertStringToType(row[property.Name].ToString(), property.PropertyType));
+                        }
                     }
+                    newDictionary.Add(newObject.Id.GetValueOrDefault(), newObject);
                 }
-                newDictionary.Add(newObject.Id.GetValueOrDefault(), newObject);
             }
 
             return newDictionary;
+        }
+
+        public static ManageableCollection<TKey, T> ConvertDataTableToManageableCollectionOfType<TKey, T>(DataTable dataTable) where T : Cope<T, TKey>, new() where TKey : struct
+        {
+            ManageableCollection<TKey, T> newCollection = new ManageableCollection<TKey, T>();
+            if (dataTable != null)
+            {
+                foreach (DataRow row in dataTable.Rows)
+                {
+                    T newObject = new T();
+                    PropertyInfo[] properties = typeof(T).GetProperties();
+
+                    foreach (PropertyInfo property in properties)
+                    {
+                        if (dataTable.Columns.Contains(property.Name) && property.CanWrite)
+                        {
+                            property.SetValue(newObject, SimpleConverter.ConvertStringToType(row[property.Name].ToString(), property.PropertyType));
+                        }
+                    }
+                    newCollection.Add(newObject.Id.GetValueOrDefault(), newObject);
+                }
+            }
+
+            return newCollection;
         }
 
         /// <summary>

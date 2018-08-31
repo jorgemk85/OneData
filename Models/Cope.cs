@@ -84,7 +84,7 @@ namespace DataManagement.Models
         /// <returns>Regresa la coleccion obtenida ya convertida en una lista del tipo <typeparamref name="T"/></returns>
         public static List<T> SelectAll()
         {
-            return Manager<T, TKey>.SelectAll().Dictionary.ToList();
+            return Manager<T, TKey>.SelectAll().Collection.ToList();
         }
 
         /// <summary>
@@ -94,7 +94,7 @@ namespace DataManagement.Models
         /// <returns>Regresa el resultado que incluye la coleccion obtenida por la consulta.</returns>
         public static T Select(params Parameter[] parameters)
         {
-            return Manager<T, TKey>.Select(null, parameters).Dictionary.ToObject();
+            return Manager<T, TKey>.Select(null, parameters).Collection.ToObject();
         }
 
         /// <summary>
@@ -104,7 +104,7 @@ namespace DataManagement.Models
         /// <returns>Regresa la coleccion obtenida ya convertida en una lista del tipo <typeparamref name="T"/></returns>
         public static List<T> SelectList(params Parameter[] parameters)
         {
-            return Manager<T, TKey>.Select(null, parameters).Dictionary.ToList();
+            return Manager<T, TKey>.Select(null, parameters).Collection.ToList();
         }
 
         /// <summary>
@@ -119,29 +119,22 @@ namespace DataManagement.Models
         #endregion
 
         #region Instance Methods
-        internal T Include(IManageable<TKey> obj, Type target)
-        {
-            IManageable<TKey> foreignObject = (IManageable<TKey>)Activator.CreateInstance(target);
-            Result<dynamic, TKey> result = foreignObject.GetResultFromSelect(new Parameter(obj.ForeignIdName, obj.Id));
-            foreach (KeyValuePair<string, ForeignCollection> attribute in obj.ModelComposition.ForeignCollectionAttributes)
-            {
-                if (attribute.Value.Model.Equals(target))
-                {
-                    obj.GetType().GetProperty(attribute.Key).SetValue(obj, result.Dictionary);
-                }
-            }
-            return (T)obj;
-        }
+        //internal T Include(IManageable<TKey> obj, Type target)
+        //{
+        //    Type objectType = typeof(Cope<,>);
+        //    var genericType = objectType.MakeGenericType(target, typeof(TKey));
+        //    var foreignObject = Activator.CreateInstance(genericType);
 
-        /// <summary>
-        /// Obtiene un listado de los objetos de tipo <typeparamref name="T"/> almacenados en la base de datos o en el cache segun los parametros indicados.
-        /// Este metodo usa la conexion predeterminada a la base de datos.
-        /// </summary>
-        /// <returns>Regresa el resultado que incluye la coleccion obtenida por la consulta.</returns>
-        public Result<dynamic, TKey> GetResultFromSelect(params Parameter[] parameters)
-        {
-            return Manager<T, TKey>.Select(null, parameters);
-        }
+        //    Result<dynamic, TKey> result = foreignObject.GetResultFromSelect(new Parameter(obj.ForeignIdName, obj.Id));
+        //    foreach (KeyValuePair<string, ForeignCollection> attribute in obj.ModelComposition.ForeignCollectionAttributes)
+        //    {
+        //        if (attribute.Value.Model.Equals(target))
+        //        {
+        //            obj.GetType().GetProperty(attribute.Key).SetValue(obj, result.Dictionary);
+        //        }
+        //    }
+        //    return (T)obj;
+        //}
 
         public bool Equals(T other)
         {

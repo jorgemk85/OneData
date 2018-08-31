@@ -25,12 +25,12 @@ namespace DataManagement.IntegrationTests.MySql
         {
             Blog.Insert(TestTools.GetBlogModel(true));
             List<Blog> list = Blog.SelectAll();
-            Result result = Blog.SelectResult(new Parameter(nameof(Blog.Id), list[0].Id));
+            Result<Blog, Guid> result = Blog.SelectResult(new Parameter(nameof(Blog.Id), list[0].Id));
             Blog.Delete(TestTools.GetBlogModel(false));
 
             Assert.IsTrue(result.IsFromCache);
             Assert.IsTrue(result.IsSuccessful);
-            Assert.AreNotEqual(result.Data.Rows.Count, 0);
+            Assert.AreNotEqual(result.Collection.Count, 0);
         }
 
         [Test]
@@ -38,12 +38,12 @@ namespace DataManagement.IntegrationTests.MySql
         {
             LogTestInt.Insert(TestTools.GetLogTestIntModel(true));
             List<LogTestInt> list = LogTestInt.SelectAll();
-            Result result = LogTestInt.SelectResult(new Parameter(nameof(LogTestInt.Id), list[0].Id));
+            Result<LogTestInt, int> result = LogTestInt.SelectResult(new Parameter(nameof(LogTestInt.Id), list[0].Id));
             LogTestInt.Delete(TestTools.GetLogTestIntModel(false));
 
             Assert.IsTrue(result.IsFromCache);
             Assert.IsTrue(result.IsSuccessful);
-            Assert.AreNotEqual(result.Data.Rows.Count, 0);
+            Assert.AreNotEqual(result.Collection.Count, 0);
         }
 
         [Test]
@@ -64,6 +64,15 @@ namespace DataManagement.IntegrationTests.MySql
         }
 
         [Test]
+        public void InsertComment_NewObject_ReturnsNoError()
+        {
+            List<Post> posts = Post.SelectAll();
+
+            TestTools.GetCommentModel(true).PostId = posts[0].Id;
+            Assert.DoesNotThrow(() => Comment.Insert(TestTools.GetCommentModel(false)));
+        }
+
+        [Test]
         public void InsertAuthor_NewObject_ReturnsNoError()
         {
             Assert.DoesNotThrow(() => Author.Insert(TestTools.GetAuthorModel(true)));
@@ -72,7 +81,9 @@ namespace DataManagement.IntegrationTests.MySql
         [Test]
         public void SelectBlog_DataFromDB_ReturnsNoError()
         {
-            Blog result = Blog.Select(new Parameter(nameof(Blog.Id), Guid.Parse("36e693e6-e936-4acc-bd6a-2dfb80449590"))).Include(typeof(Post));
+            var result = Blog.Select(new Parameter(nameof(Blog.Id), Guid.Parse("36e693e6-e936-4acc-bd6a-2dfb80449590")))
+                                     .Include(typeof(Post)).Posts
+                                     .Include(typeof(Comment));
             Assert.IsTrue(true);
         }
     }

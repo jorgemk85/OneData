@@ -24,11 +24,11 @@ namespace DataManagement.IntegrationTests.MsSql
         public void Select_DataFromCache_ReturnsTrue()
         {
             List<LogTestGuid> list = LogTestGuid.SelectAll();
-            Result result = LogTestGuid.SelectResult(new Parameter(nameof(LogTestGuid.Id), list[0].Id));
+            Result<LogTestGuid, Guid> result = LogTestGuid.SelectResult(new Parameter(nameof(LogTestGuid.Id), list[0].Id));
 
             Assert.IsTrue(result.IsFromCache);
             Assert.IsTrue(result.IsSuccessful);
-            Assert.AreNotEqual(result.Data.Rows.Count, 0);
+            Assert.AreNotEqual(result.Collection.Count, 0);
         }
 
         [Test]
@@ -49,6 +49,15 @@ namespace DataManagement.IntegrationTests.MsSql
         }
 
         [Test]
+        public void InsertComment_NewObject_ReturnsNoError()
+        {
+            List<Post> posts = Post.SelectAll();
+
+            TestTools.GetCommentModel(true).PostId = posts[0].Id;
+            Assert.DoesNotThrow(() => Comment.Insert(TestTools.GetCommentModel(false)));
+        }
+
+        [Test]
         public void InsertAuthor_NewObject_ReturnsNoError()
         {
             Assert.DoesNotThrow(() => Author.Insert(TestTools.GetAuthorModel(true)));
@@ -57,7 +66,9 @@ namespace DataManagement.IntegrationTests.MsSql
         [Test]
         public void SelectBlog_DataFromDB_ReturnsNoError()
         {
-            var result = Blog.Select(new Parameter(nameof(Blog.Id), Guid.Parse("8B4870AC-2D19-4D1C-B6FB-6CE2C46C974A"))).Include(typeof(Post));
+            var result = Blog.Select(new Parameter(nameof(Blog.Id), Guid.Parse("8B4870AC-2D19-4D1C-B6FB-6CE2C46C974A")))
+                                    .Include(typeof(Post)).Posts
+                                    .Include(typeof(Comment));
             Assert.IsTrue(true);
         }
 

@@ -27,6 +27,7 @@ namespace DataManagement.Tools.Test
 
         private static Blog CurrentBlogModel { get; set; }
         private static Post CurrentPostModel { get; set; }
+        private static Comment CurrentCommentModel { get; set; }
         private static Author CurrentAuthorModel { get; set; }
         private static LogTestInt CurrentLogTestIntModel { get; set; }
 
@@ -109,6 +110,21 @@ namespace DataManagement.Tools.Test
             }
 
             return CurrentPostModel;
+        }
+
+        internal static Comment GetCommentModel(bool giveNew)
+        {
+            if (giveNew || CurrentCommentModel == null)
+            {
+                Random random = new Random();
+                Comment newObj = new Comment()
+                {
+                    Name = string.Format("New Comment {0}", random.Next())
+                };
+                CurrentCommentModel = newObj;
+            }
+
+            return CurrentCommentModel;
         }
 
         internal static Author GetAuthorModel(bool giveNew)

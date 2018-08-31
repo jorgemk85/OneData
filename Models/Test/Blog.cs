@@ -1,6 +1,6 @@
 ﻿using DataManagement.Attributes;
+using DataManagement.Interfaces;
 using System;
-using System.Collections.Generic;
 
 namespace DataManagement.Models.Test
 {
@@ -10,7 +10,7 @@ namespace DataManagement.Models.Test
         public string Name { get; set; }
 
         [ForeignCollection(typeof(Post))]
-        public ICollection<Post> Posts { get; set; }
+        public ManageableCollection<Guid, Post> Posts { get; set; }
 
         public Blog() : base(Guid.NewGuid()) { }
 

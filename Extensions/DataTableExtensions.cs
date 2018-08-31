@@ -1,4 +1,5 @@
-﻿using DataManagement.Models;
+﻿using DataManagement.Interfaces;
+using DataManagement.Models;
 using DataManagement.Tools;
 using System;
 using System.Collections.Generic;
@@ -21,6 +22,11 @@ namespace DataManagement.Extensions
         public static Dictionary<TKey, T> ToDictionary<TKey, T>(this DataTable dataTable, string keyName) where T : new()
         {
             return DataSerializer.ConvertDataTableToDictionary<TKey, T>(dataTable, keyName);
+        }
+
+        public static ManageableCollection<TKey, T> ToManageableCollection<TKey, T>(this DataTable dataTable) where T : Cope<T, TKey>, new() where TKey : struct
+        {
+            return DataSerializer.ConvertDataTableToManageableCollectionOfType<TKey, T>(dataTable);
         }
 
         public static Dictionary<TKey, T> ToDictionary<TKey, T>(this DataTable dataTable) where T : Cope<T, TKey>, new() where TKey : struct

@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using DataManagement.Interfaces;
+using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 
@@ -29,13 +30,13 @@ namespace DataManagement.Models
 
     public class Result<T, TKey>
     {
-        public Dictionary<TKey, T> Dictionary { get; set; }
+        public ManageableCollection<TKey, T> Collection { get; set; }
         public bool IsFromCache { get; set; }
         public bool IsSuccessful { get; set; }
 
-        public Result(Dictionary<TKey, T> set, bool isFromCache, bool isSuccessful)
+        public Result(ManageableCollection<TKey, T> set, bool isFromCache, bool isSuccessful)
         {
-            Dictionary = set;
+            Collection = set;
             IsFromCache = isFromCache;
             IsSuccessful = isSuccessful;
         }

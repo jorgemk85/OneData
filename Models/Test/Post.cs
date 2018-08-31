@@ -1,4 +1,5 @@
 ﻿using DataManagement.Attributes;
+using DataManagement.Interfaces;
 using System;
 
 namespace DataManagement.Models.Test
@@ -13,6 +14,9 @@ namespace DataManagement.Models.Test
 
         [ForeignKey(typeof(Author))]
         public Guid? AuthorId { get; set; }
+
+        [ForeignCollection(typeof(Comment))]
+        public ManageableCollection<Guid, Comment> Comments { get; set; }
 
         public Post() : base(Guid.NewGuid()) { }
 
