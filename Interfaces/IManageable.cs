@@ -8,6 +8,6 @@ namespace DataManagement.Interfaces
         ModelComposition ModelComposition { get; }
         string ForeignIdName { get; }
 
-        Result SelectResult(params Parameter[] parameters);
+        Result GetResultFromSelect(params Parameter[] parameters);
     }
 }

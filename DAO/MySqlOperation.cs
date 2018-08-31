@@ -1,5 +1,6 @@
 ﻿using DataManagement.Enums;
 using DataManagement.Exceptions;
+using DataManagement.Extensions;
 using DataManagement.Interfaces;
 using DataManagement.Models;
 using DataManagement.Tools;
@@ -160,7 +161,7 @@ namespace DataManagement.DAO
 
             if (logTransaction) LogTransaction(Manager<T, TKey>.ModelComposition.TableName, transactionType, connectionToUse);
 
-            return new Result(dataTable, false, true);
+            return new Result(dataTable, false, true, dataTable.ToList<T>());
         }
 
         public Result ExecuteProcedure<T, TKey>(IEnumerable<T> list, string connectionToUse, TransactionTypes transactionType, bool logTransaction = true) where T : Cope<T, TKey>, new() where TKey : struct 

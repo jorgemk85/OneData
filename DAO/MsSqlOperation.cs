@@ -1,5 +1,6 @@
 ﻿using DataManagement.Enums;
 using DataManagement.Exceptions;
+using DataManagement.Extensions;
 using DataManagement.Interfaces;
 using DataManagement.Models;
 using DataManagement.Tools;
@@ -65,7 +66,7 @@ namespace DataManagement.DAO
             DataTable dataTable = null;
             bool overrideConsolidation = false;
 
-        Start:
+            Start:
             try
             {
                 Logger.Info(string.Format("Starting {0} execution for object {1} using connection {2}", transactionType.ToString(), typeof(T), connectionToUse));
@@ -80,7 +81,7 @@ namespace DataManagement.DAO
                     Command.CommandType = CommandType.StoredProcedure;
                     Command.CommandText = string.Format("{0}.{1}{2}{3}", Manager<T, TKey>.ModelComposition.Schema, Manager.StoredProcedurePrefix, Manager<T, TKey>.ModelComposition.TableName, GetFriendlyTransactionSuffix(transactionType));
 
-                    if (transactionType == TransactionTypes.Insert )
+                    if (transactionType == TransactionTypes.Insert)
                     {
                         SetParameters<T, TKey>(obj, transactionType, false);
                         Command.ExecuteNonQuery();
@@ -127,8 +128,8 @@ namespace DataManagement.DAO
                 Logger.Error(sqlException);
                 throw;
             }
-            catch (SqlException sqlException) when (sqlException.Number == ERR_INCORRECT_NUMBER_OF_ARGUMENTS || 
-                                                    sqlException.Number == ERR_CANNOT_INSERT_EXPLICIT_VALUE_FOR_IDENTITY || 
+            catch (SqlException sqlException) when (sqlException.Number == ERR_INCORRECT_NUMBER_OF_ARGUMENTS ||
+                                                    sqlException.Number == ERR_CANNOT_INSERT_EXPLICIT_VALUE_FOR_IDENTITY ||
                                                     sqlException.Number == ERR_EXPECTED_PARAMETER_NOT_SUPPLIED ||
                                                     sqlException.Number == ERR_CANNOT_UPDATE_IDENTITY_VALUE)
             {
@@ -151,7 +152,7 @@ namespace DataManagement.DAO
 
             if (logTransaction) LogTransaction(Manager<T, TKey>.ModelComposition.TableName, transactionType, connectionToUse);
 
-            return new Result(dataTable, false, true);
+            return new Result(dataTable, false, true, dataTable.ToList<T>());
         }
 
         public Result ExecuteProcedure<T, TKey>(IEnumerable<T> list, string connectionToUse, TransactionTypes transactionType, bool logTransaction = true) where T : Cope<T, TKey>, new() where TKey : struct
@@ -160,7 +161,7 @@ namespace DataManagement.DAO
             bool overrideConsolidation = false;
             T obj = new T();
 
-        Start:
+            Start:
             try
             {
                 Logger.Info(string.Format("Starting {0} execution for list {1} using connection {2}", transactionType.ToString(), typeof(T), connectionToUse));
@@ -173,7 +174,7 @@ namespace DataManagement.DAO
                     if (connection.State != ConnectionState.Open) throw new BadConnectionStateException();
                     Command = connection.CreateCommand();
                     Command.CommandType = CommandType.StoredProcedure;
-                    Command.CommandText = string.Format("{0}.{1}{2}{3}", Manager<T, TKey>.ModelComposition.Schema, Manager.StoredProcedurePrefix, Manager<T,TKey>.ModelComposition.TableName, GetFriendlyTransactionSuffix(transactionType));
+                    Command.CommandText = string.Format("{0}.{1}{2}{3}", Manager<T, TKey>.ModelComposition.Schema, Manager.StoredProcedurePrefix, Manager<T, TKey>.ModelComposition.TableName, GetFriendlyTransactionSuffix(transactionType));
 
                     if (transactionType == TransactionTypes.InsertMassive)
                     {

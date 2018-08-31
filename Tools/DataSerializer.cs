@@ -1,11 +1,9 @@
-﻿using DataManagement.Interfaces;
-using DataManagement.Models;
+﻿using DataManagement.Models;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Xml.Serialization;
 
@@ -114,13 +112,15 @@ namespace DataManagement.Tools
         /// <returns>Regresa un objeto ya convertido al tipo <typeparamref name="T"/>.</returns>
         public static T ConvertDataTableToObjectOfType<T>(DataTable dataTable) where T : new()
         {
-
             T newObject = new T();
-            foreach (PropertyInfo property in typeof(T).GetProperties())
+            if (dataTable.Rows.Count > 0)
             {
-                if (dataTable.Columns.Contains(property.Name) && property.CanWrite)
+                foreach (PropertyInfo property in typeof(T).GetProperties())
                 {
-                    property.SetValue(newObject, SimpleConverter.ConvertStringToType(dataTable.Rows[0][property.Name].ToString(), property.PropertyType));
+                    if (dataTable.Columns.Contains(property.Name) && property.CanWrite)
+                    {
+                        property.SetValue(newObject, SimpleConverter.ConvertStringToType(dataTable.Rows[0][property.Name].ToString(), property.PropertyType));
+                    }
                 }
             }
             return newObject;
@@ -210,6 +210,27 @@ namespace DataManagement.Tools
 
             return newList;
         }
+
+        public static ICollection<object> ConvertDataTableToListOfType(DataTable dataTable, Type target)
+        {
+            ICollection<object> newList = new List<object>();
+            foreach (DataRow row in dataTable.Rows)
+            {
+                PropertyInfo[] properties = target.GetProperties();
+                object newObject = Activator.CreateInstance(target);
+                foreach (PropertyInfo property in properties)
+                {
+                    if (dataTable.Columns.Contains(property.Name) && property.CanWrite)
+                    {
+                        property.SetValue(newObject, SimpleConverter.ConvertStringToType(row[property.Name].ToString(), property.PropertyType));
+                    }
+                }
+                newList.Add(newObject);
+            }
+
+            return newList;
+        }
+
 
         /// <summary>
         /// Convierte un objeto de tipo DataTable a un HashSet del tipo <typeparamref name="T"/>.

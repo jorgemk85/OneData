@@ -1,4 +1,5 @@
 ﻿using DataManagement.Tools;
+using System;
 using System.Collections.Generic;
 using System.Data;
 
@@ -24,6 +25,11 @@ namespace DataManagement.Extensions
         public static List<T> ToList<T>(this DataTable dataTable) where T : new()
         {
             return DataSerializer.ConvertDataTableToListOfType<T>(dataTable);
+        }
+
+        public static ICollection<dynamic> ToList(this DataTable dataTable, Type target)
+        {
+            return DataSerializer.ConvertDataTableToListOfType(dataTable, target);
         }
 
         public static string ToJson<T>(this DataTable dataTable) where T : new()

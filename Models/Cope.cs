@@ -40,7 +40,7 @@ namespace DataManagement.Models
         public string ForeignIdName { get; } = string.Format("{0}Id", typeof(T).Name);
         #endregion
 
-        #region Methods
+        #region Static Methods
         /// <summary>
         /// Borra el objeto en la base de datos segun su Id y en su supuesto, tambien en el cache.
         /// Este metodo usa la conexion predeterminada a la base de datos.
@@ -55,7 +55,7 @@ namespace DataManagement.Models
         /// Este metodo usa la conexion predeterminada a la base de datos.
         /// </summary>
         /// <param name="doValidation">Indica si se desea realizar la validacion de nulos.</param>
-        public void Update(T obj, bool doValidation = false)
+        public static void Update(T obj, bool doValidation = false)
         {
             if (doValidation)
             {
@@ -68,7 +68,7 @@ namespace DataManagement.Models
         /// Inserta el objeto en la base de datos y en su supuesto, tambien en el cache. 
         /// Este metodo usa la conexion predeterminada a la base de datos.
         /// </summary>
-        public void Insert(T obj, bool doValidation = false)
+        public static void Insert(T obj, bool doValidation = false)
         {
             if (doValidation)
             {
@@ -82,7 +82,7 @@ namespace DataManagement.Models
         /// Este metodo usa la conexion predeterminada a la base de datos.
         /// </summary>
         /// <returns>Regresa la coleccion obtenida ya convertida en una lista del tipo <typeparamref name="T"/></returns>
-        public List<T> SelectAll()
+        public static List<T> SelectAll()
         {
             return Manager<T, TKey>.SelectAll().Data.ToList<T>();
         }
@@ -92,7 +92,7 @@ namespace DataManagement.Models
         /// Este metodo usa la conexion predeterminada a la base de datos.
         /// </summary>
         /// <returns>Regresa el resultado que incluye la coleccion obtenida por la consulta.</returns>
-        public T Select(params Parameter[] parameters)
+        public static T Select(params Parameter[] parameters)
         {
             return Manager<T, TKey>.Select(null, parameters).Data.ToObject<T>();
         }
@@ -101,20 +101,46 @@ namespace DataManagement.Models
         /// Obtiene un listado de los objetos de tipo <typeparamref name="T"/> almacenados en la base de datos o en el cache segun los parametros indicados.
         /// Este metodo usa la conexion predeterminada a la base de datos.
         /// </summary>
-        /// <returns>Regresa el resultado que incluye la coleccion obtenida por la consulta.</returns>
-        public Result SelectResult(params Parameter[] parameters)
+        /// <returns>Regresa la coleccion obtenida ya convertida en una lista del tipo <typeparamref name="T"/></returns>
+        public static List<T> SelectList(params Parameter[] parameters)
         {
-            return Manager<T, TKey>.Select(null, parameters);
+            return Manager<T, TKey>.Select(null, parameters).Data.ToList<T>();
         }
 
         /// <summary>
         /// Obtiene un listado de los objetos de tipo <typeparamref name="T"/> almacenados en la base de datos o en el cache segun los parametros indicados.
         /// Este metodo usa la conexion predeterminada a la base de datos.
         /// </summary>
-        /// <returns>Regresa la coleccion obtenida ya convertida en una lista del tipo <typeparamref name="T"/></returns>
-        public List<T> SelectList(params Parameter[] parameters)
+        /// <returns>Regresa el resultado que incluye la coleccion obtenida por la consulta.</returns>
+        public static Result SelectResult(params Parameter[] parameters)
         {
-            return Manager<T, TKey>.Select(null, parameters).Data.ToList<T>();
+            return Manager<T, TKey>.Select(null, parameters);
+        }
+        #endregion
+
+        #region Instance Methods
+        public T Include(IManageable<TKey> obj, Type target)
+        {
+            IManageable<TKey> foreignObject = (IManageable<TKey>)Activator.CreateInstance(target);
+            Result result = foreignObject.GetResultFromSelect(new Parameter(obj.ForeignIdName, obj.Id));
+            foreach (KeyValuePair<string, ForeignCollection> attribute in obj.ModelComposition.ForeignCollectionAttributes)
+            {
+                if (attribute.Value.Model.Equals(target))
+                {
+                    obj.GetType().GetProperty(attribute.Key).SetValue(obj, result.Collection);
+                }
+            }
+            return (T)obj;
+        }
+
+        /// <summary>
+        /// Obtiene un listado de los objetos de tipo <typeparamref name="T"/> almacenados en la base de datos o en el cache segun los parametros indicados.
+        /// Este metodo usa la conexion predeterminada a la base de datos.
+        /// </summary>
+        /// <returns>Regresa el resultado que incluye la coleccion obtenida por la consulta.</returns>
+        public Result GetResultFromSelect(params Parameter[] parameters)
+        {
+            return Manager<T, TKey>.Select(null, parameters);
         }
         #endregion
 
