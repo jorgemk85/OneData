@@ -61,12 +61,12 @@ namespace DataManagement.DAO
             return new Result(dataTable, false, true);
         }
 
-        public Result ExecuteProcedure<T, TKey>(T obj, string connectionToUse, TransactionTypes transactionType, bool logTransaction = true) where T : Cope<T, TKey>, new() where TKey : struct
+        public Result<T, TKey> ExecuteProcedure<T, TKey>(T obj, string connectionToUse, TransactionTypes transactionType, bool logTransaction = true) where T : Cope<T, TKey>, new() where TKey : struct
         {
             DataTable dataTable = null;
             bool overrideConsolidation = false;
 
-            Start:
+        Start:
             try
             {
                 Logger.Info(string.Format("Starting {0} execution for object {1} using connection {2}", transactionType.ToString(), typeof(T), connectionToUse));
@@ -152,7 +152,7 @@ namespace DataManagement.DAO
 
             if (logTransaction) LogTransaction(Manager<T, TKey>.ModelComposition.TableName, transactionType, connectionToUse);
 
-            return new Result(dataTable, false, true, dataTable.ToList<T>());
+            return new Result<T, TKey>(dataTable.ToDictionary<TKey, T>(), false, true);
         }
 
         public Result ExecuteProcedure<T, TKey>(IEnumerable<T> list, string connectionToUse, TransactionTypes transactionType, bool logTransaction = true) where T : Cope<T, TKey>, new() where TKey : struct
@@ -161,7 +161,7 @@ namespace DataManagement.DAO
             bool overrideConsolidation = false;
             T obj = new T();
 
-            Start:
+        Start:
             try
             {
                 Logger.Info(string.Format("Starting {0} execution for list {1} using connection {2}", transactionType.ToString(), typeof(T), connectionToUse));

@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.Collections.Generic;
 using System.Data;
 
 namespace DataManagement.Models
@@ -23,6 +24,20 @@ namespace DataManagement.Models
             IsFromCache = isFromCache;
             IsSuccessful = isSuccessful;
             Collection = collection;
+        }
+    }
+
+    public class Result<T, TKey>
+    {
+        public Dictionary<TKey, T> Dictionary { get; set; }
+        public bool IsFromCache { get; set; }
+        public bool IsSuccessful { get; set; }
+
+        public Result(Dictionary<TKey, T> set, bool isFromCache, bool isSuccessful)
+        {
+            Dictionary = set;
+            IsFromCache = isFromCache;
+            IsSuccessful = isSuccessful;
         }
     }
 }

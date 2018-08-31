@@ -211,6 +211,25 @@ namespace DataManagement.Tools
             return newList;
         }
 
+        public static T ConvertDictionaryToObjectOfType<TKey, T>(Dictionary<TKey, T> dictionary) where T : new()
+        {
+            var enumerator = dictionary.GetEnumerator();
+            enumerator.MoveNext();
+
+            return enumerator.Current.Value;
+        }
+
+        public static List<T> ConvertDictionaryToListOfType<TKey, T>(Dictionary<TKey, T> dictionary) where T : new()
+        {
+            List<T> newList = new List<T>();
+            foreach (KeyValuePair<TKey, T> row in dictionary)
+            {
+                newList.Add(row.Value);
+            }
+
+            return newList;
+        }
+
         public static ICollection<object> ConvertDataTableToListOfType(DataTable dataTable, Type target)
         {
             ICollection<object> newList = new List<object>();

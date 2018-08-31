@@ -14,7 +14,7 @@ namespace DataManagement.Models
     /// <typeparam name="T">Representa el tipo de la clase que esta heredando de Cope<T, TKey>.</typeparam>
     /// <typeparam name="TKey">Representa el tipo a utilizar para la llave primaria del Id.</typeparam>
     [Serializable]
-    public abstract class Cope<T, TKey> : IManageable<TKey> where T : Cope<T, TKey>, new() where TKey : struct
+    public abstract class Cope<T, TKey> : IEquatable<T>, IManageable<TKey> where T : Cope<T, TKey>, new() where TKey : struct
     {
         #region Fields
         private readonly string _foreignIdName = string.Format("{0}Id", typeof(T).Name);
@@ -84,7 +84,7 @@ namespace DataManagement.Models
         /// <returns>Regresa la coleccion obtenida ya convertida en una lista del tipo <typeparamref name="T"/></returns>
         public static List<T> SelectAll()
         {
-            return Manager<T, TKey>.SelectAll().Data.ToList<T>();
+            return Manager<T, TKey>.SelectAll().Dictionary.ToList();
         }
 
         /// <summary>
@@ -94,7 +94,7 @@ namespace DataManagement.Models
         /// <returns>Regresa el resultado que incluye la coleccion obtenida por la consulta.</returns>
         public static T Select(params Parameter[] parameters)
         {
-            return Manager<T, TKey>.Select(null, parameters).Data.ToObject<T>();
+            return Manager<T, TKey>.Select(null, parameters).Dictionary.ToObject();
         }
 
         /// <summary>
@@ -104,7 +104,7 @@ namespace DataManagement.Models
         /// <returns>Regresa la coleccion obtenida ya convertida en una lista del tipo <typeparamref name="T"/></returns>
         public static List<T> SelectList(params Parameter[] parameters)
         {
-            return Manager<T, TKey>.Select(null, parameters).Data.ToList<T>();
+            return Manager<T, TKey>.Select(null, parameters).Dictionary.ToList();
         }
 
         /// <summary>
@@ -112,22 +112,22 @@ namespace DataManagement.Models
         /// Este metodo usa la conexion predeterminada a la base de datos.
         /// </summary>
         /// <returns>Regresa el resultado que incluye la coleccion obtenida por la consulta.</returns>
-        public static Result SelectResult(params Parameter[] parameters)
+        public static Result<T, TKey> SelectResult(params Parameter[] parameters)
         {
             return Manager<T, TKey>.Select(null, parameters);
         }
         #endregion
 
         #region Instance Methods
-        public T Include(IManageable<TKey> obj, Type target)
+        internal T Include(IManageable<TKey> obj, Type target)
         {
             IManageable<TKey> foreignObject = (IManageable<TKey>)Activator.CreateInstance(target);
-            Result result = foreignObject.GetResultFromSelect(new Parameter(obj.ForeignIdName, obj.Id));
+            Result<dynamic, TKey> result = foreignObject.GetResultFromSelect(new Parameter(obj.ForeignIdName, obj.Id));
             foreach (KeyValuePair<string, ForeignCollection> attribute in obj.ModelComposition.ForeignCollectionAttributes)
             {
                 if (attribute.Value.Model.Equals(target))
                 {
-                    obj.GetType().GetProperty(attribute.Key).SetValue(obj, result.Collection);
+                    obj.GetType().GetProperty(attribute.Key).SetValue(obj, result.Dictionary);
                 }
             }
             return (T)obj;
@@ -138,11 +138,21 @@ namespace DataManagement.Models
         /// Este metodo usa la conexion predeterminada a la base de datos.
         /// </summary>
         /// <returns>Regresa el resultado que incluye la coleccion obtenida por la consulta.</returns>
-        public Result GetResultFromSelect(params Parameter[] parameters)
+        public Result<dynamic, TKey> GetResultFromSelect(params Parameter[] parameters)
         {
             return Manager<T, TKey>.Select(null, parameters);
         }
+
+        public bool Equals(T other)
+        {
+            if (other.Id.Equals(Id))
+            {
+                return true;
+            }
+            return false;
+        }
         #endregion
+
 
         #region Constructors
         // TODO: Necesitamos encontrar una manera mas facil de instanciar objetos con nuevos Ids irrepetibles. 

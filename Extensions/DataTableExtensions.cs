@@ -1,4 +1,5 @@
-﻿using DataManagement.Tools;
+﻿using DataManagement.Models;
+using DataManagement.Tools;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -22,6 +23,11 @@ namespace DataManagement.Extensions
             return DataSerializer.ConvertDataTableToDictionary<TKey, T>(dataTable, keyName);
         }
 
+        public static Dictionary<TKey, T> ToDictionary<TKey, T>(this DataTable dataTable) where T : Cope<T, TKey>, new() where TKey : struct
+        {
+            return DataSerializer.ConvertDataTableToDictionaryOfType<TKey, T>(dataTable);
+        }
+
         public static List<T> ToList<T>(this DataTable dataTable) where T : new()
         {
             return DataSerializer.ConvertDataTableToListOfType<T>(dataTable);
@@ -30,6 +36,11 @@ namespace DataManagement.Extensions
         public static ICollection<dynamic> ToList(this DataTable dataTable, Type target)
         {
             return DataSerializer.ConvertDataTableToListOfType(dataTable, target);
+        }
+
+        public static HashSet<T> ToHashSet<T>(this DataTable dataTable) where T : new()
+        {
+            return DataSerializer.ConvertDataTableToHashSetOfType<T>(dataTable);
         }
 
         public static string ToJson<T>(this DataTable dataTable) where T : new()
