@@ -21,7 +21,7 @@ namespace DataManagement.Models
         /// <returns>Regresa la coleccion obtenida ya convertida en una lista del tipo <typeparamref name="T"/></returns>
         public static List<T> SelectAll()
         {
-            return Manager<T>.SelectAll().Hash.ToList<T>();
+            return Manager<T>.SelectAll().Data.ToList();
         }
 
         /// <summary>
@@ -31,7 +31,7 @@ namespace DataManagement.Models
         /// <returns>Regresa el resultado que incluye la coleccion obtenida por la consulta.</returns>
         public static T Select(params Parameter[] parameters)
         {
-            return Manager<T>.Select(null, parameters).Hash.ToObject<T>();
+            return Manager<T>.Select(null, parameters).Data.ToObject();
         }
 
         /// <summary>
@@ -41,7 +41,7 @@ namespace DataManagement.Models
         /// <returns>Regresa la coleccion obtenida ya convertida en una lista del tipo <typeparamref name="T"/></returns>
         public static List<T> SelectList(params Parameter[] parameters)
         {
-            return Manager<T>.Select(null, parameters).Hash.ToList<T>();
+            return Manager<T>.Select(null, parameters).Data.ToList();
         }
 
         /// <summary>
@@ -49,7 +49,7 @@ namespace DataManagement.Models
         /// Este metodo usa la conexion predeterminada a la base de datos.
         /// </summary>
         /// <returns>Regresa el resultado que incluye la coleccion obtenida por la consulta.</returns>
-        public static Result SelectResult(params Parameter[] parameters)
+        public static Result<T> SelectResult(params Parameter[] parameters)
         {
             return Manager<T>.Select(null, parameters);
         }

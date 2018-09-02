@@ -6,6 +6,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Xml.Serialization;
 
@@ -187,6 +188,44 @@ namespace DataManagement.Tools
             return newDictionary;
         }
 
+        public static Dictionary<dynamic, T> ConvertDataTableToDictionaryOfType<T>(DataTable dataTable, string keyName, Type keyType) where T : new()
+        {
+            var newDictionary = new Dictionary<dynamic, T>();
+            if (dataTable != null)
+            {
+                foreach (DataRow row in dataTable.Rows)
+                {
+                    T newObject = new T();
+                    PropertyInfo[] properties = typeof(T).GetProperties();
+                    dynamic key = SimpleConverter.ConvertStringToType(row[keyName].ToString(), keyType);
+
+                    foreach (PropertyInfo property in properties)
+                    {
+                        if (dataTable.Columns.Contains(property.Name) && property.CanWrite)
+                        {
+                            property.SetValue(newObject, SimpleConverter.ConvertStringToType(row[property.Name].ToString(), property.PropertyType));
+                        }
+                    }
+                    newDictionary.Add(key, newObject);
+                }
+            }
+            return newDictionary;
+        }
+
+        public static Dictionary<dynamic, T> ConvertQueryableToDictionaryOfType<T>(IQueryable queryable, string keyName, Type keyType) where T : IManageable, new()
+        {
+            var newDictionary = new Dictionary<dynamic, T>();
+            if (queryable != null)
+            {
+                foreach (T item in queryable)
+                {
+                    dynamic key = item.ModelComposition.PrimaryProperty.GetValue(item);
+                    newDictionary.Add(key, item);
+                }
+            }
+            return newDictionary;
+        }
+
         /// <summary>
         /// Convierte un objeto de tipo DataTable a una Lista del tipo <typeparamref name="T"/>.
         /// </summary>
@@ -218,33 +257,37 @@ namespace DataManagement.Tools
             Hashtable newHashTable = new Hashtable();
             object key;
             object value;
-
-            for (int i = 0; i < dataTable.Rows.Count; i++)
+            if (dataTable != null)
             {
-                key = dataTable.Rows[i][keyName].ToString();
-                value = dataTable.Rows[i];
+                for (int i = 0; i < dataTable.Rows.Count; i++)
+                {
+                    key = dataTable.Rows[i][keyName].ToString();
+                    value = dataTable.Rows[i];
 
-                newHashTable.Add(key, value);
+                    newHashTable.Add(key, value);
+                }
             }
-
             return newHashTable;
         }
 
         public static Hashtable ConvertDataTableToHashtableOfType<T>(DataTable dataTable) where T : Cope<T>, IManageable, new()
         {
             Hashtable newHashTable = new Hashtable();
-            foreach (DataRow row in dataTable.Rows)
+            if (dataTable != null)
             {
-                PropertyInfo[] properties = typeof(T).GetProperties();
-                T newObject = new T();
-                foreach (PropertyInfo property in properties)
+                foreach (DataRow row in dataTable.Rows)
                 {
-                    if (dataTable.Columns.Contains(property.Name) && property.CanWrite)
+                    PropertyInfo[] properties = typeof(T).GetProperties();
+                    T newObject = new T();
+                    foreach (PropertyInfo property in properties)
                     {
-                        property.SetValue(newObject, SimpleConverter.ConvertStringToType(row[property.Name].ToString(), property.PropertyType));
+                        if (dataTable.Columns.Contains(property.Name) && property.CanWrite)
+                        {
+                            property.SetValue(newObject, SimpleConverter.ConvertStringToType(row[property.Name].ToString(), property.PropertyType));
+                        }
                     }
+                    newHashTable.Add(newObject.ModelComposition.PrimaryProperty.GetValue(newObject), newObject);
                 }
-                newHashTable.Add(newObject.ModelComposition.PrimaryProperty.GetValue(newObject), newObject);
             }
 
             return newHashTable;

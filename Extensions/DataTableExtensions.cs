@@ -30,6 +30,11 @@ namespace DataManagement.Extensions
             return DataSerializer.ConvertDataTableToDictionaryOfType<TKey, T>(dataTable);
         }
 
+        public static Dictionary<dynamic, T> ToDictionary<T>(this DataTable dataTable, string keyName, Type keyType) where T : Cope<T>, IManageable, new()
+        {
+            return DataSerializer.ConvertDataTableToDictionaryOfType<T>(dataTable, keyName, keyType);
+        }
+
         public static List<T> ToList<T>(this DataTable dataTable) where T : new()
         {
             return DataSerializer.ConvertDataTableToListOfType<T>(dataTable);

@@ -89,6 +89,7 @@ namespace DataManagement.Tools.Test
                 Random random = new Random();
                 Blog newBlog = new Blog()
                 {
+                    Id = Guid.NewGuid(),
                     Name = string.Format("New Blog {0}", random.Next())
                 };
                 CurrentBlogModel = newBlog;
@@ -104,6 +105,7 @@ namespace DataManagement.Tools.Test
                 Random random = new Random();
                 Post newObj = new Post()
                 {
+                    Id = Guid.NewGuid(),
                     Name = string.Format("New Post {0}", random.Next())
                 };
                 CurrentPostModel = newObj;
@@ -119,6 +121,7 @@ namespace DataManagement.Tools.Test
                 Random random = new Random();
                 Comment newObj = new Comment()
                 {
+                    Id = Guid.NewGuid(),
                     Name = string.Format("New Comment {0}", random.Next())
                 };
                 CurrentCommentModel = newObj;
@@ -134,6 +137,7 @@ namespace DataManagement.Tools.Test
                 Random random = new Random();
                 Author newObj = new Author()
                 {
+                    Id = Guid.NewGuid(),
                     Name = string.Format("New Author {0}", random.Next())
                 };
                 CurrentAuthorModel = newObj;
@@ -146,8 +150,10 @@ namespace DataManagement.Tools.Test
         {
             if (giveNew || CurrentLogTestIntModel == null)
             {
+                Random random = new Random();
                 LogTestInt newLogTest = new LogTestInt()
                 {
+                    Id = random.Next(),
                     Ip = "192.168.0.1",
                     Parametros = "Sin parametros",
                     TablaAfectada = "logs",

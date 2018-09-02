@@ -7,6 +7,6 @@
 
     public class InsertMassiveExecutedEventArgs<T> : ExecutedEventArgs<T>
     {
-        public InsertMassiveExecutedEventArgs(string tableName, Models.Result result) : base(tableName, result) { }
+        public InsertMassiveExecutedEventArgs(string tableName, Models.Result<T> result) : base(tableName, result) { }
     }
 }

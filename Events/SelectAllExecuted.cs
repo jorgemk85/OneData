@@ -7,6 +7,6 @@
 
     public class SelectAllExecutedEventArgs<T> : ExecutedEventArgs<T>
     {
-        public SelectAllExecutedEventArgs(string tableName, Models.Result result) : base(tableName, result) { }
+        public SelectAllExecutedEventArgs(string tableName, Models.Result<T> result) : base(tableName, result) { }
     }
 }

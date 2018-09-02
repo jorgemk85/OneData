@@ -7,6 +7,6 @@
 
     public class StoredProcedureExecutedEventArgs<T> : ExecutedEventArgs<T>
     {
-        public StoredProcedureExecutedEventArgs(string tableName, Models.Result result) : base(tableName, result) { }
+        public StoredProcedureExecutedEventArgs(string tableName, Models.Result<T> result) : base(tableName, result) { }
     }
 }

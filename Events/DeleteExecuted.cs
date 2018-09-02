@@ -7,6 +7,6 @@
 
     public class DeleteExecutedEventArgs<T> : ExecutedEventArgs<T>
     {
-        public DeleteExecutedEventArgs(string tableName, Models.Result result) : base(tableName, result) { }
+        public DeleteExecutedEventArgs(string tableName, Models.Result<T> result) : base(tableName, result) { }
     }
 }

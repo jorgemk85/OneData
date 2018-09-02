@@ -7,6 +7,6 @@
 
     public class UpdateExecutedEventArgs<T> : ExecutedEventArgs<T>
     {
-        public UpdateExecutedEventArgs(string tableName, Models.Result result) : base(tableName, result) { }
+        public UpdateExecutedEventArgs(string tableName, Models.Result<T> result) : base(tableName, result) { }
     }
 }

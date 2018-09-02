@@ -123,7 +123,7 @@ namespace DataManagement.DAO
     /// <typeparam name="T">Tipo de clase que representa este objeto. El tipo tiene que implementar IManageable para poder operar.</typeparam>
     public sealed class Manager<T> where T : Cope<T>, IManageable, new()
     {
-        static DataCache dataCache = new DataCache();
+        static DataCache<T> dataCache = new DataCache<T>();
         static readonly ModelComposition _modelComposition = new ModelComposition(typeof(T));
 
         public static ref readonly ModelComposition ModelComposition => ref _modelComposition;
@@ -150,7 +150,7 @@ namespace DataManagement.DAO
         /// <param name="obj">Objeto que contiene la informacion a insertar.</param>
         /// <param name="connectionToUse">Especifica cual configuracion de tipo ConectionString se desea utilizar. Si se especifica nulo, o no se especifica, entonces utiliza la conexion especificada en DefaultConnection.</param>
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la insercion.</returns>
-        public static Result Insert(T obj, string connectionToUse = null)
+        public static Result<T> Insert(T obj, string connectionToUse = null)
         {
             return Command(obj, TransactionTypes.Insert, connectionToUse);
         }
@@ -161,7 +161,7 @@ namespace DataManagement.DAO
         /// <param name="list">Objeto que contiene la informacion a insertar.</param>
         /// <param name="connectionToUse">Especifica cual configuracion de tipo ConectionString se desea utilizar. Si se especifica nulo, o no se especifica, entonces utiliza la conexion especificada en DefaultConnection.</param>
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la insercion.</returns>
-        public static Result InsertMassive(IEnumerable<T> list, string connectionToUse = null)
+        public static Result<T> InsertMassive(IEnumerable<T> list, string connectionToUse = null)
         {
             return Command(list, TransactionTypes.InsertMassive, connectionToUse);
         }
@@ -172,7 +172,7 @@ namespace DataManagement.DAO
         /// <param name="obj">Objeto que contiene la informacion a insertar.</param>
         /// <param name="connectionToUse">Especifica cual configuracion de tipo ConectionString se desea utilizar. Si se especifica nulo, o no se especifica, entonces utiliza la conexion especificada en DefaultConnection.</param>
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la insercion.</returns>
-        public static async Task<Result> InsertAsync(T obj, string connectionToUse = null)
+        public static async Task<Result<T>> InsertAsync(T obj, string connectionToUse = null)
         {
             return await Task.Run(() => Command(obj, TransactionTypes.Insert, connectionToUse));
         }
@@ -183,7 +183,7 @@ namespace DataManagement.DAO
         /// <param name="obj">Objeto que contiene la informacion actualizada.</param>
         /// <param name="connectionToUse">Especifica cual configuracion de tipo ConectionString se desea utilizar. Si se especifica nulo, o no se especifica, entonces utiliza la conexion especificada en DefaultConnection.</param>
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la actualizacion.</returns>
-        public static Result Update(T obj, string connectionToUse = null)
+        public static Result<T> Update(T obj, string connectionToUse = null)
         {
             return Command(obj, TransactionTypes.Update, connectionToUse);
         }
@@ -194,7 +194,7 @@ namespace DataManagement.DAO
         /// <param name="obj">Objeto que contiene la informacion actualizada.</param>
         /// <param name="connectionToUse">Especifica cual configuracion de tipo ConectionString se desea utilizar. Si se especifica nulo, o no se especifica, entonces utiliza la conexion especificada en DefaultConnection.</param>
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la actualizacion.</returns>
-        public static async Task<Result> UpdateAsync(T obj, string connectionToUse = null)
+        public static async Task<Result<T>> UpdateAsync(T obj, string connectionToUse = null)
         {
             return await Task.Run(() => Command(obj, TransactionTypes.Update, connectionToUse));
         }
@@ -205,7 +205,7 @@ namespace DataManagement.DAO
         /// <param name="obj">Objeto que contiene el Id a eliminar.</param>
         /// <param name="connectionToUse">Especifica cual configuracion de tipo ConectionString se desea utilizar. Si se especifica nulo, o no se especifica, entonces utiliza la conexion especificada en DefaultConnection.</param>
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la eliminacion.</returns>
-        public static Result Delete(T obj, string connectionToUse = null)
+        public static Result<T> Delete(T obj, string connectionToUse = null)
         {
             return Command(obj, TransactionTypes.Delete, connectionToUse);
         }
@@ -216,7 +216,7 @@ namespace DataManagement.DAO
         /// <param name="obj">Objeto que contiene el Id a eliminar.</param>
         /// <param name="connectionToUse">Especifica cual configuracion de tipo ConectionString se desea utilizar. Si se especifica nulo, o no se especifica, entonces utiliza la conexion especificada en DefaultConnection.</param>
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la eliminacion.</returns>
-        public static async Task<Result> DeleteAsync(T obj, string connectionToUse = null)
+        public static async Task<Result<T>> DeleteAsync(T obj, string connectionToUse = null)
         {
             return await Task.Run(() => Command(obj, TransactionTypes.Delete, connectionToUse));
         }
@@ -227,7 +227,7 @@ namespace DataManagement.DAO
         /// <param name="connectionToUse">Especifica cual configuracion de tipo ConectionString se desea utilizar. Si se especifica nulo, o no se especifica, entonces utiliza la conexion especificada en DefaultConnection.</param>
         /// <param name="parameters">Formacion de objetos Parameter que contiene los parametros de la consulta.</param>
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la seleccion.</returns>
-        public static Result Select(string connectionToUse = null, params Parameter[] parameters)
+        public static Result<T> Select(string connectionToUse = null, params Parameter[] parameters)
         {
             return Command(DataSerializer.SetParametersInObject<T>(parameters), TransactionTypes.Select, connectionToUse);
         }
@@ -238,7 +238,7 @@ namespace DataManagement.DAO
         /// <param name="connectionToUse">Especifica cual configuracion de tipo ConectionString se desea utilizar. Si se especifica nulo, o no se especifica, entonces utiliza la conexion especificada en DefaultConnection.</param>
         /// <param name="parameters">Formacion de objetos Parameter que contiene los parametros de la consulta.</param>
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la seleccion.</returns>
-        public static async Task<Result> SelectAsync(string connectionToUse = null, params Parameter[] parameters)
+        public static async Task<Result<T>> SelectAsync(string connectionToUse = null, params Parameter[] parameters)
         {
             return await Task.Run(() => Command(DataSerializer.SetParametersInObject<T>(parameters), TransactionTypes.Select, connectionToUse));
         }
@@ -248,7 +248,7 @@ namespace DataManagement.DAO
         /// </summary>
         /// <param name="connectionToUse">Especifica cual configuracion de tipo ConectionString se desea utilizar. Si se especifica nulo, o no se especifica, entonces utiliza la conexion especificada en DefaultConnection.</param>
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la seleccion.</returns>
-        public static Result SelectAll(string connectionToUse = null)
+        public static Result<T> SelectAll(string connectionToUse = null)
         {
             return Command(new T(), TransactionTypes.SelectAll, connectionToUse);
         }
@@ -258,22 +258,22 @@ namespace DataManagement.DAO
         /// </summary>
         /// <param name="connectionToUse">Especifica cual configuracion de tipo ConectionString se desea utilizar. Si se especifica nulo, o no se especifica, entonces utiliza la conexion especificada en DefaultConnection.</param>
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la seleccion.</returns>
-        public static async Task<Result> SelectAllAsync(string connectionToUse = null)
+        public static async Task<Result<T>> SelectAllAsync(string connectionToUse = null)
         {
             return await Task.Run(() => Command(new T(), TransactionTypes.SelectAll, connectionToUse));
         }
 
-        private static Result Command(T obj, TransactionTypes transactionType, string connectionToUse = null)
+        private static Result<T> Command(T obj, TransactionTypes transactionType, string connectionToUse = null)
         {
             return DynamicCommand(obj, transactionType, connectionToUse);
         }
 
-        private static Result Command(IEnumerable<T> list, TransactionTypes transactionType, string connectionToUse = null)
+        private static Result<T> Command(IEnumerable<T> list, TransactionTypes transactionType, string connectionToUse = null)
         {
             return DynamicCommand(list, transactionType, connectionToUse);
         }
 
-        private static Result DynamicCommand(dynamic obj, TransactionTypes transactionType, string connectionToUse = null)
+        private static Result<T> DynamicCommand(dynamic obj, TransactionTypes transactionType, string connectionToUse = null)
         {
             if (connectionToUse == null) connectionToUse = Manager.DefaultConnection;
             QueryEvaluation queryEvaluation = new QueryEvaluation(Manager.ConnectionType);
@@ -283,7 +283,7 @@ namespace DataManagement.DAO
                 ResetCacheIfExpired();
             }
 
-            Result result = queryEvaluation.Evaluate<T>(obj, transactionType, ref dataCache, connectionToUse);
+            Result<T> result = queryEvaluation.Evaluate<T>(obj, transactionType, ref dataCache, connectionToUse);
             CallOnExecutedEventHandlers(ModelComposition.TableName, transactionType, result);
 
             return result;
@@ -298,7 +298,7 @@ namespace DataManagement.DAO
             }
         }
 
-        private static void CallOnExecutedEventHandlers(string tableName, TransactionTypes transactionType, Result result)
+        private static void CallOnExecutedEventHandlers(string tableName, TransactionTypes transactionType, Result<T> result)
         {
             switch (transactionType)
             {

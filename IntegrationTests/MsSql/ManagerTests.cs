@@ -3,7 +3,6 @@ using DataManagement.Models;
 using DataManagement.Models.Test;
 using DataManagement.Tools.Test;
 using NUnit.Framework;
-using System;
 using System.Collections.Generic;
 
 namespace DataManagement.IntegrationTests.MsSql
@@ -24,11 +23,11 @@ namespace DataManagement.IntegrationTests.MsSql
         public void Select_DataFromCache_ReturnsTrue()
         {
             List<LogTestGuid> list = LogTestGuid.SelectAll();
-            Result result = LogTestGuid.SelectResult(new Parameter(nameof(LogTestGuid.Id), list[0].Id));
+            Result<LogTestGuid> result = LogTestGuid.SelectResult(new Parameter(nameof(LogTestGuid.Id), list[0].Id));
 
             Assert.IsTrue(result.IsFromCache);
             Assert.IsTrue(result.IsSuccessful);
-            Assert.AreNotEqual(result.Hash.Count, 0);
+            Assert.AreNotEqual(result.Data.Count, 0);
         }
 
         [Test]

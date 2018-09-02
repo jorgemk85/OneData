@@ -149,11 +149,13 @@ namespace DataManagement.Models
                             DateCreatedProperty = property;
                             AutoProperties.Add(property.Name, property);
                             AutoPropertyAttributes.Add(property.Name, new AutoProperty(AutoPropertyTypes.DateTime));
+                            FilteredProperties.Remove(property.Name);
                             break;
                         case "DateModifiedProperty":
                             DateModifiedProperty = property;
                             AutoProperties.Add(property.Name, property);
                             AutoPropertyAttributes.Add(property.Name, new AutoProperty(AutoPropertyTypes.DateTime));
+                            FilteredProperties.Remove(property.Name);
                             break;
                         case "ForeignKey":
                             ForeignKeyProperties.Add(property.Name, property);

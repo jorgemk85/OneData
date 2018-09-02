@@ -2,10 +2,10 @@
 
 namespace DataManagement.Models
 {
-    internal class DataCache
+    internal class DataCache<T>
     {
         public bool IsEnabled { get; set; }
-        public Result Cache { get; set; }
+        public Result<T> Cache { get; set; }
         public bool IsPartialCache { get; set; } = false;
         public long LastCacheUpdate { get; set; }
 
