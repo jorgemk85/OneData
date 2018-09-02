@@ -24,17 +24,17 @@ namespace DataManagement.IntegrationTests.MsSql
         public void Select_DataFromCache_ReturnsTrue()
         {
             List<LogTestGuid> list = LogTestGuid.SelectAll();
-            Result<LogTestGuid, Guid> result = LogTestGuid.SelectResult(new Parameter(nameof(LogTestGuid.Id), list[0].Id));
+            Result result = LogTestGuid.SelectResult(new Parameter(nameof(LogTestGuid.Id), list[0].Id));
 
             Assert.IsTrue(result.IsFromCache);
             Assert.IsTrue(result.IsSuccessful);
-            Assert.AreNotEqual(result.Collection.Count, 0);
+            Assert.AreNotEqual(result.Hash.Count, 0);
         }
 
         [Test]
         public void InsertBlog_NewObject_ReturnsNoError()
         {
-            Assert.DoesNotThrow(() => Blog.Insert(TestTools.GetBlogModel(true)));
+            Assert.DoesNotThrow(() => TestTools.GetBlogModel(true).Insert());
         }
 
         [Test]
@@ -45,7 +45,7 @@ namespace DataManagement.IntegrationTests.MsSql
 
             TestTools.GetPostModel(true).BlogId = blogs[0].Id;
             TestTools.GetPostModel(false).AuthorId = authors[0].Id;
-            Assert.DoesNotThrow(() => Post.Insert(TestTools.GetPostModel(false)));
+            Assert.DoesNotThrow(() => TestTools.GetPostModel(false).Insert());
         }
 
         [Test]
@@ -54,22 +54,22 @@ namespace DataManagement.IntegrationTests.MsSql
             List<Post> posts = Post.SelectAll();
 
             TestTools.GetCommentModel(true).PostId = posts[0].Id;
-            Assert.DoesNotThrow(() => Comment.Insert(TestTools.GetCommentModel(false)));
+            Assert.DoesNotThrow(() => TestTools.GetCommentModel(false).Insert());
         }
 
         [Test]
         public void InsertAuthor_NewObject_ReturnsNoError()
         {
-            Assert.DoesNotThrow(() => Author.Insert(TestTools.GetAuthorModel(true)));
+            Assert.DoesNotThrow(() => TestTools.GetAuthorModel(true).Insert());
         }
 
         [Test]
         public void SelectBlog_DataFromDB_ReturnsNoError()
         {
-            var result = Blog.Select(new Parameter(nameof(Blog.Id), Guid.Parse("8B4870AC-2D19-4D1C-B6FB-6CE2C46C974A")))
-                                    .Include(typeof(Post)).Posts
-                                    .Include(typeof(Comment));
-            Assert.IsTrue(true);
+            //var result = Blog.Select(new Parameter(nameof(Blog.Id), Guid.Parse("8B4870AC-2D19-4D1C-B6FB-6CE2C46C974A")))
+            //                        .Include(typeof(Post)).Posts
+            //                        .Include(posts => posts.Comments, new Comment());
+            //Assert.IsTrue(true);
         }
 
     }

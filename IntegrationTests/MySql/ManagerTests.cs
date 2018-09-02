@@ -23,33 +23,33 @@ namespace DataManagement.IntegrationTests.MySql
         [Test]
         public void SelectGuid_DataFromCache_ReturnsTrue()
         {
-            Blog.Insert(TestTools.GetBlogModel(true));
+            TestTools.GetBlogModel(true).Insert();
             List<Blog> list = Blog.SelectAll();
-            Result<Blog, Guid> result = Blog.SelectResult(new Parameter(nameof(Blog.Id), list[0].Id));
-            Blog.Delete(TestTools.GetBlogModel(false));
+            Result result = Blog.SelectResult(new Parameter(nameof(Blog.Id), list[0].Id));
+            TestTools.GetBlogModel(false).Delete();
 
             Assert.IsTrue(result.IsFromCache);
             Assert.IsTrue(result.IsSuccessful);
-            Assert.AreNotEqual(result.Collection.Count, 0);
+            Assert.AreNotEqual(result.Hash.Count, 0);
         }
 
         [Test]
         public void SelectInt_DataFromCache_ReturnsTrue()
         {
-            LogTestInt.Insert(TestTools.GetLogTestIntModel(true));
+            TestTools.GetLogTestIntModel(true).Insert();
             List<LogTestInt> list = LogTestInt.SelectAll();
-            Result<LogTestInt, int> result = LogTestInt.SelectResult(new Parameter(nameof(LogTestInt.Id), list[0].Id));
-            LogTestInt.Delete(TestTools.GetLogTestIntModel(false));
+            Result result = LogTestInt.SelectResult(new Parameter(nameof(LogTestInt.Id), list[0].Id));
+            TestTools.GetLogTestIntModel(false).Delete();
 
             Assert.IsTrue(result.IsFromCache);
             Assert.IsTrue(result.IsSuccessful);
-            Assert.AreNotEqual(result.Collection.Count, 0);
+            Assert.AreNotEqual(result.Hash.Count, 0);
         }
 
         [Test]
         public void InsertBlog_NewObject_ReturnsNoError()
         {
-            Assert.DoesNotThrow(() => Blog.Insert(TestTools.GetBlogModel(true)));
+            Assert.DoesNotThrow(() => TestTools.GetBlogModel(true).Insert());
         }
 
         [Test]
@@ -60,7 +60,7 @@ namespace DataManagement.IntegrationTests.MySql
 
             TestTools.GetPostModel(true).BlogId = blogs[0].Id;
             TestTools.GetPostModel(false).AuthorId = authors[0].Id;
-            Assert.DoesNotThrow(() => Post.Insert(TestTools.GetPostModel(false)));
+            Assert.DoesNotThrow(() => TestTools.GetPostModel(false).Insert());
         }
 
         [Test]
@@ -69,21 +69,21 @@ namespace DataManagement.IntegrationTests.MySql
             List<Post> posts = Post.SelectAll();
 
             TestTools.GetCommentModel(true).PostId = posts[0].Id;
-            Assert.DoesNotThrow(() => Comment.Insert(TestTools.GetCommentModel(false)));
+            Assert.DoesNotThrow(() => TestTools.GetCommentModel(false).Insert());
         }
 
         [Test]
         public void InsertAuthor_NewObject_ReturnsNoError()
         {
-            Assert.DoesNotThrow(() => Author.Insert(TestTools.GetAuthorModel(true)));
+            Assert.DoesNotThrow(() => TestTools.GetAuthorModel(true).Insert());
         }
 
         [Test]
         public void SelectBlog_DataFromDB_ReturnsNoError()
         {
-            var result = Blog.Select(new Parameter(nameof(Blog.Id), Guid.Parse("36e693e6-e936-4acc-bd6a-2dfb80449590")))
-                                     .Include(typeof(Post)).Posts
-                                     .Include(typeof(Comment));
+            //var result = Blog.Select(new Parameter(nameof(Blog.Id), Guid.Parse("36e693e6-e936-4acc-bd6a-2dfb80449590")))
+            //                         .Include(typeof(Post)).Posts
+            //                         .Include(posts => posts.Comments, new Comment());
             Assert.IsTrue(true);
         }
     }

@@ -29,9 +29,9 @@ namespace DataManagement.DAO
             QueryForKeyDefinition = string.Format("SELECT * FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE TABLE_NAME = '{0}' AND COLUMN_NAME != 'Id'", string.Format("{0}{1}", Manager.TablePrefix, "{0}"));
         }
 
-        public Result ExecuteProcedure(string tableName, string storedProcedure, string connectionToUse, Parameter[] parameters, bool logTransaction = true)
+        public DataSet ExecuteProcedure(string tableName, string storedProcedure, string connectionToUse, Parameter[] parameters, bool logTransaction = true)
         {
-            DataTable dataTable = null;
+            DataSet dataSet = new DataSet();
 
             try
             {
@@ -42,11 +42,9 @@ namespace DataManagement.DAO
                     Command = connection.CreateCommand();
                     Command.CommandType = CommandType.StoredProcedure;
                     Command.CommandText = storedProcedure;
-
                     if (parameters != null) SetParameters(parameters);
-                    dataTable = new DataTable();
-                    dataTable.Load(Command.ExecuteReader());
-                    dataTable.TableName = tableName;
+                    var adapter = new SqlDataAdapter((SqlCommand)Command);
+                    adapter.Fill(dataSet);
                 }
                 Logger.Info(string.Format("Execution of stored procedure {0} using connection {1} has finished successfully.", storedProcedure, connectionToUse));
             }
@@ -58,48 +56,48 @@ namespace DataManagement.DAO
 
             if (logTransaction) LogTransaction(tableName, TransactionTypes.StoredProcedure, connectionToUse);
 
-            return new Result(dataTable, false, true);
+            return dataSet;
         }
 
-        public Result<T, TKey> ExecuteProcedure<T, TKey>(T obj, string connectionToUse, TransactionTypes transactionType, bool logTransaction = true) where T : Cope<T, TKey>, new() where TKey : struct
+        public Result ExecuteProcedure<T>(T obj, string connectionToUse, TransactionTypes transactionType, bool logTransaction = true) where T : Cope<T>, IManageable, new()
         {
             DataTable dataTable = null;
             bool overrideConsolidation = false;
 
-        Start:
+            Start:
             try
             {
                 Logger.Info(string.Format("Starting {0} execution for object {1} using connection {2}", transactionType.ToString(), typeof(T), connectionToUse));
                 if (Manager.ConstantTableConsolidation && (Manager.IsDebug || Manager.OverrideOnlyInDebug) && !overrideConsolidation && !obj.GetType().Equals(typeof(Log)))
                 {
-                    PerformTableConsolidation<T, TKey>(connectionToUse, false);
+                    PerformTableConsolidation<T>(connectionToUse, false);
                 }
                 using (SqlConnection connection = Connection.OpenMsSqlConnection(connectionToUse))
                 {
                     if (connection.State != ConnectionState.Open) throw new BadConnectionStateException();
                     Command = connection.CreateCommand();
                     Command.CommandType = CommandType.StoredProcedure;
-                    Command.CommandText = string.Format("{0}.{1}{2}{3}", Manager<T, TKey>.ModelComposition.Schema, Manager.StoredProcedurePrefix, Manager<T, TKey>.ModelComposition.TableName, GetFriendlyTransactionSuffix(transactionType));
+                    Command.CommandText = string.Format("{0}.{1}{2}{3}", Manager<T>.ModelComposition.Schema, Manager.StoredProcedurePrefix, Manager<T>.ModelComposition.TableName, GetFriendlyTransactionSuffix(transactionType));
 
                     if (transactionType == TransactionTypes.Insert)
                     {
-                        SetParameters<T, TKey>(obj, transactionType, false);
+                        SetParameters(obj, transactionType, false);
                         Command.ExecuteNonQuery();
                     }
                     else if (transactionType == TransactionTypes.Update || transactionType == TransactionTypes.Delete)
                     {
-                        SetParameters<T, TKey>(obj, transactionType, true);
+                        SetParameters(obj, transactionType, true);
                         Command.ExecuteNonQuery();
                     }
                     else
                     {
                         if (transactionType == TransactionTypes.Select)
                         {
-                            SetParameters<T, TKey>(obj, transactionType, true);
+                            SetParameters<T>(obj, transactionType, true);
                         }
                         dataTable = new DataTable();
                         dataTable.Load(Command.ExecuteReader());
-                        dataTable.TableName = Manager<T, TKey>.ModelComposition.TableName;
+                        dataTable.TableName = Manager<T>.ModelComposition.TableName;
                     }
                 }
                 Logger.Info(string.Format("Execution {0} for object {1} using connection {2} has finished successfully.", transactionType.ToString(), typeof(T), connectionToUse));
@@ -109,7 +107,7 @@ namespace DataManagement.DAO
                 if (Manager.AutoCreateStoredProcedures)
                 {
                     Logger.Warn(string.Format("Stored Procedure for {0} not found. Creating...", transactionType.ToString()));
-                    ExecuteScalar(GetTransactionTextForProcedure<T, TKey>(transactionType, false), connectionToUse, false);
+                    ExecuteScalar(GetTransactionTextForProcedure<T>(transactionType, false), connectionToUse, false);
                     overrideConsolidation = true;
                     goto Start;
                 }
@@ -120,8 +118,8 @@ namespace DataManagement.DAO
             {
                 if (Manager.AutoCreateTables)
                 {
-                    Logger.Warn(string.Format("Table {0} not found. Creating...", Manager<T, TKey>.ModelComposition.TableName));
-                    ProcessTable<T, TKey>(connectionToUse, false);
+                    Logger.Warn(string.Format("Table {0} not found. Creating...", Manager<T>.ModelComposition.TableName));
+                    ProcessTable<T>(connectionToUse, false);
                     overrideConsolidation = true;
                     goto Start;
                 }
@@ -136,8 +134,8 @@ namespace DataManagement.DAO
                 if (Manager.AutoAlterStoredProcedures)
                 {
                     Logger.Warn(string.Format("Incorrect number of arguments or is identity explicit value related to the {0} stored procedure. Modifying...", transactionType.ToString()));
-                    PerformTableConsolidation<T, TKey>(connectionToUse, true);
-                    ExecuteScalar(GetTransactionTextForProcedure<T, TKey>(transactionType, true), connectionToUse, false);
+                    PerformTableConsolidation<T>(connectionToUse, true);
+                    ExecuteScalar(GetTransactionTextForProcedure<T>(transactionType, true), connectionToUse, false);
                     overrideConsolidation = true;
                     goto Start;
                 }
@@ -150,35 +148,35 @@ namespace DataManagement.DAO
                 throw;
             }
 
-            if (logTransaction) LogTransaction(Manager<T, TKey>.ModelComposition.TableName, transactionType, connectionToUse);
+            if (logTransaction) LogTransaction(Manager<T>.ModelComposition.TableName, transactionType, connectionToUse);
 
-            return new Result<T, TKey>(dataTable.ToManageableCollection<TKey, T>(), false, true);
+            return new Result(dataTable.ToHashtable<T>(), false, true);
         }
 
-        public Result ExecuteProcedure<T, TKey>(IEnumerable<T> list, string connectionToUse, TransactionTypes transactionType, bool logTransaction = true) where T : Cope<T, TKey>, new() where TKey : struct
+        public Result ExecuteProcedure<T>(IEnumerable<T> list, string connectionToUse, TransactionTypes transactionType, bool logTransaction = true) where T : Cope<T>, IManageable, new()
         {
             DataTable dataTable = null;
             bool overrideConsolidation = false;
             T obj = new T();
 
-        Start:
+            Start:
             try
             {
                 Logger.Info(string.Format("Starting {0} execution for list {1} using connection {2}", transactionType.ToString(), typeof(T), connectionToUse));
                 if (Manager.ConstantTableConsolidation && (Manager.IsDebug || Manager.OverrideOnlyInDebug) && !overrideConsolidation && !obj.GetType().Equals(typeof(Log)))
                 {
-                    PerformTableConsolidation<T, TKey>(connectionToUse, false);
+                    PerformTableConsolidation<T>(connectionToUse, false);
                 }
                 using (SqlConnection connection = Connection.OpenMsSqlConnection(connectionToUse))
                 {
                     if (connection.State != ConnectionState.Open) throw new BadConnectionStateException();
                     Command = connection.CreateCommand();
                     Command.CommandType = CommandType.StoredProcedure;
-                    Command.CommandText = string.Format("{0}.{1}{2}{3}", Manager<T, TKey>.ModelComposition.Schema, Manager.StoredProcedurePrefix, Manager<T, TKey>.ModelComposition.TableName, GetFriendlyTransactionSuffix(transactionType));
+                    Command.CommandText = string.Format("{0}.{1}{2}{3}", Manager<T>.ModelComposition.Schema, Manager.StoredProcedurePrefix, Manager<T>.ModelComposition.TableName, GetFriendlyTransactionSuffix(transactionType));
 
                     if (transactionType == TransactionTypes.InsertMassive)
                     {
-                        SetParameters<T, TKey>(list, transactionType);
+                        SetParameters(list, transactionType);
                         Command.ExecuteNonQuery();
                     }
                 }
@@ -189,7 +187,7 @@ namespace DataManagement.DAO
                 if (Manager.AutoCreateStoredProcedures)
                 {
                     Logger.Warn(string.Format("Stored Procedure for {0} not found. Creating...", transactionType.ToString()));
-                    ExecuteScalar(GetTransactionTextForProcedure<T, TKey>(transactionType, false), connectionToUse, false);
+                    ExecuteScalar(GetTransactionTextForProcedure<T>(transactionType, false), connectionToUse, false);
                     overrideConsolidation = true;
                     goto Start;
                 }
@@ -200,8 +198,8 @@ namespace DataManagement.DAO
             {
                 if (Manager.AutoCreateTables)
                 {
-                    Logger.Warn(string.Format("Table {0} not found. Creating...", Manager<T, TKey>.ModelComposition.TableName));
-                    ProcessTable<T, TKey>(connectionToUse, false);
+                    Logger.Warn(string.Format("Table {0} not found. Creating...", Manager<T>.ModelComposition.TableName));
+                    ProcessTable<T>(connectionToUse, false);
                     overrideConsolidation = true;
                     goto Start;
                 }
@@ -213,8 +211,8 @@ namespace DataManagement.DAO
                 if (Manager.AutoAlterStoredProcedures)
                 {
                     Logger.Warn(string.Format("Incorrect number of arguments related to the {0} stored procedure. Modifying...", transactionType.ToString()));
-                    PerformTableConsolidation<T, TKey>(connectionToUse, true);
-                    ExecuteScalar(GetTransactionTextForProcedure<T, TKey>(transactionType, true), connectionToUse, false);
+                    PerformTableConsolidation<T>(connectionToUse, true);
+                    ExecuteScalar(GetTransactionTextForProcedure<T>(transactionType, true), connectionToUse, false);
                     overrideConsolidation = true;
                     goto Start;
                 }
@@ -227,9 +225,9 @@ namespace DataManagement.DAO
                 throw;
             }
 
-            if (logTransaction) LogTransaction(Manager<T, TKey>.ModelComposition.TableName, transactionType, connectionToUse);
+            if (logTransaction) LogTransaction(Manager<T>.ModelComposition.TableName, transactionType, connectionToUse);
 
-            return new Result(dataTable, false, true);
+            return new Result(dataTable.ToHashtable<T>(), false, true);
         }
 
         public void LogTransaction(string tableName, TransactionTypes transactionType, string connectionToUse)
@@ -241,7 +239,7 @@ namespace DataManagement.DAO
 
             Logger.Info(string.Format("Saving log information into the database."));
             Log newLog = NewLog(tableName, transactionType);
-            ExecuteProcedure<Log, Guid>(newLog, connectionToUse, TransactionTypes.Insert, false);
+            ExecuteProcedure(newLog, connectionToUse, TransactionTypes.Insert, false);
         }
     }
 }

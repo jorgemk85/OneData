@@ -3,10 +3,10 @@
     /// <summary>
     /// Provocado despues de ejecutar un comando de tipo DELETE en la base de datos.
     /// </summary>
-    public delegate void DeleteExecutedEventHandler<T, TKey>(DeleteExecutedEventArgs<T, TKey> e);
+    public delegate void DeleteExecutedEventHandler<T>(DeleteExecutedEventArgs<T> e);
 
-    public class DeleteExecutedEventArgs<T, TKey> : ExecutedEventArgs<T, TKey>
+    public class DeleteExecutedEventArgs<T> : ExecutedEventArgs<T>
     {
-        public DeleteExecutedEventArgs(string tableName, Models.Result<T, TKey> result) : base(tableName, result) { }
+        public DeleteExecutedEventArgs(string tableName, Models.Result result) : base(tableName, result) { }
     }
 }

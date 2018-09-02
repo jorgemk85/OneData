@@ -34,9 +34,9 @@ namespace DataManagement.Extensions
             return DataSerializer.ConvertIEnumerableToDataTableOfGenericType(list);
         }
 
-        public static DataTable ToDataTable<T, TKey>(this IEnumerable<T> list) where T : Cope<T, TKey>, new() where TKey : struct
-        {
-            return DataSerializer.ConvertIEnumerableToDataTableOfType<T, TKey>(list);
-        }
+        //public static DataTable ToDataTable<T>(this IEnumerable<T> list) where T : Cope<T>, IManageable, new()
+        //{
+        //    return DataSerializer.ConvertIEnumerableToDataTableOfType<T>(list);
+        //}
     }
 }

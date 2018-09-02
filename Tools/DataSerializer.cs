@@ -2,6 +2,7 @@
 using DataManagement.Models;
 using Newtonsoft.Json;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
@@ -212,6 +213,62 @@ namespace DataManagement.Tools
             return newList;
         }
 
+        public static Hashtable ConvertDataTableToHashtable(DataTable dataTable, string keyName)
+        {
+            Hashtable newHashTable = new Hashtable();
+            object key;
+            object value;
+
+            for (int i = 0; i < dataTable.Rows.Count; i++)
+            {
+                key = dataTable.Rows[i][keyName].ToString();
+                value = dataTable.Rows[i];
+
+                newHashTable.Add(key, value);
+            }
+
+            return newHashTable;
+        }
+
+        public static Hashtable ConvertDataTableToHashtableOfType<T>(DataTable dataTable) where T : Cope<T>, IManageable, new()
+        {
+            Hashtable newHashTable = new Hashtable();
+            foreach (DataRow row in dataTable.Rows)
+            {
+                PropertyInfo[] properties = typeof(T).GetProperties();
+                T newObject = new T();
+                foreach (PropertyInfo property in properties)
+                {
+                    if (dataTable.Columns.Contains(property.Name) && property.CanWrite)
+                    {
+                        property.SetValue(newObject, SimpleConverter.ConvertStringToType(row[property.Name].ToString(), property.PropertyType));
+                    }
+                }
+                newHashTable.Add(newObject.ModelComposition.PrimaryProperty.GetValue(newObject), newObject);
+            }
+
+            return newHashTable;
+        }
+
+        public static T ConvertHashtableToObjectOfType<T>(Hashtable hashtable) where T : new()
+        {
+            var enumerator = hashtable.GetEnumerator();
+            enumerator.MoveNext();
+
+            return (T)enumerator.Current;
+        }
+
+        public static List<T> ConvertHashtableToListOfType<T>(Hashtable hashtable) where T : new()
+        {
+            List<T> newList = new List<T>();
+            foreach (DictionaryEntry row in hashtable)
+            {
+                newList.Add((T)row.Value);
+            }
+
+            return newList;
+        }
+
         public static T ConvertDictionaryToObjectOfType<TKey, T>(Dictionary<TKey, T> dictionary) where T : new()
         {
             var enumerator = dictionary.GetEnumerator();
@@ -220,26 +277,7 @@ namespace DataManagement.Tools
             return enumerator.Current.Value;
         }
 
-        public static T ConvertManageableCollectionToObjectOfType<TKey, T>(ManageableCollection<TKey, T> dictionary) where T : new()
-        {
-            var enumerator = dictionary.GetEnumerator();
-            enumerator.MoveNext();
-
-            return enumerator.Current.Value;
-        }
-
         public static List<T> ConvertDictionaryToListOfType<TKey, T>(Dictionary<TKey, T> dictionary) where T : new()
-        {
-            List<T> newList = new List<T>();
-            foreach (KeyValuePair<TKey, T> row in dictionary)
-            {
-                newList.Add(row.Value);
-            }
-
-            return newList;
-        }
-
-        public static List<T> ConvertManageableCollectionToListOfType<TKey, T>(ManageableCollection<TKey, T> dictionary) where T : new()
         {
             List<T> newList = new List<T>();
             foreach (KeyValuePair<TKey, T> row in dictionary)
@@ -304,7 +342,7 @@ namespace DataManagement.Tools
         /// <typeparam name="T">Tipo referencia para serializar.</typeparam>
         /// <param name="dataTable">El contenido a convertir.</param>
         /// <returns>Regresa un nuevo Diccionario del tipo <typeparamref name="T"/> ya con los objetos incorporados.</returns>
-        public static Dictionary<TKey, T> ConvertDataTableToDictionaryOfType<TKey, T>(DataTable dataTable) where T : Cope<T, TKey>, new() where TKey : struct
+        public static Dictionary<TKey, T> ConvertDataTableToDictionaryOfType<TKey, T>(DataTable dataTable) where T : Cope<T>, IManageable, new()
         {
             Dictionary<TKey, T> newDictionary = new Dictionary<TKey, T>();
             if (dataTable != null)
@@ -321,35 +359,11 @@ namespace DataManagement.Tools
                             property.SetValue(newObject, SimpleConverter.ConvertStringToType(row[property.Name].ToString(), property.PropertyType));
                         }
                     }
-                    newDictionary.Add(newObject.Id.GetValueOrDefault(), newObject);
+                    newDictionary.Add((TKey)newObject.ModelComposition.PrimaryProperty.GetValue(newObject), newObject);
                 }
             }
 
             return newDictionary;
-        }
-
-        public static ManageableCollection<TKey, T> ConvertDataTableToManageableCollectionOfType<TKey, T>(DataTable dataTable) where T : Cope<T, TKey>, new() where TKey : struct
-        {
-            ManageableCollection<TKey, T> newCollection = new ManageableCollection<TKey, T>();
-            if (dataTable != null)
-            {
-                foreach (DataRow row in dataTable.Rows)
-                {
-                    T newObject = new T();
-                    PropertyInfo[] properties = typeof(T).GetProperties();
-
-                    foreach (PropertyInfo property in properties)
-                    {
-                        if (dataTable.Columns.Contains(property.Name) && property.CanWrite)
-                        {
-                            property.SetValue(newObject, SimpleConverter.ConvertStringToType(row[property.Name].ToString(), property.PropertyType));
-                        }
-                    }
-                    newCollection.Add(newObject.Id.GetValueOrDefault(), newObject);
-                }
-            }
-
-            return newCollection;
         }
 
         /// <summary>
@@ -370,7 +384,7 @@ namespace DataManagement.Tools
         /// <typeparam name="TKey">El tipo de la llave del tipo <typeparamref name="T"/> referencia para convertir.</typeparam>
         /// <param name="list">El contenido a convertir.</param>
         /// <returns>Regresa un nuevo DataTable ya con los objetos incorporados como columnas y filas.</returns>
-        public static DataTable ConvertIEnumerableToDataTableOfType<T, TKey>(IEnumerable<T> list) where T : Cope<T, TKey>, new() where TKey : struct
+        public static DataTable ConvertIEnumerableToDataTableOfType<T>(IEnumerable<T> list) where T : Cope<T>, IManageable, new()
         {
             DataTable dataTable = ConvertIEnumerableToDataTable(list);
             dataTable.PrimaryKey = new DataColumn[] { dataTable.Columns["Id"] };
@@ -433,12 +447,11 @@ namespace DataManagement.Tools
         /// <typeparam name="T">Tipo referencia para el nuevo Objeto.</typeparam>
         /// <param name="parameters">Array del objeto Parameter que contiene la informacion a colocar.</param>
         /// <returns>Regresa un nuevo objeto del tipo <typeparamref name="T"/> ya con las propiedades correspondientes alimentadas.</returns>
-        internal static T SetParametersInObject<T, TKey>(Parameter[] parameters) where T : Cope<T, TKey>, new() where TKey : struct
+        internal static T SetParametersInObject<T>(Parameter[] parameters) where T : Cope<T>, IManageable, new()
         {
-            T newObj = new T
-            {
-                Id = null
-            };
+            T newObj = new T();
+
+            newObj.ModelComposition.PrimaryProperty.SetValue(newObj, null);
 
             foreach (Parameter data in parameters)
             {

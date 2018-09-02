@@ -2,6 +2,7 @@
 using DataManagement.Models;
 using DataManagement.Tools;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 
@@ -24,12 +25,7 @@ namespace DataManagement.Extensions
             return DataSerializer.ConvertDataTableToDictionary<TKey, T>(dataTable, keyName);
         }
 
-        public static ManageableCollection<TKey, T> ToManageableCollection<TKey, T>(this DataTable dataTable) where T : Cope<T, TKey>, new() where TKey : struct
-        {
-            return DataSerializer.ConvertDataTableToManageableCollectionOfType<TKey, T>(dataTable);
-        }
-
-        public static Dictionary<TKey, T> ToDictionary<TKey, T>(this DataTable dataTable) where T : Cope<T, TKey>, new() where TKey : struct
+        public static Dictionary<TKey, T> ToDictionary<TKey, T>(this DataTable dataTable) where T : Cope<T>, IManageable, new()
         {
             return DataSerializer.ConvertDataTableToDictionaryOfType<TKey, T>(dataTable);
         }
@@ -42,6 +38,16 @@ namespace DataManagement.Extensions
         public static ICollection<dynamic> ToList(this DataTable dataTable, Type target)
         {
             return DataSerializer.ConvertDataTableToListOfType(dataTable, target);
+        }
+
+        public static Hashtable ToHashtable(this DataTable dataTable, string keyName)
+        {
+            return DataSerializer.ConvertDataTableToHashtable(dataTable, keyName);
+        }
+
+        public static Hashtable ToHashtable<T>(this DataTable dataTable) where T : Cope<T>, IManageable, new()
+        {
+            return DataSerializer.ConvertDataTableToHashtableOfType<T>(dataTable);
         }
 
         public static HashSet<T> ToHashSet<T>(this DataTable dataTable) where T : new()

@@ -3,12 +3,12 @@ using System;
 
 namespace DataManagement.Events
 {
-    public class ExecutedEventArgs<T, TKey> : EventArgs
+    public class ExecutedEventArgs<T> : EventArgs
     {
-        public Result<T, TKey> Result { get; set; }
+        public Result Result { get; set; }
         public string TableName { get; set; }
 
-        public ExecutedEventArgs(string tableName, Result<T, TKey> result)
+        public ExecutedEventArgs(string tableName, Result result)
         {
             TableName = tableName;
             Result = result;

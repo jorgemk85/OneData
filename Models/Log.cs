@@ -1,18 +1,22 @@
 ﻿using DataManagement.Attributes;
+using DataManagement.DAO;
+using DataManagement.Interfaces;
 using System;
 
 namespace DataManagement.Models
 {
     [DataTable("logs")]
-    public class Log : Cope<Log, Guid>
+    public class Log : Cope<Log>, IManageable
     {
+        [PrimaryProperty]
+        public Guid? Id { get; set; }
+        [DateCreatedProperty]
+        public DateTime? DateCreated { get; set; }
+        [DateModifiedProperty]
+        public DateTime? DateModified { get; set; }
         public string Ip { get; set; }
         public string Transaccion { get; set; }
         public string TablaAfectada { get; set; }
         public string Parametros { get; set; }
-        
-        public Log() : base(Guid.NewGuid()) { }
-
-        public Log(Guid id) : base(id) { }
     }
 }

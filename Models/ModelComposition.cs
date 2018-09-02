@@ -1,4 +1,5 @@
 ﻿using DataManagement.Attributes;
+using DataManagement.Enums;
 using DataManagement.Exceptions;
 using System;
 using System.Collections.Generic;
@@ -112,9 +113,13 @@ namespace DataManagement.Models
                             break;
                         case "DateCreatedProperty":
                             DateCreatedProperty = property;
+                            AutoProperties.Add(property.Name, property);
+                            AutoPropertyAttributes.Add(property.Name, new AutoProperty(AutoPropertyTypes.DateTime));
                             break;
                         case "DateModifiedProperty":
                             DateModifiedProperty = property;
+                            AutoProperties.Add(property.Name, property);
+                            AutoPropertyAttributes.Add(property.Name, new AutoProperty(AutoPropertyTypes.DateTime));
                             break;
                         case "ForeignKey":
                             ForeignKeyProperties.Add(property.Name, property);

@@ -5,38 +5,38 @@ using System.Data;
 
 namespace DataManagement.Models
 {
+    //public class Result
+    //{
+    //    public DataTable Data { get; set; }
+    //    public ICollection Collection { get; set; }
+    //    public bool IsFromCache { get; set; }
+    //    public bool IsSuccessful { get; set; }
+
+    //    public Result(DataTable data, bool isFromCache, bool isSuccessful)
+    //    {
+    //        Data = data ?? new DataTable();
+    //        IsFromCache = isFromCache;
+    //        IsSuccessful = isSuccessful;
+    //    }
+
+    //    public Result(DataTable data, bool isFromCache, bool isSuccessful, ICollection collection)
+    //    {
+    //        Data = data ?? new DataTable();
+    //        IsFromCache = isFromCache;
+    //        IsSuccessful = isSuccessful;
+    //        Collection = collection;
+    //    }
+    //}
+
     public class Result
     {
-        public DataTable Data { get; set; }
-        public ICollection Collection { get; set; }
+        public Hashtable Hash { get; set; }
         public bool IsFromCache { get; set; }
         public bool IsSuccessful { get; set; }
 
-        public Result(DataTable data, bool isFromCache, bool isSuccessful)
+        public Result(Hashtable collection, bool isFromCache, bool isSuccessful)
         {
-            Data = data ?? new DataTable();
-            IsFromCache = isFromCache;
-            IsSuccessful = isSuccessful;
-        }
-
-        public Result(DataTable data, bool isFromCache, bool isSuccessful, ICollection collection)
-        {
-            Data = data ?? new DataTable();
-            IsFromCache = isFromCache;
-            IsSuccessful = isSuccessful;
-            Collection = collection;
-        }
-    }
-
-    public class Result<T, TKey>
-    {
-        public ManageableCollection<TKey, T> Collection { get; set; }
-        public bool IsFromCache { get; set; }
-        public bool IsSuccessful { get; set; }
-
-        public Result(ManageableCollection<TKey, T> set, bool isFromCache, bool isSuccessful)
-        {
-            Collection = set;
+            Hash = collection;
             IsFromCache = isFromCache;
             IsSuccessful = isSuccessful;
         }

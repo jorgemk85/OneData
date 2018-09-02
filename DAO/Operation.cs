@@ -89,23 +89,23 @@ namespace DataManagement.DAO
             }
         }
 
-        protected string GetTransactionTextForProcedure<T, TKey>(TransactionTypes transactionType, bool doAlter) where T : Cope<T, TKey>, new() where TKey : struct
+        protected string GetTransactionTextForProcedure<T>(TransactionTypes transactionType, bool doAlter) where T : Cope<T>, IManageable, new()
         {
             Logger.Info(string.Format("Getting {0} transaction for type {1}. DoAlter = {2}", transactionType.ToString(), typeof(T), doAlter));
             switch (transactionType)
             {
                 case TransactionTypes.Select:
-                    return Creator.CreateSelectStoredProcedure<T, TKey>(doAlter);
+                    return Creator.CreateSelectStoredProcedure<T>(doAlter);
                 case TransactionTypes.SelectAll:
-                    return Creator.CreateSelectAllStoredProcedure<T, TKey>(doAlter);
+                    return Creator.CreateSelectAllStoredProcedure<T>(doAlter);
                 case TransactionTypes.Delete:
-                    return Creator.CreateDeleteStoredProcedure<T, TKey>(doAlter);
+                    return Creator.CreateDeleteStoredProcedure<T>(doAlter);
                 case TransactionTypes.Insert:
-                    return Creator.CreateInsertStoredProcedure<T, TKey>(doAlter);
+                    return Creator.CreateInsertStoredProcedure<T>(doAlter);
                 case TransactionTypes.InsertMassive:
-                    return Creator.CreateInsertMassiveStoredProcedure<T, TKey>(doAlter);
+                    return Creator.CreateInsertMassiveStoredProcedure<T>(doAlter);
                 case TransactionTypes.Update:
-                    return Creator.CreateUpdateStoredProcedure<T, TKey>(doAlter);
+                    return Creator.CreateUpdateStoredProcedure<T>(doAlter);
                 default:
                     ArgumentException argumentException = new ArgumentException("El tipo de transaccion no es valido para generar un nuevo procedimiento almacenado.");
                     Logger.Error(argumentException);
@@ -170,19 +170,19 @@ namespace DataManagement.DAO
             }
         }
 
-        protected void SetParameters<T, TKey>(T obj, TransactionTypes transactionType, bool considerPrimary) where T : Cope<T, TKey>, new() where TKey : struct
+        protected void SetParameters<T>(T obj, TransactionTypes transactionType, bool considerPrimary) where T : Cope<T>, IManageable, new()
         {
             Logger.Info(string.Format("Setting parameters in command based on type {0} for transaction type {1}.", typeof(T), transactionType.ToString()));
 
             if (transactionType == TransactionTypes.Delete)
             {
-                Command.Parameters.Add(CreateDbParameter(string.Format("_{0}", Manager<T, TKey>.ModelComposition.PrimaryProperty.Name), Manager<T, TKey>.ModelComposition.PrimaryProperty.GetValue(obj)));
+                Command.Parameters.Add(CreateDbParameter(string.Format("_{0}", Manager<T>.ModelComposition.PrimaryProperty.Name), Manager<T>.ModelComposition.PrimaryProperty.GetValue(obj)));
                 return;
             }
 
-            foreach (KeyValuePair<string, PropertyInfo> property in Manager<T, TKey>.ModelComposition.FilteredProperties)
+            foreach (KeyValuePair<string, PropertyInfo> property in Manager<T>.ModelComposition.FilteredProperties)
             {
-                if (property.Value.Equals(Manager<T, TKey>.ModelComposition.PrimaryProperty) && property.Value.PropertyType.Equals(typeof(int?)) && !considerPrimary)
+                if (property.Value.Equals(Manager<T>.ModelComposition.PrimaryProperty) && property.Value.PropertyType.Equals(typeof(int?)) && !considerPrimary)
                 {
                     continue;
                 }
@@ -190,48 +190,48 @@ namespace DataManagement.DAO
             }
         }
 
-        protected void SetParameters<T, TKey>(IEnumerable<T> obj, TransactionTypes transactionType) where T : Cope<T, TKey>, new() where TKey : struct
+        protected void SetParameters<T>(IEnumerable<T> obj, TransactionTypes transactionType) where T : Cope<T>, IManageable, new()
         {
             Logger.Info(string.Format("Setting parameters in command based on type {0} for transaction type {1}.", typeof(T), transactionType.ToString()));
 
             if (transactionType == TransactionTypes.Delete)
             {
-                Command.Parameters.Add(CreateDbParameter(string.Format("_{0}", Manager<T, TKey>.ModelComposition.PrimaryProperty.Name), Manager<T, TKey>.ModelComposition.PrimaryProperty.GetValue(obj)));
+                Command.Parameters.Add(CreateDbParameter(string.Format("_{0}", Manager<T>.ModelComposition.PrimaryProperty.Name), Manager<T>.ModelComposition.PrimaryProperty.GetValue(obj)));
                 return;
             }
 
-            foreach (KeyValuePair<string, PropertyInfo> propertyInfo in Manager<T, TKey>.ModelComposition.FilteredProperties)
+            foreach (KeyValuePair<string, PropertyInfo> propertyInfo in Manager<T>.ModelComposition.FilteredProperties)
             {
                 Command.Parameters.Add(CreateDbParameter("_" + propertyInfo.Value.Name, propertyInfo.Value.GetValue(obj)));
             }
         }
 
-        protected void PerformTableConsolidation<T, TKey>(string connectionToUse, bool doAlter) where T : Cope<T, TKey>, new() where TKey : struct
+        protected void PerformTableConsolidation<T>(string connectionToUse, bool doAlter) where T : Cope<T>, IManageable, new()
         {
-            Logger.Info(string.Format("Starting table consolidation for table {0} using connection {1}. DoAlter = {2}", Manager<T, TKey>.ModelComposition.TableName, connectionToUse, doAlter));
+            Logger.Info(string.Format("Starting table consolidation for table {0} using connection {1}. DoAlter = {2}", Manager<T>.ModelComposition.TableName, connectionToUse, doAlter));
             if (!doAlter)
             {
-                if (!CheckIfTableExists(Manager<T, TKey>.ModelComposition.TableName, connectionToUse))
+                if (!CheckIfTableExists(Manager<T>.ModelComposition.TableName, connectionToUse))
                 {
-                    ProcessTable<T, TKey>(connectionToUse, false);
+                    ProcessTable<T>(connectionToUse, false);
                     return;
                 }
             }
-            ExecuteScalar(Creator.CreateQueryForTableAlteration<T, TKey>(GetColumnDefinition(Manager<T, TKey>.ModelComposition.TableName, connectionToUse), GetKeyDefinition(Manager<T, TKey>.ModelComposition.TableName, connectionToUse)), connectionToUse, false);
+            ExecuteScalar(Creator.CreateQueryForTableAlteration<T>(GetColumnDefinition(Manager<T>.ModelComposition.TableName, connectionToUse), GetKeyDefinition(Manager<T>.ModelComposition.TableName, connectionToUse)), connectionToUse, false);
         }
 
-        protected void ProcessTable<T, TKey>(string connectionToUse, bool doAlter) where T : Cope<T, TKey>, new() where TKey : struct
+        protected void ProcessTable<T>(string connectionToUse, bool doAlter) where T : Cope<T>, IManageable, new()
         {
-            Logger.Info(string.Format("Processing table {0} using connection {1}. DoAlter = {2}", Manager<T, TKey>.ModelComposition.TableName, connectionToUse, doAlter));
+            Logger.Info(string.Format("Processing table {0} using connection {1}. DoAlter = {2}", Manager<T>.ModelComposition.TableName, connectionToUse, doAlter));
             if (doAlter)
             {
-                PerformTableConsolidation<T, TKey>(connectionToUse, doAlter);
+                PerformTableConsolidation<T>(connectionToUse, doAlter);
             }
             else
             {
-                ExecuteScalar(Creator.CreateQueryForTableCreation<T, TKey>(), connectionToUse, false);
-                VerifyForeignTables<T, TKey>(connectionToUse, doAlter);
-                string foreignKeyQuery = Creator.GetCreateForeignKeysQuery<T, TKey>();
+                ExecuteScalar(Creator.CreateQueryForTableCreation<T>(), connectionToUse, false);
+                VerifyForeignTables<T>(connectionToUse, doAlter);
+                string foreignKeyQuery = Creator.GetCreateForeignKeysQuery<T>();
 
                 if (!string.IsNullOrWhiteSpace(foreignKeyQuery))
                 {
@@ -240,16 +240,16 @@ namespace DataManagement.DAO
             }
         }
 
-        private void VerifyForeignTables<T, TKey>(string connectionToUse, bool doAlter) where T : Cope<T, TKey>, new() where TKey : struct
+        private void VerifyForeignTables<T>(string connectionToUse, bool doAlter) where T : Cope<T>, IManageable, new()
         {
             Logger.Info(string.Format("Verifying foreign tables for type {0} using connection {1}. DoAlter = {2}", typeof(T).ToString(), connectionToUse, doAlter));
 
-            foreach (KeyValuePair<string, PropertyInfo> property in Manager<T, TKey>.ModelComposition.ForeignKeyProperties)
+            foreach (KeyValuePair<string, PropertyInfo> property in Manager<T>.ModelComposition.ForeignKeyProperties)
             {
-                IManageable<TKey> foreignKey = (IManageable<TKey>)Activator.CreateInstance(Manager<T, TKey>.ModelComposition.ForeignKeyAttributes[property.Value.Name].Model);
+                IManageable foreignKey = (IManageable)Activator.CreateInstance(Manager<T>.ModelComposition.ForeignKeyAttributes[property.Value.Name].Model);
                 if (!CheckIfTableExists(foreignKey.ModelComposition.TableName, connectionToUse))
                 {
-                    CreateOrAlterForeignTables<T, TKey>(foreignKey, connectionToUse, false);
+                    CreateOrAlterForeignTables<T>(foreignKey, connectionToUse, false);
                 }
             }
         }
@@ -266,22 +266,22 @@ namespace DataManagement.DAO
             return ((DataTable)ExecuteScalar(string.Format(QueryForKeyDefinition, tableName), connectionToUse, true)).ToDictionary<string, KeyDefinition>(nameof(KeyDefinition.Column_Name));
         }
 
-        private void CreateOrAlterForeignTables<T, TKey>(IManageable<TKey> foreignKey, string connectionToUse, bool doAlter) where T : Cope<T, TKey>, new() where TKey : struct
+        private void CreateOrAlterForeignTables<T>(IManageable foreignKey, string connectionToUse, bool doAlter) where T : Cope<T>, IManageable, new()
         {
             Logger.Info(string.Format("Create or Alter foreign tables of {0} using connection {1}. DoAlter = {2}", foreignKey.ModelComposition.TableName, connectionToUse, doAlter));
             if (doAlter)
             {
-                ExecuteScalar(Creator.CreateQueryForTableAlteration<T, TKey>(
+                ExecuteScalar(Creator.CreateQueryForTableAlteration<T>(
                                                          GetColumnDefinition(foreignKey.ModelComposition.TableName, connectionToUse),
                                                          GetKeyDefinition(foreignKey.ModelComposition.TableName, connectionToUse)), connectionToUse, false);
             }
             else
             {
-                ExecuteScalar(Creator.CreateQueryForTableCreation<T, TKey>(), connectionToUse, false);
+                ExecuteScalar(Creator.CreateQueryForTableCreation<T>(), connectionToUse, false);
             }
 
-            VerifyForeignTables<T, TKey>(connectionToUse, false);
-            string foreignKeyQuery = Creator.GetCreateForeignKeysQuery<T, TKey>();
+            VerifyForeignTables<T>(connectionToUse, false);
+            string foreignKeyQuery = Creator.GetCreateForeignKeysQuery<T>();
 
             if (!string.IsNullOrWhiteSpace(foreignKeyQuery))
             {
@@ -314,7 +314,7 @@ namespace DataManagement.DAO
                 Parametros = GetStringParameters()
             };
 
-            Logger.Info(string.Format("Created new log object for affected table {0}, transaction used {1}, with the following parameters: {2}", Manager<Log, Guid>.ModelComposition.TableName, newLog.Transaccion, newLog.Parametros));
+            Logger.Info(string.Format("Created new log object for affected table {0}, transaction used {1}, with the following parameters: {2}", Manager<Log>.ModelComposition.TableName, newLog.Transaccion, newLog.Parametros));
 
             return newLog;
         }

@@ -1,11 +1,10 @@
 ﻿using DataManagement.Models;
+using System;
 
 namespace DataManagement.Interfaces
 {
-    public interface IManageable<TKey> where TKey : struct
+    public interface IManageable
     {
-        TKey? Id { get; set; }
         ModelComposition ModelComposition { get; }
-        string ForeignIdName { get; }
     }
 }
