@@ -121,7 +121,6 @@ namespace DataManagement.DAO
     /// Clase sellada donde se procesan las consultas a la base de datos y se administra el cache.
     /// </summary>
     /// <typeparam name="T">Tipo de clase que representa este objeto. El tipo tiene que implementar IManageable para poder operar.</typeparam>
-    /// <typeparam name="TKey">Tipo que representa la llave utilizada en la propiedad Id del tipo <typeparamref name="T"/>.</typeparam>
     public sealed class Manager<T> where T : Cope<T>, IManageable, new()
     {
         static DataCache dataCache = new DataCache();

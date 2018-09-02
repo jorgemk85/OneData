@@ -65,8 +65,6 @@ namespace DataManagement.DAO
             queryBuilder.Remove(queryBuilder.Length - 2, 2);
             queryBuilder.Append("\nAS\n");
             queryBuilder.Append("BEGIN\n");
-            queryBuilder.Append("DECLARE @actualTime datetime;\n");
-            queryBuilder.Append("SET @actualTime = getdate();\n");
             queryBuilder.AppendFormat("INSERT INTO {0}.{1}{2} (\n", Manager<T>.ModelComposition.Schema, Manager.TablePrefix, Manager<T>.ModelComposition.TableName);
 
             // Seccion para especificar a que columnas se va a insertar y sus valores.
@@ -124,8 +122,6 @@ namespace DataManagement.DAO
             queryBuilder.Remove(queryBuilder.Length - 2, 2);
             queryBuilder.Append("\nAS\n");
             queryBuilder.Append("BEGIN\n");
-            queryBuilder.Append("DECLARE @actualTime datetime;\n");
-            queryBuilder.Append("SET @actualTime = getdate();\n");
             queryBuilder.AppendFormat("UPDATE {0}.{1}{2}\n", Manager<T>.ModelComposition.Schema, Manager.TablePrefix, Manager<T>.ModelComposition.TableName);
             queryBuilder.Append("SET\n");
 
@@ -183,7 +179,6 @@ namespace DataManagement.DAO
         public string CreateSelectAllStoredProcedure<T>(bool doAlter) where T : Cope<T>, IManageable, new()
         {
             StringBuilder queryBuilder = new StringBuilder();
-            T obj = new T();
 
             if (doAlter)
             {
@@ -197,7 +192,7 @@ namespace DataManagement.DAO
             queryBuilder.Append("AS\n");
             queryBuilder.Append("BEGIN\n");
             queryBuilder.AppendFormat("SELECT * FROM {0}.{1}{2}\n", Manager<T>.ModelComposition.Schema, Manager.TablePrefix, Manager<T>.ModelComposition.TableName);
-            queryBuilder.Append("ORDER BY FechaCreacion DESC\n");
+            queryBuilder.Append($"ORDER BY {Manager<T>.ModelComposition.DateCreatedProperty.Name} DESC\n");
             queryBuilder.Append("END");
 
             Logger.Info("Created a new query for SelectAll Stored Procedure:");

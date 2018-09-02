@@ -2,11 +2,13 @@
 using DataManagement.DAO;
 using DataManagement.Extensions;
 using DataManagement.Interfaces;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace DataManagement.Models
 {
+    [Serializable]
     public class Cope<T> where T : Cope<T>, IManageable, new()
     {
         [UnmanagedProperty]

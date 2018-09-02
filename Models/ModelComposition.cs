@@ -54,7 +54,7 @@ namespace DataManagement.Models
         {
             Properties = type.GetProperties();
             SetClass(type);
-            SetProperties();
+            SetProperties(type);
         }
 
         private void PerformClassValidation(Type type)
@@ -62,6 +62,40 @@ namespace DataManagement.Models
             if (string.IsNullOrWhiteSpace(TableName))
             {
                 throw new RequiredAttributeNotFound("DataTable", type.FullName);
+            }
+        }
+
+        private void PerformPropertiesValidation(Type type)
+        {
+            if (PrimaryProperty == null)
+            {
+                throw new RequiredAttributeNotFound("PrimaryProperty", type.FullName);
+            }
+            else if (Nullable.GetUnderlyingType(PrimaryProperty.PropertyType) == null)
+            {
+                throw new InvalidDataType(PrimaryProperty.Name, type.FullName, "Nullable<struct>");
+            }
+            else if (!Nullable.GetUnderlyingType(PrimaryProperty.PropertyType).IsValueType)
+            {
+                throw new InvalidDataType(PrimaryProperty.Name, type.FullName, "Nullable<struct>");
+            }
+
+            if (DateCreatedProperty == null)
+            {
+                throw new RequiredAttributeNotFound("DateCreatedProperty", type.FullName);
+            }
+            else if (!DateCreatedProperty.PropertyType.Equals(typeof(DateTime)) && !Nullable.GetUnderlyingType(DateCreatedProperty.PropertyType).Equals(typeof(DateTime)))
+            {
+                throw new InvalidDataType(DateCreatedProperty.Name, type.FullName, "DateTime");
+            }
+
+            if (DateModifiedProperty == null)
+            {
+                throw new RequiredAttributeNotFound("DateModifiedProperty", type.FullName);
+            }
+            else if (!DateModifiedProperty.PropertyType.Equals(typeof(DateTime)) && !Nullable.GetUnderlyingType(DateModifiedProperty.PropertyType).Equals(typeof(DateTime)))
+            {
+                throw new InvalidDataType(DateModifiedProperty.Name, type.FullName, "DateTime");
             }
         }
 
@@ -88,7 +122,7 @@ namespace DataManagement.Models
             PerformClassValidation(type);
         }
 
-        private void SetProperties()
+        private void SetProperties(Type type)
         {
             foreach (PropertyInfo property in Properties)
             {
@@ -136,6 +170,7 @@ namespace DataManagement.Models
                     }
                 }
             }
+            PerformPropertiesValidation(type);
         }
     }
 }

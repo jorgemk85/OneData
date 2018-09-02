@@ -167,7 +167,6 @@ namespace DataManagement.DAO
         public string CreateSelectAllStoredProcedure<T>(bool doAlter) where T : Cope<T>, IManageable, new()
         {
             StringBuilder queryBuilder = new StringBuilder();
-            T obj = new T();
 
             if (doAlter)
             {
@@ -178,7 +177,7 @@ namespace DataManagement.DAO
 
             queryBuilder.Append(")\nBEGIN\n");
             queryBuilder.AppendFormat("SELECT * FROM {0}{1}\n", Manager.TablePrefix, Manager<T>.ModelComposition.TableName);
-            queryBuilder.Append("ORDER BY FechaCreacion DESC;\n");
+            queryBuilder.Append($"ORDER BY {Manager<T>.ModelComposition.DateCreatedProperty.Name} DESC;\n");
             queryBuilder.Append("END");
 
             Logger.Info("(MySql) Created a new query for SelectAll Stored Procedure:");
@@ -216,7 +215,7 @@ namespace DataManagement.DAO
             }
 
             queryBuilder.Remove(queryBuilder.Length - 4, 4);
-            queryBuilder.AppendFormat("\nORDER BY FechaCreacion desc;\n");
+            queryBuilder.AppendFormat($"\nORDER BY {Manager<T>.ModelComposition.DateCreatedProperty.Name} desc;\n");
             queryBuilder.Append("END");
 
             Logger.Info("(MySql) Created a new query for Select Stored Procedure:");
