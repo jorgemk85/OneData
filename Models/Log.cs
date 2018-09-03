@@ -8,7 +8,7 @@ namespace DataManagement.Models
     [DataTable("logs")]
     public class Log : Cope<Log>, IManageable
     {
-        [PrimaryProperty]
+        [PrimaryKeyProperty]
         public Guid? Id { get; set; }
         [DateCreatedProperty]
         public DateTime? DateCreated { get; set; }

@@ -8,7 +8,7 @@ namespace DataManagement.Models.Test
     [DataTable("Comments", "operaciones")]
     public class Comment : Cope<Comment>, IManageable
     {
-        [PrimaryProperty]
+        [PrimaryKeyProperty]
         public Guid? Id { get; set; }
         [DateCreatedProperty]
         public DateTime? DateCreated { get; set; }

@@ -176,13 +176,13 @@ namespace DataManagement.DAO
 
             if (transactionType == TransactionTypes.Delete)
             {
-                Command.Parameters.Add(CreateDbParameter(string.Format("_{0}", Manager<T>.ModelComposition.PrimaryProperty.Name), Manager<T>.ModelComposition.PrimaryProperty.GetValue(obj)));
+                Command.Parameters.Add(CreateDbParameter(string.Format("_{0}", Manager<T>.ModelComposition.PrimaryKeyProperty.Name), Manager<T>.ModelComposition.PrimaryKeyProperty.GetValue(obj)));
                 return;
             }
 
             foreach (KeyValuePair<string, PropertyInfo> property in Manager<T>.ModelComposition.FilteredProperties)
             {
-                if (property.Value.Equals(Manager<T>.ModelComposition.PrimaryProperty) && property.Value.PropertyType.Equals(typeof(int?)) && !considerPrimary)
+                if (property.Value.Equals(Manager<T>.ModelComposition.PrimaryKeyProperty) && property.Value.PropertyType.Equals(typeof(int?)) && !considerPrimary)
                 {
                     continue;
                 }
@@ -196,7 +196,7 @@ namespace DataManagement.DAO
 
             if (transactionType == TransactionTypes.Delete)
             {
-                Command.Parameters.Add(CreateDbParameter(string.Format("_{0}", Manager<T>.ModelComposition.PrimaryProperty.Name), Manager<T>.ModelComposition.PrimaryProperty.GetValue(obj)));
+                Command.Parameters.Add(CreateDbParameter(string.Format("_{0}", Manager<T>.ModelComposition.PrimaryKeyProperty.Name), Manager<T>.ModelComposition.PrimaryKeyProperty.GetValue(obj)));
                 return;
             }
 

@@ -170,26 +170,26 @@ namespace DataManagement.DAO
                 predicate = predicate.Substring(0, predicate.Length - 5);
                 var queryableList = dataCache.Cache.Data.Values.AsQueryable();
                 // Procedimiento LENTO en la primera ejecucion por el compilado del query.
-                var resultList = queryableList.Where(predicate, values.ToArray()).ToDictionary(Manager<T>.ModelComposition.PrimaryProperty.Name, Manager<T>.ModelComposition.PrimaryProperty.PropertyType);
+                var resultList = queryableList.Where(predicate, values.ToArray()).ToDictionary(Manager<T>.ModelComposition.PrimaryKeyProperty.Name, Manager<T>.ModelComposition.PrimaryKeyProperty.PropertyType);
                 return new Result<T>(resultList, true, true);
             }
         }
 
         private void UpdateInCache<T>(T obj, ref DataCache<T> dataCache) where T : Cope<T>, IManageable, new()
         {
-            dataCache.Cache.Data[obj.ModelComposition.PrimaryProperty.GetValue(obj)] = obj;
+            dataCache.Cache.Data[obj.PrimaryKeyProperty.GetValue(obj)] = obj;
         }
 
         private void InsertInCache<T>(T obj, ref DataCache<T> dataCache) where T : Cope<T>, IManageable, new()
         {
-            dataCache.Cache.Data.Add(obj.ModelComposition.PrimaryProperty.GetValue(obj), obj);
+            dataCache.Cache.Data.Add(obj.PrimaryKeyProperty.GetValue(obj), obj);
         }
 
         private void InsertMassiveInCache<T>(IEnumerable<T> list, ref DataCache<T> dataCache) where T : Cope<T>, IManageable, new()
         {
             foreach (T obj in list)
             {
-                dataCache.Cache.Data.Add(obj.ModelComposition.PrimaryProperty.GetValue(obj), obj);
+                dataCache.Cache.Data.Add(obj.PrimaryKeyProperty.GetValue(obj), obj);
             }
         }
 

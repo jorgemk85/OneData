@@ -20,7 +20,7 @@ namespace DataManagement.DAO
             {
                 // Si la propiedad actual es la primaria y esta es del tipo int? y no se debe considerar para estos parametros, entonces se salta a la sig propiedad.
                 // Esto significa que la propiedad primaria es Identity o Auto Increment y no se debe de mandar como parametro en un Insert.
-                if (property.Value.Equals(Manager<T>.ModelComposition.PrimaryProperty) && property.Value.PropertyType.Equals(typeof(int?)) && !considerPrimary)
+                if (property.Value.Equals(Manager<T>.ModelComposition.PrimaryKeyProperty) && property.Value.PropertyType.Equals(typeof(int?)) && !considerPrimary)
                 {
                     continue;
                 }
@@ -63,7 +63,7 @@ namespace DataManagement.DAO
             // Seccion para especificar a que columnas se va a insertar y sus valores.
             foreach (KeyValuePair<string, PropertyInfo> property in Manager<T>.ModelComposition.ManagedProperties)
             {
-                if (property.Value.Equals(Manager<T>.ModelComposition.PrimaryProperty) && property.Value.PropertyType.Equals(typeof(int?)))
+                if (property.Value.Equals(Manager<T>.ModelComposition.PrimaryKeyProperty) && property.Value.PropertyType.Equals(typeof(int?)))
                 {
                     continue;
                 }
@@ -119,7 +119,7 @@ namespace DataManagement.DAO
             // Se especifica el parametro que va en x columna.
             foreach (KeyValuePair<string, PropertyInfo> property in Manager<T>.ModelComposition.ManagedProperties)
             {
-                if (property.Value.Equals(Manager<T>.ModelComposition.PrimaryProperty) || property.Value.Name.Equals(Manager<T>.ModelComposition.DateCreatedProperty.Name))
+                if (property.Value.Equals(Manager<T>.ModelComposition.PrimaryKeyProperty) || property.Value.Name.Equals(Manager<T>.ModelComposition.DateCreatedProperty.Name))
                 {
                     continue;
                 }
@@ -153,7 +153,7 @@ namespace DataManagement.DAO
 
             queryBuilder.AppendFormat("CREATE PROCEDURE {0}{1}{2} (\n", Manager.StoredProcedurePrefix, Manager<T>.ModelComposition.DataTableAttribute.TableName, Manager.DeleteSuffix);
 
-            queryBuilder.Append(string.Format("    IN _Id {0})\n", GetSqlDataType(obj.ModelComposition.PrimaryProperty.PropertyType)));
+            queryBuilder.Append(string.Format("    IN _Id {0})\n", GetSqlDataType(obj.PrimaryKeyProperty.PropertyType)));
             queryBuilder.Append("BEGIN\n");
             queryBuilder.AppendFormat("DELETE FROM {0}{1}\n", Manager.TablePrefix, Manager<T>.ModelComposition.DataTableAttribute.TableName);
             queryBuilder.AppendFormat("WHERE Id = _Id;\n");
@@ -235,8 +235,8 @@ namespace DataManagement.DAO
             // Aqui se colocan las propiedades del objeto. Una por columna por supuesto.
             foreach (KeyValuePair<string, PropertyInfo> property in Manager<T>.ModelComposition.ManagedProperties)
             {
-                string isNullable = Nullable.GetUnderlyingType(property.Value.PropertyType) == null || property.Value.Equals(Manager<T>.ModelComposition.PrimaryProperty) ? "NOT NULL" : string.Empty;
-                if (property.Value.Equals(Manager<T>.ModelComposition.PrimaryProperty))
+                string isNullable = Nullable.GetUnderlyingType(property.Value.PropertyType) == null || property.Value.Equals(Manager<T>.ModelComposition.PrimaryKeyProperty) ? "NOT NULL" : string.Empty;
+                if (property.Value.Equals(Manager<T>.ModelComposition.PrimaryKeyProperty))
                 {
                     if (property.Value.PropertyType.Equals(typeof(int?)))
                     {
@@ -293,13 +293,13 @@ namespace DataManagement.DAO
                     queryBuilder.AppendFormat("MODIFY COLUMN {0} {1},\n", property.Value.Name, sqlDataType);
                     foundDiference = true;
                 }
-                if (columnDefinition.Is_Nullable.Equals("YES") && !isNullable && !property.Value.Equals(Manager<T>.ModelComposition.PrimaryProperty))
+                if (columnDefinition.Is_Nullable.Equals("YES") && !isNullable && !property.Value.Equals(Manager<T>.ModelComposition.PrimaryKeyProperty))
                 {
                     // Si la propiedad ya no es nullable, entonces la cambia en la base de datos
                     queryBuilder.AppendFormat("MODIFY COLUMN {0} {1} NOT NULL,\n", property.Value.Name, sqlDataType);
                     foundDiference = true;
                 }
-                if (columnDefinition.Is_Nullable.Equals("NO") && isNullable && !property.Value.Equals(Manager<T>.ModelComposition.PrimaryProperty))
+                if (columnDefinition.Is_Nullable.Equals("NO") && isNullable && !property.Value.Equals(Manager<T>.ModelComposition.PrimaryKeyProperty))
                 {
                     // Si la propiedad ES nullable, entonces la cambia en la base de datos
                     queryBuilder.AppendFormat("MODIFY COLUMN {0} {1},\n", property.Value.Name, sqlDataType);

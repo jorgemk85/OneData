@@ -8,7 +8,7 @@ namespace DataManagement.Models.Test
     [DataTable("UserTests")]
     public class UserTest : Cope<UserTest>, IManageable
     {
-        [PrimaryProperty]
+        [PrimaryKeyProperty]
         public Guid? Id { get; set; }
         [DateCreatedProperty]
         public DateTime? DateCreated { get; set; }

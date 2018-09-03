@@ -8,7 +8,7 @@ namespace DataManagement.Models.Test
     [DataTable("Blogs", "operaciones"), CacheEnabled(60)]
     public class Blog : Cope<Blog>, IManageable
     {
-        [PrimaryProperty]
+        [PrimaryKeyProperty]
         public Guid? Id { get; set; }
         [DateCreatedProperty]
         public DateTime? DateCreated { get; set; }

@@ -9,7 +9,7 @@ namespace DataManagement.Models.Test
     [DataTable("LogTestGuids"), CacheEnabled(60)]
     public class LogTestGuid : Cope<LogTestGuid>, IManageable
     {
-        [PrimaryProperty]
+        [PrimaryKeyProperty]
         public Guid? Id { get; set; }
         [DateCreatedProperty]
         public DateTime? DateCreated { get; set; }
@@ -28,7 +28,7 @@ namespace DataManagement.Models.Test
     [DataTable("LogTestInts"), CacheEnabled(60)]
     public class LogTestInt : Cope<LogTestInt>, IManageable
     {
-        [PrimaryProperty]
+        [PrimaryKeyProperty]
         public int? Id { get; set; }
         [DateCreatedProperty]
         public DateTime? DateCreated { get; set; }

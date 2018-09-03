@@ -126,7 +126,7 @@ namespace DataManagement.DAO
         static DataCache<T> dataCache = new DataCache<T>();
         static readonly ModelComposition _modelComposition = new ModelComposition(typeof(T));
 
-        public static ref readonly ModelComposition ModelComposition => ref _modelComposition;
+        internal static ref readonly ModelComposition ModelComposition => ref _modelComposition;
 
         #region Events
         public static event CommandExecutedEventHandler<T> OnCommandExecuted;

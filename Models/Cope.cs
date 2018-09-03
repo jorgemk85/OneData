@@ -5,6 +5,7 @@ using DataManagement.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 
 namespace DataManagement.Models
 {
@@ -12,31 +13,21 @@ namespace DataManagement.Models
     public abstract class Cope<T> where T : Cope<T>, IManageable, new()
     {
         [UnmanagedProperty]
-        public ref readonly string PrimaryKeyName => ref Manager<T>.ModelComposition.PrimaryPropertyName;
-
+        public PropertyInfo PrimaryKeyProperty { get; } = Manager<T>.ModelComposition.PrimaryKeyProperty;
         [UnmanagedProperty]
-        public ref readonly string DateCreatedName => ref Manager<T>.ModelComposition.DateCreatedName;
-
+        public PropertyInfo DateCreatedProperty { get; } = Manager<T>.ModelComposition.DateCreatedProperty;
         [UnmanagedProperty]
-        public ref readonly string DateModifiedName => ref Manager<T>.ModelComposition.DateModifiedName;
-
+        public PropertyInfo DateModifiedProperty { get; } = Manager<T>.ModelComposition.DateModifiedProperty;
         [UnmanagedProperty]
-        public ref readonly string TableName => ref Manager<T>.ModelComposition.TableName;
-
+        public string TableName { get; } = Manager<T>.ModelComposition.TableName;
         [UnmanagedProperty]
-        public ref readonly string Schema => ref Manager<T>.ModelComposition.Schema;
-
+        public string Schema { get; } = Manager<T>.ModelComposition.Schema;
         [UnmanagedProperty]
-        public ref readonly bool IsCacheEnabled => ref Manager<T>.ModelComposition.IsCacheEnabled;
-
+        public bool IsCacheEnabled { get; } = Manager<T>.ModelComposition.IsCacheEnabled;
         [UnmanagedProperty]
-        public ref readonly long CacheExpiration => ref Manager<T>.ModelComposition.CacheExpiration;
-
+        public long CacheExpiration { get; } = Manager<T>.ModelComposition.CacheExpiration;
         [UnmanagedProperty]
-        public ref readonly string ForeignPrimaryKeyName => ref Manager<T>.ModelComposition.ForeignPrimaryKeyName;
-
-        [UnmanagedProperty]
-        public ModelComposition ModelComposition { get; } = Manager<T>.ModelComposition;
+        public string ForeignPrimaryKeyName { get; } = Manager<T>.ModelComposition.ForeignPrimaryKeyName;
 
         /// <summary>
         /// Obtiene un listado completo de los objetos de tipo <typeparamref name="T"/> almacenados en la base de datos o en el cache.

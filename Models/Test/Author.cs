@@ -7,7 +7,7 @@ namespace DataManagement.Models.Test
     [DataTable("Authors", "operaciones")]
     public class Author : Cope<Author>, IManageable
     {
-        [PrimaryProperty]
+        [PrimaryKeyProperty]
         public Guid? Id { get; set; }
         [DateCreatedProperty]
         public DateTime? DateCreated { get; set; }

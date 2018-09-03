@@ -160,7 +160,7 @@ namespace DataManagement.DAO
 
             if (logTransaction) LogTransaction(Manager<T>.ModelComposition.DataTableAttribute.TableName, transactionType, connectionToUse);
 
-            return new Result<T>(dataTable.ToDictionary<T>(Manager<T>.ModelComposition.PrimaryProperty.Name, Manager<T>.ModelComposition.PrimaryProperty.PropertyType), false, true);
+            return new Result<T>(dataTable.ToDictionary<T>(Manager<T>.ModelComposition.PrimaryKeyProperty.Name, Manager<T>.ModelComposition.PrimaryKeyProperty.PropertyType), false, true);
         }
 
         public Result<T> ExecuteProcedure<T>(IEnumerable<T> list, string connectionToUse, TransactionTypes transactionType, bool logTransaction = true) where T : Cope<T>, IManageable, new()
@@ -247,7 +247,7 @@ namespace DataManagement.DAO
 
             if (logTransaction) LogTransaction(Manager<T>.ModelComposition.DataTableAttribute.TableName, transactionType, connectionToUse);
 
-            return new Result<T>(dataTable.ToDictionary<T>(Manager<T>.ModelComposition.PrimaryProperty.Name, Manager<T>.ModelComposition.PrimaryProperty.PropertyType), false, true);
+            return new Result<T>(dataTable.ToDictionary<T>(Manager<T>.ModelComposition.PrimaryKeyProperty.Name, Manager<T>.ModelComposition.PrimaryKeyProperty.PropertyType), false, true);
         }
 
         public void LogTransaction(string tableName, TransactionTypes transactionType, string connectionToUse)

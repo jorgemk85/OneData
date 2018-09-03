@@ -6,7 +6,7 @@ namespace DataManagement.Attributes
     /// Especifica la propiedad usada como llave primaria. Solo para administracion interna de la libreria.
     /// </summary>
     [AttributeUsage(AttributeTargets.Property)]
-    internal class PrimaryProperty : Attribute
+    public class PrimaryKeyProperty : Attribute
     {
     }
 }

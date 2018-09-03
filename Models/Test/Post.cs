@@ -9,7 +9,7 @@ namespace DataManagement.Models.Test
     [DataTable("Posts", "operaciones")]
     public class Post : Cope<Post>, IManageable
     {
-        [PrimaryProperty]
+        [PrimaryKeyProperty]
         public Guid? Id { get; set; }
         [DateCreatedProperty]
         public DateTime? DateCreated { get; set; }

@@ -7,7 +7,7 @@ using System.Reflection;
 
 namespace DataManagement.Models
 {
-    public sealed class ModelComposition
+    internal sealed class ModelComposition
     {
         /// <summary>
         /// Arreglo completo de las propiedades sin filtrar.
@@ -42,17 +42,23 @@ namespace DataManagement.Models
         internal Dictionary<string, AutoProperty> AutoPropertyAttributes { get; private set; } = new Dictionary<string, AutoProperty>();
         internal DataTable DataTableAttribute { get; private set; }
         internal CacheEnabled CacheEnabledAttribute { get; private set; }
-        internal PropertyInfo PrimaryProperty { get; private set; }
-        internal PropertyInfo DateCreatedProperty { get; private set; }
-        internal PropertyInfo DateModifiedProperty { get; private set; }
-        internal bool IsCacheEnabled;
-        internal long CacheExpiration;
-        internal string PrimaryPropertyName;
-        internal string DateCreatedName;
-        internal string DateModifiedName;
-        internal string TableName;
-        internal string Schema;
-        internal string ForeignPrimaryKeyName;
+        private PropertyInfo _primaryKeyProperty;
+        private PropertyInfo _dateCreatedProperty;
+        private PropertyInfo _dateModifiedProperty;
+        private bool _isCacheEnabled;
+        private long _cacheExpiration;
+        private string _tableName;
+        private string _schema;
+        private string _foreignPrimaryKeyName;
+
+        internal ref readonly PropertyInfo PrimaryKeyProperty => ref _primaryKeyProperty;
+        internal ref readonly PropertyInfo DateCreatedProperty => ref _dateCreatedProperty;
+        internal ref readonly PropertyInfo DateModifiedProperty => ref _dateModifiedProperty;
+        internal ref readonly string TableName => ref _tableName;
+        internal ref readonly string Schema => ref _schema;
+        internal ref readonly bool IsCacheEnabled => ref _isCacheEnabled;
+        internal ref readonly long CacheExpiration => ref _cacheExpiration;
+        internal ref readonly string ForeignPrimaryKeyName => ref _foreignPrimaryKeyName;
 
         public ModelComposition(Type type)
         {
@@ -71,17 +77,17 @@ namespace DataManagement.Models
 
         private void PerformPropertiesValidation(Type type)
         {
-            if (PrimaryProperty == null)
+            if (PrimaryKeyProperty == null)
             {
-                throw new RequiredAttributeNotFound("PrimaryProperty", type.FullName);
+                throw new RequiredAttributeNotFound("PrimaryKeyProperty", type.FullName);
             }
-            else if (Nullable.GetUnderlyingType(PrimaryProperty.PropertyType) == null)
+            else if (Nullable.GetUnderlyingType(PrimaryKeyProperty.PropertyType) == null)
             {
-                throw new InvalidDataType(PrimaryProperty.Name, type.FullName, "Nullable<struct>");
+                throw new InvalidDataType(PrimaryKeyProperty.Name, type.FullName, "Nullable<struct>");
             }
-            else if (!Nullable.GetUnderlyingType(PrimaryProperty.PropertyType).IsValueType)
+            else if (!Nullable.GetUnderlyingType(PrimaryKeyProperty.PropertyType).IsValueType)
             {
-                throw new InvalidDataType(PrimaryProperty.Name, type.FullName, "Nullable<struct>");
+                throw new InvalidDataType(PrimaryKeyProperty.Name, type.FullName, "Nullable<struct>");
             }
 
             if (DateCreatedProperty == null)
@@ -111,13 +117,13 @@ namespace DataManagement.Models
                 {
                     case "DataTable":
                         DataTableAttribute = type.GetCustomAttribute<DataTable>();
-                        TableName = DataTableAttribute.TableName;
-                        Schema = DataTableAttribute.Schema;
+                        _tableName = DataTableAttribute.TableName;
+                        _schema = DataTableAttribute.Schema;
                         break;
                     case "CacheEnabled":
                         CacheEnabledAttribute = type.GetCustomAttribute<CacheEnabled>();
-                        IsCacheEnabled = true;
-                        CacheExpiration = CacheEnabledAttribute.Expiration * TimeSpan.TicksPerSecond;
+                        _isCacheEnabled = true;
+                        _cacheExpiration = CacheEnabledAttribute.Expiration * TimeSpan.TicksPerSecond;
                         break;
                     default:
                         break;
@@ -146,21 +152,18 @@ namespace DataManagement.Models
                             AutoPropertyAttributes.Add(property.Name, property.GetCustomAttribute<AutoProperty>());
                             FilteredProperties.Remove(property.Name);
                             break;
-                        case "PrimaryProperty":
-                            PrimaryProperty = property;
-                            PrimaryPropertyName = property.Name;
-                            ForeignPrimaryKeyName = $"{type.Name}{property.Name}";
+                        case "PrimaryKeyProperty":
+                            _primaryKeyProperty = property;
+                            _foreignPrimaryKeyName = $"{type.Name}{property.Name}";
                             break;
                         case "DateCreatedProperty":
-                            DateCreatedProperty = property;
-                            DateCreatedName = property.Name;
+                            _dateCreatedProperty = property;
                             AutoProperties.Add(property.Name, property);
                             AutoPropertyAttributes.Add(property.Name, new AutoProperty(AutoPropertyTypes.DateTime));
                             FilteredProperties.Remove(property.Name);
                             break;
                         case "DateModifiedProperty":
-                            DateModifiedProperty = property;
-                            DateModifiedName = property.Name;
+                            _dateModifiedProperty = property;
                             AutoProperties.Add(property.Name, property);
                             AutoPropertyAttributes.Add(property.Name, new AutoProperty(AutoPropertyTypes.DateTime));
                             FilteredProperties.Remove(property.Name);
