@@ -208,21 +208,21 @@ namespace DataManagement.DAO
 
         protected void PerformTableConsolidation<T>(string connectionToUse, bool doAlter) where T : Cope<T>, IManageable, new()
         {
-            Logger.Info(string.Format("Starting table consolidation for table {0} using connection {1}. DoAlter = {2}", Manager<T>.ModelComposition.TableName, connectionToUse, doAlter));
+            Logger.Info(string.Format("Starting table consolidation for table {0} using connection {1}. DoAlter = {2}", Manager<T>.ModelComposition.DataTableAttribute.TableName, connectionToUse, doAlter));
             if (!doAlter)
             {
-                if (!CheckIfTableExists(Manager<T>.ModelComposition.TableName, connectionToUse))
+                if (!CheckIfTableExists(Manager<T>.ModelComposition.DataTableAttribute.TableName, connectionToUse))
                 {
                     ProcessTable<T>(connectionToUse, false);
                     return;
                 }
             }
-            ExecuteScalar(Creator.CreateQueryForTableAlteration<T>(GetColumnDefinition(Manager<T>.ModelComposition.TableName, connectionToUse), GetKeyDefinition(Manager<T>.ModelComposition.TableName, connectionToUse)), connectionToUse, false);
+            ExecuteScalar(Creator.CreateQueryForTableAlteration<T>(GetColumnDefinition(Manager<T>.ModelComposition.DataTableAttribute.TableName, connectionToUse), GetKeyDefinition(Manager<T>.ModelComposition.DataTableAttribute.TableName, connectionToUse)), connectionToUse, false);
         }
 
         protected void ProcessTable<T>(string connectionToUse, bool doAlter) where T : Cope<T>, IManageable, new()
         {
-            Logger.Info(string.Format("Processing table {0} using connection {1}. DoAlter = {2}", Manager<T>.ModelComposition.TableName, connectionToUse, doAlter));
+            Logger.Info(string.Format("Processing table {0} using connection {1}. DoAlter = {2}", Manager<T>.ModelComposition.DataTableAttribute.TableName, connectionToUse, doAlter));
             if (doAlter)
             {
                 PerformTableConsolidation<T>(connectionToUse, doAlter);
@@ -247,7 +247,7 @@ namespace DataManagement.DAO
             foreach (KeyValuePair<string, PropertyInfo> property in Manager<T>.ModelComposition.ForeignKeyProperties)
             {
                 IManageable foreignKey = (IManageable)Activator.CreateInstance(Manager<T>.ModelComposition.ForeignKeyAttributes[property.Value.Name].Model);
-                if (!CheckIfTableExists(foreignKey.ModelComposition.TableName, connectionToUse))
+                if (!CheckIfTableExists(foreignKey.TableName, connectionToUse))
                 {
                     CreateOrAlterForeignTables<T>(foreignKey, connectionToUse, false);
                 }
@@ -268,12 +268,12 @@ namespace DataManagement.DAO
 
         private void CreateOrAlterForeignTables<T>(IManageable foreignKey, string connectionToUse, bool doAlter) where T : Cope<T>, IManageable, new()
         {
-            Logger.Info(string.Format("Create or Alter foreign tables of {0} using connection {1}. DoAlter = {2}", foreignKey.ModelComposition.TableName, connectionToUse, doAlter));
+            Logger.Info(string.Format("Create or Alter foreign tables of {0} using connection {1}. DoAlter = {2}", foreignKey.TableName, connectionToUse, doAlter));
             if (doAlter)
             {
                 ExecuteScalar(Creator.CreateQueryForTableAlteration<T>(
-                                                         GetColumnDefinition(foreignKey.ModelComposition.TableName, connectionToUse),
-                                                         GetKeyDefinition(foreignKey.ModelComposition.TableName, connectionToUse)), connectionToUse, false);
+                                                         GetColumnDefinition(foreignKey.TableName, connectionToUse),
+                                                         GetKeyDefinition(foreignKey.TableName, connectionToUse)), connectionToUse, false);
             }
             else
             {
@@ -314,7 +314,7 @@ namespace DataManagement.DAO
                 Parametros = GetStringParameters()
             };
 
-            Logger.Info(string.Format("Created new log object for affected table {0}, transaction used {1}, with the following parameters: {2}", Manager<Log>.ModelComposition.TableName, newLog.Transaccion, newLog.Parametros));
+            Logger.Info(string.Format("Created new log object for affected table {0}, transaction used {1}, with the following parameters: {2}", Manager<Log>.ModelComposition.DataTableAttribute.TableName, newLog.Transaccion, newLog.Parametros));
 
             return newLog;
         }

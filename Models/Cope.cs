@@ -12,7 +12,28 @@ namespace DataManagement.Models
     public abstract class Cope<T> where T : Cope<T>, IManageable, new()
     {
         [UnmanagedProperty]
-        public string ForeignPrimaryKeyName { get; } = $"{typeof(T).Name}{Manager<T>.ModelComposition.PrimaryProperty.Name}";
+        public ref readonly string PrimaryKeyName => ref Manager<T>.ModelComposition.PrimaryPropertyName;
+
+        [UnmanagedProperty]
+        public ref readonly string DateCreatedName => ref Manager<T>.ModelComposition.DateCreatedName;
+
+        [UnmanagedProperty]
+        public ref readonly string DateModifiedName => ref Manager<T>.ModelComposition.DateModifiedName;
+
+        [UnmanagedProperty]
+        public ref readonly string TableName => ref Manager<T>.ModelComposition.TableName;
+
+        [UnmanagedProperty]
+        public ref readonly string Schema => ref Manager<T>.ModelComposition.Schema;
+
+        [UnmanagedProperty]
+        public ref readonly bool IsCacheEnabled => ref Manager<T>.ModelComposition.IsCacheEnabled;
+
+        [UnmanagedProperty]
+        public ref readonly long CacheExpiration => ref Manager<T>.ModelComposition.CacheExpiration;
+
+        [UnmanagedProperty]
+        public ref readonly string ForeignPrimaryKeyName => ref Manager<T>.ModelComposition.ForeignPrimaryKeyName;
 
         [UnmanagedProperty]
         public ModelComposition ModelComposition { get; } = Manager<T>.ModelComposition;

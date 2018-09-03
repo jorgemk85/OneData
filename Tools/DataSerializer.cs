@@ -219,9 +219,10 @@ namespace DataManagement.Tools
             var newDictionary = new Dictionary<dynamic, T>();
             if (queryable != null)
             {
+                PropertyInfo primaryProperty = typeof(T).GetProperty(new T().PrimaryKeyName);
                 foreach (T item in queryable)
                 {
-                    dynamic key = item.ModelComposition.PrimaryProperty.GetValue(item);
+                    dynamic key = primaryProperty.GetValue(item);
                     newDictionary.Add(key, item);
                 }
             }

@@ -42,13 +42,17 @@ namespace DataManagement.Models
         internal Dictionary<string, AutoProperty> AutoPropertyAttributes { get; private set; } = new Dictionary<string, AutoProperty>();
         internal DataTable DataTableAttribute { get; private set; }
         internal CacheEnabled CacheEnabledAttribute { get; private set; }
-        public PropertyInfo PrimaryProperty { get; private set; }
-        public PropertyInfo DateCreatedProperty { get; private set; }
-        public PropertyInfo DateModifiedProperty { get; private set; }
-        public string TableName { get; private set; }
-        public string Schema { get; private set; }
-        public bool IsCacheEnabled { get; private set; }
-        public long CacheExpiration { get; private set; }
+        internal PropertyInfo PrimaryProperty { get; private set; }
+        internal PropertyInfo DateCreatedProperty { get; private set; }
+        internal PropertyInfo DateModifiedProperty { get; private set; }
+        internal bool IsCacheEnabled;
+        internal long CacheExpiration;
+        internal string PrimaryPropertyName;
+        internal string DateCreatedName;
+        internal string DateModifiedName;
+        internal string TableName;
+        internal string Schema;
+        internal string ForeignPrimaryKeyName;
 
         public ModelComposition(Type type)
         {
@@ -59,7 +63,7 @@ namespace DataManagement.Models
 
         private void PerformClassValidation(Type type)
         {
-            if (string.IsNullOrWhiteSpace(TableName))
+            if (string.IsNullOrWhiteSpace(DataTableAttribute.TableName))
             {
                 throw new RequiredAttributeNotFound("DataTable", type.FullName);
             }
@@ -144,15 +148,19 @@ namespace DataManagement.Models
                             break;
                         case "PrimaryProperty":
                             PrimaryProperty = property;
+                            PrimaryPropertyName = property.Name;
+                            ForeignPrimaryKeyName = $"{type.Name}{property.Name}";
                             break;
                         case "DateCreatedProperty":
                             DateCreatedProperty = property;
+                            DateCreatedName = property.Name;
                             AutoProperties.Add(property.Name, property);
                             AutoPropertyAttributes.Add(property.Name, new AutoProperty(AutoPropertyTypes.DateTime));
                             FilteredProperties.Remove(property.Name);
                             break;
                         case "DateModifiedProperty":
                             DateModifiedProperty = property;
+                            DateModifiedName = property.Name;
                             AutoProperties.Add(property.Name, property);
                             AutoPropertyAttributes.Add(property.Name, new AutoProperty(AutoPropertyTypes.DateTime));
                             FilteredProperties.Remove(property.Name);

@@ -78,7 +78,7 @@ namespace DataManagement.DAO
                     if (connection.State != ConnectionState.Open) throw new BadConnectionStateException();
                     Command = connection.CreateCommand();
                     Command.CommandType = CommandType.StoredProcedure;
-                    Command.CommandText = string.Format("{0}{1}{2}", Manager.StoredProcedurePrefix, Manager<T>.ModelComposition.TableName, GetFriendlyTransactionSuffix(transactionType));
+                    Command.CommandText = string.Format("{0}{1}{2}", Manager.StoredProcedurePrefix, Manager<T>.ModelComposition.DataTableAttribute.TableName, GetFriendlyTransactionSuffix(transactionType));
 
                     if (transactionType == TransactionTypes.Insert)
                     {
@@ -98,7 +98,7 @@ namespace DataManagement.DAO
                         }
                         dataTable = new DataTable();
                         dataTable.Load(Command.ExecuteReader());
-                        dataTable.TableName = Manager<T>.ModelComposition.TableName;
+                        dataTable.TableName = Manager<T>.ModelComposition.DataTableAttribute.TableName;
                     }
                 }
                 Logger.Info(string.Format("Execution {0} for object {1} using connection {2} has finished successfully.", transactionType.ToString(), typeof(T), connectionToUse));
@@ -119,7 +119,7 @@ namespace DataManagement.DAO
             {
                 if (Manager.AutoCreateTables)
                 {
-                    Logger.Warn(string.Format("Table {0} not found. Creating...", Manager<T>.ModelComposition.TableName));
+                    Logger.Warn(string.Format("Table {0} not found. Creating...", Manager<T>.ModelComposition.DataTableAttribute.TableName));
                     ProcessTable<T>(connectionToUse, false);
                     overrideConsolidation = true;
                     goto Start;
@@ -158,7 +158,7 @@ namespace DataManagement.DAO
                 throw;
             }
 
-            if (logTransaction) LogTransaction(Manager<T>.ModelComposition.TableName, transactionType, connectionToUse);
+            if (logTransaction) LogTransaction(Manager<T>.ModelComposition.DataTableAttribute.TableName, transactionType, connectionToUse);
 
             return new Result<T>(dataTable.ToDictionary<T>(Manager<T>.ModelComposition.PrimaryProperty.Name, Manager<T>.ModelComposition.PrimaryProperty.PropertyType), false, true);
         }
@@ -182,7 +182,7 @@ namespace DataManagement.DAO
                     if (connection.State != ConnectionState.Open) throw new BadConnectionStateException();
                     Command = connection.CreateCommand();
                     Command.CommandType = CommandType.StoredProcedure;
-                    Command.CommandText = string.Format("{0}{1}{2}", Manager.StoredProcedurePrefix, Manager<T>.ModelComposition.TableName, GetFriendlyTransactionSuffix(transactionType));
+                    Command.CommandText = string.Format("{0}{1}{2}", Manager.StoredProcedurePrefix, Manager<T>.ModelComposition.DataTableAttribute.TableName, GetFriendlyTransactionSuffix(transactionType));
 
                     if (transactionType == TransactionTypes.InsertMassive)
                     {
@@ -208,7 +208,7 @@ namespace DataManagement.DAO
             {
                 if (Manager.AutoCreateTables)
                 {
-                    Logger.Warn(string.Format("Table {0} not found. Creating...", Manager<T>.ModelComposition.TableName));
+                    Logger.Warn(string.Format("Table {0} not found. Creating...", Manager<T>.ModelComposition.DataTableAttribute.TableName));
                     ProcessTable<T>(connectionToUse, false);
                     overrideConsolidation = true;
                     goto Start;
@@ -245,7 +245,7 @@ namespace DataManagement.DAO
                 throw;
             }
 
-            if (logTransaction) LogTransaction(Manager<T>.ModelComposition.TableName, transactionType, connectionToUse);
+            if (logTransaction) LogTransaction(Manager<T>.ModelComposition.DataTableAttribute.TableName, transactionType, connectionToUse);
 
             return new Result<T>(dataTable.ToDictionary<T>(Manager<T>.ModelComposition.PrimaryProperty.Name, Manager<T>.ModelComposition.PrimaryProperty.PropertyType), false, true);
         }
