@@ -1,4 +1,5 @@
-﻿using DataManagement.Interfaces;
+﻿using DataManagement.Enums;
+using DataManagement.Interfaces;
 using DataManagement.Models;
 using Newtonsoft.Json;
 using System;
@@ -7,6 +8,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 using System.Xml.Serialization;
 
@@ -456,6 +458,38 @@ namespace DataManagement.Tools
             return dataTable;
         }
 
+        public static Dictionary<TKey, T> ConvertIEnumerableToDictionaryOfType<TKey, T>(IEnumerable<T> list, Expression<Func<T, TKey>> keyProperty)
+        {
+            var newDictionary = new Dictionary<TKey, T>();
+            if (list != null)
+            {
+                MemberExpression expressionRequired = null;
+                var body = ConsolidationTools.GetExpressionBodyType(keyProperty, t => expressionRequired);
+                LoopIEnumerableToDictionaryOfType(list, body.Member.Name, ref newDictionary);
+            }
+            return newDictionary;
+        }
+
+        public static Dictionary<TKey, T> ConvertIEnumerableToDictionaryOfType<TKey, T>(IEnumerable<T> list, string keyPropertyName)
+        {
+            var newDictionary = new Dictionary<TKey, T>();
+            if (list != null)
+            {
+                LoopIEnumerableToDictionaryOfType(list, keyPropertyName, ref newDictionary);
+            }
+            return newDictionary;
+        }
+
+        private static void LoopIEnumerableToDictionaryOfType<TKey, T>(IEnumerable<T> list, string keyPropertyName, ref Dictionary<TKey, T> dictionary)
+        {
+            PropertyInfo keyProperty = typeof(T).GetProperty(keyPropertyName);
+            foreach (T item in list)
+            {
+                TKey key = (TKey)keyProperty.GetValue(item);
+                dictionary.Add(key, item);
+            }
+        }
+
         /// <summary>
         /// Convierte un objeto de de tipo <typeparamref name="T"/> a un objeto de tipo Datatable.
         /// </summary>
@@ -468,7 +502,7 @@ namespace DataManagement.Tools
             PropertyInfo[] properties = typeof(T).GetProperties();
             foreach (PropertyInfo prop in properties)
             {
-                Type type = (prop.PropertyType.IsGenericType && prop.PropertyType.GetGenericTypeDefinition() == typeof(Nullable<>) ? Nullable.GetUnderlyingType(prop.PropertyType) : prop.PropertyType);
+                Type type = prop.PropertyType.IsGenericType && prop.PropertyType.GetGenericTypeDefinition() == typeof(Nullable<>) ? Nullable.GetUnderlyingType(prop.PropertyType) : prop.PropertyType;
                 dataTable.Columns.Add(prop.Name, type);
             }
 

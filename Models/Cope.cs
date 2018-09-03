@@ -9,8 +9,11 @@ using System.Linq;
 namespace DataManagement.Models
 {
     [Serializable]
-    public class Cope<T> where T : Cope<T>, IManageable, new()
+    public abstract class Cope<T> where T : Cope<T>, IManageable, new()
     {
+        [UnmanagedProperty]
+        public string ForeignPrimaryKeyName { get; } = $"{typeof(T).Name}{Manager<T>.ModelComposition.PrimaryProperty.Name}";
+
         [UnmanagedProperty]
         public ModelComposition ModelComposition { get; } = Manager<T>.ModelComposition;
 

@@ -3,6 +3,7 @@ using DataManagement.Models;
 using DataManagement.Models.Test;
 using DataManagement.Tools.Test;
 using NUnit.Framework;
+using System;
 using System.Collections.Generic;
 
 namespace DataManagement.IntegrationTests.MsSql
@@ -39,8 +40,8 @@ namespace DataManagement.IntegrationTests.MsSql
         [Test]
         public void InsertPost_NewObject_ReturnsNoError()
         {
-            List<Blog> blogs = Blog.SelectAll();
-            List<Author> authors = Author.SelectAll();
+            var blogs = Blog.SelectAll();
+            var authors = Author.SelectAll();
 
             TestTools.GetPostModel(true).BlogId = blogs[0].Id;
             TestTools.GetPostModel(false).AuthorId = authors[0].Id;
@@ -50,7 +51,8 @@ namespace DataManagement.IntegrationTests.MsSql
         [Test]
         public void InsertComment_NewObject_ReturnsNoError()
         {
-            List<Post> posts = Post.SelectAll();
+            var posts = Post.SelectAll();
+            var dict = posts.ToDictionary(k => k.Id);
 
             TestTools.GetCommentModel(true).PostId = posts[0].Id;
             Assert.DoesNotThrow(() => TestTools.GetCommentModel(false).Insert());

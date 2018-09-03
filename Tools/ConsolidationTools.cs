@@ -1,6 +1,8 @@
 ﻿using DataManagement.Enums;
 using DataManagement.Exceptions;
+using System;
 using System.Configuration;
+using System.Linq.Expressions;
 using System.Reflection;
 
 namespace DataManagement.Tools
@@ -89,6 +91,18 @@ namespace DataManagement.Tools
                 default:
                     throw new ConfigurationNotFoundException(key);
             }
+        }
+
+        public static TRequired GetExpressionBodyType<TParameter, TResult, TRequired>(Expression<Func<TParameter, TResult>> expression, Expression<Func<TParameter, TRequired>> expressionType, bool throwErrorIfFalse = true) where TRequired : class
+        {
+            TRequired currentExpressionType = expression.Body as TRequired;
+
+            if (currentExpressionType == null && throwErrorIfFalse)
+            {
+                throw new NotMatchingExpressionTypeException(expression.Body.GetType().FullName, expressionType.ToString());
+            }
+
+            return currentExpressionType;
         }
     }
 }

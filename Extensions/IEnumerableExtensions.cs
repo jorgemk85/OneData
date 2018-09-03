@@ -1,8 +1,8 @@
-﻿using DataManagement.Interfaces;
-using DataManagement.Models;
-using DataManagement.Tools;
+﻿using DataManagement.Tools;
+using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Linq.Expressions;
 using System.Text;
 
 namespace DataManagement.Extensions
@@ -32,6 +32,16 @@ namespace DataManagement.Extensions
         public static DataTable ToDataTable<T>(this IEnumerable<T> list) where T : new()
         {
             return DataSerializer.ConvertIEnumerableToDataTableOfGenericType(list);
+        }
+
+        public static Dictionary<TKey, T> ToDictionary<TKey, T>(this IEnumerable<T> list, string keyPropertyName)
+        {
+            return DataSerializer.ConvertIEnumerableToDictionaryOfType<TKey, T>(list, keyPropertyName);
+        }
+
+        public static Dictionary<TKey, T> ToDictionary<TKey, T>(this IEnumerable<T> list, Expression<Func<T, TKey>> keyProperty)
+        {
+            return DataSerializer.ConvertIEnumerableToDictionaryOfType(list, keyProperty);
         }
 
         //public static DataTable ToDataTable<T>(this IEnumerable<T> list) where T : Cope<T>, IManageable, new()
