@@ -12,39 +12,39 @@ namespace DataManagement.Models
         /// <summary>
         /// Arreglo completo de las propiedades sin filtrar.
         /// </summary>
-        public PropertyInfo[] Properties { get; private set; }
+        internal PropertyInfo[] Properties { get; private set; }
         /// <summary>
         /// Controla las propiedades que NO estan marcadas como UnmanagedProperty.
         /// </summary>
-        public Dictionary<string, PropertyInfo> ManagedProperties { get; private set; } = new Dictionary<string, PropertyInfo>();
+        internal Dictionary<string, PropertyInfo> ManagedProperties { get; private set; } = new Dictionary<string, PropertyInfo>();
         /// <summary>
         /// Son aquellas propiedades marcadas con el atributo UnmanagedProperty.
         /// </summary>
-        public Dictionary<string, PropertyInfo> UnmanagedProperties { get; private set; } = new Dictionary<string, PropertyInfo>();
+        internal Dictionary<string, PropertyInfo> UnmanagedProperties { get; private set; } = new Dictionary<string, PropertyInfo>();
         /// <summary>
         /// Las propiedades contenidas en este diccionario son aquellas marcadas como AutoProperties, las cuales se usan para ser
         /// alimentada desde la base de datos, en el procedimiento almacenado.
         /// </summary>
-        public Dictionary<string, PropertyInfo> AutoProperties { get; private set; } = new Dictionary<string, PropertyInfo>();
+        internal Dictionary<string, PropertyInfo> AutoProperties { get; private set; } = new Dictionary<string, PropertyInfo>();
         /// <summary>
         /// Esta propiedad controla las propiedades del objeto que NO estan marcadas con el atributo UnmanagedProperty NI AutoProperty NI ForeignCollection.
         /// </summary>
-        public Dictionary<string, PropertyInfo> FilteredProperties { get; private set; } = new Dictionary<string, PropertyInfo>();
+        internal Dictionary<string, PropertyInfo> FilteredProperties { get; private set; } = new Dictionary<string, PropertyInfo>();
         /// <summary>
         /// Esta propiedad controla las propiedades del objeto que estan marcadas como ForeignKey.
         /// </summary>
-        public Dictionary<string, PropertyInfo> ForeignKeyProperties { get; private set; } = new Dictionary<string, PropertyInfo>();
+        internal Dictionary<string, PropertyInfo> ForeignKeyProperties { get; private set; } = new Dictionary<string, PropertyInfo>();
 
-        public Dictionary<string, PropertyInfo> ForeignCollectionProperties { get; private set; } = new Dictionary<string, PropertyInfo>();
-        public Dictionary<string, ForeignCollection> ForeignCollectionAttributes { get; private set; } = new Dictionary<string, ForeignCollection>();
+        internal Dictionary<string, PropertyInfo> ForeignCollectionProperties { get; private set; } = new Dictionary<string, PropertyInfo>();
+        internal Dictionary<string, ForeignCollection> ForeignCollectionAttributes { get; private set; } = new Dictionary<string, ForeignCollection>();
 
-        public Dictionary<string, ForeignKey> ForeignKeyAttributes { get; private set; } = new Dictionary<string, ForeignKey>();
-        public Dictionary<string, AutoProperty> AutoPropertyAttributes { get; private set; } = new Dictionary<string, AutoProperty>();
+        internal Dictionary<string, ForeignKey> ForeignKeyAttributes { get; private set; } = new Dictionary<string, ForeignKey>();
+        internal Dictionary<string, AutoProperty> AutoPropertyAttributes { get; private set; } = new Dictionary<string, AutoProperty>();
+        internal DataTable DataTableAttribute { get; private set; }
+        internal CacheEnabled CacheEnabledAttribute { get; private set; }
         public PropertyInfo PrimaryProperty { get; private set; }
         public PropertyInfo DateCreatedProperty { get; private set; }
         public PropertyInfo DateModifiedProperty { get; private set; }
-        public DataTable DataTableAttribute { get; private set; }
-        public CacheEnabled CacheEnabledAttribute { get; private set; }
         public string TableName { get; private set; }
         public string Schema { get; private set; }
         public bool IsCacheEnabled { get; private set; }

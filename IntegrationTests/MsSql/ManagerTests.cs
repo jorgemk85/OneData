@@ -5,6 +5,7 @@ using DataManagement.Tools.Test;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 
 namespace DataManagement.IntegrationTests.MsSql
 {
