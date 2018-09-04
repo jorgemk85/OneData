@@ -13,21 +13,13 @@ namespace DataManagement.Models
     public abstract class Cope<T> where T : Cope<T>, IManageable, new()
     {
         [UnmanagedProperty]
-        internal PropertyInfo PrimaryKeyProperty { get; } = Manager<T>.ModelComposition.PrimaryKeyProperty;
+        internal PropertyInfo PrimaryKeyProperty { get; set; }
         [UnmanagedProperty]
-        internal PropertyInfo DateCreatedProperty { get; } = Manager<T>.ModelComposition.DateCreatedProperty;
+        internal PropertyInfo DateCreatedProperty { get; set; }
         [UnmanagedProperty]
-        internal PropertyInfo DateModifiedProperty { get; } = Manager<T>.ModelComposition.DateModifiedProperty;
+        internal PropertyInfo DateModifiedProperty { get; set; }
         [UnmanagedProperty]
-        public string TableName { get; } = Manager<T>.ModelComposition.TableName;
-        [UnmanagedProperty]
-        public string Schema { get; } = Manager<T>.ModelComposition.Schema;
-        [UnmanagedProperty]
-        public bool IsCacheEnabled { get; } = Manager<T>.ModelComposition.IsCacheEnabled;
-        [UnmanagedProperty]
-        public long CacheExpiration { get; } = Manager<T>.ModelComposition.CacheExpiration;
-        [UnmanagedProperty]
-        public string ForeignPrimaryKeyName { get; } = Manager<T>.ModelComposition.ForeignPrimaryKeyName;
+        public Composition Composition { get; } = Manager<T>.Composition;
 
         /// <summary>
         /// Obtiene un listado completo de los objetos de tipo <typeparamref name="T"/> almacenados en la base de datos o en el cache.

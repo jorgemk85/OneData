@@ -125,8 +125,10 @@ namespace DataManagement.DAO
     {
         static DataCache<T> dataCache = new DataCache<T>();
         static readonly ModelComposition _modelComposition = new ModelComposition(typeof(T));
+        static readonly Composition _composition = new Composition();
 
         internal static ref readonly ModelComposition ModelComposition => ref _modelComposition;
+        internal static ref readonly Composition Composition => ref _composition;
 
         #region Events
         public static event CommandExecutedEventHandler<T> OnCommandExecuted;
@@ -142,6 +144,16 @@ namespace DataManagement.DAO
         static Manager()
         {
             dataCache.Initialize(ModelComposition.IsCacheEnabled);
+            SetupComposition();
+        }
+
+        private static void SetupComposition()
+        {
+            _composition.CacheExpiration = _modelComposition.CacheExpiration;
+            _composition.ForeignPrimaryKeyName = _modelComposition.ForeignPrimaryKeyName;
+            _composition.IsCacheEnabled = _modelComposition.IsCacheEnabled;
+            _composition.Schema = _modelComposition.Schema;
+            _composition.TableName = _modelComposition.TableName;
         }
 
         /// <summary>

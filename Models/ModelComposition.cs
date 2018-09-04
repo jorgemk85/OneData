@@ -42,6 +42,7 @@ namespace DataManagement.Models
         internal Dictionary<string, AutoProperty> AutoPropertyAttributes { get; private set; } = new Dictionary<string, AutoProperty>();
         internal DataTable DataTableAttribute { get; private set; }
         internal CacheEnabled CacheEnabledAttribute { get; private set; }
+        
         private PropertyInfo _primaryKeyProperty;
         private PropertyInfo _dateCreatedProperty;
         private PropertyInfo _dateModifiedProperty;

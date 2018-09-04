@@ -247,7 +247,7 @@ namespace DataManagement.DAO
             foreach (KeyValuePair<string, PropertyInfo> property in Manager<T>.ModelComposition.ForeignKeyProperties)
             {
                 IManageable foreignKey = (IManageable)Activator.CreateInstance(Manager<T>.ModelComposition.ForeignKeyAttributes[property.Value.Name].Model);
-                if (!CheckIfTableExists(foreignKey.TableName, connectionToUse))
+                if (!CheckIfTableExists(foreignKey.Composition.TableName, connectionToUse))
                 {
                     CreateOrAlterForeignTables<T>(foreignKey, connectionToUse, false);
                 }
@@ -268,12 +268,12 @@ namespace DataManagement.DAO
 
         private void CreateOrAlterForeignTables<T>(IManageable foreignKey, string connectionToUse, bool doAlter) where T : Cope<T>, IManageable, new()
         {
-            Logger.Info(string.Format("Create or Alter foreign tables of {0} using connection {1}. DoAlter = {2}", foreignKey.TableName, connectionToUse, doAlter));
+            Logger.Info(string.Format("Create or Alter foreign tables of {0} using connection {1}. DoAlter = {2}", foreignKey.Composition.TableName, connectionToUse, doAlter));
             if (doAlter)
             {
                 ExecuteScalar(Creator.CreateQueryForTableAlteration<T>(
-                                                         GetColumnDefinition(foreignKey.TableName, connectionToUse),
-                                                         GetKeyDefinition(foreignKey.TableName, connectionToUse)), connectionToUse, false);
+                                                         GetColumnDefinition(foreignKey.Composition.TableName, connectionToUse),
+                                                         GetKeyDefinition(foreignKey.Composition.TableName, connectionToUse)), connectionToUse, false);
             }
             else
             {
