@@ -10,8 +10,5 @@ namespace DataManagement.Interfaces
         string Schema { get; }
         bool IsCacheEnabled { get; }
         long CacheExpiration { get; }
-        PropertyInfo PrimaryKeyProperty { get; }
-        PropertyInfo DateCreatedProperty { get; }
-        PropertyInfo DateModifiedProperty { get; }
     }
 }

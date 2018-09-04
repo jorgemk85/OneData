@@ -214,7 +214,7 @@ namespace DataManagement.Tools
             return newDictionary;
         }
 
-        public static Dictionary<dynamic, T> ConvertQueryableToDictionaryOfType<T>(IQueryable queryable, string keyName, Type keyType) where T : IManageable, new()
+        public static Dictionary<dynamic, T> ConvertQueryableToDictionaryOfType<T>(IQueryable queryable, string keyName, Type keyType) where T : Cope<T>, IManageable, new()
         {
             var newDictionary = new Dictionary<dynamic, T>();
             if (queryable != null)

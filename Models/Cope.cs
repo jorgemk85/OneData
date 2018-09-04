@@ -13,11 +13,11 @@ namespace DataManagement.Models
     public abstract class Cope<T> where T : Cope<T>, IManageable, new()
     {
         [UnmanagedProperty]
-        public PropertyInfo PrimaryKeyProperty { get; } = Manager<T>.ModelComposition.PrimaryKeyProperty;
+        internal PropertyInfo PrimaryKeyProperty { get; } = Manager<T>.ModelComposition.PrimaryKeyProperty;
         [UnmanagedProperty]
-        public PropertyInfo DateCreatedProperty { get; } = Manager<T>.ModelComposition.DateCreatedProperty;
+        internal PropertyInfo DateCreatedProperty { get; } = Manager<T>.ModelComposition.DateCreatedProperty;
         [UnmanagedProperty]
-        public PropertyInfo DateModifiedProperty { get; } = Manager<T>.ModelComposition.DateModifiedProperty;
+        internal PropertyInfo DateModifiedProperty { get; } = Manager<T>.ModelComposition.DateModifiedProperty;
         [UnmanagedProperty]
         public string TableName { get; } = Manager<T>.ModelComposition.TableName;
         [UnmanagedProperty]
