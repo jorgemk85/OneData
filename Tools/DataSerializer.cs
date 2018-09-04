@@ -325,13 +325,7 @@ namespace DataManagement.Tools
 
         public static List<T> ConvertDictionaryToListOfType<TKey, T>(Dictionary<TKey, T> dictionary) where T : new()
         {
-            List<T> newList = new List<T>();
-            foreach (KeyValuePair<TKey, T> row in dictionary)
-            {
-                newList.Add(row.Value);
-            }
-
-            return newList;
+            return new List<T>(dictionary.Values);
         }
 
         public static ICollection<object> ConvertDataTableToListOfType(DataTable dataTable, Type target)

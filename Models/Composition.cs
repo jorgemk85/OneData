@@ -2,7 +2,7 @@
 
 namespace DataManagement.Models
 {
-    public class Composition
+    public sealed class Composition
     {
         public string TableName { get; internal set; }
         public string Schema { get; internal set; }

@@ -23,8 +23,8 @@ namespace DataManagement.IntegrationTests.MySql
         public void SelectGuid_DataFromCache_ReturnsTrue()
         {
             TestTools.GetBlogModel(true).Insert();
-            List<Blog> list = Blog.SelectAll();
-            Result<Blog> result = Blog.SelectResult(new Parameter(nameof(Blog.Id), list[0].Id));
+            List<Blog> list = Blog.SelectAll().Data.ToList();
+            Result<Blog> result = Blog.Select(new Parameter(nameof(Blog.Id), list[0].Id));
             TestTools.GetBlogModel(false).Delete();
 
             Assert.IsTrue(result.IsFromCache);
@@ -36,8 +36,8 @@ namespace DataManagement.IntegrationTests.MySql
         public void SelectInt_DataFromCache_ReturnsTrue()
         {
             TestTools.GetLogTestIntModel(true).Insert();
-            List<LogTestInt> list = LogTestInt.SelectAll();
-            Result<LogTestInt> result = LogTestInt.SelectResult(new Parameter(nameof(LogTestInt.Id), list[0].Id));
+            List<LogTestInt> list = LogTestInt.SelectAll().Data.ToList();
+            Result<LogTestInt> result = LogTestInt.Select(new Parameter(nameof(LogTestInt.Id), list[0].Id));
             TestTools.GetLogTestIntModel(false).Delete();
 
             Assert.IsTrue(result.IsFromCache);
@@ -54,8 +54,8 @@ namespace DataManagement.IntegrationTests.MySql
         [Test]
         public void InsertPost_NewObject_ReturnsNoError()
         {
-            List<Blog> blogs = Blog.SelectAll();
-            List<Author> authors = Author.SelectAll();
+            List<Blog> blogs = Blog.SelectAll().Data.ToList();
+            List<Author> authors = Author.SelectAll().Data.ToList();
 
             TestTools.GetPostModel(true).BlogId = blogs[0].Id;
             TestTools.GetPostModel(false).AuthorId = authors[0].Id;
@@ -65,9 +65,9 @@ namespace DataManagement.IntegrationTests.MySql
         [Test]
         public void InsertComment_NewObject_ReturnsNoError()
         {
-            List<Post> posts = Post.SelectAll();
+            var posts = Post.SelectAll();
 
-            TestTools.GetCommentModel(true).PostId = posts[0].Id;
+            TestTools.GetCommentModel(true).PostId = posts.Data[0].Id;
             Assert.DoesNotThrow(() => TestTools.GetCommentModel(false).Insert());
         }
 
