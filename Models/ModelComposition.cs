@@ -1,4 +1,5 @@
 ﻿using DataManagement.Attributes;
+using DataManagement.DAO;
 using DataManagement.Enums;
 using DataManagement.Exceptions;
 using System;
@@ -40,9 +41,7 @@ namespace DataManagement.Models
 
         internal Dictionary<string, ForeignKey> ForeignKeyAttributes { get; private set; } = new Dictionary<string, ForeignKey>();
         internal Dictionary<string, AutoProperty> AutoPropertyAttributes { get; private set; } = new Dictionary<string, AutoProperty>();
-        internal DataTable DataTableAttribute { get; private set; }
-        internal CacheEnabled CacheEnabledAttribute { get; private set; }
-        
+
         private PropertyInfo _primaryKeyProperty;
         private PropertyInfo _dateCreatedProperty;
         private PropertyInfo _dateModifiedProperty;
@@ -70,7 +69,7 @@ namespace DataManagement.Models
 
         private void PerformClassValidation(Type type)
         {
-            if (string.IsNullOrWhiteSpace(DataTableAttribute.TableName))
+            if (string.IsNullOrWhiteSpace(_tableName))
             {
                 throw new RequiredAttributeNotFound("DataTable", type.FullName);
             }
@@ -112,19 +111,22 @@ namespace DataManagement.Models
 
         private void SetClass(Type type)
         {
+            DataTable dataTableAttribute;
+            CacheEnabled cacheEnabledAttribute;
+
             foreach (CustomAttributeData attribute in type.CustomAttributes)
             {
                 switch (attribute.AttributeType.Name)
                 {
                     case "DataTable":
-                        DataTableAttribute = type.GetCustomAttribute<DataTable>();
-                        _tableName = DataTableAttribute.TableName;
-                        _schema = DataTableAttribute.Schema;
+                        dataTableAttribute = type.GetCustomAttribute<DataTable>();
+                        _tableName = dataTableAttribute.TableName;
+                        _schema = string.IsNullOrWhiteSpace(dataTableAttribute.Schema) ? Manager.DefaultSchema : dataTableAttribute.Schema;
                         break;
                     case "CacheEnabled":
-                        CacheEnabledAttribute = type.GetCustomAttribute<CacheEnabled>();
+                        cacheEnabledAttribute = type.GetCustomAttribute<CacheEnabled>();
                         _isCacheEnabled = true;
-                        _cacheExpiration = CacheEnabledAttribute.Expiration * TimeSpan.TicksPerSecond;
+                        _cacheExpiration = cacheEnabledAttribute.Expiration * TimeSpan.TicksPerSecond;
                         break;
                     default:
                         break;

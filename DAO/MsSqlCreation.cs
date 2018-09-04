@@ -52,11 +52,11 @@ namespace DataManagement.DAO
 
             if (doAlter)
             {
-                queryBuilder.AppendFormat("ALTER PROCEDURE {0}.{1}{2}{3}\n", Manager<T>.ModelComposition.DataTableAttribute.Schema, Manager.StoredProcedurePrefix, Manager<T>.ModelComposition.DataTableAttribute.TableName, Manager.InsertSuffix);
+                queryBuilder.AppendFormat("ALTER PROCEDURE {0}.{1}{2}{3}\n", Manager<T>.ModelComposition.Schema, Manager.StoredProcedurePrefix, Manager<T>.ModelComposition.TableName, Manager.InsertSuffix);
             }
             else
             {
-                queryBuilder.AppendFormat("CREATE PROCEDURE {0}.{1}{2}{3}\n", Manager<T>.ModelComposition.DataTableAttribute.Schema, Manager.StoredProcedurePrefix, Manager<T>.ModelComposition.DataTableAttribute.TableName, Manager.InsertSuffix);
+                queryBuilder.AppendFormat("CREATE PROCEDURE {0}.{1}{2}{3}\n", Manager<T>.ModelComposition.Schema, Manager.StoredProcedurePrefix, Manager<T>.ModelComposition.TableName, Manager.InsertSuffix);
             }
 
             // Aqui se colocan los parametros segun las propiedades del objeto
@@ -65,7 +65,7 @@ namespace DataManagement.DAO
             queryBuilder.Remove(queryBuilder.Length - 2, 2);
             queryBuilder.Append("\nAS\n");
             queryBuilder.Append("BEGIN\n");
-            queryBuilder.AppendFormat("INSERT INTO {0}.{1}{2} (\n", Manager<T>.ModelComposition.DataTableAttribute.Schema, Manager.TablePrefix, Manager<T>.ModelComposition.DataTableAttribute.TableName);
+            queryBuilder.AppendFormat("INSERT INTO {0}.{1}{2} (\n", Manager<T>.ModelComposition.Schema, Manager.TablePrefix, Manager<T>.ModelComposition.TableName);
 
             // Seccion para especificar a que columnas se va a insertar y sus valores.
             foreach (KeyValuePair<string, PropertyInfo> property in Manager<T>.ModelComposition.ManagedProperties)
@@ -108,11 +108,11 @@ namespace DataManagement.DAO
 
             if (doAlter)
             {
-                queryBuilder.AppendFormat("ALTER PROCEDURE {0}.{1}{2}{3}\n", Manager<T>.ModelComposition.DataTableAttribute.Schema, Manager.StoredProcedurePrefix, Manager<T>.ModelComposition.DataTableAttribute.TableName, Manager.UpdateSuffix);
+                queryBuilder.AppendFormat("ALTER PROCEDURE {0}.{1}{2}{3}\n", Manager<T>.ModelComposition.Schema, Manager.StoredProcedurePrefix, Manager<T>.ModelComposition.TableName, Manager.UpdateSuffix);
             }
             else
             {
-                queryBuilder.AppendFormat("CREATE PROCEDURE {0}.{1}{2}{3}\n", Manager<T>.ModelComposition.DataTableAttribute.Schema, Manager.StoredProcedurePrefix, Manager<T>.ModelComposition.DataTableAttribute.TableName, Manager.UpdateSuffix);
+                queryBuilder.AppendFormat("CREATE PROCEDURE {0}.{1}{2}{3}\n", Manager<T>.ModelComposition.Schema, Manager.StoredProcedurePrefix, Manager<T>.ModelComposition.TableName, Manager.UpdateSuffix);
             }
 
 
@@ -122,7 +122,7 @@ namespace DataManagement.DAO
             queryBuilder.Remove(queryBuilder.Length - 2, 2);
             queryBuilder.Append("\nAS\n");
             queryBuilder.Append("BEGIN\n");
-            queryBuilder.AppendFormat("UPDATE {0}.{1}{2}\n", Manager<T>.ModelComposition.DataTableAttribute.Schema, Manager.TablePrefix, Manager<T>.ModelComposition.DataTableAttribute.TableName);
+            queryBuilder.AppendFormat("UPDATE {0}.{1}{2}\n", Manager<T>.ModelComposition.Schema, Manager.TablePrefix, Manager<T>.ModelComposition.TableName);
             queryBuilder.Append("SET\n");
 
             // Se especifica el parametro que va en x columna.
@@ -157,17 +157,17 @@ namespace DataManagement.DAO
 
             if (doAlter)
             {
-                queryBuilder.AppendFormat("ALTER PROCEDURE {0}.{1}{2}{3}\n", Manager<T>.ModelComposition.DataTableAttribute.Schema, Manager.StoredProcedurePrefix, Manager<T>.ModelComposition.DataTableAttribute.TableName, Manager.DeleteSuffix);
+                queryBuilder.AppendFormat("ALTER PROCEDURE {0}.{1}{2}{3}\n", Manager<T>.ModelComposition.Schema, Manager.StoredProcedurePrefix, Manager<T>.ModelComposition.TableName, Manager.DeleteSuffix);
             }
             else
             {
-                queryBuilder.AppendFormat("CREATE PROCEDURE {0}.{1}{2}{3}\n", Manager<T>.ModelComposition.DataTableAttribute.Schema, Manager.StoredProcedurePrefix, Manager<T>.ModelComposition.DataTableAttribute.TableName, Manager.DeleteSuffix);
+                queryBuilder.AppendFormat("CREATE PROCEDURE {0}.{1}{2}{3}\n", Manager<T>.ModelComposition.Schema, Manager.StoredProcedurePrefix, Manager<T>.ModelComposition.TableName, Manager.DeleteSuffix);
             }
 
             queryBuilder.Append(string.Format("@_Id {0}\n", GetSqlDataType(obj.PrimaryKeyProperty.PropertyType)));
             queryBuilder.Append("AS\n");
             queryBuilder.Append("BEGIN\n");
-            queryBuilder.AppendFormat("DELETE FROM {0}.{1}{2}\n", Manager<T>.ModelComposition.DataTableAttribute.Schema, Manager.TablePrefix, Manager<T>.ModelComposition.DataTableAttribute.TableName);
+            queryBuilder.AppendFormat("DELETE FROM {0}.{1}{2}\n", Manager<T>.ModelComposition.Schema, Manager.TablePrefix, Manager<T>.ModelComposition.TableName);
             queryBuilder.AppendFormat("WHERE Id = @_Id;\n");
             queryBuilder.Append("END");
 
@@ -182,16 +182,16 @@ namespace DataManagement.DAO
 
             if (doAlter)
             {
-                queryBuilder.AppendFormat("ALTER PROCEDURE {0}.{1}{2}{3}\n", Manager<T>.ModelComposition.DataTableAttribute.Schema, Manager.StoredProcedurePrefix, Manager<T>.ModelComposition.DataTableAttribute.TableName, Manager.SelectAllSuffix);
+                queryBuilder.AppendFormat("ALTER PROCEDURE {0}.{1}{2}{3}\n", Manager<T>.ModelComposition.Schema, Manager.StoredProcedurePrefix, Manager<T>.ModelComposition.TableName, Manager.SelectAllSuffix);
             }
             else
             {
-                queryBuilder.AppendFormat("CREATE PROCEDURE {0}.{1}{2}{3}\n", Manager<T>.ModelComposition.DataTableAttribute.Schema, Manager.StoredProcedurePrefix, Manager<T>.ModelComposition.DataTableAttribute.TableName, Manager.SelectAllSuffix);
+                queryBuilder.AppendFormat("CREATE PROCEDURE {0}.{1}{2}{3}\n", Manager<T>.ModelComposition.Schema, Manager.StoredProcedurePrefix, Manager<T>.ModelComposition.TableName, Manager.SelectAllSuffix);
             }
 
             queryBuilder.Append("AS\n");
             queryBuilder.Append("BEGIN\n");
-            queryBuilder.AppendFormat("SELECT * FROM {0}.{1}{2}\n", Manager<T>.ModelComposition.DataTableAttribute.Schema, Manager.TablePrefix, Manager<T>.ModelComposition.DataTableAttribute.TableName);
+            queryBuilder.AppendFormat("SELECT * FROM {0}.{1}{2}\n", Manager<T>.ModelComposition.Schema, Manager.TablePrefix, Manager<T>.ModelComposition.TableName);
             queryBuilder.Append($"ORDER BY {Manager<T>.ModelComposition.DateCreatedProperty.Name} DESC\n");
             queryBuilder.Append("END");
 
@@ -209,11 +209,11 @@ namespace DataManagement.DAO
 
             if (doAlter)
             {
-                queryBuilder.AppendFormat("ALTER PROCEDURE {0}.{1}{2}{3}\n", Manager<T>.ModelComposition.DataTableAttribute.Schema, Manager.StoredProcedurePrefix, Manager<T>.ModelComposition.DataTableAttribute.TableName, Manager.SelectSuffix);
+                queryBuilder.AppendFormat("ALTER PROCEDURE {0}.{1}{2}{3}\n", Manager<T>.ModelComposition.Schema, Manager.StoredProcedurePrefix, Manager<T>.ModelComposition.TableName, Manager.SelectSuffix);
             }
             else
             {
-                queryBuilder.AppendFormat("CREATE PROCEDURE {0}.{1}{2}{3}\n", Manager<T>.ModelComposition.DataTableAttribute.Schema, Manager.StoredProcedurePrefix, Manager<T>.ModelComposition.DataTableAttribute.TableName, Manager.SelectSuffix);
+                queryBuilder.AppendFormat("CREATE PROCEDURE {0}.{1}{2}{3}\n", Manager<T>.ModelComposition.Schema, Manager.StoredProcedurePrefix, Manager<T>.ModelComposition.TableName, Manager.SelectSuffix);
             }
 
             // Aqui se colocan los parametros segun las propiedades del objeto
@@ -222,7 +222,7 @@ namespace DataManagement.DAO
             queryBuilder.Remove(queryBuilder.Length - 2, 2);
             queryBuilder.Append("\nAS\n");
             queryBuilder.Append("BEGIN\n");
-            queryBuilder.AppendFormat("SELECT * FROM {0}.{1}{2}\n", Manager<T>.ModelComposition.DataTableAttribute.Schema, Manager.TablePrefix, Manager<T>.ModelComposition.DataTableAttribute.TableName);
+            queryBuilder.AppendFormat("SELECT * FROM {0}.{1}{2}\n", Manager<T>.ModelComposition.Schema, Manager.TablePrefix, Manager<T>.ModelComposition.TableName);
             queryBuilder.Append("WHERE\n");
 
             // Se especifica el parametro que va en x columna.
@@ -247,7 +247,7 @@ namespace DataManagement.DAO
 
             if (Manager<T>.ModelComposition.ManagedProperties.Count == 0) return string.Empty;
 
-            queryBuilder.AppendFormat("CREATE TABLE {0}.{1}{2}\n", Manager<T>.ModelComposition.DataTableAttribute.Schema, Manager.TablePrefix, Manager<T>.ModelComposition.DataTableAttribute.TableName);
+            queryBuilder.AppendFormat("CREATE TABLE {0}.{1}{2}\n", Manager<T>.ModelComposition.Schema, Manager.TablePrefix, Manager<T>.ModelComposition.TableName);
 
             queryBuilder.Append("(");
             // Aqui se colocan las propiedades del objeto. Una por columna por su puesto.
@@ -287,7 +287,7 @@ namespace DataManagement.DAO
 
             if (Manager<T>.ModelComposition.ManagedProperties.Count == 0) return string.Empty;
 
-            string fullyQualifiedTableName = string.Format("{0}.{1}{2}", Manager<T>.ModelComposition.DataTableAttribute.Schema, Manager.TablePrefix, Manager<T>.ModelComposition.DataTableAttribute.TableName);
+            string fullyQualifiedTableName = string.Format("{0}.{1}{2}", Manager<T>.ModelComposition.Schema, Manager.TablePrefix, Manager<T>.ModelComposition.TableName);
 
             foreach (KeyValuePair<string, PropertyInfo> property in Manager<T>.ModelComposition.ManagedProperties)
             {
@@ -397,11 +397,11 @@ namespace DataManagement.DAO
 
             foreach (KeyValuePair<string, PropertyInfo> property in properties)
             {
-                queryBuilder.AppendFormat("ALTER TABLE {0}.{1}{2}\n", Manager<T>.ModelComposition.DataTableAttribute.Schema, Manager.TablePrefix, Manager<T>.ModelComposition.DataTableAttribute.TableName);
+                queryBuilder.AppendFormat("ALTER TABLE {0}.{1}{2}\n", Manager<T>.ModelComposition.Schema, Manager.TablePrefix, Manager<T>.ModelComposition.TableName);
                 ForeignKey foreignAttribute = property.Value.GetCustomAttribute<ForeignKey>();
                 IManageable foreignKey = (IManageable)Activator.CreateInstance(foreignAttribute.Model);
-                queryBuilder.AppendFormat("ADD CONSTRAINT FK_{0}_{1}\n", Manager<T>.ModelComposition.DataTableAttribute.TableName, foreignKey.Composition.TableName);
-                queryBuilder.AppendFormat("FOREIGN KEY({0}) REFERENCES {1}.{2}{3}(Id) ON DELETE {4} ON UPDATE NO ACTION;\n", property.Value.Name, Manager<T>.ModelComposition.DataTableAttribute.Schema, Manager.TablePrefix, foreignKey.Composition.TableName, foreignAttribute.Action.ToString().Replace("_", " "));
+                queryBuilder.AppendFormat("ADD CONSTRAINT FK_{0}_{1}\n", Manager<T>.ModelComposition.TableName, foreignKey.Composition.TableName);
+                queryBuilder.AppendFormat("FOREIGN KEY({0}) REFERENCES {1}.{2}{3}(Id) ON DELETE {4} ON UPDATE NO ACTION;\n", property.Value.Name, Manager<T>.ModelComposition.Schema, Manager.TablePrefix, foreignKey.Composition.TableName, foreignAttribute.Action.ToString().Replace("_", " "));
             }
 
             Logger.Info("Created a new query for Create Foreign Keys:");

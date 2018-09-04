@@ -296,7 +296,7 @@ namespace DataManagement.DAO
             }
 
             Result<T> result = queryEvaluation.Evaluate<T>(obj, transactionType, ref dataCache, connectionToUse);
-            CallOnExecutedEventHandlers(ModelComposition.DataTableAttribute.TableName, transactionType, result);
+            CallOnExecutedEventHandlers(ModelComposition.TableName, transactionType, result);
 
             return result;
         }
