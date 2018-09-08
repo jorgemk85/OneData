@@ -42,23 +42,15 @@ namespace DataManagement.Models
         internal Dictionary<string, ForeignKey> ForeignKeyAttributes { get; private set; } = new Dictionary<string, ForeignKey>();
         internal Dictionary<string, AutoProperty> AutoPropertyAttributes { get; private set; } = new Dictionary<string, AutoProperty>();
 
-        private PropertyInfo _primaryKeyProperty;
-        private PropertyInfo _dateCreatedProperty;
-        private PropertyInfo _dateModifiedProperty;
-        private bool _isCacheEnabled;
-        private long _cacheExpiration;
-        private string _tableName;
-        private string _schema;
-        private string _foreignPrimaryKeyName;
-
-        internal ref readonly PropertyInfo PrimaryKeyProperty => ref _primaryKeyProperty;
-        internal ref readonly PropertyInfo DateCreatedProperty => ref _dateCreatedProperty;
-        internal ref readonly PropertyInfo DateModifiedProperty => ref _dateModifiedProperty;
-        internal ref readonly string TableName => ref _tableName;
-        internal ref readonly string Schema => ref _schema;
-        internal ref readonly bool IsCacheEnabled => ref _isCacheEnabled;
-        internal ref readonly long CacheExpiration => ref _cacheExpiration;
-        internal ref readonly string ForeignPrimaryKeyName => ref _foreignPrimaryKeyName;
+        internal PropertyInfo PrimaryKeyProperty { get; private set; }
+        internal PropertyInfo DateCreatedProperty { get; private set; }
+        internal PropertyInfo DateModifiedProperty { get; private set; }
+        internal bool IsIdentityModel { get; private set; }
+        internal string TableName { get; private set; }
+        internal string Schema { get; private set; }
+        internal bool IsCacheEnabled { get; private set; }
+        internal long CacheExpiration { get; private set; }
+        internal string ForeignPrimaryKeyName { get; private set; }
 
         public ModelComposition(Type type)
         {
@@ -69,7 +61,7 @@ namespace DataManagement.Models
 
         private void PerformClassValidation(Type type)
         {
-            if (string.IsNullOrWhiteSpace(_tableName))
+            if (string.IsNullOrWhiteSpace(TableName))
             {
                 throw new RequiredAttributeNotFound("DataTable", type.FullName);
             }
@@ -120,13 +112,16 @@ namespace DataManagement.Models
                 {
                     case "DataTable":
                         dataTableAttribute = type.GetCustomAttribute<DataTable>();
-                        _tableName = dataTableAttribute.TableName;
-                        _schema = string.IsNullOrWhiteSpace(dataTableAttribute.Schema) ? Manager.DefaultSchema : dataTableAttribute.Schema;
+                        TableName = dataTableAttribute.TableName;
+                        Schema = string.IsNullOrWhiteSpace(dataTableAttribute.Schema) ? Manager.DefaultSchema : dataTableAttribute.Schema;
                         break;
                     case "CacheEnabled":
                         cacheEnabledAttribute = type.GetCustomAttribute<CacheEnabled>();
-                        _isCacheEnabled = true;
-                        _cacheExpiration = cacheEnabledAttribute.Expiration * TimeSpan.TicksPerSecond;
+                        IsCacheEnabled = true;
+                        CacheExpiration = cacheEnabledAttribute.Expiration * TimeSpan.TicksPerSecond;
+                        break;
+                    case "IdentityModel":
+                        IsIdentityModel = true;
                         break;
                     default:
                         break;
@@ -156,17 +151,17 @@ namespace DataManagement.Models
                             FilteredProperties.Remove(property.Name);
                             break;
                         case "PrimaryKeyProperty":
-                            _primaryKeyProperty = property;
-                            _foreignPrimaryKeyName = $"{type.Name}{property.Name}";
+                            PrimaryKeyProperty = property;
+                            ForeignPrimaryKeyName = $"{type.Name}{property.Name}";
                             break;
                         case "DateCreatedProperty":
-                            _dateCreatedProperty = property;
+                            DateCreatedProperty = property;
                             AutoProperties.Add(property.Name, property);
                             AutoPropertyAttributes.Add(property.Name, new AutoProperty(AutoPropertyTypes.DateTime));
                             FilteredProperties.Remove(property.Name);
                             break;
                         case "DateModifiedProperty":
-                            _dateModifiedProperty = property;
+                            DateModifiedProperty = property;
                             AutoProperties.Add(property.Name, property);
                             AutoPropertyAttributes.Add(property.Name, new AutoProperty(AutoPropertyTypes.DateTime));
                             FilteredProperties.Remove(property.Name);

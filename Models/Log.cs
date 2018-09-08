@@ -1,5 +1,4 @@
 ﻿using DataManagement.Attributes;
-using DataManagement.DAO;
 using DataManagement.Interfaces;
 using System;
 
@@ -14,7 +13,7 @@ namespace DataManagement.Models
         public DateTime? DateCreated { get; set; }
         [DateModifiedProperty]
         public DateTime? DateModified { get; set; }
-        public string Ip { get; set; }
+        public dynamic IdentityId { get; set; }
         public string Transaccion { get; set; }
         public string TablaAfectada { get; set; }
         public string Parametros { get; set; }

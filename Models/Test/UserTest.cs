@@ -1,12 +1,11 @@
 ﻿using DataManagement.Attributes;
-using DataManagement.DAO;
 using DataManagement.Interfaces;
 using System;
 
 namespace DataManagement.Models.Test
 {
     [DataTable("UserTests")]
-    public class UserTest : Cope<UserTest>, IManageable
+    public class UserTest : Cope<UserTest>, IManageable, IIdentifiable
     {
         [PrimaryKeyProperty]
         public Guid? Id { get; set; }

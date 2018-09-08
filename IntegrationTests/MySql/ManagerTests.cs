@@ -1,8 +1,11 @@
-﻿using DataManagement.Extensions;
+﻿using DataManagement.DAO;
+using DataManagement.Extensions;
+using DataManagement.Interfaces;
 using DataManagement.Models;
 using DataManagement.Models.Test;
 using DataManagement.Tools.Test;
 using NUnit.Framework;
+using System;
 using System.Collections.Generic;
 
 namespace DataManagement.IntegrationTests.MySql
@@ -78,12 +81,29 @@ namespace DataManagement.IntegrationTests.MySql
         }
 
         [Test]
-        public void SelectBlog_DataFromDB_ReturnsNoError()
+        public void SetIdentity_RealIdentity_ReturnsNoError()
         {
-            //var result = Blog.Select(new Parameter(nameof(Blog.Id), Guid.Parse("36e693e6-e936-4acc-bd6a-2dfb80449590")))
-            //                         .Include(typeof(Post)).Posts
-            //                         .Include(posts => posts.Comments, new Comment());
-            Assert.IsTrue(true);
+            UserTest user = new UserTest();
+            Assert.DoesNotThrow(() => Manager.Identity = user);
+        }
+
+        [Test]
+        public void SetIdentity_RealIdentity_ReturnsError()
+        {
+            Log user = new Log();
+            Assert.Throws<InvalidCastException>(() => Manager.Identity = (IIdentifiable)user);
+        }
+
+        [Test]
+        public void LogWithIdentity_RealIdentity_ReturnsNoError()
+        {
+            UserTest user = new UserTest();
+            user.Id = Guid.NewGuid();
+            Manager.Identity = user;
+            //TestTools.SetConfigurationForConstantConsolidation(true);
+            TestTools.GetLogTestIntModel(true).Insert();
+
+            Assert.DoesNotThrow(() => Manager.Identity = user);
         }
     }
 }

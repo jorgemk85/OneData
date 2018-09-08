@@ -54,7 +54,7 @@ namespace DataManagement.DAO
                 throw mySqlException;
             }
 
-            if (logTransaction) LogTransaction(tableName, TransactionTypes.StoredProcedure, connectionToUse);
+            if (logTransaction) LogTransaction<Log>(tableName, TransactionTypes.StoredProcedure, connectionToUse);
 
             return dataSet;
         }
@@ -77,7 +77,7 @@ namespace DataManagement.DAO
                     if (connection.State != ConnectionState.Open) throw new BadConnectionStateException();
                     Command = connection.CreateCommand();
                     Command.CommandType = CommandType.StoredProcedure;
-                    Command.CommandText = string.Format("{0}.{1}{2}{3}", Manager<T>.ModelComposition.Schema, Manager.StoredProcedurePrefix, Manager<T>.ModelComposition.TableName, GetFriendlyTransactionSuffix(transactionType));
+                    Command.CommandText = string.Format("{0}.{1}{2}{3}", Cope<T>.ModelComposition.Schema, Manager.StoredProcedurePrefix, Cope<T>.ModelComposition.TableName, GetFriendlyTransactionSuffix(transactionType));
 
                     if (transactionType == TransactionTypes.Insert)
                     {
@@ -97,7 +97,7 @@ namespace DataManagement.DAO
                         }
                         dataTable = new DataTable();
                         dataTable.Load(Command.ExecuteReader());
-                        dataTable.TableName = Manager<T>.ModelComposition.TableName;
+                        dataTable.TableName = Cope<T>.ModelComposition.TableName;
                     }
                 }
                 Logger.Info(string.Format("Execution {0} for object {1} using connection {2} has finished successfully.", transactionType.ToString(), typeof(T), connectionToUse));
@@ -118,7 +118,7 @@ namespace DataManagement.DAO
             {
                 if (Manager.AutoCreateTables)
                 {
-                    Logger.Warn(string.Format("Table {0} not found. Creating...", Manager<T>.ModelComposition.TableName));
+                    Logger.Warn(string.Format("Table {0} not found. Creating...", Cope<T>.ModelComposition.TableName));
                     ProcessTable<T>(connectionToUse, false);
                     overrideConsolidation = true;
                     goto Start;
@@ -148,9 +148,9 @@ namespace DataManagement.DAO
                 throw;
             }
 
-            if (logTransaction) LogTransaction(Manager<T>.ModelComposition.TableName, transactionType, connectionToUse);
+            if (logTransaction) LogTransaction<T>(Cope<T>.ModelComposition.TableName, transactionType, connectionToUse);
 
-            return new Result<T>(dataTable.ToDictionary<T>(Manager<T>.ModelComposition.PrimaryKeyProperty.Name, Manager<T>.ModelComposition.PrimaryKeyProperty.PropertyType), false, true);
+            return new Result<T>(dataTable.ToDictionary<T>(Cope<T>.ModelComposition.PrimaryKeyProperty.Name, Cope<T>.ModelComposition.PrimaryKeyProperty.PropertyType), false, true);
         }
 
         public Result<T> ExecuteProcedure<T>(IEnumerable<T> list, string connectionToUse, TransactionTypes transactionType, bool logTransaction = true) where T : Cope<T>, IManageable, new()
@@ -172,7 +172,7 @@ namespace DataManagement.DAO
                     if (connection.State != ConnectionState.Open) throw new BadConnectionStateException();
                     Command = connection.CreateCommand();
                     Command.CommandType = CommandType.StoredProcedure;
-                    Command.CommandText = string.Format("{0}.{1}{2}{3}", Manager<T>.ModelComposition.Schema, Manager.StoredProcedurePrefix, Manager<T>.ModelComposition.TableName, GetFriendlyTransactionSuffix(transactionType));
+                    Command.CommandText = string.Format("{0}.{1}{2}{3}", Cope<T>.ModelComposition.Schema, Manager.StoredProcedurePrefix, Cope<T>.ModelComposition.TableName, GetFriendlyTransactionSuffix(transactionType));
 
                     if (transactionType == TransactionTypes.InsertMassive)
                     {
@@ -198,7 +198,7 @@ namespace DataManagement.DAO
             {
                 if (Manager.AutoCreateTables)
                 {
-                    Logger.Warn(string.Format("Table {0} not found. Creating...", Manager<T>.ModelComposition.TableName));
+                    Logger.Warn(string.Format("Table {0} not found. Creating...", Cope<T>.ModelComposition.TableName));
                     ProcessTable<T>(connectionToUse, false);
                     overrideConsolidation = true;
                     goto Start;
@@ -225,12 +225,12 @@ namespace DataManagement.DAO
                 throw;
             }
 
-            if (logTransaction) LogTransaction(Manager<T>.ModelComposition.TableName, transactionType, connectionToUse);
+            if (logTransaction) LogTransaction<T>(Cope<T>.ModelComposition.TableName, transactionType, connectionToUse);
 
-            return new Result<T>(dataTable.ToDictionary<T>(Manager<T>.ModelComposition.PrimaryKeyProperty.Name, Manager<T>.ModelComposition.PrimaryKeyProperty.PropertyType), false, true);
+            return new Result<T>(dataTable.ToDictionary<T>(Cope<T>.ModelComposition.PrimaryKeyProperty.Name, Cope<T>.ModelComposition.PrimaryKeyProperty.PropertyType), false, true);
         }
 
-        public void LogTransaction(string tableName, TransactionTypes transactionType, string connectionToUse)
+        public void LogTransaction<T>(string tableName, TransactionTypes transactionType, string connectionToUse)
         {
             if (!Manager.EnableLogInDatabase)
             {
@@ -238,7 +238,7 @@ namespace DataManagement.DAO
             }
 
             Logger.Info(string.Format("Saving log information into the database."));
-            Log newLog = NewLog(tableName, transactionType);
+            Log newLog = NewLog<T>(tableName, transactionType);
             ExecuteProcedure(newLog, connectionToUse, TransactionTypes.Insert, false);
         }
     }

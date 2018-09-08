@@ -219,7 +219,7 @@ namespace DataManagement.Tools
             var newDictionary = new Dictionary<dynamic, T>();
             if (queryable != null)
             {
-                PropertyInfo primaryProperty = typeof(T).GetProperty(new T().PrimaryKeyProperty.Name);
+                PropertyInfo primaryProperty = typeof(T).GetProperty(Cope<T>.ModelComposition.PrimaryKeyProperty.Name);
                 foreach (T item in queryable)
                 {
                     dynamic key = primaryProperty.GetValue(item);
@@ -289,7 +289,7 @@ namespace DataManagement.Tools
                             property.SetValue(newObject, SimpleConverter.ConvertStringToType(row[property.Name].ToString(), property.PropertyType));
                         }
                     }
-                    newHashTable.Add(newObject.PrimaryKeyProperty.GetValue(newObject), newObject);
+                    newHashTable.Add(Cope<T>.ModelComposition.PrimaryKeyProperty.GetValue(newObject), newObject);
                 }
             }
 
@@ -399,7 +399,7 @@ namespace DataManagement.Tools
                             property.SetValue(newObject, SimpleConverter.ConvertStringToType(row[property.Name].ToString(), property.PropertyType));
                         }
                     }
-                    newDictionary.Add((TKey)newObject.PrimaryKeyProperty.GetValue(newObject), newObject);
+                    newDictionary.Add((TKey)Cope<T>.ModelComposition.PrimaryKeyProperty.GetValue(newObject), newObject);
                 }
             }
 
@@ -523,7 +523,7 @@ namespace DataManagement.Tools
         {
             T newObj = new T();
 
-            newObj.PrimaryKeyProperty.SetValue(newObj, null);
+            Cope<T>.ModelComposition.PrimaryKeyProperty.SetValue(newObj, null);
 
             foreach (Parameter data in parameters)
             {

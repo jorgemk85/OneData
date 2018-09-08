@@ -1,25 +1,34 @@
 ﻿using DataManagement.Attributes;
 using DataManagement.DAO;
-using DataManagement.Extensions;
 using DataManagement.Interfaces;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
 
 namespace DataManagement.Models
 {
     [Serializable]
     public abstract class Cope<T> where T : Cope<T>, IManageable, new()
     {
+        static readonly ModelComposition _modelComposition = new ModelComposition(typeof(T));
+        static readonly Composition _composition = new Composition();
+
         [UnmanagedProperty]
-        internal PropertyInfo PrimaryKeyProperty { get; } = Manager<T>.ModelComposition.PrimaryKeyProperty;
+        internal static ModelComposition ModelComposition { get; } = _modelComposition;
         [UnmanagedProperty]
-        internal PropertyInfo DateCreatedProperty { get;} = Manager<T>.ModelComposition.DateCreatedProperty;
-        [UnmanagedProperty]
-        internal PropertyInfo DateModifiedProperty { get; } = Manager<T>.ModelComposition.DateModifiedProperty;
-        [UnmanagedProperty]
-        public Composition Composition { get; } = Manager<T>.Composition;
+        public Composition Composition { get; } = _composition;
+
+        static Cope()
+        {
+            SetupComposition();
+        }
+
+        private static void SetupComposition()
+        {
+            _composition.CacheExpiration = ModelComposition.CacheExpiration;
+            _composition.ForeignPrimaryKeyName = ModelComposition.ForeignPrimaryKeyName;
+            _composition.IsCacheEnabled = ModelComposition.IsCacheEnabled;
+            _composition.Schema = ModelComposition.Schema;
+            _composition.TableName = ModelComposition.TableName;
+        }
 
         /// <summary>
         /// Obtiene un listado completo de los objetos de tipo <typeparamref name="T"/> almacenados en la base de datos o en el cache.

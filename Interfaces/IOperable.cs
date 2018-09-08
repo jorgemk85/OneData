@@ -13,6 +13,6 @@ namespace DataManagement.Interfaces
 
         Result<T> ExecuteProcedure<T>(IEnumerable<T> list, string connectionToUse, TransactionTypes transactionType, bool logTransaction = true) where T : Cope<T>, IManageable, new();
 
-        void LogTransaction(string tableName, TransactionTypes transactionType, string connectionToUse);
+        void LogTransaction<T>(string tableName, TransactionTypes transactionType, string connectionToUse);
     }
 }
