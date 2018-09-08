@@ -375,8 +375,8 @@ namespace DataManagement.DAO
                 queryBuilder.AppendFormat("ALTER TABLE {0}{1}\n", Manager.TablePrefix, Cope<T>.ModelComposition.TableName);
                 ForeignKey foreignAttribute = property.Value.GetCustomAttribute<ForeignKey>();
                 IManageable foreignKey = (IManageable)Activator.CreateInstance(foreignAttribute.Model);
-                queryBuilder.AppendFormat("ADD CONSTRAINT FK_{0}_{1}\n", Cope<T>.ModelComposition.TableName, foreignKey.Composition.TableName);
-                queryBuilder.AppendFormat("FOREIGN KEY({0}) REFERENCES {1}{2}(Id) ON DELETE {3} ON UPDATE NO ACTION;\n", property.Value.Name, Manager.TablePrefix, foreignKey.Composition.TableName, foreignAttribute.Action.ToString().Replace("_", " "));
+                queryBuilder.AppendFormat("ADD CONSTRAINT FK_{0}_{1}\n", Cope<T>.ModelComposition.TableName, foreignKey.Configuration.TableName);
+                queryBuilder.AppendFormat("FOREIGN KEY({0}) REFERENCES {1}{2}(Id) ON DELETE {3} ON UPDATE NO ACTION;\n", property.Value.Name, Manager.TablePrefix, foreignKey.Configuration.TableName, foreignAttribute.Action.ToString().Replace("_", " "));
             }
 
             Logger.Info("(MySql) Created a new query for Create Foreign Keys:");

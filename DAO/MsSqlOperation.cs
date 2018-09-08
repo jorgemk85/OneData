@@ -54,7 +54,7 @@ namespace DataManagement.DAO
                 throw mySqlException;
             }
 
-            if (logTransaction) LogTransaction<Log>(tableName, TransactionTypes.StoredProcedure, connectionToUse);
+            if (logTransaction) LogTransaction(tableName, TransactionTypes.StoredProcedure, connectionToUse);
 
             return dataSet;
         }
@@ -148,7 +148,7 @@ namespace DataManagement.DAO
                 throw;
             }
 
-            if (logTransaction) LogTransaction<T>(Cope<T>.ModelComposition.TableName, transactionType, connectionToUse);
+            if (logTransaction) LogTransaction(Cope<T>.ModelComposition.TableName, transactionType, connectionToUse);
 
             return new Result<T>(dataTable.ToDictionary<T>(Cope<T>.ModelComposition.PrimaryKeyProperty.Name, Cope<T>.ModelComposition.PrimaryKeyProperty.PropertyType), false, true);
         }
@@ -225,12 +225,12 @@ namespace DataManagement.DAO
                 throw;
             }
 
-            if (logTransaction) LogTransaction<T>(Cope<T>.ModelComposition.TableName, transactionType, connectionToUse);
+            if (logTransaction) LogTransaction(Cope<T>.ModelComposition.TableName, transactionType, connectionToUse);
 
             return new Result<T>(dataTable.ToDictionary<T>(Cope<T>.ModelComposition.PrimaryKeyProperty.Name, Cope<T>.ModelComposition.PrimaryKeyProperty.PropertyType), false, true);
         }
 
-        public void LogTransaction<T>(string tableName, TransactionTypes transactionType, string connectionToUse)
+        public void LogTransaction(string tableName, TransactionTypes transactionType, string connectionToUse)
         {
             if (!Manager.EnableLogInDatabase)
             {
@@ -238,7 +238,7 @@ namespace DataManagement.DAO
             }
 
             Logger.Info(string.Format("Saving log information into the database."));
-            Log newLog = NewLog<T>(tableName, transactionType);
+            Log newLog = NewLog(tableName, transactionType);
             ExecuteProcedure(newLog, connectionToUse, TransactionTypes.Insert, false);
         }
     }

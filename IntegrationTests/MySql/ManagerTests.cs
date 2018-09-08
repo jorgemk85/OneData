@@ -88,13 +88,6 @@ namespace DataManagement.IntegrationTests.MySql
         }
 
         [Test]
-        public void SetIdentity_RealIdentity_ReturnsError()
-        {
-            Log user = new Log();
-            Assert.Throws<InvalidCastException>(() => Manager.Identity = (IIdentifiable)user);
-        }
-
-        [Test]
         public void LogWithIdentity_RealIdentity_ReturnsNoError()
         {
             UserTest user = new UserTest();

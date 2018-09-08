@@ -247,7 +247,7 @@ namespace DataManagement.DAO
             foreach (KeyValuePair<string, PropertyInfo> property in Cope<T>.ModelComposition.ForeignKeyProperties)
             {
                 IManageable foreignKey = (IManageable)Activator.CreateInstance(Cope<T>.ModelComposition.ForeignKeyAttributes[property.Value.Name].Model);
-                if (!CheckIfTableExists(foreignKey.Composition.TableName, connectionToUse))
+                if (!CheckIfTableExists(foreignKey.Configuration.TableName, connectionToUse))
                 {
                     CreateOrAlterForeignTables<T>(foreignKey, connectionToUse, false);
                 }
@@ -268,12 +268,12 @@ namespace DataManagement.DAO
 
         private void CreateOrAlterForeignTables<T>(IManageable foreignKey, string connectionToUse, bool doAlter) where T : Cope<T>, IManageable, new()
         {
-            Logger.Info(string.Format("Create or Alter foreign tables of {0} using connection {1}. DoAlter = {2}", foreignKey.Composition.TableName, connectionToUse, doAlter));
+            Logger.Info(string.Format("Create or Alter foreign tables of {0} using connection {1}. DoAlter = {2}", foreignKey.Configuration.TableName, connectionToUse, doAlter));
             if (doAlter)
             {
                 ExecuteScalar(Creator.CreateQueryForTableAlteration<T>(
-                                                         GetColumnDefinition(foreignKey.Composition.TableName, connectionToUse),
-                                                         GetKeyDefinition(foreignKey.Composition.TableName, connectionToUse)), connectionToUse, false);
+                                                         GetColumnDefinition(foreignKey.Configuration.TableName, connectionToUse),
+                                                         GetKeyDefinition(foreignKey.Configuration.TableName, connectionToUse)), connectionToUse, false);
             }
             else
             {
@@ -304,13 +304,13 @@ namespace DataManagement.DAO
             }
         }
 
-        protected Log NewLog<T>(string TableName, TransactionTypes transactionType)
+        protected Log NewLog(string TableName, TransactionTypes transactionType)
         {
             dynamic identityId = string.Empty;
 
             if (Manager.Identity != null)
             {
-                identityId = Manager.IdentityPrimaryKey.GetValue(Manager.Identity);
+                identityId = Manager.Identity.Configuration.PrimaryKeyProperty.GetValue(Manager.Identity);
             }
 
             Log newLog = new Log

@@ -9,25 +9,28 @@ namespace DataManagement.Models
     public abstract class Cope<T> where T : Cope<T>, IManageable, new()
     {
         static readonly ModelComposition _modelComposition = new ModelComposition(typeof(T));
-        static readonly Composition _composition = new Composition();
+        static readonly Configuration _configuration = new Configuration();
 
         [UnmanagedProperty]
         internal static ModelComposition ModelComposition { get; } = _modelComposition;
         [UnmanagedProperty]
-        public Composition Composition { get; } = _composition;
+        public Configuration Configuration { get; } = _configuration;
 
         static Cope()
         {
-            SetupComposition();
+            SetupConfiguration();
         }
 
-        private static void SetupComposition()
+        private static void SetupConfiguration()
         {
-            _composition.CacheExpiration = ModelComposition.CacheExpiration;
-            _composition.ForeignPrimaryKeyName = ModelComposition.ForeignPrimaryKeyName;
-            _composition.IsCacheEnabled = ModelComposition.IsCacheEnabled;
-            _composition.Schema = ModelComposition.Schema;
-            _composition.TableName = ModelComposition.TableName;
+            _configuration.PrimaryKeyProperty = _modelComposition.PrimaryKeyProperty;
+            _configuration.DateCreatedProperty = _modelComposition.DateCreatedProperty;
+            _configuration.DateModifiedProperty = _modelComposition.DateModifiedProperty;
+            _configuration.CacheExpiration = _modelComposition.CacheExpiration;
+            _configuration.ForeignPrimaryKeyName = _modelComposition.ForeignPrimaryKeyName;
+            _configuration.IsCacheEnabled = _modelComposition.IsCacheEnabled;
+            _configuration.Schema = _modelComposition.Schema;
+            _configuration.TableName = _modelComposition.TableName;
         }
 
         /// <summary>
@@ -51,3 +54,4 @@ namespace DataManagement.Models
         }
     }
 }
+

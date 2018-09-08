@@ -400,8 +400,8 @@ namespace DataManagement.DAO
                 queryBuilder.AppendFormat("ALTER TABLE {0}.{1}{2}\n", Cope<T>.ModelComposition.Schema, Manager.TablePrefix, Cope<T>.ModelComposition.TableName);
                 ForeignKey foreignAttribute = property.Value.GetCustomAttribute<ForeignKey>();
                 IManageable foreignKey = (IManageable)Activator.CreateInstance(foreignAttribute.Model);
-                queryBuilder.AppendFormat("ADD CONSTRAINT FK_{0}_{1}\n", Cope<T>.ModelComposition.TableName, foreignKey.Composition.TableName);
-                queryBuilder.AppendFormat("FOREIGN KEY({0}) REFERENCES {1}.{2}{3}(Id) ON DELETE {4} ON UPDATE NO ACTION;\n", property.Value.Name, Cope<T>.ModelComposition.Schema, Manager.TablePrefix, foreignKey.Composition.TableName, foreignAttribute.Action.ToString().Replace("_", " "));
+                queryBuilder.AppendFormat("ADD CONSTRAINT FK_{0}_{1}\n", Cope<T>.ModelComposition.TableName, foreignKey.Configuration.TableName);
+                queryBuilder.AppendFormat("FOREIGN KEY({0}) REFERENCES {1}.{2}{3}(Id) ON DELETE {4} ON UPDATE NO ACTION;\n", property.Value.Name, Cope<T>.ModelComposition.Schema, Manager.TablePrefix, foreignKey.Configuration.TableName, foreignAttribute.Action.ToString().Replace("_", " "));
             }
 
             Logger.Info("Created a new query for Create Foreign Keys:");

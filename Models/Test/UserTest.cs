@@ -5,7 +5,7 @@ using System;
 namespace DataManagement.Models.Test
 {
     [DataTable("UserTests")]
-    public class UserTest : Cope<UserTest>, IManageable, IIdentifiable
+    public class UserTest : Cope<UserTest>, IManageable
     {
         [PrimaryKeyProperty]
         public Guid? Id { get; set; }

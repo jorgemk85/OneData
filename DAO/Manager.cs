@@ -37,40 +37,12 @@ namespace DataManagement.DAO
         public static string SelectAllSuffix { get; internal set; }
         public static string StoredProcedurePrefix { get; internal set; }
         public static string TablePrefix { get; internal set; }
-        public static PropertyInfo IdentityPrimaryKey { get; set; }
-
-        private static IIdentifiable _identity;
-
-        public static IIdentifiable Identity
-        {
-            get { return _identity; }
-            set
-            {
-                _identity = value;
-                IdentityPrimaryKey = GetPrimaryKey(_identity);
-            }
-        }
+        public static IManageable Identity { get; set; }
 
         static Manager()
         {
             GetConfigurationSettings();
             GetPrefixesAndSuffixes();
-        }
-
-        static PropertyInfo GetPrimaryKey(IIdentifiable identity)
-        {
-            foreach (PropertyInfo property in identity.GetType().GetProperties())
-            {
-                foreach (CustomAttributeData attribute in property.CustomAttributes)
-                {
-                    if (attribute.AttributeType.Name.Equals(nameof(PrimaryKeyProperty)))
-                    {
-                        return property;
-                    }
-                }
-            }
-
-            return null;
         }
 
         internal static void GetConfigurationSettings()
