@@ -293,6 +293,14 @@ namespace DataManagement.DAO
                     queryBuilder.AppendFormat("MODIFY COLUMN {0} {1},\n", property.Value.Name, sqlDataType);
                     foundDiference = true;
                 }
+
+                if (!columnDefinition.Extra.Contains("auto_increment") && property.Value.Equals(Cope<T>.ModelComposition.PrimaryKeyProperty) && property.Value.PropertyType.Equals(typeof(int)))
+                {
+                    // La propiedad es Primaria, es INT y no esta marcada como auto-increment...
+                    queryBuilder.AppendFormat("MODIFY COLUMN {0} {1} NOT NULL auto_increment,\n", property.Value.Name, sqlDataType);
+                    foundDiference = true;
+                }
+
                 if (columnDefinition.Is_Nullable.Equals("YES") && !isNullable && !property.Value.Equals(Cope<T>.ModelComposition.PrimaryKeyProperty))
                 {
                     // Si la propiedad ya no es nullable, entonces la cambia en la base de datos

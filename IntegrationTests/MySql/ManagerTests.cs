@@ -100,7 +100,7 @@ namespace DataManagement.IntegrationTests.MySql
             UserTest user = new UserTest();
             user.Id = Guid.NewGuid();
             Manager.Identity = user;
-            //TestTools.SetConfigurationForConstantConsolidation(true);
+            TestTools.SetConfigurationForConstantConsolidation(true);
             TestTools.GetLogTestIntModel(true).Insert();
 
             Assert.DoesNotThrow(() => Manager.Identity = user);
