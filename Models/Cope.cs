@@ -4,21 +4,36 @@ using DataManagement.Interfaces;
 using DataManagement.Tools;
 using System;
 using System.Linq.Expressions;
-using System.Reflection;
 
 namespace DataManagement.Models
 {
     [Serializable]
     public abstract class Cope<T> where T : Cope<T>, IManageable, new()
     {
+        static readonly ModelComposition _modelComposition = new ModelComposition(typeof(T));
+        static readonly Configuration _configuration = new Configuration();
+
         [UnmanagedProperty]
-        internal PropertyInfo PrimaryKeyProperty { get; } = Manager<T>.ModelComposition.PrimaryKeyProperty;
+        internal static ModelComposition ModelComposition { get; } = _modelComposition;
         [UnmanagedProperty]
-        internal PropertyInfo DateCreatedProperty { get; } = Manager<T>.ModelComposition.DateCreatedProperty;
-        [UnmanagedProperty]
-        internal PropertyInfo DateModifiedProperty { get; } = Manager<T>.ModelComposition.DateModifiedProperty;
-        [UnmanagedProperty]
-        public Composition Composition { get; } = Manager<T>.Composition;
+        public Configuration Configuration { get; } = _configuration;
+
+        static Cope()
+        {
+            SetupConfiguration();
+        }
+
+        private static void SetupConfiguration()
+        {
+            _configuration.PrimaryKeyProperty = _modelComposition.PrimaryKeyProperty;
+            _configuration.DateCreatedProperty = _modelComposition.DateCreatedProperty;
+            _configuration.DateModifiedProperty = _modelComposition.DateModifiedProperty;
+            _configuration.CacheExpiration = _modelComposition.CacheExpiration;
+            _configuration.ForeignPrimaryKeyName = _modelComposition.ForeignPrimaryKeyName;
+            _configuration.IsCacheEnabled = _modelComposition.IsCacheEnabled;
+            _configuration.Schema = _modelComposition.Schema;
+            _configuration.TableName = _modelComposition.TableName;
+        }
 
         /// <summary>
         /// Obtiene un listado completo de los objetos de tipo <typeparamref name="T"/> almacenados en la base de datos o en el cache.
