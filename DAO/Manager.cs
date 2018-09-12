@@ -1,4 +1,5 @@
-﻿using DataManagement.Enums;
+﻿using DataManagement.Attributes;
+using DataManagement.Enums;
 using DataManagement.Events;
 using DataManagement.Interfaces;
 using DataManagement.Models;
@@ -6,6 +7,7 @@ using DataManagement.Tools;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Reflection;
 using System.Threading.Tasks;
 
 namespace DataManagement.DAO
@@ -15,26 +17,27 @@ namespace DataManagement.DAO
     /// </summary>
     public static class Manager
     {
-        internal static string DefaultSchema { get; set; }
-        internal static string DefaultConnection { get; set; }
-        internal static ConnectionTypes ConnectionType { get; set; }
-        internal static bool IsDebug { get; set; }
-        internal static bool AutoCreateStoredProcedures { get; set; }
-        internal static bool AutoCreateTables { get; set; }
-        internal static bool AutoAlterStoredProcedures { get; set; }
-        internal static bool AutoAlterTables { get; set; }
-        internal static bool EnableLogInDatabase { get; set; }
-        internal static bool EnableLogInFile { get; set; }
-        internal static bool ConstantTableConsolidation { get; set; }
-        internal static bool OverrideOnlyInDebug { get; set; }
-        internal static string SelectSuffix { get; set; }
-        internal static string InsertSuffix { get; set; }
-        internal static string InsertMassiveSuffix { get; set; }
-        internal static string UpdateSuffix { get; set; }
-        internal static string DeleteSuffix { get; set; }
-        internal static string SelectAllSuffix { get; set; }
-        internal static string StoredProcedurePrefix { get; set; }
-        internal static string TablePrefix { get; set; }
+        public static string DefaultSchema { get; internal set; }
+        public static string DefaultConnection { get; internal set; }
+        public static ConnectionTypes ConnectionType { get; internal set; }
+        public static bool IsDebug { get; internal set; }
+        public static bool AutoCreateStoredProcedures { get; internal set; }
+        public static bool AutoCreateTables { get; internal set; }
+        public static bool AutoAlterStoredProcedures { get; internal set; }
+        public static bool AutoAlterTables { get; internal set; }
+        public static bool EnableLogInDatabase { get; internal set; }
+        public static bool EnableLogInFile { get; internal set; }
+        public static bool ConstantTableConsolidation { get; internal set; }
+        public static bool OverrideOnlyInDebug { get; internal set; }
+        public static string SelectSuffix { get; internal set; }
+        public static string InsertSuffix { get; internal set; }
+        public static string InsertMassiveSuffix { get; internal set; }
+        public static string UpdateSuffix { get; internal set; }
+        public static string DeleteSuffix { get; internal set; }
+        public static string SelectAllSuffix { get; internal set; }
+        public static string StoredProcedurePrefix { get; internal set; }
+        public static string TablePrefix { get; internal set; }
+        public static IManageable Identity { get; set; }
 
         static Manager()
         {
@@ -124,11 +127,6 @@ namespace DataManagement.DAO
     public sealed class Manager<T> where T : Cope<T>, IManageable, new()
     {
         static DataCache<T> dataCache = new DataCache<T>();
-        static readonly ModelComposition _modelComposition = new ModelComposition(typeof(T));
-        static readonly Composition _composition = new Composition();
-
-        internal static ref readonly ModelComposition ModelComposition => ref _modelComposition;
-        internal static ref readonly Composition Composition => ref _composition;
 
         #region Events
         public static event CommandExecutedEventHandler<T> OnCommandExecuted;
@@ -143,17 +141,7 @@ namespace DataManagement.DAO
 
         static Manager()
         {
-            dataCache.Initialize(ModelComposition.IsCacheEnabled);
-            SetupComposition();
-        }
-
-        private static void SetupComposition()
-        {
-            _composition.CacheExpiration = _modelComposition.CacheExpiration;
-            _composition.ForeignPrimaryKeyName = _modelComposition.ForeignPrimaryKeyName;
-            _composition.IsCacheEnabled = _modelComposition.IsCacheEnabled;
-            _composition.Schema = _modelComposition.Schema;
-            _composition.TableName = _modelComposition.TableName;
+            dataCache.Initialize(Cope<T>.ModelComposition.IsCacheEnabled);
         }
 
         /// <summary>
@@ -290,23 +278,23 @@ namespace DataManagement.DAO
             if (connectionToUse == null) connectionToUse = Manager.DefaultConnection;
             QueryEvaluation queryEvaluation = new QueryEvaluation(Manager.ConnectionType);
 
-            if (ModelComposition.IsCacheEnabled)
+            if (Cope<T>.ModelComposition.IsCacheEnabled)
             {
                 ResetCacheIfExpired();
             }
 
             Result<T> result = queryEvaluation.Evaluate<T>(obj, transactionType, ref dataCache, connectionToUse);
-            CallOnExecutedEventHandlers(ModelComposition.TableName, transactionType, result);
+            CallOnExecutedEventHandlers(Cope<T>.ModelComposition.TableName, transactionType, result);
 
             return result;
         }
 
         private static void ResetCacheIfExpired()
         {
-            if (DateTime.Now.Ticks > dataCache.LastCacheUpdate + ModelComposition.CacheExpiration)
+            if (DateTime.Now.Ticks > dataCache.LastCacheUpdate + Cope<T>.ModelComposition.CacheExpiration)
             {
                 // Elimina el cache ya que esta EXPIRADO y de debe de refrescar.
-                dataCache.Reset(ModelComposition.IsCacheEnabled);
+                dataCache.Reset(Cope<T>.ModelComposition.IsCacheEnabled);
             }
         }
 

@@ -4,6 +4,6 @@ namespace DataManagement.Interfaces
 {
     public interface IManageable
     {
-        Composition Composition { get; }
+        Configuration Configuration { get; }
     }
 }

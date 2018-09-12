@@ -176,13 +176,13 @@ namespace DataManagement.DAO
 
             if (transactionType == TransactionTypes.Delete)
             {
-                Command.Parameters.Add(CreateDbParameter(string.Format("_{0}", Manager<T>.ModelComposition.PrimaryKeyProperty.Name), Manager<T>.ModelComposition.PrimaryKeyProperty.GetValue(obj)));
+                Command.Parameters.Add(CreateDbParameter(string.Format("_{0}", Cope<T>.ModelComposition.PrimaryKeyProperty.Name), Cope<T>.ModelComposition.PrimaryKeyProperty.GetValue(obj)));
                 return;
             }
 
-            foreach (KeyValuePair<string, PropertyInfo> property in Manager<T>.ModelComposition.FilteredProperties)
+            foreach (KeyValuePair<string, PropertyInfo> property in Cope<T>.ModelComposition.FilteredProperties)
             {
-                if (property.Value.Equals(Manager<T>.ModelComposition.PrimaryKeyProperty) && property.Value.PropertyType.Equals(typeof(int?)) && !considerPrimary)
+                if (property.Value.Equals(Cope<T>.ModelComposition.PrimaryKeyProperty) && property.Value.PropertyType.Equals(typeof(int?)) && !considerPrimary)
                 {
                     continue;
                 }
@@ -196,11 +196,11 @@ namespace DataManagement.DAO
 
             if (transactionType == TransactionTypes.Delete)
             {
-                Command.Parameters.Add(CreateDbParameter(string.Format("_{0}", Manager<T>.ModelComposition.PrimaryKeyProperty.Name), Manager<T>.ModelComposition.PrimaryKeyProperty.GetValue(obj)));
+                Command.Parameters.Add(CreateDbParameter(string.Format("_{0}", Cope<T>.ModelComposition.PrimaryKeyProperty.Name), Cope<T>.ModelComposition.PrimaryKeyProperty.GetValue(obj)));
                 return;
             }
 
-            foreach (KeyValuePair<string, PropertyInfo> propertyInfo in Manager<T>.ModelComposition.FilteredProperties)
+            foreach (KeyValuePair<string, PropertyInfo> propertyInfo in Cope<T>.ModelComposition.FilteredProperties)
             {
                 Command.Parameters.Add(CreateDbParameter("_" + propertyInfo.Value.Name, propertyInfo.Value.GetValue(obj)));
             }
@@ -208,21 +208,21 @@ namespace DataManagement.DAO
 
         protected void PerformTableConsolidation<T>(string connectionToUse, bool doAlter) where T : Cope<T>, IManageable, new()
         {
-            Logger.Info(string.Format("Starting table consolidation for table {0} using connection {1}. DoAlter = {2}", Manager<T>.ModelComposition.TableName, connectionToUse, doAlter));
+            Logger.Info(string.Format("Starting table consolidation for table {0} using connection {1}. DoAlter = {2}", Cope<T>.ModelComposition.TableName, connectionToUse, doAlter));
             if (!doAlter)
             {
-                if (!CheckIfTableExists(Manager<T>.ModelComposition.TableName, connectionToUse))
+                if (!CheckIfTableExists(Cope<T>.ModelComposition.TableName, connectionToUse))
                 {
                     ProcessTable<T>(connectionToUse, false);
                     return;
                 }
             }
-            ExecuteScalar(Creator.CreateQueryForTableAlteration<T>(GetColumnDefinition(Manager<T>.ModelComposition.TableName, connectionToUse), GetKeyDefinition(Manager<T>.ModelComposition.TableName, connectionToUse)), connectionToUse, false);
+            ExecuteScalar(Creator.CreateQueryForTableAlteration<T>(GetColumnDefinition(Cope<T>.ModelComposition.TableName, connectionToUse), GetKeyDefinition(Cope<T>.ModelComposition.TableName, connectionToUse)), connectionToUse, false);
         }
 
         protected void ProcessTable<T>(string connectionToUse, bool doAlter) where T : Cope<T>, IManageable, new()
         {
-            Logger.Info(string.Format("Processing table {0} using connection {1}. DoAlter = {2}", Manager<T>.ModelComposition.TableName, connectionToUse, doAlter));
+            Logger.Info(string.Format("Processing table {0} using connection {1}. DoAlter = {2}", Cope<T>.ModelComposition.TableName, connectionToUse, doAlter));
             if (doAlter)
             {
                 PerformTableConsolidation<T>(connectionToUse, doAlter);
@@ -244,10 +244,10 @@ namespace DataManagement.DAO
         {
             Logger.Info(string.Format("Verifying foreign tables for type {0} using connection {1}. DoAlter = {2}", typeof(T).ToString(), connectionToUse, doAlter));
 
-            foreach (KeyValuePair<string, PropertyInfo> property in Manager<T>.ModelComposition.ForeignKeyProperties)
+            foreach (KeyValuePair<string, PropertyInfo> property in Cope<T>.ModelComposition.ForeignKeyProperties)
             {
-                IManageable foreignKey = (IManageable)Activator.CreateInstance(Manager<T>.ModelComposition.ForeignKeyAttributes[property.Value.Name].Model);
-                if (!CheckIfTableExists(foreignKey.Composition.TableName, connectionToUse))
+                IManageable foreignKey = (IManageable)Activator.CreateInstance(Cope<T>.ModelComposition.ForeignKeyAttributes[property.Value.Name].Model);
+                if (!CheckIfTableExists(foreignKey.Configuration.TableName, connectionToUse))
                 {
                     CreateOrAlterForeignTables<T>(foreignKey, connectionToUse, false);
                 }
@@ -268,12 +268,12 @@ namespace DataManagement.DAO
 
         private void CreateOrAlterForeignTables<T>(IManageable foreignKey, string connectionToUse, bool doAlter) where T : Cope<T>, IManageable, new()
         {
-            Logger.Info(string.Format("Create or Alter foreign tables of {0} using connection {1}. DoAlter = {2}", foreignKey.Composition.TableName, connectionToUse, doAlter));
+            Logger.Info(string.Format("Create or Alter foreign tables of {0} using connection {1}. DoAlter = {2}", foreignKey.Configuration.TableName, connectionToUse, doAlter));
             if (doAlter)
             {
                 ExecuteScalar(Creator.CreateQueryForTableAlteration<T>(
-                                                         GetColumnDefinition(foreignKey.Composition.TableName, connectionToUse),
-                                                         GetKeyDefinition(foreignKey.Composition.TableName, connectionToUse)), connectionToUse, false);
+                                                         GetColumnDefinition(foreignKey.Configuration.TableName, connectionToUse),
+                                                         GetKeyDefinition(foreignKey.Configuration.TableName, connectionToUse)), connectionToUse, false);
             }
             else
             {
@@ -306,15 +306,23 @@ namespace DataManagement.DAO
 
         protected Log NewLog(string TableName, TransactionTypes transactionType)
         {
+            dynamic identityId = string.Empty;
+
+            if (Manager.Identity != null)
+            {
+                identityId = Manager.Identity.Configuration.PrimaryKeyProperty.GetValue(Manager.Identity);
+            }
+
             Log newLog = new Log
             {
-                Ip = string.Empty,
+                Id = Guid.NewGuid(),
+                IdentityId = identityId,
                 Transaccion = transactionType.ToString(),
                 TablaAfectada = TableName,
                 Parametros = GetStringParameters()
             };
 
-            Logger.Info(string.Format("Created new log object for affected table {0}, transaction used {1}, with the following parameters: {2}", Manager<Log>.ModelComposition.TableName, newLog.Transaccion, newLog.Parametros));
+            Logger.Info(string.Format("Created new log object for affected table {0}, transaction used {1}, with the following parameters: {2}", Cope<Log>.ModelComposition.TableName, newLog.Transaccion, newLog.Parametros));
 
             return newLog;
         }
