@@ -5,7 +5,7 @@ using DataManagement.Tools.Test;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
-using System.Reflection;
+using System.Linq.Expressions;
 
 namespace DataManagement.IntegrationTests.MsSql
 {
@@ -25,7 +25,8 @@ namespace DataManagement.IntegrationTests.MsSql
         public void Select_DataFromCache_ReturnsTrue()
         {
             List<LogTestGuid> list = LogTestGuid.SelectAll().Data.ToList();
-            Result<LogTestGuid> result = LogTestGuid.Select(new Parameter(nameof(LogTestGuid.Id), list[0].Id));
+            //new Parameter(nameof(LogTestGuid.Id), list[0].Id)
+            Result<LogTestGuid> result = LogTestGuid.Select(log => log.Id == list[0].Id);
 
             Assert.IsTrue(result.IsFromCache);
             Assert.IsTrue(result.IsSuccessful);
@@ -72,6 +73,5 @@ namespace DataManagement.IntegrationTests.MsSql
             //                        .Include(posts => posts.Comments, new Comment());
             //Assert.IsTrue(true);
         }
-
     }
 }

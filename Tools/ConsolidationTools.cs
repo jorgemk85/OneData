@@ -1,6 +1,8 @@
 ﻿using DataManagement.Enums;
 using DataManagement.Exceptions;
+using DataManagement.Models;
 using System;
+using System.Collections.Generic;
 using System.Configuration;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -103,6 +105,79 @@ namespace DataManagement.Tools
             }
 
             return currentExpressionType;
+        }
+
+        public static Parameter[] GetParametersFromExpression<T>(Expression<Func<T, bool>> expression)
+        {
+            List<Parameter> parameters = new List<Parameter>();
+
+            GetParametersFromExpression((BinaryExpression)expression.Body, ref parameters);
+
+            return parameters.ToArray();
+        }
+
+        private static void GetParametersFromExpression(BinaryExpression body, ref List<Parameter> parameters)
+        {
+            Type bodyType = body.GetType();
+            Type leftType = body.Left.GetType();
+            Type rightType = body.Right.GetType();
+
+            if (bodyType.Name == "MethodBinaryExpression")
+            {
+                parameters.Add(GetNewParameter(body));
+                return;
+            }
+
+            if (leftType.Name == "MethodBinaryExpression")
+            {
+                parameters.Add(GetNewParameter((BinaryExpression)body.Left));
+            }
+            else
+            {
+                GetParametersFromExpression((BinaryExpression)body.Left, ref parameters);
+            }
+
+            if (rightType.Name == "MethodBinaryExpression")
+            {
+                parameters.Add(GetNewParameter((BinaryExpression)body.Right));
+            }
+            else
+            {
+                GetParametersFromExpression((BinaryExpression)body.Right, ref parameters);
+            }
+        }
+
+        private static Parameter GetNewParameter(BinaryExpression body)
+        {
+            MemberExpression leftExpression = (MemberExpression)body.Left;
+            dynamic rightValue = GetRightValue(body.Right);
+
+            return new Parameter(leftExpression.Member.Name, rightValue);
+        }
+
+
+        private static dynamic GetRightValue(Expression body)
+        {
+            dynamic right;
+            Type bodyType = body.GetType();
+
+            right = body as ConstantExpression;
+            if (right != null) return ((ConstantExpression)right).Value;
+
+            right = body as MemberExpression;
+            if (right != null)
+            {
+                return Expression.Lambda(right).Compile().DynamicInvoke();
+            }
+
+            right = body as UnaryExpression;
+            if (right != null)
+            {
+                MethodCallExpression call = (MethodCallExpression)((UnaryExpression)right).Operand;
+                return Expression.Lambda(call).Compile().DynamicInvoke();
+            }
+
+            throw new NotSupportedException($"La instruccion '{body.ToString()}' no es comprendida por el analizador de consultas. Intente colocar una expresion diferente.");
         }
     }
 }
