@@ -459,7 +459,7 @@ namespace DataManagement.Tools
             if (list != null)
             {
                 MemberExpression expressionRequired = null;
-                var body = ConsolidationTools.GetExpressionBodyType(keyProperty, t => expressionRequired);
+                var body = ExpressionTools.GetExpressionBodyType(keyProperty, t => expressionRequired);
                 LoopIEnumerableToDictionaryOfType(list, body.Member.Name, ref newDictionary);
             }
             return newDictionary;

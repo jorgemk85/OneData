@@ -40,7 +40,7 @@ namespace DataManagement.IntegrationTests.MySql
         {
             TestTools.GetLogTestIntModel(true).Insert();
             List<LogTestInt> list = LogTestInt.SelectAll().Data.ToList();
-            Result<LogTestInt> result = LogTestInt.Select(new Parameter(nameof(LogTestInt.Id), list[0].Id));
+            Result<LogTestInt> result = LogTestInt.Select(log => log.Id == list[0].Id);
             TestTools.GetLogTestIntModel(false).Delete();
 
             Assert.IsTrue(result.IsFromCache);

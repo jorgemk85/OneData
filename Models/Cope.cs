@@ -62,7 +62,7 @@ namespace DataManagement.Models
         /// <returns>Regresa el resultado que incluye la coleccion obtenida por la consulta.</returns>
         public static Result<T> Select(Expression<Func<T, bool>> expression)
         {
-            return Manager<T>.Select(null, ConsolidationTools.GetParametersFromExpression(expression));
+            return Manager<T>.Select(null, ExpressionTools.SetParametersFromExpression(expression));
         }
     }
 }

@@ -25,7 +25,6 @@ namespace DataManagement.IntegrationTests.MsSql
         public void Select_DataFromCache_ReturnsTrue()
         {
             List<LogTestGuid> list = LogTestGuid.SelectAll().Data.ToList();
-            //new Parameter(nameof(LogTestGuid.Id), list[0].Id)
             Result<LogTestGuid> result = LogTestGuid.Select(log => log.Id == list[0].Id);
 
             Assert.IsTrue(result.IsFromCache);
