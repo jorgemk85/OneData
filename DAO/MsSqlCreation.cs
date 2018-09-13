@@ -377,7 +377,7 @@ namespace DataManagement.DAO
                 }
                 return value;
             }
-            return null;
+            return 0;
         }
 
         public string GetCreateForeignKeysQuery<T>(Dictionary<string, KeyDefinition> keyDetails = null) where T : Cope<T>, IManageable, new()

@@ -1,8 +1,12 @@
-﻿using DataManagement.Exceptions;
+﻿using DataManagement.DAO;
+using DataManagement.Enums;
+using DataManagement.Exceptions;
+using DataManagement.Interfaces;
 using DataManagement.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
+using System.Text;
 
 namespace DataManagement.Tools
 {
@@ -20,7 +24,7 @@ namespace DataManagement.Tools
             return currentExpressionType;
         }
 
-        internal static Parameter[] SetParametersFromExpression<T>(Expression<Func<T, bool>> expression)
+        internal static Parameter[] ConvertExpressionToParameters<T>(Expression<Func<T, bool>> expression)
         {
             List<Parameter> parameters = new List<Parameter>();
 
@@ -36,15 +40,70 @@ namespace DataManagement.Tools
             return parameters.ToArray();
         }
 
+        internal static string ConvertExpressionToSQL<T>(Expression<Func<T, bool>> expression) where T : Cope<T>, IManageable, new()
+        {
+            StringBuilder builder = new StringBuilder();
+            string qualifiedTableName = string.Format("{0}{1}", Manager.TablePrefix, Cope<T>.ModelComposition.TableName);
+
+            try
+            {
+                builder.AppendFormat("SELECT * FROM {0}.{1} WHERE ", Cope<T>.ModelComposition.Schema, qualifiedTableName);
+                BuildQueryFromExpressionBody((BinaryExpression)expression.Body, ref builder, qualifiedTableName);
+            }
+            catch
+            {
+                throw new NotSupportedException($"La instruccion '{expression.ToString()}' no es comprendida por el analizador de consultas. Intente colocar una expresion diferente.");
+            }
+
+            return builder.ToString();
+        }
+
+        private static void BuildQueryFromExpressionBody(BinaryExpression body, ref StringBuilder builder, string tableName)
+        {
+            string logicalString = string.Empty;
+            if (GetNodeGroup(body) == NodeGroupTypes.Comparison)
+            {
+                builder.Append(MsSqlQueryCreation.GetStringFromNodeType(body, tableName));
+                return;
+            }
+            else
+            {
+                logicalString = MsSqlQueryCreation.GetStringFromNodeType(body, tableName);
+            }
+
+            if (GetNodeGroup(body.Left) == NodeGroupTypes.Comparison)
+            {
+                builder.Append(MsSqlQueryCreation.GetStringFromNodeType(body.Left, tableName));
+            }
+            else
+            {
+                BuildQueryFromExpressionBody((BinaryExpression)body.Left, ref builder, tableName);
+            }
+
+            if (!string.IsNullOrWhiteSpace(logicalString))
+            {
+                builder.Append(logicalString);
+            }
+
+            if (GetNodeGroup(body.Right) == NodeGroupTypes.Comparison)
+            {
+                builder.Append(MsSqlQueryCreation.GetStringFromNodeType(body.Right, tableName));
+            }
+            else
+            {
+                BuildQueryFromExpressionBody((BinaryExpression)body.Right, ref builder, tableName);
+            }
+        }
+
         private static void SetParametersFromExpressionBody(BinaryExpression body, ref List<Parameter> parameters)
         {
-            if (IsComparisonExpression(body))
+            if (GetNodeGroup(body) == NodeGroupTypes.Comparison)
             {
                 parameters.Add(GetNewParameter(body));
                 return;
             }
 
-            if (IsComparisonExpression(body.Left))
+            if (GetNodeGroup(body.Left) == NodeGroupTypes.Comparison)
             {
                 parameters.Add(GetNewParameter((BinaryExpression)body.Left));
             }
@@ -53,7 +112,7 @@ namespace DataManagement.Tools
                 SetParametersFromExpressionBody((BinaryExpression)body.Left, ref parameters);
             }
 
-            if (IsComparisonExpression(body.Right))
+            if (GetNodeGroup(body.Right) == NodeGroupTypes.Comparison)
             {
                 parameters.Add(GetNewParameter((BinaryExpression)body.Right));
             }
@@ -63,131 +122,194 @@ namespace DataManagement.Tools
             }
         }
 
-        private static bool IsComparisonExpression(Expression body)
+        private static Parameter GetNewParameter(BinaryExpression body)
         {
-            bool isComparison = false;
+            var (name, value) = GetNameValuePairs(body, "");
+            return new Parameter(name.ToString(), value);
+        }
 
+        internal static (object name, object value) GetNameValuePairs(BinaryExpression body, string tableName)
+        {
+            return (GetExpressionValue(body.Left, tableName), GetExpressionValue(body.Right, tableName));
+        }
+
+        private static object GetExpressionValue(Expression body, string tableName)
+        {
+            object result = null;
+            bool checkAnsciiType = true;
+
+            if (body is ConstantExpression)
+            {
+                result = ((ConstantExpression)body).Value;
+            }
+
+            if (body is MemberExpression)
+            {
+                if (((MemberExpression)body).Expression != null)
+                {
+                    // Si contiene un valor en Expression es por que  hace referencia a una propiedad interna y por ello
+                    // no debe obtener el valor contenido (ya que no existe), sino solo el nombre de la misma.
+                    checkAnsciiType = false;
+                    if (string.IsNullOrWhiteSpace(tableName))
+                    {
+                        result = ((MemberExpression)body).Member.Name;
+                    }
+                    else
+                    {
+                        result = $"{tableName}.{((MemberExpression)body).Member.Name}";
+                    }
+                }
+                else
+                {
+                    // Caso contrario, significa que tiene que traer el valor contenido en la variable o propiedad.
+                    result = Expression.Lambda(body).Compile().DynamicInvoke();
+                }
+            }
+
+            if (body is UnaryExpression || body is MethodCallExpression)
+            {
+                result = Expression.Lambda(body).Compile().DynamicInvoke();
+            }
+
+            if (checkAnsciiType && result != null)
+            {
+                // Si el tipo del resultado tiene seleccionado internamente que es un formato de un string, entonces agrega dos comillas simples 
+                // alrededor del mismo.
+                AppendSingleQuotes(ref result);
+            }
+
+            if (result == null)
+            {
+                throw new NotSupportedException($"La instruccion '{body.ToString()}' no es comprendida por el analizador de consultas. Intente colocar una expresion diferente.");
+            }
+
+            return result;
+        }
+
+        private static void AppendSingleQuotes(ref object result)
+        {
+            if (result.GetType().IsAnsiClass)
+            {
+                result = $"'{result}'";
+            }
+        }
+
+        internal static NodeGroupTypes GetNodeGroup(Expression body)
+        {
             switch (body.NodeType)
             {
                 case ExpressionType.Add:
-                    break;
+                    return NodeGroupTypes.Arithmetic;
                 case ExpressionType.AddChecked:
-                    break;
+                    return NodeGroupTypes.Arithmetic;
                 case ExpressionType.And:
-                    break;
+                    return NodeGroupTypes.Logical;
                 case ExpressionType.AndAlso:
-                    break;
+                    return NodeGroupTypes.Logical;
                 case ExpressionType.ArrayLength:
-                    break;
+                    return NodeGroupTypes.Value;
                 case ExpressionType.ArrayIndex:
-                    break;
+                    return NodeGroupTypes.Value;
                 case ExpressionType.Call:
-                    break;
+                    return NodeGroupTypes.Method;
                 case ExpressionType.Coalesce:
-                    break;
+                    return NodeGroupTypes.Method;
                 case ExpressionType.Conditional:
-                    break;
+                    return NodeGroupTypes.Method;
                 case ExpressionType.Constant:
-                    break;
+                    return NodeGroupTypes.Value;
                 case ExpressionType.Convert:
-                    break;
+                    return NodeGroupTypes.Method;
                 case ExpressionType.ConvertChecked:
-                    break;
+                    return NodeGroupTypes.Method;
                 case ExpressionType.Divide:
-                    break;
+                    return NodeGroupTypes.Arithmetic;
                 case ExpressionType.Equal:
-                    isComparison = true;
-                    break;
+                    return NodeGroupTypes.Comparison;
                 case ExpressionType.ExclusiveOr:
-                    break;
+                    return NodeGroupTypes.Logical;
                 case ExpressionType.GreaterThan:
-                    isComparison = true;
-                    break;
+                    return NodeGroupTypes.Comparison;
                 case ExpressionType.GreaterThanOrEqual:
-                    isComparison = true;
-                    break;
+                    return NodeGroupTypes.Comparison;
                 case ExpressionType.Invoke:
-                    break;
+                    return NodeGroupTypes.Method;
                 case ExpressionType.Lambda:
                     break;
                 case ExpressionType.LeftShift:
-                    break;
+                    return NodeGroupTypes.Bitwise;
                 case ExpressionType.LessThan:
-                    isComparison = true;
-                    break;
+                    return NodeGroupTypes.Comparison;
                 case ExpressionType.LessThanOrEqual:
-                    isComparison = true;
-                    break;
+                    return NodeGroupTypes.Comparison;
                 case ExpressionType.ListInit:
-                    break;
+                    return NodeGroupTypes.Method;
                 case ExpressionType.MemberAccess:
-                    break;
+                    return NodeGroupTypes.Value;
                 case ExpressionType.MemberInit:
-                    break;
+                    return NodeGroupTypes.Method;
                 case ExpressionType.Modulo:
-                    break;
+                    return NodeGroupTypes.Arithmetic;
                 case ExpressionType.Multiply:
-                    break;
+                    return NodeGroupTypes.Arithmetic;
                 case ExpressionType.MultiplyChecked:
-                    break;
+                    return NodeGroupTypes.Arithmetic;
                 case ExpressionType.Negate:
-                    break;
+                    return NodeGroupTypes.Arithmetic;
                 case ExpressionType.UnaryPlus:
-                    break;
+                    return NodeGroupTypes.Method;
                 case ExpressionType.NegateChecked:
-                    break;
+                    return NodeGroupTypes.Arithmetic;
                 case ExpressionType.New:
-                    break;
+                    return NodeGroupTypes.Method;
                 case ExpressionType.NewArrayInit:
-                    break;
+                    return NodeGroupTypes.Method;
                 case ExpressionType.NewArrayBounds:
-                    break;
+                    return NodeGroupTypes.Method;
                 case ExpressionType.Not:
-                    isComparison = true;
-                    break;
+                    return NodeGroupTypes.Comparison;
                 case ExpressionType.NotEqual:
-                    isComparison = true;
-                    break;
+                    return NodeGroupTypes.Comparison;
                 case ExpressionType.Or:
-                    break;
+                    return NodeGroupTypes.Logical;
                 case ExpressionType.OrElse:
-                    break;
+                    return NodeGroupTypes.Logical;
                 case ExpressionType.Parameter:
-                    break;
+                    return NodeGroupTypes.Method;
                 case ExpressionType.Power:
-                    break;
+                    return NodeGroupTypes.Arithmetic;
                 case ExpressionType.Quote:
                     break;
                 case ExpressionType.RightShift:
-                    break;
+                    return NodeGroupTypes.Bitwise;
                 case ExpressionType.Subtract:
-                    break;
+                    return NodeGroupTypes.Arithmetic;
                 case ExpressionType.SubtractChecked:
-                    break;
+                    return NodeGroupTypes.Arithmetic;
                 case ExpressionType.TypeAs:
-                    break;
+                    return NodeGroupTypes.Method;
                 case ExpressionType.TypeIs:
-                    break;
+                    return NodeGroupTypes.Method;
                 case ExpressionType.Assign:
-                    break;
+                    return NodeGroupTypes.Method;
                 case ExpressionType.Block:
                     break;
                 case ExpressionType.DebugInfo:
                     break;
                 case ExpressionType.Decrement:
-                    break;
+                    return NodeGroupTypes.Method;
                 case ExpressionType.Dynamic:
                     break;
                 case ExpressionType.Default:
-                    break;
+                    return NodeGroupTypes.Method;
                 case ExpressionType.Extension:
                     break;
                 case ExpressionType.Goto:
-                    break;
+                    return NodeGroupTypes.Method;
                 case ExpressionType.Increment:
-                    break;
+                    return NodeGroupTypes.Method;
                 case ExpressionType.Index:
-                    break;
+                    return NodeGroupTypes.Method;
                 case ExpressionType.Label:
                     break;
                 case ExpressionType.RuntimeVariables:
@@ -203,7 +325,7 @@ namespace DataManagement.Tools
                 case ExpressionType.Unbox:
                     break;
                 case ExpressionType.AddAssign:
-                    break;
+                    return NodeGroupTypes.Method;
                 case ExpressionType.AndAssign:
                     break;
                 case ExpressionType.DivideAssign:
@@ -231,57 +353,26 @@ namespace DataManagement.Tools
                 case ExpressionType.SubtractAssignChecked:
                     break;
                 case ExpressionType.PreIncrementAssign:
-                    break;
+                    return NodeGroupTypes.Method;
                 case ExpressionType.PreDecrementAssign:
-                    break;
+                    return NodeGroupTypes.Method;
                 case ExpressionType.PostIncrementAssign:
-                    break;
+                    return NodeGroupTypes.Method;
                 case ExpressionType.PostDecrementAssign:
-                    break;
+                    return NodeGroupTypes.Method;
                 case ExpressionType.TypeEqual:
-                    isComparison = true;
-                    break;
+                    return NodeGroupTypes.Comparison;
                 case ExpressionType.OnesComplement:
                     break;
                 case ExpressionType.IsTrue:
-                    isComparison = true;
-                    break;
+                    return NodeGroupTypes.Comparison;
                 case ExpressionType.IsFalse:
-                    isComparison = true;
-                    break;
+                    return NodeGroupTypes.Comparison;
                 default:
                     break;
             }
 
-            return isComparison;
-        }
-
-        private static Parameter GetNewParameter(BinaryExpression body)
-        {
-            return new Parameter(((MemberExpression)body.Left).Member.Name, GetExpressionValue(body.Right));
-        }
-
-        private static dynamic GetExpressionValue(Expression body)
-        {
-            dynamic right;
-
-            right = body as ConstantExpression;
-            if (right != null) return ((ConstantExpression)right).Value;
-
-            right = body as MemberExpression;
-            if (right != null)
-            {
-                return Expression.Lambda(right).Compile().DynamicInvoke();
-            }
-
-            right = body as UnaryExpression;
-            if (right != null)
-            {
-                MethodCallExpression call = (MethodCallExpression)((UnaryExpression)right).Operand;
-                return Expression.Lambda(call).Compile().DynamicInvoke();
-            }
-
-            throw new NotSupportedException($"La instruccion '{body.ToString()}' no es comprendida por el analizador de consultas. Intente colocar una expresion diferente.");
+            return NodeGroupTypes.Unknown;
         }
     }
 }

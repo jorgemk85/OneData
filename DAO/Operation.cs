@@ -306,7 +306,7 @@ namespace DataManagement.DAO
 
         protected Log NewLog(string TableName, TransactionTypes transactionType)
         {
-            dynamic identityId = string.Empty;
+            dynamic identityId = 0;
 
             if (Manager.Identity != null)
             {
