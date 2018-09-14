@@ -47,7 +47,6 @@ namespace DataManagement.Tools
 
             try
             {
-                builder.AppendFormat("SELECT * FROM {0}.{1} WHERE ", Cope<T>.ModelComposition.Schema, qualifiedTableName);
                 BuildQueryFromExpressionBody((BinaryExpression)expression.Body, ref builder, qualifiedTableName);
             }
             catch

@@ -3,6 +3,7 @@ using DataManagement.DAO;
 using DataManagement.Interfaces;
 using DataManagement.Tools;
 using System;
+using System.Data;
 using System.Linq.Expressions;
 
 namespace DataManagement.Models
@@ -60,9 +61,11 @@ namespace DataManagement.Models
         /// Este metodo usa la conexion predeterminada a la base de datos.
         /// </summary>
         /// <returns>Regresa el resultado que incluye la coleccion obtenida por la consulta.</returns>
-        public static Result<T> Select(Expression<Func<T, bool>> expression)
+        public static DataSet Select(Expression<Func<T, bool>> expression)
         {
-            return Manager<T>.Select(null, ExpressionTools.ConvertExpressionToParameters(expression));
+            string fullyQualifiedTableName = string.Format("{0}.{1}{2}", ModelComposition.Schema, Manager.TablePrefix, ModelComposition.TableName);
+            string query = ExpressionTools.ConvertExpressionToSQL(expression);
+            return Manager.StoredProcedure(ModelComposition.TableName, $"{ModelComposition.Schema}.{Manager.StoredProcedurePrefix}ProtectedExecute", null, new Parameter("@query", $"{fullyQualifiedTableName} WHERE {query}"));
         }
     }
 }

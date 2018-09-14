@@ -1,8 +1,6 @@
-﻿using DataManagement.DAO;
-using DataManagement.Extensions;
+﻿using DataManagement.Extensions;
 using DataManagement.Models;
 using DataManagement.Models.Test;
-using DataManagement.Tools;
 using DataManagement.Tools.Test;
 using NUnit.Framework;
 using System;
@@ -27,7 +25,8 @@ namespace DataManagement.IntegrationTests.MsSql
         public void Select_DataFromCache_ReturnsTrue()
         {
             List<LogTestGuid> list = LogTestGuid.SelectAll().Data.ToList();
-            Result<LogTestGuid> result = LogTestGuid.Select(log => log.Id == list[0].Id && log.Ip == string.Empty && log.Id == Guid.NewGuid());
+            //log => log.Id == list[0].Id
+            Result<LogTestGuid> result = LogTestGuid.Select(new Parameter("Id", list[0].Id));
 
             Assert.IsTrue(result.IsFromCache);
             Assert.IsTrue(result.IsSuccessful);
@@ -79,8 +78,7 @@ namespace DataManagement.IntegrationTests.MsSql
         public void TestExpressionToSQL()
         {
             DateTime testingDateTime = DateTime.Now.AddDays(-30);
-            string sql = ExpressionTools.ConvertExpressionToSQL<LogTestGuid>(log => log.DateModified > testingDateTime);
-            DataSet data = Manager.StoredProcedure("TB_logs", "operaciones.SP_ProtectedExecute", null, new Parameter("@statement", sql));
+            DataSet data = LogTestGuid.Select(log => log.DateModified == testingDateTime && log.Id == Guid.NewGuid() || log.Ip == "''; Select * from operaciones.TB_LogTestGuids");
         }
     }
 }
