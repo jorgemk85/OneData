@@ -1,6 +1,5 @@
 ﻿using DataManagement.DAO;
 using DataManagement.Extensions;
-using DataManagement.Interfaces;
 using DataManagement.Models;
 using DataManagement.Models.Test;
 using DataManagement.Tools.Test;
@@ -40,7 +39,7 @@ namespace DataManagement.IntegrationTests.MySql
         {
             TestTools.GetLogTestIntModel(true).Insert();
             List<LogTestInt> list = LogTestInt.SelectAll().Data.ToList();
-            Result<LogTestInt> result = LogTestInt.Select(log => log.Id == list[0].Id);
+            Result<LogTestInt> result = LogTestInt.Select(new Parameter("Id", list[0].Id));
             TestTools.GetLogTestIntModel(false).Delete();
 
             Assert.IsTrue(result.IsFromCache);

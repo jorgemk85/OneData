@@ -47,10 +47,9 @@ namespace DataManagement.DAO
                     EvaluateUpdate(obj, out resultado, hasCache, ref dataCache, connectionToUse);
                     break;
                 case TransactionTypes.StoredProcedure:
-                    resultado = operation.ExecuteProcedure(obj, connectionToUse, transactionType);
-                    break;
+                    throw new NotSupportedException($"El tipo de transaccion {transactionType.ToString()} no puede ser utilizado con esta funcion.");
                 default:
-                    break;
+                    throw new NotSupportedException($"El tipo de transaccion {transactionType.ToString()} no puede ser utilizado con esta funcion.");
             }
 
             return resultado;
@@ -63,7 +62,7 @@ namespace DataManagement.DAO
 
         private void EvaluateInsert<T>(T obj, out Result<T> resultado, bool hasCache, ref DataCache<T> dataCache, string connectionToUse) where T : Cope<T>, IManageable, new()
         {
-            resultado = operation.ExecuteProcedure(obj, connectionToUse, TransactionTypes.Insert);
+            resultado = operation.ExecuteProcedure<T>(obj, connectionToUse, TransactionTypes.Insert, true);
             if (hasCache && resultado.IsSuccessful)
             {
                 InsertInCache(obj, ref dataCache);
@@ -72,7 +71,7 @@ namespace DataManagement.DAO
 
         private void EvaluateUpdate<T>(T obj, out Result<T> resultado, bool hasCache, ref DataCache<T> dataCache, string connectionToUse) where T : Cope<T>, IManageable, new()
         {
-            resultado = operation.ExecuteProcedure(obj, connectionToUse, TransactionTypes.Update);
+            resultado = operation.ExecuteProcedure<T>(obj, connectionToUse, TransactionTypes.Update, true);
             if (hasCache && resultado.IsSuccessful)
             {
                 UpdateInCache(obj, ref dataCache);
@@ -81,7 +80,7 @@ namespace DataManagement.DAO
 
         private void EvaluateDelete<T>(T obj, out Result<T> resultado, bool hasCache, ref DataCache<T> dataCache, string connectionToUse) where T : Cope<T>, IManageable, new()
         {
-            resultado = operation.ExecuteProcedure(obj, connectionToUse, TransactionTypes.Delete);
+            resultado = operation.ExecuteProcedure<T>(obj, connectionToUse, TransactionTypes.Delete, true);
             if (hasCache && resultado.IsSuccessful)
             {
                 DeleteInCache(obj, ref dataCache);
@@ -92,16 +91,16 @@ namespace DataManagement.DAO
         {
             if (!dataCache.IsEnabled)
             {
-                resultado = operation.ExecuteProcedure(obj, connectionToUse, TransactionTypes.Select);
+                resultado = operation.ExecuteProcedure<T>(obj, connectionToUse, TransactionTypes.Select, true);
             }
             else
             {
-                resultado = hasCache == true ? SelectInCache(obj, dataCache) : operation.ExecuteProcedure<T>(obj, connectionToUse, TransactionTypes.Select);
+                resultado = hasCache == true ? SelectInCache(obj, dataCache) : operation.ExecuteProcedure<T>(obj, connectionToUse, TransactionTypes.Select, true);
 
                 resultado.IsFromCache = hasCache == true ? true : false;
                 if (hasCache && dataCache.IsPartialCache && resultado.Data.Count == 0)
                 {
-                    resultado = operation.ExecuteProcedure(obj, connectionToUse, TransactionTypes.Select);
+                    resultado = operation.ExecuteProcedure<T>(obj, connectionToUse, TransactionTypes.Select, true);
                     AlterCache(resultado, ref dataCache);
                 }
                 if (!resultado.IsFromCache && hasCache)
@@ -120,7 +119,7 @@ namespace DataManagement.DAO
         {
             if (!dataCache.IsEnabled)
             {
-                resultado = operation.ExecuteProcedure(obj, connectionToUse, TransactionTypes.SelectAll);
+                resultado = operation.ExecuteProcedure<T>(obj, connectionToUse, TransactionTypes.SelectAll, true);
             }
             else
             {
@@ -131,7 +130,7 @@ namespace DataManagement.DAO
                 }
                 else
                 {
-                    resultado = operation.ExecuteProcedure(obj, connectionToUse, TransactionTypes.SelectAll);
+                    resultado = operation.ExecuteProcedure<T>(obj, connectionToUse, TransactionTypes.SelectAll, true);
                     dataCache.Cache = resultado;
                     dataCache.LastCacheUpdate = DateTime.Now.Ticks;
                 }

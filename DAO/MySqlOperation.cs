@@ -59,9 +59,9 @@ namespace DataManagement.DAO
             return dataSet;
         }
 
-        public Result<T> ExecuteProcedure<T>(T obj, string connectionToUse, TransactionTypes transactionType, bool logTransaction = true) where T : Cope<T>, IManageable, new()
+        public Result<T> ExecuteProcedure<T>(object obj, string connectionToUse, TransactionTypes transactionType, bool logTransaction) where T : Cope<T>, IManageable, new()
         {
-            DataTable dataTable = null;
+            Result<T> result = null;
             bool overrideConsolidation = false;
             bool nextTryRepairStoredProcedure = false;
 
@@ -73,33 +73,29 @@ namespace DataManagement.DAO
                 {
                     PerformTableConsolidation<T>(connectionToUse, false);
                 }
-                using (MySqlConnection connection = Connection.OpenMySqlConnection(connectionToUse))
-                {
-                    if (connection.State != ConnectionState.Open) throw new BadConnectionStateException();
-                    Command = connection.CreateCommand();
-                    Command.CommandType = CommandType.StoredProcedure;
-                    Command.CommandText = string.Format("{0}{1}{2}", Manager.StoredProcedurePrefix, Cope<T>.ModelComposition.TableName, GetFriendlyTransactionSuffix(transactionType));
 
-                    if (transactionType == TransactionTypes.Insert)
-                    {
-                        SetParameters<T>(obj, transactionType, false);
-                        Command.ExecuteNonQuery();
-                    }
-                    else if (transactionType == TransactionTypes.Update || transactionType == TransactionTypes.Delete)
-                    {
-                        SetParameters<T>(obj, transactionType, true);
-                        Command.ExecuteNonQuery();
-                    }
-                    else
-                    {
-                        if (transactionType == TransactionTypes.Select)
-                        {
-                            SetParameters<T>(obj, transactionType, true);
-                        }
-                        dataTable = new DataTable();
-                        dataTable.Load(Command.ExecuteReader());
-                        dataTable.TableName = Cope<T>.ModelComposition.TableName;
-                    }
+                switch (transactionType)
+                {
+                    case TransactionTypes.Select:
+                        result = ExecuteProcedure((T)obj, connectionToUse, transactionType);
+                        break;
+                    case TransactionTypes.SelectAll:
+                        result = ExecuteProcedure((T)obj, connectionToUse, transactionType);
+                        break;
+                    case TransactionTypes.Delete:
+                        result = ExecuteProcedure((T)obj, connectionToUse, transactionType);
+                        break;
+                    case TransactionTypes.Insert:
+                        result = ExecuteProcedure((T)obj, connectionToUse, transactionType);
+                        break;
+                    case TransactionTypes.InsertMassive:
+                        result = ExecuteProcedure((IEnumerable<T>)obj, connectionToUse, transactionType);
+                        break;
+                    case TransactionTypes.Update:
+                        result = ExecuteProcedure((T)obj, connectionToUse, transactionType);
+                        break;
+                    default:
+                        throw new NotSupportedException($"El tipo de transaccion {transactionType.ToString()} no puede ser utilizado con esta funcion.");
                 }
                 Logger.Info(string.Format("Execution {0} for object {1} using connection {2} has finished successfully.", transactionType.ToString(), typeof(T), connectionToUse));
             }
@@ -160,93 +156,61 @@ namespace DataManagement.DAO
 
             if (logTransaction) LogTransaction(Cope<T>.ModelComposition.TableName, transactionType, connectionToUse);
 
+            return result;
+        }
+
+        private Result<T> ExecuteProcedure<T>(T obj, string connectionToUse, TransactionTypes transactionType) where T : Cope<T>, IManageable, new()
+        {
+            DataTable dataTable = null;
+
+            using (MySqlConnection connection = Connection.OpenMySqlConnection(connectionToUse))
+            {
+                if (connection.State != ConnectionState.Open) throw new BadConnectionStateException();
+                Command = connection.CreateCommand();
+                Command.CommandType = CommandType.StoredProcedure;
+                Command.CommandText = string.Format("{0}{1}{2}", Manager.StoredProcedurePrefix, Cope<T>.ModelComposition.TableName, GetFriendlyTransactionSuffix(transactionType));
+
+                if (transactionType == TransactionTypes.Insert)
+                {
+                    SetParameters(obj, transactionType, false);
+                    Command.ExecuteNonQuery();
+                }
+                else if (transactionType == TransactionTypes.Update || transactionType == TransactionTypes.Delete)
+                {
+                    SetParameters(obj, transactionType, true);
+                    Command.ExecuteNonQuery();
+                }
+                else
+                {
+                    if (transactionType == TransactionTypes.Select)
+                    {
+                        SetParameters(obj, transactionType, true);
+                    }
+                    dataTable = new DataTable();
+                    dataTable.Load(Command.ExecuteReader());
+                    dataTable.TableName = Cope<T>.ModelComposition.TableName;
+                }
+            }
             return new Result<T>(dataTable.ToDictionary<T>(Cope<T>.ModelComposition.PrimaryKeyProperty.Name, Cope<T>.ModelComposition.PrimaryKeyProperty.PropertyType), false, true);
         }
 
-        public Result<T> ExecuteProcedure<T>(IEnumerable<T> list, string connectionToUse, TransactionTypes transactionType, bool logTransaction = true) where T : Cope<T>, IManageable, new()
+        private Result<T> ExecuteProcedure<T>(IEnumerable<T> list, string connectionToUse, TransactionTypes transactionType) where T : Cope<T>, IManageable, new()
         {
             DataTable dataTable = null;
-            bool overrideConsolidation = false;
-            T obj = new T();
 
-            Start:
-            try
+            using (MySqlConnection connection = Connection.OpenMySqlConnection(connectionToUse))
             {
-                Logger.Info(string.Format("Starting {0} execution for list {1} using connection {2}", transactionType.ToString(), typeof(T), connectionToUse));
-                if (Manager.ConstantTableConsolidation && (Manager.IsDebug || Manager.OverrideOnlyInDebug) && !overrideConsolidation && !obj.GetType().Equals(typeof(Log)))
-                {
-                    PerformTableConsolidation<T>(connectionToUse, false);
-                }
-                using (MySqlConnection connection = Connection.OpenMySqlConnection(connectionToUse))
-                {
-                    if (connection.State != ConnectionState.Open) throw new BadConnectionStateException();
-                    Command = connection.CreateCommand();
-                    Command.CommandType = CommandType.StoredProcedure;
-                    Command.CommandText = string.Format("{0}{1}{2}", Manager.StoredProcedurePrefix, Cope<T>.ModelComposition.TableName, GetFriendlyTransactionSuffix(transactionType));
+                if (connection.State != ConnectionState.Open) throw new BadConnectionStateException();
+                Command = connection.CreateCommand();
+                Command.CommandType = CommandType.StoredProcedure;
+                Command.CommandText = string.Format("{0}{1}{2}", Manager.StoredProcedurePrefix, Cope<T>.ModelComposition.TableName, GetFriendlyTransactionSuffix(transactionType));
 
-                    if (transactionType == TransactionTypes.InsertMassive)
-                    {
-                        SetParameters<T>(list, transactionType);
-                        Command.ExecuteNonQuery();
-                    }
-                }
-                Logger.Info(string.Format("Execution {0} for list {1} using connection {2} has finished successfully.", transactionType.ToString(), typeof(T), connectionToUse));
-            }
-            catch (MySqlException mySqlException) when (mySqlException.Number == ERR_STORED_PROCEDURE_NOT_FOUND)
-            {
-                if (Manager.AutoCreateStoredProcedures)
+                if (transactionType == TransactionTypes.InsertMassive)
                 {
-                    Logger.Warn(string.Format("Stored Procedure for {0} not found. Creating...", transactionType.ToString()));
-                    ExecuteScalar(GetTransactionTextForProcedure<T>(transactionType, false), connectionToUse, false);
-                    overrideConsolidation = true;
-                    goto Start;
+                    SetParameters(list, transactionType);
+                    Command.ExecuteNonQuery();
                 }
-                Logger.Error(mySqlException);
-                throw;
             }
-            catch (MySqlException mySqlException) when (mySqlException.Number == ERR_TABLE_NOT_FOUND)
-            {
-                if (Manager.AutoCreateTables)
-                {
-                    Logger.Warn(string.Format("Table {0} not found. Creating...", Cope<T>.ModelComposition.TableName));
-                    ProcessTable<T>(connectionToUse, false);
-                    overrideConsolidation = true;
-                    goto Start;
-                }
-                Logger.Error(mySqlException);
-                throw;
-            }
-            catch (MySqlException mySqlException) when (mySqlException.Number == ERR_INCORRECT_NUMBER_OF_ARGUMENTS)
-            {
-                if (Manager.AutoAlterStoredProcedures)
-                {
-                    Logger.Warn(string.Format("Incorrect number of arguments related to the {0} stored procedure. Modifying...", transactionType.ToString()));
-                    ExecuteScalar(GetTransactionTextForProcedure<T>(transactionType, true), connectionToUse, false);
-                    overrideConsolidation = true;
-                    goto Start;
-                }
-                Logger.Error(mySqlException);
-                throw;
-            }
-            catch (MySqlException mySqlException) when (mySqlException.Number == ERR_UNKOWN_COLUMN || mySqlException.Number == ERR_NO_DEFAULT_VALUE_IN_FIELD)
-            {
-                if (Manager.AutoAlterTables)
-                {
-                    ProcessTable<T>(connectionToUse, true);
-                    overrideConsolidation = true;
-                    goto Start;
-                }
-                Logger.Error(mySqlException);
-                throw;
-            }
-            catch (Exception exception)
-            {
-                Logger.Error(exception);
-                throw;
-            }
-
-            if (logTransaction) LogTransaction(Cope<T>.ModelComposition.TableName, transactionType, connectionToUse);
-
             return new Result<T>(dataTable.ToDictionary<T>(Cope<T>.ModelComposition.PrimaryKeyProperty.Name, Cope<T>.ModelComposition.PrimaryKeyProperty.PropertyType), false, true);
         }
 
@@ -259,7 +223,7 @@ namespace DataManagement.DAO
 
             Logger.Info(string.Format("Saving log information into the database."));
             Log newLog = NewLog(tableName, transactionType);
-            ExecuteProcedure(newLog, connectionToUse, TransactionTypes.Insert, false);
+            ExecuteProcedure<Log>(newLog, connectionToUse, TransactionTypes.Insert, false);
         }
     }
 }
