@@ -196,8 +196,6 @@ namespace DataManagement.DAO
 
         private Result<T> ExecuteProcedure<T>(IEnumerable<T> list, string connectionToUse, TransactionTypes transactionType) where T : Cope<T>, IManageable, new()
         {
-            DataTable dataTable = null;
-
             using (MySqlConnection connection = Connection.OpenMySqlConnection(connectionToUse))
             {
                 if (connection.State != ConnectionState.Open) throw new BadConnectionStateException();
@@ -211,7 +209,7 @@ namespace DataManagement.DAO
                     Command.ExecuteNonQuery();
                 }
             }
-            return new Result<T>(dataTable.ToDictionary<T>(Cope<T>.ModelComposition.PrimaryKeyProperty.Name, Cope<T>.ModelComposition.PrimaryKeyProperty.PropertyType), false, true);
+            return new Result<T>(new Dictionary<dynamic, T>(), false, true);
         }
 
         public void LogTransaction(string tableName, TransactionTypes transactionType, string connectionToUse)
