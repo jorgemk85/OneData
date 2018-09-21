@@ -539,5 +539,27 @@ namespace DataManagement.Tools
 
             return newObj;
         }
+
+        internal static T ConvertReaderToObjectOfType<T>(IDataReader reader, IEnumerable<PropertyInfo> properties) where T : Cope<T>, IManageable, new()
+        {
+            T newObj = new T();
+
+            foreach (PropertyInfo property in properties)
+            {
+                property.SetValue(newObj, SimpleConverter.ConvertStringToType(reader[property.Name].ToString(), property.PropertyType));
+            }
+
+            return newObj;
+        }
+
+        internal static IEnumerable<PropertyInfo> GetFilteredPropertiesBasedOnList<T>(IDataReader reader) where T : Cope<T>, IManageable, new()
+        {
+            List<string> columns = new List<string>();
+            for (int i = 0; i < reader.FieldCount; i++)
+            {
+                columns.Add(reader.GetName(i));
+            }
+            return Cope<T>.ModelComposition.Properties.Where(column => columns.Contains(column.Name));
+        }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using DataManagement.Enums;
+using DataManagement.Models;
 using DataManagement.Tools;
 using System.Linq.Expressions;
 
@@ -8,12 +9,15 @@ namespace DataManagement.DAO
     {
         public static string GetStringFromNodeType(Expression body, string tableName)
         {
+            TempTODO temp = null;
             object name = null;
             object value = null;
 
             if (ExpressionTools.GetNodeGroup(body) == NodeGroupTypes.Comparison)
             {
-                (name, value) = ExpressionTools.GetNameValuePairs((BinaryExpression)body, tableName);
+                temp = ExpressionTools.GetNameValuePairs((BinaryExpression)body, tableName);
+                name = temp.Name;
+                value = temp.Value;
             }
 
             switch (body.NodeType)

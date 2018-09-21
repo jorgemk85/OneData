@@ -1,6 +1,5 @@
 ﻿using DataManagement.Enums;
 using DataManagement.Exceptions;
-using DataManagement.Extensions;
 using DataManagement.Interfaces;
 using DataManagement.Models;
 using DataManagement.Tools;
@@ -8,6 +7,7 @@ using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Reflection;
 
 namespace DataManagement.DAO
 {
@@ -161,7 +161,7 @@ namespace DataManagement.DAO
 
         private Result<T> ExecuteProcedure<T>(T obj, string connectionToUse, TransactionTypes transactionType) where T : Cope<T>, IManageable, new()
         {
-            DataTable dataTable = null;
+            Result<T> result = new Result<T>(new Dictionary<dynamic, T>(), false, true);
 
             using (MySqlConnection connection = Connection.OpenMySqlConnection(connectionToUse))
             {
@@ -186,12 +186,17 @@ namespace DataManagement.DAO
                     {
                         SetParameters(obj, transactionType, true);
                     }
-                    dataTable = new DataTable();
-                    dataTable.Load(Command.ExecuteReader());
-                    dataTable.TableName = Cope<T>.ModelComposition.TableName;
+                    using (IDataReader reader = Command.ExecuteReader())
+                    {
+                        IEnumerable<PropertyInfo> properties = DataSerializer.GetFilteredPropertiesBasedOnList<T>(reader);
+                        while (reader.Read())
+                        {
+                            result.Data.Add(reader[Cope<T>.ModelComposition.PrimaryKeyProperty.Name], DataSerializer.ConvertReaderToObjectOfType<T>(reader, properties));
+                        }
+                    }
                 }
             }
-            return new Result<T>(dataTable.ToDictionary<T>(Cope<T>.ModelComposition.PrimaryKeyProperty.Name, Cope<T>.ModelComposition.PrimaryKeyProperty.PropertyType), false, true);
+            return result;
         }
 
         private Result<T> ExecuteProcedure<T>(IEnumerable<T> list, string connectionToUse, TransactionTypes transactionType) where T : Cope<T>, IManageable, new()

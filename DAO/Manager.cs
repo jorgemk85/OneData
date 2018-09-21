@@ -77,13 +77,22 @@ namespace DataManagement.DAO
 
         internal static void SetIfDebug()
         {
+            try
+            {
 #if DEBUG
-            IsDebug = true;
-            Logger.Info("Debug mode is set.");
+                IsDebug = true;
+                Logger.Info("Debug mode is set.");
 #else
             IsDebug = false;
             Logger.Info("Release mode is set.");
 #endif
+            }
+            catch (Exception ex)
+            {
+
+                throw;
+            }
+
         }
 
         /// <summary>
