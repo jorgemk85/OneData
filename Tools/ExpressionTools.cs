@@ -123,13 +123,13 @@ namespace DataManagement.Tools
 
         private static Parameter GetNewParameter(BinaryExpression body)
         {
-            TempTODO temp = GetNameValuePairs(body, "");
-            return new Parameter(temp.Name.ToString(), temp.Value);
+            NameValueObject pair = GetNameValuePairs(body, "");
+            return new Parameter(pair.Name.ToString(), pair.Value);
         }
 
-        internal static TempTODO GetNameValuePairs(BinaryExpression body, string tableName)
+        internal static NameValueObject GetNameValuePairs(BinaryExpression body, string tableName)
         {
-            return new TempTODO(GetExpressionValue(body.Left, tableName), GetExpressionValue(body.Right, tableName));
+            return new NameValueObject(GetExpressionValue(body.Left, tableName), GetExpressionValue(body.Right, tableName));
         }
 
         private static object GetExpressionValue(Expression body, string tableName)

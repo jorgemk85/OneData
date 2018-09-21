@@ -9,15 +9,11 @@ namespace DataManagement.DAO
     {
         public static string GetStringFromNodeType(Expression body, string tableName)
         {
-            TempTODO temp = null;
-            object name = null;
-            object value = null;
+            NameValueObject pair = null;
 
             if (ExpressionTools.GetNodeGroup(body) == NodeGroupTypes.Comparison)
             {
-                temp = ExpressionTools.GetNameValuePairs((BinaryExpression)body, tableName);
-                name = temp.Name;
-                value = temp.Value;
+                pair = ExpressionTools.GetNameValuePairs((BinaryExpression)body, tableName);
             }
 
             switch (body.NodeType)
@@ -49,13 +45,13 @@ namespace DataManagement.DAO
                 case ExpressionType.Divide:
                     break;
                 case ExpressionType.Equal:
-                    return string.Format("{0} {1}", name, value == null ? "is null" : $" = {value}");
+                    return string.Format("{0} {1}", pair.Name, pair.Value == null ? "is null" : $" = {pair.Value }");
                 case ExpressionType.ExclusiveOr:
                     break;
                 case ExpressionType.GreaterThan:
-                    return string.Format("{0} > {1}", name, value ?? "null");
+                    return string.Format("{0} > {1}", pair.Name, pair.Value ?? "null");
                 case ExpressionType.GreaterThanOrEqual:
-                    return string.Format("{0} >= {1}", name, value ?? "null");
+                    return string.Format("{0} >= {1}", pair.Name, pair.Value ?? "null");
                 case ExpressionType.Invoke:
                     break;
                 case ExpressionType.Lambda:
@@ -63,9 +59,9 @@ namespace DataManagement.DAO
                 case ExpressionType.LeftShift:
                     break;
                 case ExpressionType.LessThan:
-                    return string.Format("{0} < {1}", name, value ?? "null");
+                    return string.Format("{0} < {1}", pair.Name, pair.Value ?? "null");
                 case ExpressionType.LessThanOrEqual:
-                    return string.Format("{0} <= {1}", name, value ?? "null");
+                    return string.Format("{0} <= {1}", pair.Name, pair.Value ?? "null");
                 case ExpressionType.ListInit:
                     break;
                 case ExpressionType.MemberAccess:
@@ -93,7 +89,7 @@ namespace DataManagement.DAO
                 case ExpressionType.Not:
                     break;
                 case ExpressionType.NotEqual:
-                    return string.Format("{0} {1}", name, value == null ? "is not null" : $" != {value}");
+                    return string.Format("{0} {1}", pair.Name, pair.Value == null ? "is not null" : $" != {pair.Value }");
                 case ExpressionType.Or:
                     break;
                 case ExpressionType.OrElse:

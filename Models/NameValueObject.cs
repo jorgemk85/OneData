@@ -6,12 +6,12 @@ using System.Threading.Tasks;
 
 namespace DataManagement.Models
 {
-    public class TempTODO
+    public class NameValueObject
     {
         public object Name { get; set; }
         public object Value { get; set; }
 
-        public TempTODO(object name, object value)
+        public NameValueObject(object name, object value)
         {
             Name = name;
             Value = value;
