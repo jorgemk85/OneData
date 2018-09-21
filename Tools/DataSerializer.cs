@@ -192,7 +192,7 @@ namespace DataManagement.Tools
 
         public static Dictionary<dynamic, T> ConvertDataTableToDictionaryOfType<T>(DataTable dataTable, string keyName, Type keyType) where T : new()
         {
-            var newDictionary = new Dictionary<dynamic, T>();
+            Dictionary<dynamic, T> newDictionary = new Dictionary<dynamic, T>();
             if (dataTable != null)
             {
                 foreach (DataRow row in dataTable.Rows)
@@ -216,7 +216,7 @@ namespace DataManagement.Tools
 
         public static Dictionary<dynamic, T> ConvertQueryableToDictionaryOfType<T>(IQueryable queryable, string keyName, Type keyType) where T : Cope<T>, IManageable, new()
         {
-            var newDictionary = new Dictionary<dynamic, T>();
+            Dictionary<dynamic, T> newDictionary = new Dictionary<dynamic, T>();
             if (queryable != null)
             {
                 PropertyInfo primaryProperty = typeof(T).GetProperty(Cope<T>.ModelComposition.PrimaryKeyProperty.Name);
