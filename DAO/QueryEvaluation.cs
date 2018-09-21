@@ -48,8 +48,6 @@ namespace DataManagement.DAO
                 case TransactionTypes.Update:
                     EvaluateUpdate(obj, out resultado, hasCache, ref dataCache, connectionToUse);
                     break;
-                case TransactionTypes.StoredProcedure:
-                    throw new NotSupportedException($"El tipo de transaccion {transactionType.ToString()} no puede ser utilizado con esta funcion.");
                 default:
                     throw new NotSupportedException($"El tipo de transaccion {transactionType.ToString()} no puede ser utilizado con esta funcion.");
             }

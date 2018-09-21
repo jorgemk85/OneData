@@ -23,8 +23,8 @@ namespace DataManagement.DAO
 
         public MsSqlOperation() : base()
         {
-            ConnectionType = ConnectionTypes.MSSQL;
-            Creator = new MsSqlCreation();
+            _connectionType = ConnectionTypes.MSSQL;
+            _creator = new MsSqlCreation();
             QueryForTableExistance = "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE' AND TABLE_NAME = '{0}{1}'";
             QueryForColumnDefinition = string.Format("SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '{0}'", string.Format("{0}{1}", Manager.TablePrefix, "{0}"));
             QueryForKeyDefinition = string.Format("SELECT * FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE TABLE_NAME = '{0}' AND COLUMN_NAME != 'Id'", string.Format("{0}{1}", Manager.TablePrefix, "{0}"));
@@ -40,11 +40,11 @@ namespace DataManagement.DAO
                 using (SqlConnection connection = Connection.OpenMsSqlConnection(connectionToUse))
                 {
                     if (connection.State != ConnectionState.Open) throw new BadConnectionStateException();
-                    Command = connection.CreateCommand();
-                    Command.CommandType = CommandType.StoredProcedure;
-                    Command.CommandText = storedProcedure;
+                    _command = connection.CreateCommand();
+                    _command.CommandType = CommandType.StoredProcedure;
+                    _command.CommandText = storedProcedure;
                     if (parameters != null) SetParameters(parameters);
-                    var adapter = new SqlDataAdapter((SqlCommand)Command);
+                    var adapter = new SqlDataAdapter((SqlCommand)_command);
                     adapter.Fill(dataSet);
                 }
                 Logger.Info(string.Format("Execution of stored procedure {0} using connection {1} has finished successfully.", storedProcedure, connectionToUse));
@@ -160,30 +160,30 @@ namespace DataManagement.DAO
             using (SqlConnection connection = Connection.OpenMsSqlConnection(connectionToUse))
             {
                 if (connection.State != ConnectionState.Open) throw new BadConnectionStateException();
-                Command = connection.CreateCommand();
-                Command.CommandType = CommandType.StoredProcedure;
-                Command.CommandText = string.Format("{0}.{1}{2}{3}", Cope<T>.ModelComposition.Schema, Manager.StoredProcedurePrefix, Cope<T>.ModelComposition.TableName, GetFriendlyTransactionSuffix(transactionType));
+                _command = connection.CreateCommand();
+                _command.CommandType = CommandType.StoredProcedure;
+                _command.CommandText = string.Format("{0}.{1}{2}{3}", Cope<T>.ModelComposition.Schema, Manager.StoredProcedurePrefix, Cope<T>.ModelComposition.TableName, GetFriendlyTransactionSuffix(transactionType));
 
                 switch (transactionType)
                 {
                     case TransactionTypes.Select:
                         SetParameters(obj, transactionType, true);
-                        FillDictionaryWithReader(Command.ExecuteReader(), ref result);
+                        FillDictionaryWithReader(_command.ExecuteReader(), ref result);
                         break;
                     case TransactionTypes.SelectAll:
-                        FillDictionaryWithReader(Command.ExecuteReader(), ref result);
+                        FillDictionaryWithReader(_command.ExecuteReader(), ref result);
                         break;
                     case TransactionTypes.Delete:
                         SetParameters(obj, transactionType, true);
-                        Command.ExecuteNonQuery();
+                        _command.ExecuteNonQuery();
                         break;
                     case TransactionTypes.Insert:
                         SetParameters(obj, transactionType, false);
-                        Command.ExecuteNonQuery();
+                        _command.ExecuteNonQuery();
                         break;
                     case TransactionTypes.Update:
                         SetParameters(obj, transactionType, true);
-                        Command.ExecuteNonQuery();
+                        _command.ExecuteNonQuery();
                         break;
                     default:
                         throw new NotSupportedException($"El tipo de transaccion {transactionType.ToString()} no puede ser utilizado con esta funcion.");
@@ -198,15 +198,15 @@ namespace DataManagement.DAO
             using (SqlConnection connection = Connection.OpenMsSqlConnection(connectionToUse))
             {
                 if (connection.State != ConnectionState.Open) throw new BadConnectionStateException();
-                Command = connection.CreateCommand();
-                Command.CommandType = CommandType.StoredProcedure;
-                Command.CommandText = string.Format("{0}.{1}{2}{3}", Cope<T>.ModelComposition.Schema, Manager.StoredProcedurePrefix, Cope<T>.ModelComposition.TableName, GetFriendlyTransactionSuffix(transactionType));
+                _command = connection.CreateCommand();
+                _command.CommandType = CommandType.StoredProcedure;
+                _command.CommandText = string.Format("{0}.{1}{2}{3}", Cope<T>.ModelComposition.Schema, Manager.StoredProcedurePrefix, Cope<T>.ModelComposition.TableName, GetFriendlyTransactionSuffix(transactionType));
 
                 switch (transactionType)
                 {
                     case TransactionTypes.InsertMassive:
                         SetParameters(list, transactionType);
-                        Command.ExecuteNonQuery();
+                        _command.ExecuteNonQuery();
                         break;
                     default:
                         throw new NotSupportedException($"El tipo de transaccion {transactionType.ToString()} no puede ser utilizado con esta funcion.");

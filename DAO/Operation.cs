@@ -19,9 +19,10 @@ namespace DataManagement.DAO
         public string QueryForTableExistance { get; protected set; }
         public string QueryForColumnDefinition { get; protected set; }
         public string QueryForKeyDefinition { get; protected set; }
-        public ICreatable Creator { get; set; }
-        public ConnectionTypes ConnectionType { get; set; }
-        public DbCommand Command { get; set; }
+
+        protected ICreatable _creator;
+        protected ConnectionTypes _connectionType;
+        protected DbCommand _command;
 
         internal object ExecuteScalar(string transaction, string connectionToUse, bool returnDataTable)
         {
@@ -33,22 +34,22 @@ namespace DataManagement.DAO
             try
             {
                 Logger.Info(string.Format("Starting execution for transaction using connection {0}", connectionToUse));
-                using (DbConnection connection = ConnectionType == ConnectionTypes.MySQL ? (DbConnection)Connection.OpenMySqlConnection(connectionToUse) : (DbConnection)Connection.OpenMsSqlConnection(connectionToUse))
+                using (DbConnection connection = _connectionType == ConnectionTypes.MySQL ? (DbConnection)Connection.OpenMySqlConnection(connectionToUse) : (DbConnection)Connection.OpenMsSqlConnection(connectionToUse))
                 {
                     if (connection.State != ConnectionState.Open) throw new BadConnectionStateException();
-                    Command = connection.CreateCommand();
-                    Command.CommandType = CommandType.Text;
-                    Command.CommandText = transaction;
+                    _command = connection.CreateCommand();
+                    _command.CommandType = CommandType.Text;
+                    _command.CommandText = transaction;
                     if (returnDataTable)
                     {
                         DataTable dataTable = new DataTable();
-                        dataTable.Load(Command.ExecuteReader());
+                        dataTable.Load(_command.ExecuteReader());
                         Logger.Info(string.Format("Execution for transaction using connection {0} has finished successfully.", connectionToUse));
                         return dataTable;
                     }
                     else
                     {
-                        object scalar = Command.ExecuteScalar();
+                        object scalar = _command.ExecuteScalar();
                         Logger.Info(string.Format("Execution for transaction using connection {0} has finished successfully.", connectionToUse));
                         return scalar;
                     }
@@ -95,17 +96,17 @@ namespace DataManagement.DAO
             switch (transactionType)
             {
                 case TransactionTypes.Select:
-                    return Creator.CreateSelectStoredProcedure<T>(doAlter);
+                    return _creator.CreateSelectStoredProcedure<T>(doAlter);
                 case TransactionTypes.SelectAll:
-                    return Creator.CreateSelectAllStoredProcedure<T>(doAlter);
+                    return _creator.CreateSelectAllStoredProcedure<T>(doAlter);
                 case TransactionTypes.Delete:
-                    return Creator.CreateDeleteStoredProcedure<T>(doAlter);
+                    return _creator.CreateDeleteStoredProcedure<T>(doAlter);
                 case TransactionTypes.Insert:
-                    return Creator.CreateInsertStoredProcedure<T>(doAlter);
+                    return _creator.CreateInsertStoredProcedure<T>(doAlter);
                 case TransactionTypes.InsertMassive:
-                    return Creator.CreateInsertMassiveStoredProcedure<T>(doAlter);
+                    return _creator.CreateInsertMassiveStoredProcedure<T>(doAlter);
                 case TransactionTypes.Update:
-                    return Creator.CreateUpdateStoredProcedure<T>(doAlter);
+                    return _creator.CreateUpdateStoredProcedure<T>(doAlter);
                 default:
                     ArgumentException argumentException = new ArgumentException("El tipo de transaccion no es valido para generar un nuevo procedimiento almacenado.");
                     Logger.Error(argumentException);
@@ -119,7 +120,7 @@ namespace DataManagement.DAO
 
             StringBuilder builder = new StringBuilder();
 
-            foreach (DbParameter parametro in Command.Parameters)
+            foreach (DbParameter parametro in _command.Parameters)
             {
                 if (parametro.Value != null)
                 {
@@ -153,7 +154,7 @@ namespace DataManagement.DAO
 
         private DbParameter CreateDbParameter(string name, object value)
         {
-            DbParameter dbParameter = Command.CreateParameter();
+            DbParameter dbParameter = _command.CreateParameter();
 
             dbParameter.ParameterName = name;
             dbParameter.Value = value;
@@ -166,7 +167,7 @@ namespace DataManagement.DAO
             Logger.Info(string.Format("Setting parameters in command."));
             for (int i = 0; i < parameters.Length; i++)
             {
-                Command.Parameters.Add(CreateDbParameter(parameters[i].Name, parameters[i].Value));
+                _command.Parameters.Add(CreateDbParameter(parameters[i].Name, parameters[i].Value));
             }
         }
 
@@ -176,7 +177,7 @@ namespace DataManagement.DAO
 
             if (transactionType == TransactionTypes.Delete)
             {
-                Command.Parameters.Add(CreateDbParameter(string.Format("_{0}", Cope<T>.ModelComposition.PrimaryKeyProperty.Name), Cope<T>.ModelComposition.PrimaryKeyProperty.GetValue(obj)));
+                _command.Parameters.Add(CreateDbParameter(string.Format("_{0}", Cope<T>.ModelComposition.PrimaryKeyProperty.Name), Cope<T>.ModelComposition.PrimaryKeyProperty.GetValue(obj)));
                 return;
             }
 
@@ -186,7 +187,7 @@ namespace DataManagement.DAO
                 {
                     continue;
                 }
-                Command.Parameters.Add(CreateDbParameter("_" + property.Value.Name, property.Value.GetValue(obj)));
+                _command.Parameters.Add(CreateDbParameter("_" + property.Value.Name, property.Value.GetValue(obj)));
             }
         }
 
@@ -196,13 +197,13 @@ namespace DataManagement.DAO
 
             if (transactionType == TransactionTypes.Delete)
             {
-                Command.Parameters.Add(CreateDbParameter(string.Format("_{0}", Cope<T>.ModelComposition.PrimaryKeyProperty.Name), Cope<T>.ModelComposition.PrimaryKeyProperty.GetValue(obj)));
+                _command.Parameters.Add(CreateDbParameter(string.Format("_{0}", Cope<T>.ModelComposition.PrimaryKeyProperty.Name), Cope<T>.ModelComposition.PrimaryKeyProperty.GetValue(obj)));
                 return;
             }
 
             foreach (KeyValuePair<string, PropertyInfo> propertyInfo in Cope<T>.ModelComposition.FilteredProperties)
             {
-                Command.Parameters.Add(CreateDbParameter("_" + propertyInfo.Value.Name, propertyInfo.Value.GetValue(obj)));
+                _command.Parameters.Add(CreateDbParameter("_" + propertyInfo.Value.Name, propertyInfo.Value.GetValue(obj)));
             }
         }
 
@@ -217,7 +218,7 @@ namespace DataManagement.DAO
                     return;
                 }
             }
-            ExecuteScalar(Creator.CreateQueryForTableAlteration<T>(GetColumnDefinition(Cope<T>.ModelComposition.TableName, connectionToUse), GetKeyDefinition(Cope<T>.ModelComposition.TableName, connectionToUse)), connectionToUse, false);
+            ExecuteScalar(_creator.CreateQueryForTableAlteration<T>(GetColumnDefinition(Cope<T>.ModelComposition.TableName, connectionToUse), GetKeyDefinition(Cope<T>.ModelComposition.TableName, connectionToUse)), connectionToUse, false);
         }
 
         protected void ProcessTable<T>(string connectionToUse, bool doAlter) where T : Cope<T>, IManageable, new()
@@ -229,9 +230,9 @@ namespace DataManagement.DAO
             }
             else
             {
-                ExecuteScalar(Creator.CreateQueryForTableCreation<T>(), connectionToUse, false);
+                ExecuteScalar(_creator.CreateQueryForTableCreation<T>(), connectionToUse, false);
                 VerifyForeignTables<T>(connectionToUse, doAlter);
-                string foreignKeyQuery = Creator.GetCreateForeignKeysQuery<T>();
+                string foreignKeyQuery = _creator.GetCreateForeignKeysQuery<T>();
 
                 if (!string.IsNullOrWhiteSpace(foreignKeyQuery))
                 {
@@ -271,17 +272,17 @@ namespace DataManagement.DAO
             Logger.Info(string.Format("Create or Alter foreign tables of {0} using connection {1}. DoAlter = {2}", foreignKey.Configuration.TableName, connectionToUse, doAlter));
             if (doAlter)
             {
-                ExecuteScalar(Creator.CreateQueryForTableAlteration<T>(
+                ExecuteScalar(_creator.CreateQueryForTableAlteration<T>(
                                                          GetColumnDefinition(foreignKey.Configuration.TableName, connectionToUse),
                                                          GetKeyDefinition(foreignKey.Configuration.TableName, connectionToUse)), connectionToUse, false);
             }
             else
             {
-                ExecuteScalar(Creator.CreateQueryForTableCreation<T>(), connectionToUse, false);
+                ExecuteScalar(_creator.CreateQueryForTableCreation<T>(), connectionToUse, false);
             }
 
             VerifyForeignTables<T>(connectionToUse, false);
-            string foreignKeyQuery = Creator.GetCreateForeignKeysQuery<T>();
+            string foreignKeyQuery = _creator.GetCreateForeignKeysQuery<T>();
 
             if (!string.IsNullOrWhiteSpace(foreignKeyQuery))
             {
