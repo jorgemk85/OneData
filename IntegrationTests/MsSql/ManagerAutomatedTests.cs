@@ -23,7 +23,7 @@ namespace DataManagement.IntegrationTests.MsSql
 
             newObjId = TestTools.GetBlogModel(true).Id.GetValueOrDefault();
 
-            Assert.DoesNotThrow(() => Manager<Blog>.Insert(TestTools.GetBlogModel(false)));
+            Assert.DoesNotThrow(() => Manager<Blog>.Insert(TestTools.GetBlogModel(false), null));
         }
 
         [Test, Order(1)]
@@ -31,19 +31,19 @@ namespace DataManagement.IntegrationTests.MsSql
         {
             TestTools.GetBlogModel(false).Name = "Parametros Editados";
 
-            Assert.DoesNotThrow(() => Manager<Blog>.Update(TestTools.GetBlogModel(false)));
+            Assert.DoesNotThrow(() => Manager<Blog>.Update(TestTools.GetBlogModel(false), null));
         }
 
         [Test, Order(2)]
         public void Select_FullAutomation_DoesNotThrow()
         {
-            Assert.DoesNotThrow(() => Manager<Blog>.Select(null, new Parameter(nameof(Blog.Id), newObjId)));
+            Assert.DoesNotThrow(() => Manager<Blog>.Select(null, new Parameter(nameof(Blog.Id), newObjId), null));
         }
 
         [Test, Order(3)]
         public void SelectAll_FullAutomation_DoesNotThrow()
         {
-            Assert.DoesNotThrow(() => Manager<Blog>.SelectAll());
+            Assert.DoesNotThrow(() => Manager<Blog>.SelectAll(null));
         }
 
         [Test, Order(4)]
@@ -51,7 +51,7 @@ namespace DataManagement.IntegrationTests.MsSql
         {
             TestTools.GetBlogModel(false).Id = newObjId;
 
-            Assert.DoesNotThrow(() => Manager<Blog>.Delete(TestTools.GetBlogModel(false)));
+            Assert.DoesNotThrow(() => Manager<Blog>.Delete(TestTools.GetBlogModel(false), null));
         }
 
         [OneTimeTearDown]

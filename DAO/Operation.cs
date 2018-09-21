@@ -147,7 +147,7 @@ namespace DataManagement.DAO
                 case TransactionTypes.SelectAll:
                     return Manager.SelectAllSuffix;
                 default:
-                    return Manager.SelectAllSuffix;
+                    throw new NotSupportedException($"El tipo de transaccion {transactionType.ToString()} no puede ser utilizado con esta funcion.");
             }
         }
 
@@ -325,6 +325,18 @@ namespace DataManagement.DAO
             Logger.Info(string.Format("Created new log object for affected table {0}, transaction used {1}, with the following parameters: {2}", Cope<Log>.ModelComposition.TableName, newLog.Transaccion, newLog.Parametros));
 
             return newLog;
+        }
+
+        protected void FillDictionaryWithReader<T>(IDataReader reader, ref Result<T> result) where T : Cope<T>, IManageable, new()
+        {
+            using (reader)
+            {
+                IEnumerable<PropertyInfo> properties = DataSerializer.GetFilteredPropertiesBasedOnList<T>(reader);
+                while (reader.Read())
+                {
+                    result.Data.Add(reader[Cope<T>.ModelComposition.PrimaryKeyProperty.Name], DataSerializer.ConvertReaderToObjectOfType<T>(reader, properties));
+                }
+            }
         }
     }
 }

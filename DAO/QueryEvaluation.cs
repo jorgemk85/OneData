@@ -34,6 +34,8 @@ namespace DataManagement.DAO
                 case TransactionTypes.Select:
                     EvaluateSelect(obj, out resultado, hasCache, ref dataCache, connectionToUse);
                     break;
+                case TransactionTypes.SelectQuery:
+                    throw new NotImplementedException();
                 case TransactionTypes.SelectAll:
                     EvaluateSelectAll(obj, out resultado, hasCache, ref dataCache, connectionToUse);
                     break;

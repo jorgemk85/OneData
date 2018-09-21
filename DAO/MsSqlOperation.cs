@@ -79,6 +79,8 @@ namespace DataManagement.DAO
                     case TransactionTypes.Select:
                         result = ExecuteProcedure((T)obj, connectionToUse, transactionType);
                         break;
+                    case TransactionTypes.SelectQuery:
+                        throw new NotImplementedException();
                     case TransactionTypes.SelectAll:
                         result = ExecuteProcedure((T)obj, connectionToUse, transactionType);
                         break;
@@ -162,30 +164,29 @@ namespace DataManagement.DAO
                 Command.CommandType = CommandType.StoredProcedure;
                 Command.CommandText = string.Format("{0}.{1}{2}{3}", Cope<T>.ModelComposition.Schema, Manager.StoredProcedurePrefix, Cope<T>.ModelComposition.TableName, GetFriendlyTransactionSuffix(transactionType));
 
-                if (transactionType == TransactionTypes.Insert)
+                switch (transactionType)
                 {
-                    SetParameters(obj, transactionType, false);
-                    Command.ExecuteNonQuery();
-                }
-                else if (transactionType == TransactionTypes.Update || transactionType == TransactionTypes.Delete)
-                {
-                    SetParameters(obj, transactionType, true);
-                    Command.ExecuteNonQuery();
-                }
-                else
-                {
-                    if (transactionType == TransactionTypes.Select)
-                    {
+                    case TransactionTypes.Select:
                         SetParameters(obj, transactionType, true);
-                    }
-                    using (IDataReader reader = Command.ExecuteReader())
-                    {
-                        IEnumerable<PropertyInfo> properties = DataSerializer.GetFilteredPropertiesBasedOnList<T>(reader);
-                        while (reader.Read())
-                        {
-                            result.Data.Add(reader[Cope<T>.ModelComposition.PrimaryKeyProperty.Name], DataSerializer.ConvertReaderToObjectOfType<T>(reader, properties));
-                        }
-                    }
+                        FillDictionaryWithReader(Command.ExecuteReader(), ref result);
+                        break;
+                    case TransactionTypes.SelectAll:
+                        FillDictionaryWithReader(Command.ExecuteReader(), ref result);
+                        break;
+                    case TransactionTypes.Delete:
+                        SetParameters(obj, transactionType, true);
+                        Command.ExecuteNonQuery();
+                        break;
+                    case TransactionTypes.Insert:
+                        SetParameters(obj, transactionType, false);
+                        Command.ExecuteNonQuery();
+                        break;
+                    case TransactionTypes.Update:
+                        SetParameters(obj, transactionType, true);
+                        Command.ExecuteNonQuery();
+                        break;
+                    default:
+                        throw new NotSupportedException($"El tipo de transaccion {transactionType.ToString()} no puede ser utilizado con esta funcion.");
                 }
             }
 
@@ -194,8 +195,6 @@ namespace DataManagement.DAO
 
         private Result<T> ExecuteProcedure<T>(IEnumerable<T> list, string connectionToUse, TransactionTypes transactionType) where T : Cope<T>, IManageable, new()
         {
-            DataTable dataTable = null;
-
             using (SqlConnection connection = Connection.OpenMsSqlConnection(connectionToUse))
             {
                 if (connection.State != ConnectionState.Open) throw new BadConnectionStateException();
@@ -203,13 +202,17 @@ namespace DataManagement.DAO
                 Command.CommandType = CommandType.StoredProcedure;
                 Command.CommandText = string.Format("{0}.{1}{2}{3}", Cope<T>.ModelComposition.Schema, Manager.StoredProcedurePrefix, Cope<T>.ModelComposition.TableName, GetFriendlyTransactionSuffix(transactionType));
 
-                if (transactionType == TransactionTypes.InsertMassive)
+                switch (transactionType)
                 {
-                    SetParameters(list, transactionType);
-                    Command.ExecuteNonQuery();
+                    case TransactionTypes.InsertMassive:
+                        SetParameters(list, transactionType);
+                        Command.ExecuteNonQuery();
+                        break;
+                    default:
+                        throw new NotSupportedException($"El tipo de transaccion {transactionType.ToString()} no puede ser utilizado con esta funcion.");
                 }
             }
-            return new Result<T>(dataTable.ToDictionary<T>(Cope<T>.ModelComposition.PrimaryKeyProperty.Name, Cope<T>.ModelComposition.PrimaryKeyProperty.PropertyType), false, true);
+            return new Result<T>(new Dictionary<dynamic, T>(), false, true);
         }
 
         public void LogTransaction(string tableName, TransactionTypes transactionType, string connectionToUse)

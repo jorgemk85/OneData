@@ -1,7 +1,6 @@
 ﻿using DataManagement.DAO;
 using DataManagement.Interfaces;
 using DataManagement.Models;
-using System.Collections.Generic;
 
 namespace DataManagement.Extensions
 {
@@ -29,7 +28,7 @@ namespace DataManagement.Extensions
         /// </summary>
         public static void Delete<T>(this T obj) where T : Cope<T>, IManageable, new()
         {
-            Manager<T>.Delete(obj);
+            Manager<T>.Delete(obj, null);
         }
 
         /// <summary>
@@ -43,7 +42,7 @@ namespace DataManagement.Extensions
             {
                 obj.Validate();
             }
-            Manager<T>.Update(obj);
+            Manager<T>.Update(obj, null);
         }
 
         /// <summary>
@@ -56,7 +55,7 @@ namespace DataManagement.Extensions
             {
                 obj.Validate();
             }
-            Manager<T>.Insert(obj);
+            Manager<T>.Insert(obj, null);
         }
     }
 }

@@ -43,7 +43,7 @@ namespace DataManagement.Models
         /// <returns>Regresa el resultado que incluye la coleccion obtenida por la consulta.</returns>
         public static Result<T> SelectAll()
         {
-            return Manager<T>.SelectAll();
+            return Manager<T>.SelectAll(null);
         }
 
         /// <summary>
