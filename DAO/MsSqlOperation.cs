@@ -1,6 +1,5 @@
 ﻿using DataManagement.Enums;
 using DataManagement.Exceptions;
-using DataManagement.Extensions;
 using DataManagement.Interfaces;
 using DataManagement.Models;
 using DataManagement.Tools;
@@ -8,7 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
-using System.Reflection;
+using System.Linq.Expressions;
 
 namespace DataManagement.DAO
 {
@@ -60,12 +59,12 @@ namespace DataManagement.DAO
             return dataSet;
         }
 
-        public Result<T> ExecuteProcedure<T>(object obj, string connectionToUse, TransactionTypes transactionType, bool logTransaction) where T : Cope<T>, IManageable, new()
+        public Result<T> ExecuteProcedure<T>(string connectionToUse, TransactionTypes transactionType, bool logTransaction, object obj, Expression<Func<T, bool>> expression) where T : Cope<T>, IManageable, new()
         {
             Result<T> result = null;
             bool overrideConsolidation = false;
 
-            Start:
+        Start:
             try
             {
                 Logger.Info(string.Format("Starting {0} execution for object {1} using connection {2}", transactionType.ToString(), typeof(T), connectionToUse));
@@ -215,6 +214,22 @@ namespace DataManagement.DAO
             return new Result<T>(new Dictionary<dynamic, T>(), false, true);
         }
 
+        private Result<T> ExecuteProcedure<T>(Expression<Func<T, bool>> expression, string connectionToUse, TransactionTypes transactionType) where T : Cope<T>, IManageable, new()
+        {
+            Result<T> result = new Result<T>(new Dictionary<dynamic, T>(), false, true);
+
+            using (SqlConnection connection = Connection.OpenMsSqlConnection(connectionToUse))
+            {
+                if (connection.State != ConnectionState.Open) throw new BadConnectionStateException();
+                _command = connection.CreateCommand();
+                _command.CommandType = CommandType.Text;
+                string fullyQualifiedTableName = string.Format("{0}.{1}{2}", Cope<T>.ModelComposition.Schema, Manager.TablePrefix, Cope<T>.ModelComposition.TableName);
+                _command.CommandText = $"SELECT * FROM {fullyQualifiedTableName} WHERE {ExpressionTools.ConvertExpressionToSQL(expression)}";
+                FillDictionaryWithReader(_command.ExecuteReader(), ref result);
+            }
+            return new Result<T>(new Dictionary<dynamic, T>(), false, true);
+        }
+
         public void LogTransaction(string tableName, TransactionTypes transactionType, string connectionToUse)
         {
             if (!Manager.EnableLogInDatabase)
@@ -224,7 +239,7 @@ namespace DataManagement.DAO
 
             Logger.Info(string.Format("Saving log information into the database."));
             Log newLog = NewLog(tableName, transactionType);
-            ExecuteProcedure<Log>(newLog, connectionToUse, TransactionTypes.Insert, false);
+            ExecuteProcedure<Log>(connectionToUse, TransactionTypes.Insert, false, newLog, null);
         }
     }
 }

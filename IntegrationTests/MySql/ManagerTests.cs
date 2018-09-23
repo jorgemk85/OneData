@@ -6,6 +6,7 @@ using DataManagement.Tools.Test;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 
 namespace DataManagement.IntegrationTests.MySql
 {
@@ -96,6 +97,13 @@ namespace DataManagement.IntegrationTests.MySql
             TestTools.GetLogTestIntModel(true).Insert();
 
             Assert.DoesNotThrow(() => Manager.Identity = user);
+        }
+
+        [Test]
+        public void TestExpressionToSQL()
+        {
+            Result<LogTestGuid> data = LogTestGuid.Select(log => log.Parametros == "Parametros Editados");
+            Result<LogTestGuid> dataFromCache = LogTestGuid.Select(log => log.Parametros == "Parametros Editados");
         }
     }
 }
