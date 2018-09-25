@@ -6,6 +6,7 @@ using DataManagement.Tools;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 
 namespace DataManagement.DAO
@@ -231,10 +232,10 @@ namespace DataManagement.DAO
             return Command(DataSerializer.SetParametersInObject<T>(parameters), TransactionTypes.Select, connectionToUse);
         }
 
-        //public static Result<T> Select(string connectionToUse, Expression<Func<T, bool>> expression)
-        //{
-        //    return Command(DataSerializer.SetParametersInObject<T>(parameters), TransactionTypes.Select, connectionToUse);
-        //}
+        public static Result<T> Select(Expression<Func<T, bool>> expression, string connectionToUse)
+        {
+            return Command(expression, TransactionTypes.SelectQuery, connectionToUse);
+        }
 
         /// <summary>
         /// Ejecuta una consulta de seleccion en la base de datos usando el objeto de tipo <typeparamref name="T"/> como referencia y los parametros proporcionados usando Async.
@@ -267,17 +268,22 @@ namespace DataManagement.DAO
             return await Task.Run(() => Command(new T(), TransactionTypes.SelectAll, connectionToUse));
         }
 
+        private static Result<T> Command(Expression<Func<T, bool>> expression, TransactionTypes transactionType, string connectionToUse)
+        {
+            return DynamicCommand(null, expression, transactionType, connectionToUse);
+        }
+
         private static Result<T> Command(T obj, TransactionTypes transactionType, string connectionToUse)
         {
-            return DynamicCommand(obj, transactionType, connectionToUse);
+            return DynamicCommand(obj, null, transactionType, connectionToUse);
         }
 
         private static Result<T> Command(IEnumerable<T> list, TransactionTypes transactionType, string connectionToUse)
         {
-            return DynamicCommand(list, transactionType, connectionToUse);
+            return DynamicCommand(list, null, transactionType, connectionToUse);
         }
 
-        private static Result<T> DynamicCommand(dynamic obj, TransactionTypes transactionType, string connectionToUse)
+        private static Result<T> DynamicCommand(dynamic obj, Expression<Func<T, bool>> expression, TransactionTypes transactionType, string connectionToUse)
         {
             if (connectionToUse == null) connectionToUse = Manager.DefaultConnection;
             QueryEvaluation queryEvaluation = new QueryEvaluation(Manager.ConnectionType);
@@ -287,7 +293,7 @@ namespace DataManagement.DAO
                 ResetCacheIfExpired();
             }
 
-            Result<T> result = queryEvaluation.Evaluate<T>(obj, transactionType, ref dataCache, connectionToUse);
+            Result<T> result = queryEvaluation.Evaluate<T>(obj, expression, transactionType, ref dataCache, connectionToUse);
             CallOnExecutedEventHandlers(Cope<T>.ModelComposition.TableName, transactionType, result);
 
             return result;

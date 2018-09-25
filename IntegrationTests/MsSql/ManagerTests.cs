@@ -78,7 +78,7 @@ namespace DataManagement.IntegrationTests.MsSql
         public void TestExpressionToSQL()
         {
             DateTime testingDateTime = DateTime.Now.AddDays(-30);
-            DataSet data = LogTestGuid.Select(log => log.DateModified == testingDateTime && log.Id == Guid.NewGuid() || log.Ip == "''; Select * from operaciones.TB_LogTestGuids");
+            Result<LogTestGuid> data = LogTestGuid.Select(log => log.DateModified == testingDateTime);
         }
     }
 }

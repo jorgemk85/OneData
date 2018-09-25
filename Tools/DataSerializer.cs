@@ -557,9 +557,9 @@ namespace DataManagement.Tools
             List<string> columns = new List<string>();
             for (int i = 0; i < reader.FieldCount; i++)
             {
-                columns.Add(reader.GetName(i));
+                columns.Add(reader.GetName(i).ToLower());
             }
-            return Cope<T>.ModelComposition.Properties.Where(column => columns.Contains(column.Name));
+            return Cope<T>.ModelComposition.Properties.Where(property => columns.Contains(property.Name.ToLower()));
         }
     }
 }
