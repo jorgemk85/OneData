@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net461</TargetFramework>
+    <TargetFrameworks>net461;netstandard2.0</TargetFrameworks>
     <LangVersion>7.2</LangVersion>
     <Authors>Jorge Marcos Kawas</Authors>
     <AssemblyVersion>1.9.6819.77</AssemblyVersion>
@@ -13,6 +13,7 @@
     <PackageReference Include="EPPlus" Version="4.5.2.1" />
     <PackageReference Include="log4net" Version="2.0.8" />
     <PackageReference Include="Microsoft.CSharp" Version="4.5.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="2.1.1" />
     <PackageReference Include="MySql.Data" Version="8.0.12" />
     <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
     <PackageReference Include="NUnit" Version="3.10.1" />
