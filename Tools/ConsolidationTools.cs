@@ -103,7 +103,6 @@ namespace DataManagement.Tools
                     if (ConfigurationManager.AppSettings[key] == null) throw new ConfigurationNotFoundException(key);
                     return ConfigurationManager.AppSettings[key];
                 default:
-                    var builder = new ConfigurationBuilder();
                     throw new ConfigurationNotFoundException(key);
                     
             }
