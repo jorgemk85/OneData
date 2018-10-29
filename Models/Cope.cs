@@ -1,7 +1,9 @@
 ﻿using DataManagement.Attributes;
 using DataManagement.DAO;
+using DataManagement.Extensions;
 using DataManagement.Interfaces;
 using System;
+using System.Collections.Generic;
 using System.Linq.Expressions;
 
 namespace DataManagement.Models
@@ -45,6 +47,16 @@ namespace DataManagement.Models
         }
 
         /// <summary>
+        /// Obtiene un listado completo de los objetos de tipo <typeparamref name="T"/> almacenados en la base de datos o en el cache.
+        /// Este metodo usa la conexion predeterminada a la base de datos.
+        /// </summary>
+        /// <returns>Regresa el resultado en forma de una lista que incluye la coleccion obtenida por la consulta.</returns>
+        public static List<T> SelectAllList()
+        {
+            return Manager<T>.SelectAll(null).Data.ToList();
+        }
+
+        /// <summary>
         /// Obtiene un listado de los objetos de tipo <typeparamref name="T"/> almacenados en la base de datos o en el cache segun los parametros indicados.
         /// Este metodo usa la conexion predeterminada a la base de datos.
         /// </summary>
@@ -62,6 +74,16 @@ namespace DataManagement.Models
         public static Result<T> Select(Expression<Func<T, bool>> expression)
         {
             return Manager<T>.Select(expression, null);
+        }
+
+        /// <summary>
+        /// Obtiene un listado de los objetos de tipo <typeparamref name="T"/> almacenados en la base de datos o en el cache segun los parametros indicados via una expresion.
+        /// Este metodo usa la conexion predeterminada a la base de datos.
+        /// </summary>
+        /// <returns>Regresa el resultado en forma de una lista que incluye la coleccion obtenida por la consulta.</returns>
+        public static List<T> SelectList(Expression<Func<T, bool>> expression)
+        {
+            return Manager<T>.Select(expression, null).Data.ToList();
         }
     }
 }
