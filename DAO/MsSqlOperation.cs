@@ -16,6 +16,7 @@ namespace DataManagement.DAO
         const int ERR_STORED_PROCEDURE_NOT_FOUND = 2812;
         const int ERR_OBJECT_NOT_FOUND = 208;
         const int ERR_INCORRECT_NUMBER_OF_ARGUMENTS = 8144;
+        const int ERR_NOT_A_PARAMETER_FOR_PROCEDURE = 8145;
         const int ERR_EXPECTED_PARAMETER_NOT_SUPPLIED = 201;
         const int ERR_CANNOT_INSERT_EXPLICIT_VALUE_FOR_IDENTITY = 544;
         const int ERR_CANNOT_UPDATE_IDENTITY_VALUE = 8102;
@@ -128,7 +129,8 @@ namespace DataManagement.DAO
             catch (SqlException sqlException) when (sqlException.Number == ERR_INCORRECT_NUMBER_OF_ARGUMENTS ||
                                                     sqlException.Number == ERR_CANNOT_INSERT_EXPLICIT_VALUE_FOR_IDENTITY ||
                                                     sqlException.Number == ERR_EXPECTED_PARAMETER_NOT_SUPPLIED ||
-                                                    sqlException.Number == ERR_CANNOT_UPDATE_IDENTITY_VALUE)
+                                                    sqlException.Number == ERR_CANNOT_UPDATE_IDENTITY_VALUE ||
+                                                    sqlException.Number == ERR_NOT_A_PARAMETER_FOR_PROCEDURE)
             {
                 if (Manager.AutoAlterStoredProcedures)
                 {

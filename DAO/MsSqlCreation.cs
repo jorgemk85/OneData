@@ -142,7 +142,7 @@ namespace DataManagement.DAO
                 }
             }
             queryBuilder.Remove(queryBuilder.Length - 2, 2);
-            queryBuilder.AppendFormat("WHERE Id = @_Id;\n");
+            queryBuilder.AppendFormat($"WHERE {Cope<T>.ModelComposition.PrimaryKeyProperty.Name} = @_{Cope<T>.ModelComposition.PrimaryKeyProperty.Name};\n");
             queryBuilder.Append("END");
 
             Logger.Info("Created a new query for Update Stored Procedure:");
@@ -164,11 +164,11 @@ namespace DataManagement.DAO
                 queryBuilder.AppendFormat("CREATE PROCEDURE {0}.{1}{2}{3}\n", Cope<T>.ModelComposition.Schema, Manager.StoredProcedurePrefix, Cope<T>.ModelComposition.TableName, Manager.DeleteSuffix);
             }
 
-            queryBuilder.Append(string.Format("@_Id {0}\n", GetSqlDataType(Cope<T>.ModelComposition.PrimaryKeyProperty.PropertyType)));
+            queryBuilder.Append($"@_{Cope<T>.ModelComposition.PrimaryKeyProperty.Name} {GetSqlDataType(Cope<T>.ModelComposition.PrimaryKeyProperty.PropertyType)}\n");
             queryBuilder.Append("AS\n");
             queryBuilder.Append("BEGIN\n");
             queryBuilder.AppendFormat("DELETE FROM {0}.{1}{2}\n", Cope<T>.ModelComposition.Schema, Manager.TablePrefix, Cope<T>.ModelComposition.TableName);
-            queryBuilder.AppendFormat("WHERE Id = @_Id;\n");
+            queryBuilder.AppendFormat($"WHERE {Cope<T>.ModelComposition.PrimaryKeyProperty.Name} = @_{Cope<T>.ModelComposition.PrimaryKeyProperty.Name};\n");
             queryBuilder.Append("END");
 
             Logger.Info("Created a new query for Delete Stored Procedure:");
@@ -326,7 +326,7 @@ namespace DataManagement.DAO
                     queryBuilder.AppendFormat("ALTER COLUMN {0} {1};\n", property.Value.Name, sqlDataType);
                     foundDiference = true;
                 }
-                if (keyDetails.TryGetValue(property.Value.Name, out KeyDefinition keyDefinition))
+                if (keyDetails.TryGetValue(property.Value.Name, out KeyDefinition keyDefinition) && !property.Value.Equals(Cope<T>.ModelComposition.PrimaryKeyProperty))
                 {
                     // Si existe una llave en la base de datos relacionada a esta propiedad entonces...
                     ForeignKey foreignAttribute = property.Value.GetCustomAttribute<ForeignKey>();
@@ -401,7 +401,7 @@ namespace DataManagement.DAO
                 ForeignKey foreignAttribute = property.Value.GetCustomAttribute<ForeignKey>();
                 IManageable foreignKey = (IManageable)Activator.CreateInstance(foreignAttribute.Model);
                 queryBuilder.AppendFormat("ADD CONSTRAINT FK_{0}_{1}\n", Cope<T>.ModelComposition.TableName, foreignKey.Configuration.TableName);
-                queryBuilder.AppendFormat("FOREIGN KEY({0}) REFERENCES {1}.{2}{3}(Id) ON DELETE {4} ON UPDATE NO ACTION;\n", property.Value.Name, Cope<T>.ModelComposition.Schema, Manager.TablePrefix, foreignKey.Configuration.TableName, foreignAttribute.Action.ToString().Replace("_", " "));
+                queryBuilder.AppendFormat($"FOREIGN KEY({property.Value.Name}) REFERENCES {Cope<T>.ModelComposition.Schema}.{Manager.TablePrefix}{foreignKey.Configuration.TableName}({Cope<T>.ModelComposition.PrimaryKeyProperty.Name}) ON DELETE {foreignAttribute.Action.ToString().Replace("_", " ")} ON UPDATE NO ACTION;\n");
             }
 
             Logger.Info("Created a new query for Create Foreign Keys:");

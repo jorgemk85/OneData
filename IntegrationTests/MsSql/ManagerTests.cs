@@ -78,7 +78,7 @@ namespace DataManagement.IntegrationTests.MsSql
         public void TestExpressionToSQL()
         {
             DateTime testingDateTime = DateTime.Now.AddDays(-30);
-            Result<LogTestGuid> data = LogTestGuid.Select(log => log.DateModified == testingDateTime);
+            Result<LogTestGuid> data = LogTestGuid.Select(log => log.DateModified == testingDateTime || log.Id == Guid.Empty);
         }
     }
 }
