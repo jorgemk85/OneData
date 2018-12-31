@@ -25,7 +25,7 @@ namespace DataManagement.DAO
             operation = Operation.GetOperationBasedOnConnectionType(connectionType);
         }
 
-        public Result<T> Evaluate<T>(T obj, Expression<Func<T, bool>> expression, TransactionTypes transactionType, ref DataCache<T> dataCache, string connectionToUse) where T : Cope<T>, IManageable, new()
+        public Result<T> Evaluate<T>(T obj, Expression<Func<T, bool>> expression, TransactionTypes transactionType, ref DataCache<T> dataCache, QueryOptions queryOptions) where T : Cope<T>, IManageable, new()
         {
             Result<T> resultado = null;
             bool hasCache = dataCache.Cache == null ? false : true;
@@ -33,22 +33,22 @@ namespace DataManagement.DAO
             switch (transactionType)
             {
                 case TransactionTypes.Select:
-                    EvaluateSelect(obj, out resultado, hasCache, ref dataCache, connectionToUse);
+                    EvaluateSelect(obj, out resultado, hasCache, ref dataCache, queryOptions);
                     break;
                 case TransactionTypes.SelectQuery:
-                    EvaluateSelectQuery(expression, out resultado, hasCache, ref dataCache, connectionToUse);
+                    EvaluateSelectQuery(expression, out resultado, hasCache, ref dataCache, queryOptions);
                     break;
                 case TransactionTypes.SelectAll:
-                    EvaluateSelectAll(obj, out resultado, hasCache, ref dataCache, connectionToUse);
+                    EvaluateSelectAll(obj, out resultado, hasCache, ref dataCache, queryOptions);
                     break;
                 case TransactionTypes.Delete:
-                    EvaluateDelete(obj, out resultado, hasCache, ref dataCache, connectionToUse);
+                    EvaluateDelete(obj, out resultado, hasCache, ref dataCache, queryOptions);
                     break;
                 case TransactionTypes.Insert:
-                    EvaluateInsert(obj, out resultado, hasCache, ref dataCache, connectionToUse);
+                    EvaluateInsert(obj, out resultado, hasCache, ref dataCache, queryOptions);
                     break;
                 case TransactionTypes.Update:
-                    EvaluateUpdate(obj, out resultado, hasCache, ref dataCache, connectionToUse);
+                    EvaluateUpdate(obj, out resultado, hasCache, ref dataCache, queryOptions);
                     break;
                 default:
                     throw new NotSupportedException($"El tipo de transaccion {transactionType.ToString()} no puede ser utilizado con esta funcion.");
@@ -57,19 +57,19 @@ namespace DataManagement.DAO
             return resultado;
         }
 
-        private void EvaluateSelectQuery<T>(Expression<Func<T, bool>> expression, out Result<T> resultado, bool hasCache, ref DataCache<T> dataCache, string connectionToUse) where T : Cope<T>, IManageable, new()
+        private void EvaluateSelectQuery<T>(Expression<Func<T, bool>> expression, out Result<T> resultado, bool hasCache, ref DataCache<T> dataCache, QueryOptions queryOptions) where T : Cope<T>, IManageable, new()
         {
             if (!dataCache.IsEnabled)
             {
-                resultado = operation.ExecuteProcedure(connectionToUse, TransactionTypes.SelectQuery, true, null, expression);
+                resultado = operation.ExecuteProcedure(queryOptions, TransactionTypes.SelectQuery, true, null, expression);
             }
             else
             {
-                resultado = hasCache == true ? SelectInCache(expression, dataCache) : operation.ExecuteProcedure(connectionToUse, TransactionTypes.SelectQuery, true, null, expression);
+                resultado = hasCache == true ? SelectInCache(expression, dataCache) : operation.ExecuteProcedure(queryOptions, TransactionTypes.SelectQuery, true, null, expression);
 
                 if (hasCache && dataCache.IsPartialCache && resultado.Data.Count == 0)
                 {
-                    resultado = operation.ExecuteProcedure(connectionToUse, TransactionTypes.SelectQuery, true, null, expression);
+                    resultado = operation.ExecuteProcedure(queryOptions, TransactionTypes.SelectQuery, true, null, expression);
                     AlterCache(resultado, ref dataCache);
                 }
                 if (!resultado.IsFromCache && hasCache)
@@ -84,46 +84,46 @@ namespace DataManagement.DAO
             }
         }
 
-        private void EvaluateInsert<T>(T obj, out Result<T> resultado, bool hasCache, ref DataCache<T> dataCache, string connectionToUse) where T : Cope<T>, IManageable, new()
+        private void EvaluateInsert<T>(T obj, out Result<T> resultado, bool hasCache, ref DataCache<T> dataCache, QueryOptions queryOptions) where T : Cope<T>, IManageable, new()
         {
-            resultado = operation.ExecuteProcedure<T>(connectionToUse, TransactionTypes.Insert, true, obj, null);
+            resultado = operation.ExecuteProcedure<T>(queryOptions, TransactionTypes.Insert, true, obj, null);
             if (hasCache && resultado.IsSuccessful)
             {
                 InsertInCache(obj, ref dataCache);
             }
         }
 
-        private void EvaluateUpdate<T>(T obj, out Result<T> resultado, bool hasCache, ref DataCache<T> dataCache, string connectionToUse) where T : Cope<T>, IManageable, new()
+        private void EvaluateUpdate<T>(T obj, out Result<T> resultado, bool hasCache, ref DataCache<T> dataCache, QueryOptions queryOptions) where T : Cope<T>, IManageable, new()
         {
-            resultado = operation.ExecuteProcedure<T>(connectionToUse, TransactionTypes.Update, true, obj, null);
+            resultado = operation.ExecuteProcedure<T>(queryOptions, TransactionTypes.Update, true, obj, null);
             if (hasCache && resultado.IsSuccessful)
             {
                 UpdateInCache(obj, ref dataCache);
             }
         }
 
-        private void EvaluateDelete<T>(T obj, out Result<T> resultado, bool hasCache, ref DataCache<T> dataCache, string connectionToUse) where T : Cope<T>, IManageable, new()
+        private void EvaluateDelete<T>(T obj, out Result<T> resultado, bool hasCache, ref DataCache<T> dataCache, QueryOptions queryOptions) where T : Cope<T>, IManageable, new()
         {
-            resultado = operation.ExecuteProcedure<T>(connectionToUse, TransactionTypes.Delete, true, obj, null);
+            resultado = operation.ExecuteProcedure<T>(queryOptions, TransactionTypes.Delete, true, obj, null);
             if (hasCache && resultado.IsSuccessful)
             {
                 DeleteInCache(obj, ref dataCache);
             }
         }
 
-        private void EvaluateSelect<T>(T obj, out Result<T> resultado, bool hasCache, ref DataCache<T> dataCache, string connectionToUse) where T : Cope<T>, IManageable, new()
+        private void EvaluateSelect<T>(T obj, out Result<T> resultado, bool hasCache, ref DataCache<T> dataCache, QueryOptions queryOptions) where T : Cope<T>, IManageable, new()
         {
             if (!dataCache.IsEnabled)
             {
-                resultado = operation.ExecuteProcedure<T>(connectionToUse, TransactionTypes.Select, true, obj, null);
+                resultado = operation.ExecuteProcedure<T>(queryOptions, TransactionTypes.Select, true, obj, null);
             }
             else
             {
-                resultado = hasCache == true ? SelectInCache(obj, dataCache) : operation.ExecuteProcedure<T>(connectionToUse, TransactionTypes.Select, true, obj, null);
+                resultado = hasCache == true ? SelectInCache(obj, dataCache) : operation.ExecuteProcedure<T>(queryOptions, TransactionTypes.Select, true, obj, null);
 
                 if (hasCache && dataCache.IsPartialCache && resultado.Data.Count == 0)
                 {
-                    resultado = operation.ExecuteProcedure<T>(connectionToUse, TransactionTypes.Select, true, obj, null);
+                    resultado = operation.ExecuteProcedure<T>(queryOptions, TransactionTypes.Select, true, obj, null);
                     AlterCache(resultado, ref dataCache);
                 }
                 if (!resultado.IsFromCache && hasCache)
@@ -138,11 +138,11 @@ namespace DataManagement.DAO
             }
         }
 
-        private void EvaluateSelectAll<T>(T obj, out Result<T> resultado, bool hasCache, ref DataCache<T> dataCache, string connectionToUse) where T : Cope<T>, IManageable, new()
+        private void EvaluateSelectAll<T>(T obj, out Result<T> resultado, bool hasCache, ref DataCache<T> dataCache, QueryOptions queryOptions) where T : Cope<T>, IManageable, new()
         {
             if (!dataCache.IsEnabled)
             {
-                resultado = operation.ExecuteProcedure<T>(connectionToUse, TransactionTypes.SelectAll, true, obj, null);
+                resultado = operation.ExecuteProcedure<T>(queryOptions, TransactionTypes.SelectAll, true, obj, null);
             }
             else
             {
@@ -153,13 +153,13 @@ namespace DataManagement.DAO
                 }
                 else
                 {
-                    resultado = operation.ExecuteProcedure<T>(connectionToUse, TransactionTypes.SelectAll, true, obj, null);
+                    resultado = operation.ExecuteProcedure<T>(queryOptions, TransactionTypes.SelectAll, true, obj, null);
                     dataCache.Cache = resultado;
                     dataCache.LastCacheUpdate = DateTime.Now.Ticks;
                 }
             }
 
-            if (dataCache.IsEnabled && resultado.IsSuccessful && resultado.Data.Count > 0)
+            if (dataCache.IsEnabled && resultado.IsSuccessful && resultado.Data.Count > 0 && queryOptions.MaximumResults == -1 & queryOptions.Offset == 0)
             {
                 dataCache.IsPartialCache = false;
             }

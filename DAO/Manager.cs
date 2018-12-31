@@ -93,9 +93,9 @@ namespace DataManagement.DAO
         /// <param name="connectionToUse">Especifica cual configuracion de tipo ConectionString se desea utilizar. Si se especifica nulo, entonces utiliza la conexion especificada en DefaultConnection.</param>
         /// <param name="parameters">Formacion de objetos Parameter que contiene los parametros de la consulta.</param>
         /// <returns>Regresa un nuevo DataSet que contiene la informacion resultante de la ejecucion.</returns>
-        public static DataSet StoredProcedure(string tableName, string storedProcedure, string connectionToUse, params Parameter[] parameters)
+        public static DataSet StoredProcedure(string tableName, string storedProcedure, QueryOptions queryOptions, params Parameter[] parameters)
         {
-            return ExecuteStoredProcedure(tableName, storedProcedure, connectionToUse, parameters);
+            return ExecuteStoredProcedure(tableName, storedProcedure, queryOptions, parameters);
         }
 
         /// <summary>
@@ -106,16 +106,24 @@ namespace DataManagement.DAO
         /// <param name="connectionToUse">Especifica cual configuracion de tipo ConectionString se desea utilizar. Si se especifica nulo, entonces utiliza la conexion especificada en DefaultConnection.</param>
         /// <param name="parameters">Formacion de objetos Parameter que contiene los parametros de la consulta.</param>
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la ejecucion.</returns>
-        public static async Task<DataSet> StoredProcedureAsync(string tableName, string storedProcedure, string connectionToUse, params Parameter[] parameters)
+        public static async Task<DataSet> StoredProcedureAsync(string tableName, string storedProcedure, QueryOptions queryOptions, params Parameter[] parameters)
         {
-            return await Task.Run(() => ExecuteStoredProcedure(tableName, storedProcedure, connectionToUse, parameters));
+            return await Task.Run(() => ExecuteStoredProcedure(tableName, storedProcedure, queryOptions, parameters));
         }
 
-        private static DataSet ExecuteStoredProcedure(string tableName, string storedProcedure, string connectionToUse, Parameter[] parameters)
+        private static DataSet ExecuteStoredProcedure(string tableName, string storedProcedure, QueryOptions queryOptions, Parameter[] parameters)
         {
-            if (connectionToUse == null) connectionToUse = DefaultConnection;
+            if (queryOptions == null)
+            {
+                queryOptions = new QueryOptions() { ConnectionToUse = DefaultConnection };
+            }
+            if (queryOptions.ConnectionToUse == null)
+            {
+                queryOptions.ConnectionToUse = DefaultConnection;
+            }
+
             IOperable operation = Operation.GetOperationBasedOnConnectionType(ConnectionType);
-            return operation.ExecuteProcedure(tableName, storedProcedure, connectionToUse, parameters);
+            return operation.ExecuteProcedure(tableName, storedProcedure, queryOptions, parameters);
         }
     }
 
@@ -144,15 +152,34 @@ namespace DataManagement.DAO
             dataCache.Initialize(Cope<T>.ModelComposition.IsCacheEnabled);
         }
 
+        private static void VerifyQueryOptions(ref QueryOptions queryOptions)
+        {
+            if (queryOptions == null)
+            {
+                queryOptions = new QueryOptions();
+                queryOptions.MaximumResults = -1;
+                queryOptions.Offset = 0;
+                queryOptions.OrderBy = Cope<T>.ModelComposition.DateCreatedProperty.Name;
+                queryOptions.ConnectionToUse = Manager.DefaultConnection;
+            }
+            else
+            {
+                queryOptions.MaximumResults = queryOptions.MaximumResults < -1 ? -1 : queryOptions.MaximumResults;
+                queryOptions.Offset = queryOptions.MaximumResults < 0 ? 0 : queryOptions.Offset;
+                queryOptions.OrderBy = string.IsNullOrWhiteSpace(queryOptions.OrderBy) ? Cope<T>.ModelComposition.DateCreatedProperty.Name : queryOptions.OrderBy;
+                queryOptions.ConnectionToUse = string.IsNullOrWhiteSpace(queryOptions.ConnectionToUse) ? Manager.DefaultConnection : queryOptions.ConnectionToUse;
+            }
+        }
+
         /// <summary>
         /// Inserta un objeto de tipo <typeparamref name="T"/> en la base de datos.
         /// </summary>
         /// <param name="obj">Objeto que contiene la informacion a insertar.</param>
         /// <param name="connectionToUse">Especifica cual configuracion de tipo ConectionString se desea utilizar. Si se especifica nulo, entonces utiliza la conexion especificada en DefaultConnection.</param>
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la insercion.</returns>
-        public static Result<T> Insert(T obj, string connectionToUse)
+        public static Result<T> Insert(T obj, QueryOptions queryOptions)
         {
-            return Command(obj, TransactionTypes.Insert, connectionToUse);
+            return Command(obj, TransactionTypes.Insert, queryOptions);
         }
 
         /// <summary>
@@ -161,9 +188,9 @@ namespace DataManagement.DAO
         /// <param name="list">Objeto que contiene la informacion a insertar.</param>
         /// <param name="connectionToUse">Especifica cual configuracion de tipo ConectionString se desea utilizar. Si se especifica nulo, entonces utiliza la conexion especificada en DefaultConnection.</param>
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la insercion.</returns>
-        public static Result<T> InsertMassive(IEnumerable<T> list, string connectionToUse)
+        public static Result<T> InsertMassive(IEnumerable<T> list, QueryOptions queryOptions)
         {
-            return Command(list, TransactionTypes.InsertMassive, connectionToUse);
+            return Command(list, TransactionTypes.InsertMassive, queryOptions);
         }
 
         /// <summary>
@@ -172,9 +199,9 @@ namespace DataManagement.DAO
         /// <param name="obj">Objeto que contiene la informacion a insertar.</param>
         /// <param name="connectionToUse">Especifica cual configuracion de tipo ConectionString se desea utilizar. Si se especifica nulo, entonces utiliza la conexion especificada en DefaultConnection.</param>
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la insercion.</returns>
-        public static async Task<Result<T>> InsertAsync(T obj, string connectionToUse)
+        public static async Task<Result<T>> InsertAsync(T obj, QueryOptions queryOptions)
         {
-            return await Task.Run(() => Command(obj, TransactionTypes.Insert, connectionToUse));
+            return await Task.Run(() => Command(obj, TransactionTypes.Insert, queryOptions));
         }
 
         /// <summary>
@@ -183,9 +210,9 @@ namespace DataManagement.DAO
         /// <param name="obj">Objeto que contiene la informacion actualizada.</param>
         /// <param name="connectionToUse">Especifica cual configuracion de tipo ConectionString se desea utilizar. Si se especifica nulo, entonces utiliza la conexion especificada en DefaultConnection.</param>
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la actualizacion.</returns>
-        public static Result<T> Update(T obj, string connectionToUse)
+        public static Result<T> Update(T obj, QueryOptions queryOptions)
         {
-            return Command(obj, TransactionTypes.Update, connectionToUse);
+            return Command(obj, TransactionTypes.Update, queryOptions);
         }
 
         /// <summary>
@@ -194,9 +221,9 @@ namespace DataManagement.DAO
         /// <param name="obj">Objeto que contiene la informacion actualizada.</param>
         /// <param name="connectionToUse">Especifica cual configuracion de tipo ConectionString se desea utilizar. Si se especifica nulo, entonces utiliza la conexion especificada en DefaultConnection.</param>
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la actualizacion.</returns>
-        public static async Task<Result<T>> UpdateAsync(T obj, string connectionToUse)
+        public static async Task<Result<T>> UpdateAsync(T obj, QueryOptions queryOptions)
         {
-            return await Task.Run(() => Command(obj, TransactionTypes.Update, connectionToUse));
+            return await Task.Run(() => Command(obj, TransactionTypes.Update, queryOptions));
         }
 
         /// <summary>
@@ -205,9 +232,9 @@ namespace DataManagement.DAO
         /// <param name="obj">Objeto que contiene el Id a eliminar.</param>
         /// <param name="connectionToUse">Especifica cual configuracion de tipo ConectionString se desea utilizar. Si se especifica nulo, entonces utiliza la conexion especificada en DefaultConnection.</param>
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la eliminacion.</returns>
-        public static Result<T> Delete(T obj, string connectionToUse)
+        public static Result<T> Delete(T obj, QueryOptions queryOptions)
         {
-            return Command(obj, TransactionTypes.Delete, connectionToUse);
+            return Command(obj, TransactionTypes.Delete, queryOptions);
         }
 
         /// <summary>
@@ -216,9 +243,9 @@ namespace DataManagement.DAO
         /// <param name="obj">Objeto que contiene el Id a eliminar.</param>
         /// <param name="connectionToUse">Especifica cual configuracion de tipo ConectionString se desea utilizar. Si se especifica nulo, entonces utiliza la conexion especificada en DefaultConnection.</param>
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la eliminacion.</returns>
-        public static async Task<Result<T>> DeleteAsync(T obj, string connectionToUse)
+        public static async Task<Result<T>> DeleteAsync(T obj, QueryOptions queryOptions)
         {
-            return await Task.Run(() => Command(obj, TransactionTypes.Delete, connectionToUse));
+            return await Task.Run(() => Command(obj, TransactionTypes.Delete, queryOptions));
         }
 
         /// <summary>
@@ -227,9 +254,9 @@ namespace DataManagement.DAO
         /// <param name="connectionToUse">Especifica cual configuracion de tipo ConectionString se desea utilizar. Si se especifica nulo, entonces utiliza la conexion especificada en DefaultConnection.</param>
         /// <param name="parameters">Formacion de objetos Parameter que contiene los parametros de la consulta.</param>
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la seleccion.</returns>
-        public static Result<T> Select(string connectionToUse, params Parameter[] parameters)
+        public static Result<T> Select(QueryOptions queryOptions, params Parameter[] parameters)
         {
-            return Command(DataSerializer.SetParametersInObject<T>(parameters), TransactionTypes.Select, connectionToUse);
+            return Command(DataSerializer.SetParametersInObject<T>(parameters), TransactionTypes.Select, queryOptions);
         }
 
         /// <summary>
@@ -238,9 +265,9 @@ namespace DataManagement.DAO
         /// <param name="connectionToUse">Especifica cual configuracion de tipo ConectionString se desea utilizar. Si se especifica nulo, entonces utiliza la conexion especificada en DefaultConnection.</param>
         /// <param name="expression">Expresion Lambda que represnta un resultado verdadero de un boolean utilizado para la conversion a SQL y la execucion de la declaracion Select.</param>
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la seleccion.</returns>
-        public static Result<T> Select(Expression<Func<T, bool>> expression, string connectionToUse)
+        public static Result<T> Select(Expression<Func<T, bool>> expression, QueryOptions queryOptions)
         {
-            return Command(expression, TransactionTypes.SelectQuery, connectionToUse);
+            return Command(expression, TransactionTypes.SelectQuery, queryOptions);
         }
 
         /// <summary>
@@ -249,9 +276,9 @@ namespace DataManagement.DAO
         /// <param name="connectionToUse">Especifica cual configuracion de tipo ConectionString se desea utilizar. Si se especifica nulo, entonces utiliza la conexion especificada en DefaultConnection.</param>
         /// <param name="parameters">Formacion de objetos Parameter que contiene los parametros de la consulta.</param>
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la seleccion.</returns>
-        public static async Task<Result<T>> SelectAsync(string connectionToUse, params Parameter[] parameters)
+        public static async Task<Result<T>> SelectAsync(QueryOptions queryOptions, params Parameter[] parameters)
         {
-            return await Task.Run(() => Command(DataSerializer.SetParametersInObject<T>(parameters), TransactionTypes.Select, connectionToUse));
+            return await Task.Run(() => Command(DataSerializer.SetParametersInObject<T>(parameters), TransactionTypes.Select, queryOptions));
         }
 
         /// <summary>
@@ -260,9 +287,9 @@ namespace DataManagement.DAO
         /// <param name="connectionToUse">Especifica cual configuracion de tipo ConectionString se desea utilizar. Si se especifica nulo, entonces utiliza la conexion especificada en DefaultConnection.</param>
         /// <param name="expression">Expresion Lambda que represnta un resultado verdadero de un boolean utilizado para la conversion a SQL y la execucion de la declaracion Select.</param>
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la seleccion.</returns>
-        public static async Task<Result<T>> SelectAsync(Expression<Func<T, bool>> expression, string connectionToUse)
+        public static async Task<Result<T>> SelectAsync(Expression<Func<T, bool>> expression, QueryOptions queryOptions)
         {
-            return await Task.Run(() => Command(expression, TransactionTypes.SelectQuery, connectionToUse));
+            return await Task.Run(() => Command(expression, TransactionTypes.SelectQuery, queryOptions));
         }
 
         /// <summary>
@@ -270,9 +297,9 @@ namespace DataManagement.DAO
         /// </summary>
         /// <param name="connectionToUse">Especifica cual configuracion de tipo ConectionString se desea utilizar. Si se especifica nulo, entonces utiliza la conexion especificada en DefaultConnection.</param>
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la seleccion.</returns>
-        public static Result<T> SelectAll(string connectionToUse)
+        public static Result<T> SelectAll(QueryOptions queryOptions)
         {
-            return Command(new T(), TransactionTypes.SelectAll, connectionToUse);
+            return Command(new T(), TransactionTypes.SelectAll, queryOptions);
         }
 
         /// <summary>
@@ -280,29 +307,30 @@ namespace DataManagement.DAO
         /// </summary>
         /// <param name="connectionToUse">Especifica cual configuracion de tipo ConectionString se desea utilizar. Si se especifica nulo, entonces utiliza la conexion especificada en DefaultConnection.</param>
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la seleccion.</returns>
-        public static async Task<Result<T>> SelectAllAsync(string connectionToUse)
+        public static async Task<Result<T>> SelectAllAsync(QueryOptions queryOptions)
         {
-            return await Task.Run(() => Command(new T(), TransactionTypes.SelectAll, connectionToUse));
+            return await Task.Run(() => Command(new T(), TransactionTypes.SelectAll, queryOptions));
         }
 
-        private static Result<T> Command(Expression<Func<T, bool>> expression, TransactionTypes transactionType, string connectionToUse)
+        private static Result<T> Command(Expression<Func<T, bool>> expression, TransactionTypes transactionType, QueryOptions queryOptions)
         {
-            return DynamicCommand(null, expression, transactionType, connectionToUse);
+            return DynamicCommand(null, expression, transactionType, queryOptions);
         }
 
-        private static Result<T> Command(T obj, TransactionTypes transactionType, string connectionToUse)
+        private static Result<T> Command(T obj, TransactionTypes transactionType, QueryOptions queryOptions)
         {
-            return DynamicCommand(obj, null, transactionType, connectionToUse);
+            return DynamicCommand(obj, null, transactionType, queryOptions);
         }
 
-        private static Result<T> Command(IEnumerable<T> list, TransactionTypes transactionType, string connectionToUse)
+        private static Result<T> Command(IEnumerable<T> list, TransactionTypes transactionType, QueryOptions queryOptions)
         {
-            return DynamicCommand(list, null, transactionType, connectionToUse);
+            return DynamicCommand(list, null, transactionType, queryOptions);
         }
 
-        private static Result<T> DynamicCommand(dynamic obj, Expression<Func<T, bool>> expression, TransactionTypes transactionType, string connectionToUse)
+        private static Result<T> DynamicCommand(dynamic obj, Expression<Func<T, bool>> expression, TransactionTypes transactionType, QueryOptions queryOptions)
         {
-            if (connectionToUse == null) connectionToUse = Manager.DefaultConnection;
+            VerifyQueryOptions(ref queryOptions);
+
             QueryEvaluation queryEvaluation = new QueryEvaluation(Manager.ConnectionType);
 
             if (Cope<T>.ModelComposition.IsCacheEnabled)
@@ -310,7 +338,7 @@ namespace DataManagement.DAO
                 ResetCacheIfExpired();
             }
 
-            Result<T> result = queryEvaluation.Evaluate<T>(obj, expression, transactionType, ref dataCache, connectionToUse);
+            Result<T> result = queryEvaluation.Evaluate<T>(obj, expression, transactionType, ref dataCache, queryOptions);
             CallOnExecutedEventHandlers(Cope<T>.ModelComposition.TableName, transactionType, result);
 
             return result;

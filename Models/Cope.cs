@@ -60,6 +60,16 @@ namespace DataManagement.Models
         }
 
         /// <summary>
+        /// Obtiene un listado limitado de los objetos de tipo <typeparamref name="T"/> almacenados en la base de datos o en el cache. Se puede estipular un a partir de que registro se desea obtener.
+        /// Este metodo usa la conexion predeterminada a la base de datos.
+        /// </summary>
+        /// <returns>Regresa el resultado en forma de una lista que incluye la coleccion obtenida por la consulta.</returns>
+        public static List<T> SelectAllList(QueryOptions queryOptions)
+        {
+            return Manager<T>.SelectAll(queryOptions).Data.ToList();
+        }
+
+        /// <summary>
         /// Obtiene un listado de los objetos de tipo <typeparamref name="T"/> almacenados en la base de datos o en el cache segun los parametros indicados.
         /// Este metodo usa la conexion predeterminada a la base de datos.
         /// </summary>

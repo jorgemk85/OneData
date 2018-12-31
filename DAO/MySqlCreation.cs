@@ -35,6 +35,15 @@ namespace DataManagement.DAO
             }
         }
 
+        private void SetParametersForQueryOptions(StringBuilder queryBuilder)
+        {
+            foreach (PropertyInfo property in typeof(QueryOptions).GetProperties().Where(options => options.GetCustomAttribute(typeof(NotParameter)) == null))
+            {
+                queryBuilder.AppendFormat("    IN _{0} {1},\n", property.Name, GetSqlDataType(property.PropertyType));
+            }
+            queryBuilder.Remove(queryBuilder.Length - 2, 2);
+        }
+
         public string CreateInsertStoredProcedure<T>(bool doAlter) where T : Cope<T>, IManageable, new()
         {
             StringBuilder queryBuilder = new StringBuilder();
@@ -174,10 +183,13 @@ namespace DataManagement.DAO
             }
 
             queryBuilder.AppendFormat("CREATE PROCEDURE `{0}{1}{2}` (\n", Manager.StoredProcedurePrefix, Cope<T>.ModelComposition.TableName, Manager.SelectAllSuffix);
+            SetParametersForQueryOptions(queryBuilder);
 
             queryBuilder.Append(")\nBEGIN\n");
             queryBuilder.AppendFormat("SELECT * FROM `{0}{1}`\n", Manager.TablePrefix, Cope<T>.ModelComposition.TableName);
-            queryBuilder.Append($"ORDER BY {Cope<T>.ModelComposition.DateCreatedProperty.Name} DESC;\n");
+            queryBuilder.Append($"ORDER BY _{nameof(QueryOptions.OrderBy)} DESC\n");
+            queryBuilder.Append($"LIMIT _{nameof(QueryOptions.MaximumResults)}\n");
+            queryBuilder.Append($"OFFSET _{nameof(QueryOptions.Offset)} ;\n");
             queryBuilder.Append("END");
 
             Logger.Info("(MySql) Created a new query for SelectAll Stored Procedure:");
@@ -201,8 +213,9 @@ namespace DataManagement.DAO
 
             // Aqui se colocan los parametros segun las propiedades del objeto
             SetStoredProceduresParameters<T>(queryBuilder, false, true);
-
             queryBuilder.Remove(queryBuilder.Length - 2, 2);
+            SetParametersForQueryOptions(queryBuilder);
+            
             queryBuilder.Append(")\nBEGIN\n");
             queryBuilder.Append("SET @@sql_mode:=TRADITIONAL;\n");
             queryBuilder.AppendFormat("SELECT * FROM `{0}{1}`\n", Manager.TablePrefix, Cope<T>.ModelComposition.TableName);
@@ -215,7 +228,9 @@ namespace DataManagement.DAO
             }
 
             queryBuilder.Remove(queryBuilder.Length - 4, 4);
-            queryBuilder.AppendFormat($"\nORDER BY {Cope<T>.ModelComposition.DateCreatedProperty.Name} desc;\n");
+            queryBuilder.Append($"ORDER BY _{nameof(QueryOptions.OrderBy)} DESC\n");
+            queryBuilder.Append($"LIMIT _{nameof(QueryOptions.MaximumResults)}\n");
+            queryBuilder.Append($"OFFSET _{nameof(QueryOptions.Offset)} ;\n");
             queryBuilder.Append("END");
 
             Logger.Info("(MySql) Created a new query for Select Stored Procedure:");

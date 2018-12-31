@@ -1,4 +1,5 @@
-﻿using DataManagement.Enums;
+﻿using DataManagement.Attributes;
+using DataManagement.Enums;
 using DataManagement.Exceptions;
 using DataManagement.Extensions;
 using DataManagement.Interfaces;
@@ -42,7 +43,7 @@ namespace DataManagement.DAO
                     _command.CommandText = transaction;
                     if (returnDataTable)
                     {
-                        DataTable dataTable = new DataTable();
+                        System.Data.DataTable dataTable = new System.Data.DataTable();
                         dataTable.Load(_command.ExecuteReader());
                         Logger.Info(string.Format("Execution for transaction using connection {0} has finished successfully.", connectionToUse));
                         return dataTable;
@@ -171,7 +172,7 @@ namespace DataManagement.DAO
             }
         }
 
-        protected void SetParameters<T>(T obj, TransactionTypes transactionType, bool considerPrimary) where T : Cope<T>, IManageable, new()
+        protected void SetParameters<T>(T obj, TransactionTypes transactionType, bool considerPrimary, QueryOptions queryOptions) where T : Cope<T>, IManageable, new()
         {
             Logger.Info(string.Format("Setting parameters in command based on type {0} for transaction type {1}.", typeof(T), transactionType.ToString()));
 
@@ -180,6 +181,8 @@ namespace DataManagement.DAO
                 _command.Parameters.Add(CreateDbParameter(string.Format("_{0}", Cope<T>.ModelComposition.PrimaryKeyProperty.Name), Cope<T>.ModelComposition.PrimaryKeyProperty.GetValue(obj)));
                 return;
             }
+
+            SetParametersForQueryOptions(transactionType, queryOptions);
 
             foreach (KeyValuePair<string, PropertyInfo> property in Cope<T>.ModelComposition.FilteredProperties)
             {
@@ -191,7 +194,18 @@ namespace DataManagement.DAO
             }
         }
 
-        protected void SetParameters<T>(IEnumerable<T> obj, TransactionTypes transactionType) where T : Cope<T>, IManageable, new()
+        protected void SetParametersForQueryOptions(TransactionTypes transactionType, QueryOptions queryOptions)
+        {
+            if (transactionType == TransactionTypes.Select || transactionType == TransactionTypes.SelectAll)
+            {
+                foreach (PropertyInfo property in typeof(QueryOptions).GetProperties().Where(options => options.GetCustomAttribute(typeof(NotParameter)) == null))
+                {
+                    _command.Parameters.Add(CreateDbParameter("_" + property.Name, property.GetValue(queryOptions)));
+                }
+            }
+        }
+
+        protected void SetParameters<T>(IEnumerable<T> obj, TransactionTypes transactionType, QueryOptions queryOptions) where T : Cope<T>, IManageable, new()
         {
             Logger.Info(string.Format("Setting parameters in command based on type {0} for transaction type {1}.", typeof(T), transactionType.ToString()));
 
@@ -200,6 +214,8 @@ namespace DataManagement.DAO
                 _command.Parameters.Add(CreateDbParameter(string.Format("_{0}", Cope<T>.ModelComposition.PrimaryKeyProperty.Name), Cope<T>.ModelComposition.PrimaryKeyProperty.GetValue(obj)));
                 return;
             }
+
+            SetParametersForQueryOptions(transactionType, queryOptions);
 
             foreach (KeyValuePair<string, PropertyInfo> propertyInfo in Cope<T>.ModelComposition.FilteredProperties)
             {
@@ -258,13 +274,13 @@ namespace DataManagement.DAO
         private Dictionary<string, ColumnDefinition> GetColumnDefinition(string tableName, string connectionToUse)
         {
             Logger.Info(string.Format("Getting Column definition for table {0} using connection {1}.", tableName, connectionToUse));
-            return ((DataTable)ExecuteScalar(string.Format(QueryForColumnDefinition, tableName), connectionToUse, true)).ToDictionary<string, ColumnDefinition>(nameof(ColumnDefinition.Column_Name));
+            return ((System.Data.DataTable)ExecuteScalar(string.Format(QueryForColumnDefinition, tableName), connectionToUse, true)).ToDictionary<string, ColumnDefinition>(nameof(ColumnDefinition.Column_Name));
         }
 
         private Dictionary<string, KeyDefinition> GetKeyDefinition(string tableName, string connectionToUse)
         {
             Logger.Info(string.Format("Getting Key definition for table {0} using connection {1}.", tableName, connectionToUse));
-            return ((DataTable)ExecuteScalar(string.Format(QueryForKeyDefinition, tableName), connectionToUse, true)).ToDictionary<string, KeyDefinition>(nameof(KeyDefinition.Column_Name));
+            return ((System.Data.DataTable)ExecuteScalar(string.Format(QueryForKeyDefinition, tableName), connectionToUse, true)).ToDictionary<string, KeyDefinition>(nameof(KeyDefinition.Column_Name));
         }
 
         private void CreateOrAlterForeignTables<T>(IManageable foreignKey, string connectionToUse, bool doAlter) where T : Cope<T>, IManageable, new()
