@@ -6,7 +6,7 @@ namespace DataManagement.Models
     {
         public bool IsEnabled { get; set; }
         public Result<T> Cache { get; set; }
-        public bool IsPartialCache { get; set; } = false;
+        public bool IsPartialCache { get; set; } = true;
         public long LastCacheUpdate { get; set; }
 
         public void Initialize(bool isEnabled)
@@ -18,7 +18,7 @@ namespace DataManagement.Models
         {
             IsEnabled = isEnabled;
             Cache = null;
-            IsPartialCache = false;
+            IsPartialCache = true;
             LastCacheUpdate = DateTime.Now.Ticks;
         }
     }

@@ -45,7 +45,8 @@ namespace DataManagement.DAO
                 case ExpressionType.Divide:
                     break;
                 case ExpressionType.Equal:
-                    return string.Format("{0} {1}", pair.Name, pair.Value == null ? "is null" : $" = {pair.Value }");
+                    return string.Format("{0} {1}", pair.Name, pair.Value == null ? "is null" : $" = {pair.Value}");
+                //return string.Format("{0} {1}", pair.Name, pair.Value == null ? "is null" : $" like '%{pair.Value.ToString().Replace("'", "")}%'");
                 case ExpressionType.ExclusiveOr:
                     break;
                 case ExpressionType.GreaterThan:

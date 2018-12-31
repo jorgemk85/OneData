@@ -232,7 +232,7 @@ namespace DataManagement.DAO
                 if (connection.State != ConnectionState.Open) throw new BadConnectionStateException();
                 _command = connection.CreateCommand();
                 _command.CommandType = CommandType.Text;
-                string fullyQualifiedTableName = string.Format("{0}{1}", Manager.TablePrefix, Cope<T>.ModelComposition.TableName);
+                string fullyQualifiedTableName = $"`{Manager.TablePrefix}{Cope<T>.ModelComposition.TableName}`";
                 _command.CommandText = $"SELECT * FROM {fullyQualifiedTableName} WHERE {ExpressionTools.ConvertExpressionToSQL(expression)}";
                 FillDictionaryWithReader(_command.ExecuteReader(), ref result);
             }

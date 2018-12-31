@@ -43,13 +43,14 @@ namespace DataManagement.Tools
         internal static string ConvertExpressionToSQL<T>(Expression<Func<T, bool>> expression) where T : Cope<T>, IManageable, new()
         {
             StringBuilder builder = new StringBuilder();
-            string qualifiedTableName = string.Format("{0}{1}", Manager.TablePrefix, Cope<T>.ModelComposition.TableName);
+            string qualifiedTableName = $"`{Manager.TablePrefix}{Cope<T>.ModelComposition.TableName}`";
 
             try
             {
-                BuildQueryFromExpressionBody((BinaryExpression)expression.Body, ref builder, qualifiedTableName);
+                BinaryExpression body = (BinaryExpression)expression.Body;
+                BuildQueryFromExpressionBody(body, ref builder, qualifiedTableName);
             }
-            catch
+            catch (Exception ex)
             {
                 throw new NotSupportedException($"La instruccion '{expression.ToString()}' no es comprendida por el analizador de consultas. Intente colocar una expresion diferente.");
             }
@@ -146,16 +147,24 @@ namespace DataManagement.Tools
             {
                 if (((MemberExpression)body).Expression != null)
                 {
-                    // Si contiene un valor en Expression es por que  hace referencia a una propiedad interna y por ello
-                    // no debe obtener el valor contenido (ya que no existe), sino solo el nombre de la misma.
-                    checkAnsciiType = false;
-                    if (string.IsNullOrWhiteSpace(tableName))
+                    if (((MemberExpression)body).Expression.NodeType == ExpressionType.Parameter)
                     {
-                        result = ((MemberExpression)body).Member.Name;
+                        // Si contiene un valor en Expression es por que  hace referencia a una propiedad interna y por ello
+                        // no debe obtener el valor contenido (ya que no existe), sino solo el nombre de la misma.
+                        checkAnsciiType = false;
+                        if (string.IsNullOrWhiteSpace(tableName))
+                        {
+                            result = ((MemberExpression)body).Member.Name;
+                        }
+                        else
+                        {
+                            result = $"{tableName}.{((MemberExpression)body).Member.Name}";
+                        }
                     }
                     else
                     {
-                        result = $"{tableName}.{((MemberExpression)body).Member.Name}";
+                        // Caso contrario, significa que tiene que traer el valor contenido en la variable o propiedad.
+                        result = Expression.Lambda(body).Compile().DynamicInvoke();
                     }
                 }
                 else

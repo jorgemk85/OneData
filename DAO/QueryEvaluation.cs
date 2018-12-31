@@ -67,7 +67,6 @@ namespace DataManagement.DAO
             {
                 resultado = hasCache == true ? SelectInCache(expression, dataCache) : operation.ExecuteProcedure(connectionToUse, TransactionTypes.SelectQuery, true, null, expression);
 
-                resultado.IsFromCache = hasCache == true ? true : false;
                 if (hasCache && dataCache.IsPartialCache && resultado.Data.Count == 0)
                 {
                     resultado = operation.ExecuteProcedure(connectionToUse, TransactionTypes.SelectQuery, true, null, expression);
@@ -122,7 +121,6 @@ namespace DataManagement.DAO
             {
                 resultado = hasCache == true ? SelectInCache(obj, dataCache) : operation.ExecuteProcedure<T>(connectionToUse, TransactionTypes.Select, true, obj, null);
 
-                resultado.IsFromCache = hasCache == true ? true : false;
                 if (hasCache && dataCache.IsPartialCache && resultado.Data.Count == 0)
                 {
                     resultado = operation.ExecuteProcedure<T>(connectionToUse, TransactionTypes.Select, true, obj, null);

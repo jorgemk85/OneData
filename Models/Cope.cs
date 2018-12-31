@@ -2,6 +2,7 @@
 using DataManagement.DAO;
 using DataManagement.Extensions;
 using DataManagement.Interfaces;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
@@ -11,12 +12,14 @@ namespace DataManagement.Models
     [Serializable]
     public abstract class Cope<T> where T : Cope<T>, IManageable, new()
     {
+        [JsonIgnore]
         static readonly ModelComposition _modelComposition = new ModelComposition(typeof(T));
+        [JsonIgnore]
         static readonly Configuration _configuration = new Configuration();
 
-        [UnmanagedProperty]
+        [UnmanagedProperty, JsonIgnore]
         internal static ModelComposition ModelComposition { get; } = _modelComposition;
-        [UnmanagedProperty]
+        [UnmanagedProperty, JsonIgnore]
         public Configuration Configuration { get; } = _configuration;
 
         static Cope()
@@ -71,9 +74,9 @@ namespace DataManagement.Models
         /// Este metodo usa la conexion predeterminada a la base de datos.
         /// </summary>
         /// <returns>Regresa el resultado que incluye la coleccion obtenida por la consulta.</returns>
-        public static Result<T> Select(Expression<Func<T, bool>> expression)
+        public static T Select(Expression<Func<T, bool>> expression)
         {
-            return Manager<T>.Select(expression, null);
+            return Manager<T>.Select(expression, null).Data.ToObject();
         }
 
         /// <summary>

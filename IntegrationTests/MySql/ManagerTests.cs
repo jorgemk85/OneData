@@ -102,8 +102,7 @@ namespace DataManagement.IntegrationTests.MySql
         [Test]
         public void TestExpressionToSQL()
         {
-            Result<LogTestGuid> data = LogTestGuid.Select(log => log.Parametros == "Parametros Editados");
-            Result<LogTestGuid> dataFromCache = LogTestGuid.Select(log => log.Parametros == "Parametros Editados");
+ 
         }
     }
 }

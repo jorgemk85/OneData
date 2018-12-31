@@ -418,6 +418,11 @@ namespace DataManagement.DAO
                 underlyingType = codeType;
             }
 
+            if (underlyingType.IsEnum)
+            {
+                return "int";
+            }
+
             switch (underlyingType.Name.ToLower())
             {
                 case "boolean":
