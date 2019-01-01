@@ -162,7 +162,7 @@ namespace DataManagement.DAO
             {
                 if (hasCache && !dataCache.IsPartialCache)
                 {
-                    resultado = new Result<T>(GetDataBasedFromCacheOnQueryOptions(ref dataCache, queryOptions),true, true);
+                    resultado = new Result<T>(GetDataBasedFromCacheOnQueryOptions(ref dataCache, queryOptions), true, true);
                 }
                 else
                 {
@@ -181,15 +181,15 @@ namespace DataManagement.DAO
         {
             if (queryOptions.Offset > 0 && queryOptions.MaximumResults > 0)
             {
-                return new Dictionary<dynamic, T>(dataCache.Cache.Data.Values.Skip(queryOptions.Offset).Take(queryOptions.MaximumResults).ToDictionary<dynamic, T>());
+                return new Dictionary<dynamic, T>(dataCache.Cache.Data.Values.OrderByDescending(obj => Cope<T>.ModelComposition.DateCreatedProperty.GetValue(obj)).Skip(queryOptions.Offset).Take(queryOptions.MaximumResults).ToDictionary<dynamic, T>());
             }
             else if (queryOptions.Offset > 0)
             {
-                return new Dictionary<dynamic, T>(dataCache.Cache.Data.Values.Skip(queryOptions.Offset).ToDictionary<dynamic, T>());
+                return new Dictionary<dynamic, T>(dataCache.Cache.Data.Values.OrderByDescending(obj => Cope<T>.ModelComposition.DateCreatedProperty.GetValue(obj)).Skip(queryOptions.Offset).ToDictionary<dynamic, T>());
             }
             else if (queryOptions.MaximumResults > 0)
             {
-                return new Dictionary<dynamic, T>(dataCache.Cache.Data.Values.Take(queryOptions.MaximumResults).ToDictionary<dynamic, T>());
+                return new Dictionary<dynamic, T>(dataCache.Cache.Data.Values.OrderByDescending(obj => Cope<T>.ModelComposition.DateCreatedProperty.GetValue(obj)).Take(queryOptions.MaximumResults).ToDictionary<dynamic, T>());
             }
 
             return dataCache.Cache.Data;
@@ -221,7 +221,6 @@ namespace DataManagement.DAO
             {
                 predicate = predicate.Substring(0, predicate.Length - 5);
                 IQueryable<T> queryableList = dataCache.Cache.Data.Values.AsQueryable();
-                // Procedimiento LENTO en la primera ejecucion por el compilado del query.
                 Dictionary<dynamic, T> resultList = queryableList.Where(predicate, values.ToArray()).ToDictionary(Cope<T>.ModelComposition.PrimaryKeyProperty.Name, Cope<T>.ModelComposition.PrimaryKeyProperty.PropertyType);
 
                 return new Result<T>(resultList, true, true);
@@ -238,11 +237,16 @@ namespace DataManagement.DAO
 
         private void UpdateInCache<T>(T obj, ref DataCache<T> dataCache) where T : Cope<T>, IManageable, new()
         {
+            // TODO: En vez de especificar cada propiedad automatica, es mejor barrer la coleccion de propiedades automaticas y asignar el valor que corresponda.
+            Cope<T>.ModelComposition.DateModifiedProperty.SetValue(obj, DateTime.Now);
             dataCache.Cache.Data[Cope<T>.ModelComposition.PrimaryKeyProperty.GetValue(obj)] = obj;
         }
 
         private void InsertInCache<T>(T obj, ref DataCache<T> dataCache) where T : Cope<T>, IManageable, new()
         {
+            // TODO: En vez de especificar cada propiedad automatica, es mejor barrer la coleccion de propiedades automaticas y asignar el valor que corresponda.
+            Cope<T>.ModelComposition.DateCreatedProperty.SetValue(obj, DateTime.Now);
+            Cope<T>.ModelComposition.DateModifiedProperty.SetValue(obj, DateTime.Now);
             dataCache.Cache.Data.Add(Cope<T>.ModelComposition.PrimaryKeyProperty.GetValue(obj), obj);
         }
 
