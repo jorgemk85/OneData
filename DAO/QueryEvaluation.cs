@@ -73,11 +73,6 @@ namespace DataManagement.DAO
                     AlterCache(resultado, ref dataCache);
                 }
 
-                if (resultado.IsFromCache)
-                {
-                    GetDataBasedFromCacheOnQueryOptions(ref resultado, ref dataCache, queryOptions);
-                }
-
                 if (!resultado.IsFromCache && hasCache)
                 {
                     AlterCache(resultado, ref dataCache);
@@ -87,6 +82,11 @@ namespace DataManagement.DAO
                 {
                     dataCache.Cache = resultado;
                     dataCache.LastCacheUpdate = DateTime.Now.Ticks;
+                }
+
+                if (resultado.IsFromCache)
+                {
+                    resultado.Data = GetDataBasedFromCacheOnQueryOptions(ref dataCache, queryOptions);
                 }
             }
         }
@@ -134,11 +134,6 @@ namespace DataManagement.DAO
                     AlterCache(resultado, ref dataCache);
                 }
 
-                if (resultado.IsFromCache)
-                {
-                    GetDataBasedFromCacheOnQueryOptions(ref resultado, ref dataCache, queryOptions);
-                }
-
                 if (!resultado.IsFromCache && hasCache)
                 {
                     AlterCache(resultado, ref dataCache);
@@ -148,6 +143,11 @@ namespace DataManagement.DAO
                 {
                     dataCache.Cache = resultado;
                     dataCache.LastCacheUpdate = DateTime.Now.Ticks;
+                }
+
+                if (resultado.IsFromCache)
+                {
+                    resultado.Data = GetDataBasedFromCacheOnQueryOptions(ref dataCache, queryOptions);
                 }
             }
         }
@@ -162,15 +162,12 @@ namespace DataManagement.DAO
             {
                 if (hasCache && !dataCache.IsPartialCache)
                 {
-                    resultado = dataCache.Cache;
-                    resultado.IsFromCache = true;
-                    GetDataBasedFromCacheOnQueryOptions(ref resultado, ref dataCache, queryOptions);
+                    resultado = new Result<T>(GetDataBasedFromCacheOnQueryOptions(ref dataCache, queryOptions),true, true);
                 }
                 else
                 {
                     resultado = operation.ExecuteProcedure<T>(queryOptions, TransactionTypes.SelectAll, true, obj, null);
                     dataCache.Cache = resultado;
-                    dataCache.LastCacheUpdate = DateTime.Now.Ticks;
                 }
             }
 
@@ -180,20 +177,22 @@ namespace DataManagement.DAO
             }
         }
 
-        private void GetDataBasedFromCacheOnQueryOptions<T>(ref Result<T> resultado, ref DataCache<T> dataCache, QueryOptions queryOptions) where T : Cope<T>, IManageable, new()
+        private Dictionary<dynamic, T> GetDataBasedFromCacheOnQueryOptions<T>(ref DataCache<T> dataCache, QueryOptions queryOptions) where T : Cope<T>, IManageable, new()
         {
             if (queryOptions.Offset > 0 && queryOptions.MaximumResults > 0)
             {
-                resultado.Data = dataCache.Cache.Data.Values.Skip(queryOptions.Offset).Take(queryOptions.MaximumResults).ToDictionary<dynamic, T>();
+                return new Dictionary<dynamic, T>(dataCache.Cache.Data.Values.Skip(queryOptions.Offset).Take(queryOptions.MaximumResults).ToDictionary<dynamic, T>());
             }
             else if (queryOptions.Offset > 0)
             {
-                resultado.Data = dataCache.Cache.Data.Values.Skip(queryOptions.Offset).ToDictionary<dynamic, T>();
+                return new Dictionary<dynamic, T>(dataCache.Cache.Data.Values.Skip(queryOptions.Offset).ToDictionary<dynamic, T>());
             }
             else if (queryOptions.MaximumResults > 0)
             {
-                resultado.Data = dataCache.Cache.Data.Values.Take(queryOptions.MaximumResults).ToDictionary<dynamic, T>();
+                return new Dictionary<dynamic, T>(dataCache.Cache.Data.Values.Take(queryOptions.MaximumResults).ToDictionary<dynamic, T>());
             }
+
+            return dataCache.Cache.Data;
         }
 
         private Result<T> SelectInCache<T>(T obj, DataCache<T> dataCache) where T : Cope<T>, IManageable, new()
@@ -224,7 +223,7 @@ namespace DataManagement.DAO
                 IQueryable<T> queryableList = dataCache.Cache.Data.Values.AsQueryable();
                 // Procedimiento LENTO en la primera ejecucion por el compilado del query.
                 Dictionary<dynamic, T> resultList = queryableList.Where(predicate, values.ToArray()).ToDictionary(Cope<T>.ModelComposition.PrimaryKeyProperty.Name, Cope<T>.ModelComposition.PrimaryKeyProperty.PropertyType);
-               
+
                 return new Result<T>(resultList, true, true);
             }
         }
