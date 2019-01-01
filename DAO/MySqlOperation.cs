@@ -237,7 +237,7 @@ namespace DataManagement.DAO
                 string limitQuery = queryOptions.MaximumResults > -1 ? $"LIMIT {queryOptions.MaximumResults}" : string.Empty;
                 string offsetQuery = queryOptions.Offset > 0 ? $"LIMIT {queryOptions.Offset}" : string.Empty;
 
-                _command.CommandText = $"SELECT * FROM {fullyQualifiedTableName} WHERE {ExpressionTools.ConvertExpressionToSQL(expression)} ORDER BY {queryOptions.OrderBy} {limitQuery} {offsetQuery}";
+                _command.CommandText = $"SELECT * FROM {fullyQualifiedTableName} WHERE {ExpressionTools.ConvertExpressionToSQL(expression)} {limitQuery} {offsetQuery}";
                 FillDictionaryWithReader(_command.ExecuteReader(), ref result);
             }
             return result;

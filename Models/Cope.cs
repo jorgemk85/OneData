@@ -80,13 +80,13 @@ namespace DataManagement.Models
         }
 
         /// <summary>
-        /// Obtiene un listado de los objetos de tipo <typeparamref name="T"/> almacenados en la base de datos o en el cache segun los parametros indicados via una expresion.
+        /// Obtiene un objeto de tipo <typeparamref name="T"/> almacenados en la base de datos o en el cache segun los parametros indicados via una expresion.
         /// Este metodo usa la conexion predeterminada a la base de datos.
         /// </summary>
         /// <returns>Regresa el resultado que incluye la coleccion obtenida por la consulta.</returns>
         public static T Select(Expression<Func<T, bool>> expression)
         {
-            return Manager<T>.Select(expression, null).Data.ToObject();
+            return Manager<T>.Select(expression, new QueryOptions() { MaximumResults = 1 }).Data.ToObject();
         }
 
         /// <summary>
@@ -97,6 +97,16 @@ namespace DataManagement.Models
         public static List<T> SelectList(Expression<Func<T, bool>> expression)
         {
             return Manager<T>.Select(expression, null).Data.ToList();
+        }
+
+        /// <summary>
+        /// Obtiene un listado de los objetos de tipo <typeparamref name="T"/> almacenados en la base de datos o en el cache segun los parametros indicados via una expresion.
+        /// Este metodo usa la conexion predeterminada a la base de datos.
+        /// </summary>
+        /// <returns>Regresa el resultado en forma de una lista que incluye la coleccion obtenida por la consulta.</returns>
+        public static List<T> SelectList(Expression<Func<T, bool>> expression, QueryOptions queryOptions)
+        {
+            return Manager<T>.Select(expression, queryOptions).Data.ToList();
         }
     }
 }

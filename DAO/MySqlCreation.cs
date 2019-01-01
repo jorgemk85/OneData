@@ -37,7 +37,7 @@ namespace DataManagement.DAO
 
         private void SetParametersForQueryOptions(StringBuilder queryBuilder)
         {
-            foreach (PropertyInfo property in typeof(QueryOptions).GetProperties().Where(options => options.GetCustomAttribute(typeof(NotParameter)) == null))
+            foreach (PropertyInfo property in typeof(QueryOptions).GetProperties().Where(option => option.GetCustomAttribute(typeof(NotParameter)) == null).OrderBy(option => option.Name))
             {
                 queryBuilder.AppendFormat("    IN _{0} {1},\n", property.Name, GetSqlDataType(property.PropertyType));
             }
@@ -187,7 +187,7 @@ namespace DataManagement.DAO
 
             queryBuilder.Append(")\nBEGIN\n");
             queryBuilder.AppendFormat("SELECT * FROM `{0}{1}`\n", Manager.TablePrefix, Cope<T>.ModelComposition.TableName);
-            queryBuilder.Append($"ORDER BY _{nameof(QueryOptions.OrderBy)} DESC\n");
+            queryBuilder.Append($"ORDER BY {Cope<T>.ModelComposition.DateCreatedProperty.Name} DESC\n");
             queryBuilder.Append($"LIMIT _{nameof(QueryOptions.MaximumResults)}\n");
             queryBuilder.Append($"OFFSET _{nameof(QueryOptions.Offset)} ;\n");
             queryBuilder.Append("END");
@@ -228,7 +228,7 @@ namespace DataManagement.DAO
             }
 
             queryBuilder.Remove(queryBuilder.Length - 4, 4);
-            queryBuilder.Append($"ORDER BY _{nameof(QueryOptions.OrderBy)} DESC\n");
+            queryBuilder.Append($"ORDER BY {Cope<T>.ModelComposition.DateCreatedProperty.Name} DESC\n");
             queryBuilder.Append($"LIMIT _{nameof(QueryOptions.MaximumResults)}\n");
             queryBuilder.Append($"OFFSET _{nameof(QueryOptions.Offset)} ;\n");
             queryBuilder.Append("END");

@@ -198,7 +198,7 @@ namespace DataManagement.DAO
         {
             if (transactionType == TransactionTypes.Select || transactionType == TransactionTypes.SelectAll)
             {
-                foreach (PropertyInfo property in typeof(QueryOptions).GetProperties().Where(options => options.GetCustomAttribute(typeof(NotParameter)) == null))
+                foreach (PropertyInfo property in typeof(QueryOptions).GetProperties().Where(options => options.GetCustomAttribute(typeof(NotParameter)) == null).OrderBy(option => option.Name))
                 {
                     _command.Parameters.Add(CreateDbParameter("_" + property.Name, property.GetValue(queryOptions)));
                 }

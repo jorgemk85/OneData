@@ -406,6 +406,20 @@ namespace DataManagement.Tools
             return newDictionary;
         }
 
+        public static Dictionary<TKey, T> ConvertIEnumerableToDictionaryOfType<TKey, T>(IEnumerable<T> list) where T : Cope<T>, IManageable, new()
+        {
+            Dictionary<TKey, T> newDictionary = new Dictionary<TKey, T>();
+            if (list != null)
+            {
+                foreach (T newObject in list)
+                {
+                    newDictionary.Add((TKey)Cope<T>.ModelComposition.PrimaryKeyProperty.GetValue(newObject), newObject);
+                }
+            }
+
+            return newDictionary;
+        }
+
         /// <summary>
         /// Convierte un objeto de tipo IEnumerable <typeparamref name="T"/> a un objeto de tipo DataTable.
         /// </summary>

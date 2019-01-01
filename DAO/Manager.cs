@@ -159,14 +159,12 @@ namespace DataManagement.DAO
                 queryOptions = new QueryOptions();
                 queryOptions.MaximumResults = -1;
                 queryOptions.Offset = 0;
-                queryOptions.OrderBy = Cope<T>.ModelComposition.DateCreatedProperty.Name;
                 queryOptions.ConnectionToUse = Manager.DefaultConnection;
             }
             else
             {
                 queryOptions.MaximumResults = queryOptions.MaximumResults < -1 ? -1 : queryOptions.MaximumResults;
                 queryOptions.Offset = queryOptions.MaximumResults < 0 ? 0 : queryOptions.Offset;
-                queryOptions.OrderBy = string.IsNullOrWhiteSpace(queryOptions.OrderBy) ? Cope<T>.ModelComposition.DateCreatedProperty.Name : queryOptions.OrderBy;
                 queryOptions.ConnectionToUse = string.IsNullOrWhiteSpace(queryOptions.ConnectionToUse) ? Manager.DefaultConnection : queryOptions.ConnectionToUse;
             }
         }

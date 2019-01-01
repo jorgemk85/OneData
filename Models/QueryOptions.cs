@@ -8,6 +8,5 @@ namespace DataManagement.Models
         public string ConnectionToUse { get; set; }
         public int MaximumResults { get; set; } 
         public int Offset { get; set; } 
-        public string OrderBy { get; set; }
     }
 }

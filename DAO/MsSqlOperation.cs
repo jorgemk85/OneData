@@ -227,10 +227,10 @@ namespace DataManagement.DAO
                 _command = connection.CreateCommand();
                 _command.CommandType = CommandType.Text;
                 string fullyQualifiedTableName = string.Format("{0}.{1}{2}", Cope<T>.ModelComposition.Schema, Manager.TablePrefix, Cope<T>.ModelComposition.TableName);
-                string limitQuery = queryOptions.MaximumResults > -1 ? $"LIMIT {queryOptions.MaximumResults}" : string.Empty;
-                string offsetQuery = queryOptions.Offset > 0 ? $"LIMIT {queryOptions.Offset}" : string.Empty;
-
-                _command.CommandText = $"SELECT * FROM {fullyQualifiedTableName} WHERE {ExpressionTools.ConvertExpressionToSQL(expression)} {queryOptions.OrderBy} {limitQuery} {offsetQuery}";
+                string limitQuery = queryOptions.MaximumResults > -1 ? $"FETCH NEXT {queryOptions.MaximumResults} ROWS ONLY" : string.Empty;
+                string offsetQuery = queryOptions.Offset > 0 ? $"OFFSET {queryOptions.Offset} ROWS" : string.Empty;
+                
+                _command.CommandText = $"SELECT * FROM {fullyQualifiedTableName} WHERE {ExpressionTools.ConvertExpressionToSQL(expression)} {offsetQuery} {limitQuery}";
                 FillDictionaryWithReader(_command.ExecuteReader(), ref result);
             }
             return new Result<T>(new Dictionary<dynamic, T>(), false, true);
