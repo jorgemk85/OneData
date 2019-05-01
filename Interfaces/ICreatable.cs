@@ -17,6 +17,6 @@ namespace DataManagement.Interfaces
         string CreateQueryForTableCreation<T>() where T : Cope<T>, IManageable, new();
         string CreateQueryForTableAlteration<T>(Dictionary<string, ColumnDefinition> columnDetails, Dictionary<string, KeyDefinition> keyDetails) where T : Cope<T>, IManageable, new();
         string GetCreateForeignKeysQuery<T>(Dictionary<string, KeyDefinition> keyDetails = null) where T : Cope<T>, IManageable, new();
-        string GetSqlDataType(Type codeType);
+        string GetSqlDataType(Type codeType, bool isUniqueKey, long dataLength);
     }
 }

@@ -30,7 +30,6 @@ namespace DataManagement.DAO
         public static bool OverrideOnlyInDebug { get; internal set; }
         public static string SelectSuffix { get; internal set; }
         public static string InsertSuffix { get; internal set; }
-        public static string InsertMassiveSuffix { get; internal set; }
         public static string UpdateSuffix { get; internal set; }
         public static string DeleteSuffix { get; internal set; }
         public static string SelectAllSuffix { get; internal set; }
@@ -66,7 +65,6 @@ namespace DataManagement.DAO
             Logger.Info("Getting Manager configuration for prefixes and suffixes.");
             SelectSuffix = ConsolidationTools.GetValueFromConfiguration("SelectSuffix", ConfigurationTypes.AppSetting);
             InsertSuffix = ConsolidationTools.GetValueFromConfiguration("InsertSuffix", ConfigurationTypes.AppSetting);
-            InsertMassiveSuffix = ConsolidationTools.GetValueFromConfiguration("InsertMassiveSuffix", ConfigurationTypes.AppSetting);
             UpdateSuffix = ConsolidationTools.GetValueFromConfiguration("UpdateSuffix", ConfigurationTypes.AppSetting);
             DeleteSuffix = ConsolidationTools.GetValueFromConfiguration("DeleteSuffix", ConfigurationTypes.AppSetting);
             SelectAllSuffix = ConsolidationTools.GetValueFromConfiguration("SelectAllSuffix", ConfigurationTypes.AppSetting);

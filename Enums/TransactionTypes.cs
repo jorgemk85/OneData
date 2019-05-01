@@ -9,6 +9,7 @@
         Insert,
         InsertMassive,
         Update,
+        UpdateMassive,
         StoredProcedure
     }
 }

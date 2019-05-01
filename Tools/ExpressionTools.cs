@@ -47,8 +47,17 @@ namespace DataManagement.Tools
 
             try
             {
-                BinaryExpression body = (BinaryExpression)expression.Body;
-                BuildQueryFromExpressionBody(body, ref builder, qualifiedTableName);
+                if (expression.Body.NodeType == ExpressionType.Call)
+                {
+                    MethodCallExpression body = (MethodCallExpression)expression.Body;
+                    BuildQueryFromMethodCallExpressionBody(body, ref builder, qualifiedTableName);
+                }
+                else
+                {
+                    BinaryExpression body = (BinaryExpression)expression.Body;
+                    BuildQueryFromBinaryExpressionBody(body, ref builder, qualifiedTableName);
+                }
+
             }
             catch (Exception ex)
             {
@@ -58,26 +67,38 @@ namespace DataManagement.Tools
             return builder.ToString();
         }
 
-        private static void BuildQueryFromExpressionBody(BinaryExpression body, ref StringBuilder builder, string tableName)
+        private static void BuildQueryFromMethodCallExpressionBody(MethodCallExpression body, ref StringBuilder builder, string qualifiedTableName)
+        {
+            builder.Append(QueryCreation.GetStringFromNodeType(body, qualifiedTableName));
+        }
+
+        private static void BuildQueryFromBinaryExpressionBody(BinaryExpression body, ref StringBuilder builder, string tableName)
         {
             string logicalString = string.Empty;
             if (GetNodeGroup(body) == NodeGroupTypes.Comparison)
             {
-                builder.Append(MsSqlQueryCreation.GetStringFromNodeType(body, tableName));
+                builder.Append(QueryCreation.GetStringFromNodeType(body, tableName));
                 return;
             }
             else
             {
-                logicalString = MsSqlQueryCreation.GetStringFromNodeType(body, tableName);
+                logicalString = QueryCreation.GetStringFromNodeType(body, tableName);
             }
 
             if (GetNodeGroup(body.Left) == NodeGroupTypes.Comparison)
             {
-                builder.Append(MsSqlQueryCreation.GetStringFromNodeType(body.Left, tableName));
+                builder.Append(QueryCreation.GetStringFromNodeType(body.Left, tableName));
             }
             else
             {
-                BuildQueryFromExpressionBody((BinaryExpression)body.Left, ref builder, tableName);
+                if (body.Left.NodeType == ExpressionType.Call)
+                {
+                    BuildQueryFromMethodCallExpressionBody((MethodCallExpression)body.Left, ref builder, tableName);
+                }
+                else
+                {
+                    BuildQueryFromBinaryExpressionBody((BinaryExpression)body.Left, ref builder, tableName);
+                }
             }
 
             if (!string.IsNullOrWhiteSpace(logicalString))
@@ -87,11 +108,18 @@ namespace DataManagement.Tools
 
             if (GetNodeGroup(body.Right) == NodeGroupTypes.Comparison)
             {
-                builder.Append(MsSqlQueryCreation.GetStringFromNodeType(body.Right, tableName));
+                builder.Append(QueryCreation.GetStringFromNodeType(body.Right, tableName));
             }
             else
             {
-                BuildQueryFromExpressionBody((BinaryExpression)body.Right, ref builder, tableName);
+                if (body.Right.NodeType == ExpressionType.Call)
+                {
+                    BuildQueryFromMethodCallExpressionBody((MethodCallExpression)body.Right, ref builder, tableName);
+                }
+                else
+                {
+                    BuildQueryFromBinaryExpressionBody((BinaryExpression)body.Right, ref builder, tableName);
+                }
             }
         }
 
@@ -124,11 +152,11 @@ namespace DataManagement.Tools
 
         private static Parameter GetNewParameter(BinaryExpression body)
         {
-            NameValueObject pair = GetNameValuePairs(body, "");
+            NameValueObject pair = GetPairFromComparison(body, "");
             return new Parameter(pair.Name.ToString(), pair.Value);
         }
 
-        internal static NameValueObject GetNameValuePairs(BinaryExpression body, string tableName)
+        internal static NameValueObject GetPairFromComparison(BinaryExpression body, string tableName)
         {
             return new NameValueObject(GetExpressionValue(body.Left, tableName), GetExpressionValue(body.Right, tableName));
         }
@@ -177,6 +205,10 @@ namespace DataManagement.Tools
             if (body is UnaryExpression || body is MethodCallExpression)
             {
                 result = Expression.Lambda(body).Compile().DynamicInvoke();
+                if (result is bool)
+                {
+                    checkAnsciiType = false;
+                }
             }
 
             if (checkAnsciiType && result != null)

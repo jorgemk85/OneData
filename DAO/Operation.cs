@@ -142,8 +142,6 @@ namespace DataManagement.DAO
                     return Manager.DeleteSuffix;
                 case TransactionTypes.Insert:
                     return Manager.InsertSuffix;
-                case TransactionTypes.InsertMassive:
-                    return Manager.InsertMassiveSuffix;
                 case TransactionTypes.Update:
                     return Manager.UpdateSuffix;
                 case TransactionTypes.SelectAll:
@@ -237,6 +235,33 @@ namespace DataManagement.DAO
             ExecuteScalar(_creator.CreateQueryForTableAlteration<T>(GetColumnDefinition(Cope<T>.ModelComposition.TableName, connectionToUse), GetKeyDefinition(Cope<T>.ModelComposition.TableName, connectionToUse)), connectionToUse, false);
         }
 
+        protected ProcedureComposition GetStoredProcedureCode<T>(string connectionToUse, TransactionTypes transactionType) where T : Cope<T>, IManageable, new()
+        {
+            Logger.Info($"Getting stored procedure code for object {Cope<T>.ModelComposition.TableName} type {transactionType} using connection {connectionToUse}.");
+            string storedProcedure;
+            switch (transactionType)
+            {
+                case TransactionTypes.Select:
+                    storedProcedure = $"{Manager.StoredProcedurePrefix}{Cope<T>.ModelComposition.TableName}{Manager.SelectSuffix}";
+                    break;
+                case TransactionTypes.SelectAll:
+                    storedProcedure = $"{Manager.StoredProcedurePrefix}{Cope<T>.ModelComposition.TableName}{Manager.SelectAllSuffix}";
+                    break;
+                case TransactionTypes.Delete:
+                    storedProcedure = $"{Manager.StoredProcedurePrefix}{Cope<T>.ModelComposition.TableName}{Manager.DeleteSuffix}";
+                    break;
+                case TransactionTypes.Insert:
+                    storedProcedure = $"{Manager.StoredProcedurePrefix}{Cope<T>.ModelComposition.TableName}{Manager.InsertSuffix}";
+                    break;
+                case TransactionTypes.Update:
+                    storedProcedure = $"{Manager.StoredProcedurePrefix}{Cope<T>.ModelComposition.TableName}{Manager.UpdateSuffix}";
+                    break;
+                default:
+                    throw new NotSupportedException($"El tipo de transaccion {transactionType.ToString()} no puede ser utilizado con esta funcion.");
+            }
+            return ((System.Data.DataTable)ExecuteScalar($"SHOW CREATE PROCEDURE {storedProcedure}", connectionToUse, true)).ToObject<ProcedureComposition>();
+        }
+
         protected void ProcessTable<T>(string connectionToUse, bool doAlter) where T : Cope<T>, IManageable, new()
         {
             Logger.Info(string.Format("Processing table {0} using connection {1}. DoAlter = {2}", Cope<T>.ModelComposition.TableName, connectionToUse, doAlter));
@@ -309,7 +334,7 @@ namespace DataManagement.DAO
         private bool CheckIfTableExists(string tableName, string connectionToUse)
         {
             Logger.Info(string.Format("Checking if table {0} exists using connection {1}.", tableName, connectionToUse));
-            string query = string.Format(QueryForTableExistance, Manager.TablePrefix, tableName);
+            string query = string.Format(QueryForTableExistance, $"{tableName}");
 
             if (ExecuteScalar(query, connectionToUse, false) != null)
             {

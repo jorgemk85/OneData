@@ -181,15 +181,15 @@ namespace DataManagement.DAO
         {
             if (queryOptions.Offset > 0 && queryOptions.MaximumResults > 0)
             {
-                return new Dictionary<dynamic, T>(dataCache.Cache.Data.Values.OrderByDescending(obj => Cope<T>.ModelComposition.DateCreatedProperty.GetValue(obj)).Skip(queryOptions.Offset).Take(queryOptions.MaximumResults).ToDictionary<dynamic, T>());
+                return new Dictionary<dynamic, T>(dataCache.Cache.Data.Values.OrderByDescending(obj => Cope<T>.ModelComposition.DateModifiedProperty.GetValue(obj)).Skip(queryOptions.Offset).Take(queryOptions.MaximumResults).ToDictionary<dynamic, T>());
             }
             else if (queryOptions.Offset > 0)
             {
-                return new Dictionary<dynamic, T>(dataCache.Cache.Data.Values.OrderByDescending(obj => Cope<T>.ModelComposition.DateCreatedProperty.GetValue(obj)).Skip(queryOptions.Offset).ToDictionary<dynamic, T>());
+                return new Dictionary<dynamic, T>(dataCache.Cache.Data.Values.OrderByDescending(obj => Cope<T>.ModelComposition.DateModifiedProperty.GetValue(obj)).Skip(queryOptions.Offset).ToDictionary<dynamic, T>());
             }
             else if (queryOptions.MaximumResults > 0)
             {
-                return new Dictionary<dynamic, T>(dataCache.Cache.Data.Values.OrderByDescending(obj => Cope<T>.ModelComposition.DateCreatedProperty.GetValue(obj)).Take(queryOptions.MaximumResults).ToDictionary<dynamic, T>());
+                return new Dictionary<dynamic, T>(dataCache.Cache.Data.Values.OrderByDescending(obj => Cope<T>.ModelComposition.DateModifiedProperty.GetValue(obj)).Take(queryOptions.MaximumResults).ToDictionary<dynamic, T>());
             }
 
             return dataCache.Cache.Data;

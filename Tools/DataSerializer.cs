@@ -1,4 +1,6 @@
-﻿using DataManagement.Enums;
+﻿using DataManagement.Attributes;
+using DataManagement.DAO;
+using DataManagement.Enums;
 using DataManagement.Interfaces;
 using DataManagement.Models;
 using Newtonsoft.Json;
@@ -10,6 +12,7 @@ using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Text;
 using System.Xml.Serialization;
 
 namespace DataManagement.Tools
@@ -17,23 +20,23 @@ namespace DataManagement.Tools
     public class DataSerializer
     {
         /// <summary>
-        /// Convierte un objeto de tipo DataTable en una Lista con formato JSON proporcionando un tipo <typeparamref name="T"/> para la serializacion.
+        /// Convierte un objeto de tipo System.Data.DataTable en una Lista con formato JSON proporcionando un tipo <typeparamref name="T"/> para la serializacion.
         /// </summary>
         /// <typeparam name="T">Tipo referencia para deserializar.</typeparam>
         /// <param name="dataTable">El contenido a convertir.</param>
         /// <returns>Regresa un objeto string ya procesado que contiene una lista en formato JSON.</returns>
-        public static string SerializeDataTableToJsonListOfType<T>(DataTable dataTable) where T : new()
+        public static string SerializeDataTableToJsonListOfType<T>(System.Data.DataTable dataTable) where T : new()
         {
             return JsonConvert.SerializeObject(ConvertDataTableToListOfType<T>(dataTable), Formatting.None);
         }
 
         /// <summary>
-        /// Convierte un objeto de tipo DataTable en formato JSON proporcionando un tipo <typeparamref name="T"/> para la serializacion.
+        /// Convierte un objeto de tipo System.Data.DataTable en formato JSON proporcionando un tipo <typeparamref name="T"/> para la serializacion.
         /// </summary>
         /// <typeparam name="T">Tipo referencia para deserializar.</typeparam>
         /// <param name="dataTable">El contenido a convertir.</param>
         /// <returns>Regresa un objeto string ya procesado en formato JSON.</returns>
-        public static string SerializeDataTableToJsonObjectOfType<T>(DataTable dataTable) where T : new()
+        public static string SerializeDataTableToJsonObjectOfType<T>(System.Data.DataTable dataTable) where T : new()
         {
             return JsonConvert.SerializeObject(ConvertDataTableToObjectOfType<T>(dataTable), Formatting.None);
         }
@@ -61,23 +64,23 @@ namespace DataManagement.Tools
         }
 
         /// <summary>
-        /// Convierte un objeto de tipo DataTable en una Lista con formato XML proporcionando un tipo <typeparamref name="T"/> para la serializacion.
+        /// Convierte un objeto de tipo System.Data.DataTable en una Lista con formato XML proporcionando un tipo <typeparamref name="T"/> para la serializacion.
         /// </summary>
         /// <typeparam name="T">Tipo referencia para deserializar.</typeparam>
         /// <param name="dataTable">El contenido a convertir.</param>
         /// <returns>Regresa un objeto string ya procesado que contiene una lista en formato XML.</returns>
-        public static string SerializeDataTableToXmlListOfType<T>(DataTable dataTable) where T : new()
+        public static string SerializeDataTableToXmlListOfType<T>(System.Data.DataTable dataTable) where T : new()
         {
             return SerializeObjectOfTypeToXml(ConvertDataTableToListOfType<T>(dataTable));
         }
 
         /// <summary>
-        /// Convierte un objeto de tipo DataTable en formato XML proporcionando un tipo <typeparamref name="T"/> para la serializacion.
+        /// Convierte un objeto de tipo System.Data.DataTable en formato XML proporcionando un tipo <typeparamref name="T"/> para la serializacion.
         /// </summary>
         /// <typeparam name="T">Tipo referencia para deserializar.</typeparam>
         /// <param name="dataTable">El contenido a convertir.</param>
         /// <returns>Regresa un objeto string ya procesado en formato XML.</returns>
-        public static string SerializeDataTableToXmlObjectOfType<T>(DataTable dataTable) where T : new()
+        public static string SerializeDataTableToXmlObjectOfType<T>(System.Data.DataTable dataTable) where T : new()
         {
             return SerializeObjectOfTypeToXml(ConvertDataTableToObjectOfType<T>(dataTable));
         }
@@ -88,7 +91,7 @@ namespace DataManagement.Tools
         /// <typeparam name="T">Tipo referencia para deserializar.</typeparam>
         /// <param name="list">Arreglo a deserializar</param>
         /// <returns>Regresa un objeto string ya procesado en formato XML.</returns>
-        public static string SerializeIEnumerableOfTypeToXml<T>(IEnumerable<T> list)
+        public static string SerializeIEnumerableOfTypeToXml<T>(List<T> list)
         {
             return SerializeObjectOfTypeToXml(list);
         }
@@ -109,42 +112,128 @@ namespace DataManagement.Tools
             }
         }
 
+        public static MassiveTaskParameter GenerateCompatibleMassiveTaskXML<T>(IEnumerable<T> list, TransactionTypes transactionType) where T : Cope<T>, IManageable, new()
+        {
+            MassiveTaskParameter massiveTaskParameter = new MassiveTaskParameter();
+            StringBuilder builder = new StringBuilder();
+
+            builder.Append("<columns>\n");
+            foreach (KeyValuePair<string, PropertyInfo> property in Cope<T>.ModelComposition.FilteredProperties)
+            {
+                builder.Append("  <column>\n");
+                builder.Append($"      <name>{property.Value.Name}</name>\n");
+                builder.Append("  </column>\n");
+            }
+            builder.Append("</columns>");
+            massiveTaskParameter.XmlNames = builder.ToString();
+
+            builder.Clear();
+
+            builder.Append("<objects>\n");
+            foreach (T obj in list)
+            {
+                builder.Append("  <object>\n");
+                foreach (KeyValuePair<string, PropertyInfo> property in Cope<T>.ModelComposition.FilteredProperties)
+                {
+                    if (property.Value.GetValue(obj) == null)
+                    {
+                        builder.Append($"     <{property.Value.Name}>{DBNull.Value}</{property.Value.Name}>\n");
+                    }
+                    else
+                    {
+                        // Si es Numero o Boolean no agrega comillas sencillas, de lo contrario se las pone.
+                        if (long.TryParse(property.Value.GetValue(obj).ToString(), out long n) || property.Value.GetValue(obj) is bool)
+                        {
+                            builder.Append($"     <{property.Value.Name}>{property.Value.GetValue(obj)}</{property.Value.Name}>\n");
+                        }
+                        else
+                        {
+                            if (property.Value.GetValue(obj) is DateTime)
+                            {
+                                builder.Append($"     <{property.Value.Name}>'{((DateTime)property.Value.GetValue(obj)).ToString("yyyy-MM-dd H:mm:ss")}'</{property.Value.Name}>\n");
+                            }
+                            else
+                            {
+                                builder.Append($"     <{property.Value.Name}>'{property.Value.GetValue(obj)}'</{property.Value.Name}>\n");
+                            }
+                           
+                        }
+                    }
+                }
+                builder.Append("  </object>\n");
+            }
+            builder.Append("</objects>");
+
+            massiveTaskParameter.XmlValues = builder.ToString();
+            switch (transactionType)
+            {
+                case TransactionTypes.InsertMassive:
+                    massiveTaskParameter.ProcedureName = $"`{Manager.StoredProcedurePrefix}{Cope<T>.ModelComposition.TableName}{Manager.InsertSuffix}`";
+                    break;
+                case TransactionTypes.UpdateMassive:
+                    massiveTaskParameter.ProcedureName = $"`{Manager.StoredProcedurePrefix}{Cope<T>.ModelComposition.TableName}{Manager.UpdateSuffix}`";
+                    break;
+                default:
+                    throw new NotSupportedException($"El tipo de transaccion {transactionType.ToString()} no puede ser utilizado con la funcion {nameof(GenerateCompatibleMassiveTaskXML)}.");
+            }
+
+            return massiveTaskParameter;
+        }
+
         /// <summary>
-        /// Convierte la primer fila DataRow dentro del DataTable a un Objeto del tipo <typeparamref name="T"/>.
+        /// Convierte la primer fila DataRow dentro del System.Data.DataTable a un Objeto del tipo <typeparamref name="T"/>.
         /// </summary>
         /// <typeparam name="T">Tipo referencia para serializar.</typeparam>
         /// <param name="dataTable">El contenido a convertir.</param>
         /// <returns>Regresa un objeto ya convertido al tipo <typeparamref name="T"/>.</returns>
-        public static T ConvertDataTableToObjectOfType<T>(DataTable dataTable) where T : new()
+        public static T ConvertDataTableToObjectOfType<T>(System.Data.DataTable dataTable) where T : new()
         {
             T newObject = new T();
             if (dataTable.Rows.Count > 0)
             {
-                foreach (PropertyInfo property in typeof(T).GetProperties())
+                PropertyInfo[] properties = typeof(T).GetProperties();
+                Dictionary<string, HeaderName> headers = GetCustomAttributesFromPropertiesInClass<HeaderName, T>();
+                foreach (DataColumn column in dataTable.Columns)
                 {
-                    if (dataTable.Columns.Contains(property.Name) && property.CanWrite)
+                    foreach (PropertyInfo property in properties)
                     {
-                        property.SetValue(newObject, SimpleConverter.ConvertStringToType(dataTable.Rows[0][property.Name].ToString(), property.PropertyType));
+                        if (property.CanWrite)
+                        {
+                            if (headers.TryGetValue(property.Name, out HeaderName header))
+                            {
+                                if (header.Name.Equals(column.ColumnName))
+                                {
+                                    property.SetValue(newObject, SimpleConverter.ConvertStringToType(dataTable.Rows[0][header.Name].ToString(), property.PropertyType));
+                                    break;
+                                }
+                            }
+                            else if (column.ColumnName.Equals(property.Name))
+                            {
+                                property.SetValue(newObject, SimpleConverter.ConvertStringToType(dataTable.Rows[0][property.Name].ToString(), property.PropertyType));
+                                break;
+                            }
+                        }
                     }
                 }
             }
+
             return newObject;
         }
 
         /// <summary>
-        /// Convierte un objeto de tipo DataTable a un Diccionario con el tipo de la llave <typeparamref name="TKey"/> y valor <typeparamref name="TValue"/>.
+        /// Convierte un objeto de tipo System.Data.DataTable a un Diccionario con el tipo de la llave <typeparamref name="TKey"/> y valor <typeparamref name="TValue"/>.
         /// </summary>
         /// <typeparam name="TKey">El tipo que se usara como Llave.</typeparam>
         /// <typeparam name="TValue">El tipo que se usara como Valor.</typeparam>
         /// <param name="dataTable">El contenido a convertir.</param>
-        /// <param name="keyName">El nombre de la columna dentro del objeto DataTable.Columns que se usara como Llave.</param>
-        /// <param name="valueName">El nombre de la columna dentro del objeto DataTable.Columns que se usara como Valor.</param>
+        /// <param name="keyName">El nombre de la columna dentro del objeto System.Data.DataTable.Columns que se usara como Llave.</param>
+        /// <param name="valueName">El nombre de la columna dentro del objeto System.Data.DataTable.Columns que se usara como Valor.</param>
         /// <returns>Regresa un nuevo Diccionario alimentado con los valores proporcionados.</returns>
-        public static Dictionary<TKey, TValue> ConvertDataTableToDictionary<TKey, TValue>(DataTable dataTable, string keyName, string valueName)
+        public static Dictionary<TKey, TValue> ConvertDataTableToDictionary<TKey, TValue>(System.Data.DataTable dataTable, string keyName, string valueName)
         {
             if (dataTable.Columns.Count < 2)
             {
-                throw new ArgumentException("Esta funcion requiere 2 columnas en el objeto DataTable.");
+                throw new ArgumentException("Esta funcion requiere 2 columnas en el objeto System.Data.DataTable.");
             }
 
             Dictionary<TKey, TValue> newDictionary = new Dictionary<TKey, TValue>();
@@ -162,14 +251,14 @@ namespace DataManagement.Tools
         }
 
         /// <summary>
-        /// Convierte un objeto de tipo DataTable a un Diccionario con el tipo de la llave <typeparamref name="TKey"/> y el objeto como valor.
+        /// Convierte un objeto de tipo System.Data.DataTable a un Diccionario con el tipo de la llave <typeparamref name="TKey"/> y el objeto como valor.
         /// </summary>
         /// <typeparam name="TKey">El tipo que se usara como llave.</typeparam>
         /// <typeparam name="T">El tipo que se usara como objeto para el valor del diccionario.</typeparam>
         /// <param name="dataTable">El contenido a convertir.</param>
-        /// <param name="keyName">El nombre de la columna dentro del objeto DataTable.Columns que se usara como Llave.</param>
+        /// <param name="keyName">El nombre de la columna dentro del objeto System.Data.DataTable.Columns que se usara como Llave.</param>
         /// <returns>Regresa un nuevo Diccionario alimentado con los valores proporcionados.</returns>
-        public static Dictionary<TKey, T> ConvertDataTableToDictionary<TKey, T>(DataTable dataTable, string keyName) where T : new()
+        public static Dictionary<TKey, T> ConvertDataTableToDictionary<TKey, T>(System.Data.DataTable dataTable, string keyName) where T : new()
         {
             Dictionary<TKey, T> newDictionary = new Dictionary<TKey, T>();
             foreach (DataRow row in dataTable.Rows)
@@ -190,7 +279,7 @@ namespace DataManagement.Tools
             return newDictionary;
         }
 
-        public static Dictionary<dynamic, T> ConvertDataTableToDictionaryOfType<T>(DataTable dataTable, string keyName, Type keyType) where T : new()
+        public static Dictionary<dynamic, T> ConvertDataTableToDictionaryOfType<T>(System.Data.DataTable dataTable, string keyName, Type keyType) where T : new()
         {
             Dictionary<dynamic, T> newDictionary = new Dictionary<dynamic, T>();
             if (dataTable != null)
@@ -230,32 +319,70 @@ namespace DataManagement.Tools
         }
 
         /// <summary>
-        /// Convierte un objeto de tipo DataTable a una Lista del tipo <typeparamref name="T"/>.
+        /// Convierte un objeto de tipo System.Data.DataTable a una Lista del tipo <typeparamref name="T"/>.
         /// </summary>
         /// <typeparam name="T">Tipo referencia para serializar.</typeparam>
         /// <param name="dataTable">El contenido a convertir.</param>
         /// <returns>Regresa una nueva Lista del tipo <typeparamref name="T"/> ya con los objetos incorporados.</returns>
-        public static List<T> ConvertDataTableToListOfType<T>(DataTable dataTable) where T : new()
+        public static List<T> ConvertDataTableToListOfType<T>(System.Data.DataTable dataTable) where T : new()
         {
             List<T> newList = new List<T>();
+            PropertyInfo[] properties = typeof(T).GetProperties();
+            Dictionary<string, HeaderName> headers = GetCustomAttributesFromPropertiesInClass<HeaderName, T>();
             foreach (DataRow row in dataTable.Rows)
             {
-                PropertyInfo[] properties = typeof(T).GetProperties();
                 T newObject = new T();
-                foreach (PropertyInfo property in properties)
+                foreach (DataColumn column in dataTable.Columns)
                 {
-                    if (dataTable.Columns.Contains(property.Name) && property.CanWrite)
+                    foreach (PropertyInfo property in properties)
                     {
-                        property.SetValue(newObject, SimpleConverter.ConvertStringToType(row[property.Name].ToString(), property.PropertyType));
+                        if (property.CanWrite)
+                        {
+                            if (headers.TryGetValue(property.Name, out HeaderName header))
+                            {
+                                if (header.Name.Equals(column.ColumnName))
+                                {
+                                    property.SetValue(newObject, SimpleConverter.ConvertStringToType(row[header.Name].ToString(), property.PropertyType));
+                                    break;
+                                }
+                            }
+                            else if (column.ColumnName.Equals(property.Name))
+                            {
+                                property.SetValue(newObject, SimpleConverter.ConvertStringToType(row[property.Name].ToString(), property.PropertyType));
+                                break;
+                            }
+                        }
                     }
                 }
+                
                 newList.Add(newObject);
             }
 
             return newList;
         }
 
-        public static Hashtable ConvertDataTableToHashtable(DataTable dataTable, string keyName)
+        public static Dictionary<string, TAttr> GetCustomAttributesFromPropertiesInClass<TAttr, TClass>() where TAttr : Attribute
+        {
+            Dictionary<string, TAttr> attributes = new Dictionary<string, TAttr>();
+            foreach (PropertyInfo property in typeof(TClass).GetProperties())
+            {
+                if (property.GetCustomAttribute(typeof(TAttr)) is TAttr attribute)
+                {
+                    //foreach (PropertyInfo attributeProperty in typeof(TAttr).GetProperties())
+                    //{
+                    //    if (attributeProperty.Name.Equals(keyName))
+                    //    {
+                    //        keyValue = attributeProperty.GetValue(attribute) as TKey;
+                    //        break;
+                    //    }
+                    //}
+                    attributes.Add(property.Name, attribute);
+                }
+            }
+            return attributes;
+        }
+
+        public static Hashtable ConvertDataTableToHashtable(System.Data.DataTable dataTable, string keyName)
         {
             Hashtable newHashTable = new Hashtable();
             object key;
@@ -273,7 +400,7 @@ namespace DataManagement.Tools
             return newHashTable;
         }
 
-        public static Hashtable ConvertDataTableToHashtableOfType<T>(DataTable dataTable) where T : Cope<T>, IManageable, new()
+        public static Hashtable ConvertDataTableToHashtableOfType<T>(System.Data.DataTable dataTable) where T : Cope<T>, IManageable, new()
         {
             Hashtable newHashTable = new Hashtable();
             if (dataTable != null)
@@ -328,7 +455,12 @@ namespace DataManagement.Tools
             return new List<T>(dictionary.Values);
         }
 
-        public static ICollection<object> ConvertDataTableToListOfType(DataTable dataTable, Type target)
+        public static IEnumerable<T> ConvertDictionaryToIEnumerableOfType<TKey, T>(Dictionary<TKey, T> dictionary) where T : new()
+        {
+            return dictionary.Values;
+        }
+
+        public static ICollection<object> ConvertDataTableToListOfType(System.Data.DataTable dataTable, Type target)
         {
             ICollection<object> newList = new List<object>();
             foreach (DataRow row in dataTable.Rows)
@@ -350,12 +482,12 @@ namespace DataManagement.Tools
 
 
         /// <summary>
-        /// Convierte un objeto de tipo DataTable a un HashSet del tipo <typeparamref name="T"/>.
+        /// Convierte un objeto de tipo System.Data.DataTable a un HashSet del tipo <typeparamref name="T"/>.
         /// </summary>
         /// <typeparam name="T">Tipo referencia para serializar.</typeparam>
         /// <param name="dataTable">El contenido a convertir.</param>
         /// <returns>Regresa un nuevo HashSet del tipo <typeparamref name="T"/> ya con los objetos incorporados.</returns>
-        public static HashSet<T> ConvertDataTableToHashSetOfType<T>(DataTable dataTable) where T : new()
+        public static HashSet<T> ConvertDataTableToHashSetOfType<T>(System.Data.DataTable dataTable) where T : new()
         {
             HashSet<T> newSet = new HashSet<T>();
 
@@ -377,12 +509,12 @@ namespace DataManagement.Tools
         }
 
         /// <summary>
-        /// Convierte un objeto de tipo DataTable a un Diccionario del tipo <typeparamref name="T"/>. Requiere que el tipo sea una clase que herede de la clase abstracta Main del namespace DataManagement.BO ya que utilizara la propiedad Id de la clase como Llave.
+        /// Convierte un objeto de tipo System.Data.DataTable a un Diccionario del tipo <typeparamref name="T"/>. Requiere que el tipo sea una clase que herede de la clase abstracta Main del namespace DataManagement.BO ya que utilizara la propiedad Id de la clase como Llave.
         /// </summary>
         /// <typeparam name="T">Tipo referencia para serializar.</typeparam>
         /// <param name="dataTable">El contenido a convertir.</param>
         /// <returns>Regresa un nuevo Diccionario del tipo <typeparamref name="T"/> ya con los objetos incorporados.</returns>
-        public static Dictionary<TKey, T> ConvertDataTableToDictionaryOfType<TKey, T>(DataTable dataTable) where T : Cope<T>, IManageable, new()
+        public static Dictionary<TKey, T> ConvertDataTableToDictionaryOfType<TKey, T>(System.Data.DataTable dataTable) where T : Cope<T>, IManageable, new()
         {
             Dictionary<TKey, T> newDictionary = new Dictionary<TKey, T>();
             if (dataTable != null)
@@ -421,12 +553,12 @@ namespace DataManagement.Tools
         }
 
         /// <summary>
-        /// Convierte un objeto de tipo IEnumerable <typeparamref name="T"/> a un objeto de tipo DataTable.
+        /// Convierte un objeto de tipo IEnumerable <typeparamref name="T"/> a un objeto de tipo System.Data.DataTable.
         /// </summary>
         /// <typeparam name="T">Tipo referencia para serializar.</typeparam>
         /// <param name="list">El contenido a convertir.</param>
-        /// <returns>Regresa un nuevo DataTable ya con los objetos incorporados como columnas y filas.</returns>
-        public static DataTable ConvertIEnumerableToDataTableOfGenericType<T>(IEnumerable<T> list)
+        /// <returns>Regresa un nuevo System.Data.DataTable ya con los objetos incorporados como columnas y filas.</returns>
+        public static System.Data.DataTable ConvertIEnumerableToDataTableOfGenericType<T>(IEnumerable<T> list)
         {
             return ConvertIEnumerableToDataTable(list);
         }
@@ -437,17 +569,17 @@ namespace DataManagement.Tools
         /// <typeparam name="T">Tipo referencia para convertir.</typeparam>
         /// <typeparam name="TKey">El tipo de la llave del tipo <typeparamref name="T"/> referencia para convertir.</typeparam>
         /// <param name="list">El contenido a convertir.</param>
-        /// <returns>Regresa un nuevo DataTable ya con los objetos incorporados como columnas y filas.</returns>
-        public static DataTable ConvertIEnumerableToDataTableOfType<T>(IEnumerable<T> list) where T : Cope<T>, IManageable, new()
+        /// <returns>Regresa un nuevo System.Data.DataTable ya con los objetos incorporados como columnas y filas.</returns>
+        public static System.Data.DataTable ConvertIEnumerableToDataTableOfType<T>(IEnumerable<T> list) where T : Cope<T>, IManageable, new()
         {
-            DataTable dataTable = ConvertIEnumerableToDataTable(list);
+            System.Data.DataTable dataTable = ConvertIEnumerableToDataTable(list);
             dataTable.PrimaryKey = new DataColumn[] { dataTable.Columns["Id"] };
             return dataTable;
         }
 
-        private static DataTable ConvertIEnumerableToDataTable<T>(IEnumerable<T> list)
+        private static System.Data.DataTable ConvertIEnumerableToDataTable<T>(IEnumerable<T> list)
         {
-            DataTable dataTable = new DataTable(typeof(T).Name);
+            System.Data.DataTable dataTable = new System.Data.DataTable(typeof(T).Name);
             PropertyInfo[] properties = typeof(T).GetProperties();
             foreach (PropertyInfo prop in properties)
             {
@@ -504,10 +636,10 @@ namespace DataManagement.Tools
         /// </summary>
         /// <typeparam name="T">Tipo referencia para convertir.</typeparam>
         /// <param name="obj">El objeto a convertir.</param>
-        /// <returns>Regresa un nuevo DataTable ya con los objetos incorporados como columnas y filas.</returns>
-        public static DataTable ConvertObjectOfTypeToDataTable<T>(T obj)
+        /// <returns>Regresa un nuevo System.Data.DataTable ya con los objetos incorporados como columnas y filas.</returns>
+        public static System.Data.DataTable ConvertObjectOfTypeToDataTable<T>(T obj)
         {
-            DataTable dataTable = new DataTable(typeof(T).Name);
+            System.Data.DataTable dataTable = new System.Data.DataTable(typeof(T).Name);
             PropertyInfo[] properties = typeof(T).GetProperties();
             foreach (PropertyInfo prop in properties)
             {

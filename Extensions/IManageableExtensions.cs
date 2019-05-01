@@ -1,6 +1,11 @@
 ﻿using DataManagement.DAO;
+using DataManagement.Enums;
 using DataManagement.Interfaces;
 using DataManagement.Models;
+using DataManagement.Tools;
+using System.Collections.Generic;
+using System.Data;
+using System.Linq;
 
 namespace DataManagement.Extensions
 {
@@ -56,6 +61,40 @@ namespace DataManagement.Extensions
                 obj.Validate();
             }
             Manager<T>.Insert(obj, null);
+        }
+
+        /// <summary>
+        /// Inserta una coleccion de objetos de forma masiva y en una sola llamada en la base de datos. Aun no integrado al pipeline regular de la aplicacion. ACTUALMENTE EN ALPHA.
+        /// Este metodo usa la conexion predeterminada a la base de datos.
+        /// </summary>
+        public static DataSet InsertMassive<T>(this IEnumerable<T> list) where T : Cope<T>, IManageable, new()
+        {
+            if (list.Count() > 0)
+            {
+                MassiveTaskParameter parameters = DataSerializer.GenerateCompatibleMassiveTaskXML(list, TransactionTypes.InsertMassive);
+
+                return Manager.StoredProcedure("", "SP_Generic_InsertMassive", null, new Parameter("_xmlValues", parameters.XmlValues)
+                                                                                , new Parameter("_xmlNames", parameters.XmlNames)
+                                                                                , new Parameter("_procedureName", parameters.ProcedureName));
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Actualiza una coleccion de objetos de forma masiva y en una sola llamada en la base de datos. Aun no integrado al pipeline regular de la aplicacion. ACTUALMENTE EN ALPHA.
+        /// Este metodo usa la conexion predeterminada a la base de datos.
+        /// </summary>
+        public static DataSet UpdateMassive<T>(this IEnumerable<T> list) where T : Cope<T>, IManageable, new()
+        {
+            if (list.Count() > 0)
+            {
+                MassiveTaskParameter parameters = DataSerializer.GenerateCompatibleMassiveTaskXML(list, TransactionTypes.UpdateMassive);
+
+                return Manager.StoredProcedure("", "SP_Generic_UpdateMassive", null, new Parameter("_xmlValues", parameters.XmlValues)
+                                                                                , new Parameter("_xmlNames", parameters.XmlNames)
+                                                                                , new Parameter("_procedureName", parameters.ProcedureName));
+            }
+            return null;
         }
     }
 }

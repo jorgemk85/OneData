@@ -52,11 +52,10 @@ namespace DataManagement.Tools.Test
         internal static void SetDefaultConfiguration(ConnectionTypes connectionType)
         {
             Manager.ConnectionType = connectionType;
-            Manager.DefaultSchema = "operaciones";
+            Manager.DefaultSchema = "jorgemk8_mancachan";
             Manager.DefaultConnection = connectionType.ToString();
             Manager.SelectSuffix = "_Select";
             Manager.InsertSuffix = "_Insert";
-            Manager.InsertMassiveSuffix = "_InsertList";
             Manager.UpdateSuffix = "_Update";
             Manager.DeleteSuffix = "_Delete";
             Manager.SelectAllSuffix = "_SelectAll";

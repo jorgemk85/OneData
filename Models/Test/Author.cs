@@ -16,5 +16,14 @@ namespace DataManagement.Models.Test
 
         public string Name { get; set; }
 
+        public Author()
+        {
+            Id = Guid.NewGuid();
+        }
+
+        public Author(Guid id)
+        {
+            Id = id;
+        }
     }
 }

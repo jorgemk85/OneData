@@ -1,11 +1,12 @@
 ﻿using DataManagement.Enums;
 using DataManagement.Models;
 using DataManagement.Tools;
+using System;
 using System.Linq.Expressions;
 
 namespace DataManagement.DAO
 {
-    public class MsSqlQueryCreation
+    public class QueryCreation
     {
         public static string GetStringFromNodeType(Expression body, string tableName)
         {
@@ -13,7 +14,11 @@ namespace DataManagement.DAO
 
             if (ExpressionTools.GetNodeGroup(body) == NodeGroupTypes.Comparison)
             {
-                pair = ExpressionTools.GetNameValuePairs((BinaryExpression)body, tableName);
+                pair = ExpressionTools.GetPairFromComparison((BinaryExpression)body, tableName);
+            }
+            else if (ExpressionTools.GetNodeGroup(body) == NodeGroupTypes.Method)
+            {
+                pair = GetPairFromMethod(body, tableName);
             }
 
             switch (body.NodeType)
@@ -31,7 +36,7 @@ namespace DataManagement.DAO
                 case ExpressionType.ArrayIndex:
                     break;
                 case ExpressionType.Call:
-                    break;
+                    return $"{tableName}.{pair.Name} {GetSqlTranslationFromMethodName((MethodCallExpression)body, pair.Value)}";
                 case ExpressionType.Coalesce:
                     break;
                 case ExpressionType.Conditional:
@@ -46,7 +51,6 @@ namespace DataManagement.DAO
                     break;
                 case ExpressionType.Equal:
                     return string.Format("{0} {1}", pair.Name, pair.Value == null ? "is null" : $" = {pair.Value}");
-                //return string.Format("{0} {1}", pair.Name, pair.Value == null ? "is null" : $" like '%{pair.Value.ToString().Replace("'", "")}%'");
                 case ExpressionType.ExclusiveOr:
                     break;
                 case ExpressionType.GreaterThan:
@@ -194,6 +198,41 @@ namespace DataManagement.DAO
             }
 
             return string.Empty;
+        }
+
+        private static NameValueObject GetPairFromMethod(Expression body, string tableName)
+        {
+            MemberExpression member = (MemberExpression)((MethodCallExpression)body).Object;
+            MethodCallExpression method = (MethodCallExpression)body;
+            object value = null;
+            if (method.Arguments[0] is ConstantExpression)
+            {
+                value = ((ConstantExpression)method.Arguments[0]).Value;
+            }
+            else if (method.Arguments[0] is MemberExpression)
+            {
+                var objectMember = Expression.Convert(method.Arguments[0], typeof(object));
+                var getterLambda = Expression.Lambda<Func<object>>(objectMember);
+                var getter = getterLambda.Compile();
+                value = getter();
+            }
+
+            return new NameValueObject(member.Member.Name, value);
+        }
+
+        private static string GetSqlTranslationFromMethodName(MethodCallExpression method, object value)
+        {
+            switch (method.Method.Name)
+            {
+                case "Contains":
+                    return $"like '%{value}%'";
+                case "StartsWith":
+                    return $"like '{value}%'";
+                case "EndsWith":
+                    return $"like '%{value}'";
+                default:
+                    throw new NotSupportedException($"El metodo '{method.Method.Name}' no es comprendido por el analizador de consultas. Intente colocar una expresion diferente.");
+            }
         }
     }
 }

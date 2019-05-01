@@ -35,10 +35,16 @@ namespace DataManagement.Models
         /// Esta propiedad controla las propiedades del objeto que estan marcadas como ForeignKey.
         /// </summary>
         internal Dictionary<string, PropertyInfo> ForeignKeyProperties { get; private set; } = new Dictionary<string, PropertyInfo>();
+        internal Dictionary<string, PropertyInfo> UniqueKeyProperties { get; private set; } = new Dictionary<string, PropertyInfo>();
+        internal Dictionary<string, PropertyInfo> DataLengthProperties { get; private set; } = new Dictionary<string, PropertyInfo>();
+        internal Dictionary<string, PropertyInfo> ForeignDataProperties { get; private set; } = new Dictionary<string, PropertyInfo>();
 
         internal Dictionary<string, PropertyInfo> ForeignCollectionProperties { get; private set; } = new Dictionary<string, PropertyInfo>();
         internal Dictionary<string, ForeignCollection> ForeignCollectionAttributes { get; private set; } = new Dictionary<string, ForeignCollection>();
 
+        internal Dictionary<string, UniqueKey> UniqueKeyAttributes { get; private set; } = new Dictionary<string, UniqueKey>();
+        internal Dictionary<string, DataLength> DataLengthAttributes { get; private set; } = new Dictionary<string, DataLength>();
+        internal Dictionary<string, ForeignData> ForeignDataAttributes { get; private set; } = new Dictionary<string, ForeignData>();
         internal Dictionary<string, ForeignKey> ForeignKeyAttributes { get; private set; } = new Dictionary<string, ForeignKey>();
         internal Dictionary<string, AutoProperty> AutoPropertyAttributes { get; private set; } = new Dictionary<string, AutoProperty>();
 
@@ -170,6 +176,20 @@ namespace DataManagement.Models
                             ForeignKeyProperties.Add(property.Name, property);
                             ForeignKeyAttributes.Add(property.Name, property.GetCustomAttribute<ForeignKey>());
                             break;
+                        case "UniqueKey":
+                            UniqueKeyProperties.Add(property.Name, property);
+                            UniqueKeyAttributes.Add(property.Name, property.GetCustomAttribute<UniqueKey>());
+                            break;
+                        case "DataLength":
+                            DataLengthProperties.Add(property.Name, property);
+                            DataLengthAttributes.Add(property.Name, property.GetCustomAttribute<DataLength>());
+                            break;
+                        case "ForeignData":
+                            ForeignDataProperties.Add(property.Name, property);
+                            ForeignDataAttributes.Add(property.Name, ConfigureForeignDataAttribute(property.GetCustomAttribute<ForeignData>(), property));
+                            ManagedProperties.Remove(property.Name);
+                            FilteredProperties.Remove(property.Name);
+                            break;
                         case "ForeignCollection":
                             ForeignCollectionProperties.Add(property.Name, property);
                             ForeignCollectionAttributes.Add(property.Name, property.GetCustomAttribute<ForeignCollection>());
@@ -182,6 +202,18 @@ namespace DataManagement.Models
                 }
             }
             PerformPropertiesValidation(type);
+        }
+
+        private ForeignData ConfigureForeignDataAttribute(ForeignData foreignData, PropertyInfo property)
+        {
+            if (foreignData.ReferenceModel == null)
+            {
+                foreignData.ReferenceModel = property.ReflectedType;
+                foreignData.ReferenceIdName = $"{foreignData.JoinModel.Name}Id";
+            }
+            foreignData.PropertyName = property.Name;
+
+            return foreignData;
         }
     }
 }

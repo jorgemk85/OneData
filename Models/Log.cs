@@ -16,6 +16,7 @@ namespace DataManagement.Models
         public dynamic IdentityId { get; set; }
         public string Transaccion { get; set; }
         public string TablaAfectada { get; set; }
+        [DataLength(2550)]
         public string Parametros { get; set; }
     }
 }

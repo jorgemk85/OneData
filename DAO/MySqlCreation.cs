@@ -15,6 +15,7 @@ namespace DataManagement.DAO
     {
         public void SetStoredProceduresParameters<T>(StringBuilder queryBuilder, bool setDefaultNull, bool considerPrimary) where T : Cope<T>, IManageable, new()
         {
+
             // Aqui se colocan los parametros segun las propiedades del objeto 
             foreach (KeyValuePair<string, PropertyInfo> property in Cope<T>.ModelComposition.FilteredProperties)
             {
@@ -24,22 +25,37 @@ namespace DataManagement.DAO
                 {
                     continue;
                 }
+
                 if (setDefaultNull)
                 {
-                    queryBuilder.AppendFormat("    IN _{0} {1} = null,\n", property.Value.Name, GetSqlDataType(property.Value.PropertyType));
+                    queryBuilder.AppendFormat("    IN `_{0}` {1} = null,\n", property.Value.Name, GetSqlDataType(property.Value.PropertyType, Cope<T>.ModelComposition.UniqueKeyProperties.ContainsKey(property.Value.Name), GetDataLengthFromProperty<T>(property.Key)));
                 }
                 else
                 {
-                    queryBuilder.AppendFormat("    IN _{0} {1},\n", property.Value.Name, GetSqlDataType(property.Value.PropertyType));
+                    queryBuilder.AppendFormat("    IN `_{0}` {1},\n", property.Value.Name, GetSqlDataType(property.Value.PropertyType, Cope<T>.ModelComposition.UniqueKeyProperties.ContainsKey(property.Value.Name), GetDataLengthFromProperty<T>(property.Key)));
                 }
             }
         }
 
-        private void SetParametersForQueryOptions(StringBuilder queryBuilder)
+        private long GetDataLengthFromProperty<T>(string propertyName) where T : Cope<T>, IManageable, new()
+        {
+            Cope<T>.ModelComposition.DataLengthAttributes.TryGetValue(propertyName, out DataLength dataLengthAttribute);
+
+            if (dataLengthAttribute != null)
+            {
+                return dataLengthAttribute.Length;
+            }
+            else
+            {
+                return 0;
+            }
+        }
+
+        private void SetParametersForQueryOptions<T>(StringBuilder queryBuilder) where T : Cope<T>, IManageable, new()
         {
             foreach (PropertyInfo property in typeof(QueryOptions).GetProperties().Where(option => option.GetCustomAttribute(typeof(NotParameter)) == null).OrderBy(option => option.Name))
             {
-                queryBuilder.AppendFormat("    IN _{0} {1},\n", property.Name, GetSqlDataType(property.PropertyType));
+                queryBuilder.AppendFormat("    IN `_{0}` {1},\n", property.Name, GetSqlDataType(property.PropertyType, Cope<T>.ModelComposition.UniqueKeyProperties.ContainsKey(property.Name), GetDataLengthFromProperty<T>(property.Name)));
             }
             queryBuilder.Remove(queryBuilder.Length - 2, 2);
         }
@@ -78,14 +94,14 @@ namespace DataManagement.DAO
                 }
                 else
                 {
-                    insertsBuilder.AppendFormat("    {0},\n", property.Value.Name);
+                    insertsBuilder.AppendFormat("    `{0}`,\n", property.Value.Name);
                     if (Cope<T>.ModelComposition.AutoProperties.TryGetValue(property.Value.Name, out PropertyInfo autoProperty))
                     {
                         valuesBuilder.AppendFormat("    {0},\n", GetAutoPropertyValue(Cope<T>.ModelComposition.AutoPropertyAttributes[property.Value.Name].AutoPropertyType));
                     }
                     else
                     {
-                        valuesBuilder.AppendFormat("    _{0},\n", property.Value.Name);
+                        valuesBuilder.AppendFormat("    `_{0}`,\n", property.Value.Name);
                     }
                 }
             }
@@ -138,11 +154,11 @@ namespace DataManagement.DAO
                 }
                 else
                 {
-                    queryBuilder.AppendFormat("    {0} = IFNULL(_{0}, {0}),\n", property.Value.Name);
+                    queryBuilder.AppendFormat("    `{0}` = IFNULL(`_{0}`, `{0}`),\n", property.Value.Name);
                 }
             }
             queryBuilder.Remove(queryBuilder.Length - 2, 2);
-            queryBuilder.AppendFormat("WHERE Id = _Id;\n");
+            queryBuilder.Append($"WHERE `{Cope<T>.ModelComposition.PrimaryKeyProperty.Name}` = `_{Cope<T>.ModelComposition.PrimaryKeyProperty.Name}`;\n");
             queryBuilder.Append("END");
 
             Logger.Info("(MySql) Created a new query for Update Stored Procedure:");
@@ -162,10 +178,10 @@ namespace DataManagement.DAO
 
             queryBuilder.AppendFormat("CREATE PROCEDURE `{0}{1}{2}` (\n", Manager.StoredProcedurePrefix, Cope<T>.ModelComposition.TableName, Manager.DeleteSuffix);
 
-            queryBuilder.Append(string.Format("    IN _Id {0})\n", GetSqlDataType(Cope<T>.ModelComposition.PrimaryKeyProperty.PropertyType)));
+            queryBuilder.Append($"    IN `_{Cope<T>.ModelComposition.PrimaryKeyProperty.Name}` {GetSqlDataType(Cope<T>.ModelComposition.PrimaryKeyProperty.PropertyType, Cope<T>.ModelComposition.UniqueKeyProperties.ContainsKey(Cope<T>.ModelComposition.PrimaryKeyProperty.Name), 0)})\n");
             queryBuilder.Append("BEGIN\n");
             queryBuilder.AppendFormat("DELETE FROM `{0}{1}`\n", Manager.TablePrefix, Cope<T>.ModelComposition.TableName);
-            queryBuilder.AppendFormat("WHERE Id = _Id;\n");
+            queryBuilder.Append($"WHERE `{Cope<T>.ModelComposition.PrimaryKeyProperty.Name}` = `_{Cope<T>.ModelComposition.PrimaryKeyProperty.Name}`;\n");
             queryBuilder.Append("END");
 
             Logger.Info("(MySql) Created a new query for Delete Stored Procedure:");
@@ -183,13 +199,13 @@ namespace DataManagement.DAO
             }
 
             queryBuilder.AppendFormat("CREATE PROCEDURE `{0}{1}{2}` (\n", Manager.StoredProcedurePrefix, Cope<T>.ModelComposition.TableName, Manager.SelectAllSuffix);
-            SetParametersForQueryOptions(queryBuilder);
+            SetParametersForQueryOptions<T>(queryBuilder);
 
             queryBuilder.Append(")\nBEGIN\n");
             queryBuilder.AppendFormat("SELECT * FROM `{0}{1}`\n", Manager.TablePrefix, Cope<T>.ModelComposition.TableName);
-            queryBuilder.Append($"ORDER BY {Cope<T>.ModelComposition.DateCreatedProperty.Name} DESC\n");
-            queryBuilder.Append($"LIMIT _{nameof(QueryOptions.MaximumResults)}\n");
-            queryBuilder.Append($"OFFSET _{nameof(QueryOptions.Offset)} ;\n");
+            queryBuilder.Append($"ORDER BY {Cope<T>.ModelComposition.DateModifiedProperty.Name} DESC\n");
+            queryBuilder.Append($"LIMIT `_{nameof(QueryOptions.MaximumResults)}`\n");
+            queryBuilder.Append($"OFFSET `_{nameof(QueryOptions.Offset)}` ;\n");
             queryBuilder.Append("END");
 
             Logger.Info("(MySql) Created a new query for SelectAll Stored Procedure:");
@@ -214,8 +230,8 @@ namespace DataManagement.DAO
             // Aqui se colocan los parametros segun las propiedades del objeto
             SetStoredProceduresParameters<T>(queryBuilder, false, true);
             queryBuilder.Remove(queryBuilder.Length - 2, 2);
-            SetParametersForQueryOptions(queryBuilder);
-            
+            SetParametersForQueryOptions<T>(queryBuilder);
+
             queryBuilder.Append(")\nBEGIN\n");
             queryBuilder.Append("SET @@sql_mode:=TRADITIONAL;\n");
             queryBuilder.AppendFormat("SELECT * FROM `{0}{1}`\n", Manager.TablePrefix, Cope<T>.ModelComposition.TableName);
@@ -224,13 +240,13 @@ namespace DataManagement.DAO
             // Se especifica el parametro que va en x columna.
             foreach (KeyValuePair<string, PropertyInfo> property in Cope<T>.ModelComposition.FilteredProperties)
             {
-                queryBuilder.AppendFormat("    {0} LIKE IFNULL(CONCAT('%', _{0}, '%'), {0}) AND\n", property.Value.Name);
+                queryBuilder.AppendFormat("    `{0}` LIKE IFNULL(CONCAT('%', `_{0}`, '%'), `{0}`) AND\n", property.Value.Name);
             }
 
             queryBuilder.Remove(queryBuilder.Length - 4, 4);
-            queryBuilder.Append($"ORDER BY {Cope<T>.ModelComposition.DateCreatedProperty.Name} DESC\n");
-            queryBuilder.Append($"LIMIT _{nameof(QueryOptions.MaximumResults)}\n");
-            queryBuilder.Append($"OFFSET _{nameof(QueryOptions.Offset)} ;\n");
+            queryBuilder.Append($"ORDER BY {Cope<T>.ModelComposition.DateModifiedProperty.Name} DESC\n");
+            queryBuilder.Append($"LIMIT `_{nameof(QueryOptions.MaximumResults)}`\n");
+            queryBuilder.Append($"OFFSET `_{nameof(QueryOptions.Offset)}` ;\n");
             queryBuilder.Append("END");
 
             Logger.Info("(MySql) Created a new query for Select Stored Procedure:");
@@ -255,21 +271,27 @@ namespace DataManagement.DAO
                 {
                     if (property.Value.PropertyType.Equals(typeof(int?)))
                     {
-                        queryBuilder.AppendFormat("{0} {1} NOT NULL AUTO_INCREMENT,\n", property.Value.Name, GetSqlDataType(property.Value.PropertyType));
+                        queryBuilder.AppendFormat("`{0}` {1} NOT NULL AUTO_INCREMENT,\n", property.Value.Name, GetSqlDataType(property.Value.PropertyType, Cope<T>.ModelComposition.UniqueKeyProperties.ContainsKey(property.Value.Name), GetDataLengthFromProperty<T>(property.Key)));
                     }
                     else
                     {
-                        queryBuilder.AppendFormat("{0} {1} NOT NULL,\n", property.Value.Name, GetSqlDataType(property.Value.PropertyType));
+                        queryBuilder.AppendFormat("`{0}` {1} NOT NULL,\n", property.Value.Name, GetSqlDataType(property.Value.PropertyType, Cope<T>.ModelComposition.UniqueKeyProperties.ContainsKey(property.Value.Name), GetDataLengthFromProperty<T>(property.Key)));
                     }
                 }
                 else
                 {
-                    queryBuilder.AppendFormat("{0} {1} {2},\n", property.Value.Name, GetSqlDataType(property.Value.PropertyType), isNullable);
+                    queryBuilder.AppendFormat("`{0}` {1} {2},\n", property.Value.Name, GetSqlDataType(property.Value.PropertyType, Cope<T>.ModelComposition.UniqueKeyProperties.ContainsKey(property.Value.Name), GetDataLengthFromProperty<T>(property.Key)), isNullable);
                 }
             }
 
-            queryBuilder.Append("PRIMARY KEY (Id),\n");
-            queryBuilder.Append("UNIQUE KEY `id_UNIQUE` (Id))\n");
+            queryBuilder.Append($"PRIMARY KEY (`{Cope<T>.ModelComposition.PrimaryKeyProperty.Name}`),\n");
+
+            foreach (KeyValuePair<string, PropertyInfo> property in Cope<T>.ModelComposition.UniqueKeyProperties)
+            {
+                queryBuilder.Append($"UNIQUE KEY `{property.Value.Name}_UNIQUE` (`{property.Value.Name}`),\n");
+            }
+
+            queryBuilder.Append($"UNIQUE KEY `{Cope<T>.ModelComposition.PrimaryKeyProperty.Name}_UNIQUE` (`{Cope<T>.ModelComposition.PrimaryKeyProperty.Name}`))\n");
             queryBuilder.Append("ENGINE=InnoDB;");
 
             Logger.Info("(MySql) Created a new query for Create Table:");
@@ -293,21 +315,21 @@ namespace DataManagement.DAO
             foreach (KeyValuePair<string, PropertyInfo> property in Cope<T>.ModelComposition.ManagedProperties)
             {
                 columnDetails.TryGetValue(property.Value.Name, out ColumnDefinition columnDefinition);
-                string sqlDataType = GetSqlDataType(property.Value.PropertyType);
+                string sqlDataType = GetSqlDataType(property.Value.PropertyType, Cope<T>.ModelComposition.UniqueKeyProperties.ContainsKey(property.Value.Name), GetDataLengthFromProperty<T>(property.Key));
                 bool isNullable = Nullable.GetUnderlyingType(property.Value.PropertyType) == null ? false : true;
                 string nullable = isNullable == true ? string.Empty : "NOT NULL";
 
                 if (columnDefinition == null)
                 {
                     // Agregar propiedad a tabla ya que no existe.
-                    addQueryBuilder.AppendFormat("ADD {0} {1} {2},\n", property.Value.Name, sqlDataType, nullable);
+                    addQueryBuilder.AppendFormat("ADD `{0}` {1} {2},\n", property.Value.Name, sqlDataType, nullable);
                     foundDiference = true;
                     goto AddAsFound;
                 }
                 if (!sqlDataType.Equals(columnDefinition.Column_Type))
                 {
                     // Si el data type cambio, entonces lo modifica.
-                    addQueryBuilder.AppendFormat("MODIFY COLUMN {0} {1},\n", property.Value.Name, sqlDataType);
+                    addQueryBuilder.AppendFormat("MODIFY COLUMN `{0}` {1},\n", property.Value.Name, sqlDataType);
                     foundDiference = true;
                     goto AddAsFound;
                 }
@@ -315,7 +337,7 @@ namespace DataManagement.DAO
                 if (!columnDefinition.Extra.Contains("auto_increment") && property.Value.Equals(Cope<T>.ModelComposition.PrimaryKeyProperty) && property.Value.PropertyType.Equals(typeof(int)))
                 {
                     // La propiedad es Primaria, es INT y no esta marcada como auto-increment...
-                    addQueryBuilder.AppendFormat("MODIFY COLUMN {0} {1} NOT NULL auto_increment,\n", property.Value.Name, sqlDataType);
+                    addQueryBuilder.AppendFormat("MODIFY COLUMN `{0}` {1} NOT NULL auto_increment,\n", property.Value.Name, sqlDataType);
                     foundDiference = true;
                     goto AddAsFound;
                 }
@@ -323,49 +345,67 @@ namespace DataManagement.DAO
                 if (columnDefinition.Is_Nullable.Equals("YES") && !isNullable && !property.Value.Equals(Cope<T>.ModelComposition.PrimaryKeyProperty))
                 {
                     // Si la propiedad ya no es nullable, entonces la cambia en la base de datos
-                    addQueryBuilder.AppendFormat("MODIFY COLUMN {0} {1} NOT NULL,\n", property.Value.Name, sqlDataType);
+                    addQueryBuilder.AppendFormat("MODIFY COLUMN `{0}` {1} NOT NULL,\n", property.Value.Name, sqlDataType);
                     foundDiference = true;
                     goto AddAsFound;
                 }
                 if (columnDefinition.Is_Nullable.Equals("NO") && isNullable && !property.Value.Equals(Cope<T>.ModelComposition.PrimaryKeyProperty))
                 {
                     // Si la propiedad ES nullable, entonces la cambia en la base de datos
-                    addQueryBuilder.AppendFormat("MODIFY COLUMN {0} {1},\n", property.Value.Name, sqlDataType);
+                    addQueryBuilder.AppendFormat("MODIFY COLUMN `{0}` {1},\n", property.Value.Name, sqlDataType);
                     foundDiference = true;
                     goto AddAsFound;
                 }
-                if (keyDetails.TryGetValue(property.Value.Name, out KeyDefinition keyDefinition))
+                if (columnDefinition.Column_Key.Equals("UNI") && property.Value.GetCustomAttribute<UniqueKey>() == null)
                 {
-                    // Si existe una llave en la base de datos relacionada a esta propiedad entonces...
+                    // Si la columna esta marcada como UNIQUE pero la propiedad no tiene el atributo, entonces hay que quitarlo
+                    addQueryBuilder.Append($"DROP INDEX `{property.Value.Name}_UNIQUE`,\n");
+                    foundDiference = true;
+                    goto AddAsFound;
+                }
+                if (!columnDefinition.Column_Key.Equals("UNI") && property.Value.GetCustomAttribute<UniqueKey>() != null)
+                {
+                    // Si la propiedad tiene el atributo UniqueKey y la columna no, entonces agregamos
+                    addQueryBuilder.Append($"ADD UNIQUE INDEX `{property.Value.Name}_UNIQUE` (`{property.Value.Name}` ASC),\n");
+                    foundDiference = true;
+                    goto AddAsFound;
+                }
+                if (keyDetails.TryGetValue(property.Value.Name, out KeyDefinition keyDefinition) && !columnDefinition.Column_Key.Equals("UNI"))
+                {
+                    // Si existe una llave foranea en la base de datos relacionada a esta propiedad entonces...
                     ForeignKey foreignAttribute = property.Value.GetCustomAttribute<ForeignKey>();
                     if (foreignAttribute == null)
                     {
                         // En el caso de que no tenga ya el atributo, significa que dejo de ser una propiedad relacionada con algun modelo foraneo y por ende, debemos de eliminar la llave foranea
-                        addQueryBuilder.AppendFormat("DROP FOREIGN KEY {0},\n", keyDefinition.Constraint_Name);
+                        addQueryBuilder.AppendFormat("DROP FOREIGN KEY `{0}`,\n", keyDefinition.Constraint_Name);
                         keyDetails.Remove(property.Value.Name);
                         foundDiference = true;
                         goto AddAsFound;
                     }
                 }
-                AddAsFound:
+            AddAsFound:
                 columnsFound.Add(property.Value.Name);
             }
 
             // Extraemos las columnas en la tabla que ya no estan en las propiedades del modelo para quitarlas.
             foreach (KeyValuePair<string, ColumnDefinition> detail in columnDetails.Where(q => !columnsFound.Contains(q.Key)))
             {
-                dropQueryBuilder.AppendFormat("DROP {0},\n", detail.Value.Column_Name);
+                dropQueryBuilder.AppendFormat("DROP `{0}`,\n", detail.Value.Column_Name);
                 foundDiference = true;
                 continue;
             }
 
-            if (addQueryBuilder.Length> 0)
+            if (addQueryBuilder.Length > 0)
             {
                 addQueryBuilder.Remove(addQueryBuilder.Length - 2, 2);
             }
             if (dropQueryBuilder.Length > 0)
             {
-                dropQueryBuilder.Remove(dropQueryBuilder.Length - 2, 2);
+                if (addQueryBuilder.Length == 0)
+                {
+                    dropQueryBuilder.Remove(dropQueryBuilder.Length - 2, 2);
+                }
+                
             }
 
             fullQuery = $"{fullQuery}\n{dropQueryBuilder.ToString()}\n{addQueryBuilder.ToString()};";
@@ -407,7 +447,7 @@ namespace DataManagement.DAO
                 ForeignKey foreignAttribute = property.Value.GetCustomAttribute<ForeignKey>();
                 IManageable foreignKey = (IManageable)Activator.CreateInstance(foreignAttribute.Model);
                 queryBuilder.AppendFormat("ADD CONSTRAINT `FK_{0}_{1}`\n", Cope<T>.ModelComposition.TableName, foreignKey.Configuration.TableName);
-                queryBuilder.AppendFormat("FOREIGN KEY({0}) REFERENCES {1}{2}(Id) ON DELETE {3} ON UPDATE NO ACTION;\n", property.Value.Name, Manager.TablePrefix, foreignKey.Configuration.TableName, foreignAttribute.Action.ToString().Replace("_", " "));
+                queryBuilder.Append($"FOREIGN KEY(`{property.Value.Name}`) REFERENCES {Manager.TablePrefix}{foreignKey.Configuration.TableName}({Cope<T>.ModelComposition.PrimaryKeyProperty.Name}) ON DELETE {foreignAttribute.Action.ToString().Replace("_", " ")} ON UPDATE NO ACTION;\n");
             }
 
             Logger.Info("(MySql) Created a new query for Create Foreign Keys:");
@@ -415,7 +455,7 @@ namespace DataManagement.DAO
             return queryBuilder.ToString();
         }
 
-        public string GetSqlDataType(Type codeType)
+        public string GetSqlDataType(Type codeType, bool isUniqueKey, long dataLength)
         {
             Type underlyingType = Nullable.GetUnderlyingType(codeType);
 
@@ -440,7 +480,14 @@ namespace DataManagement.DAO
                 case "char":
                     return "char(1)";
                 case "string":
-                    return "mediumtext";
+                    if (isUniqueKey)
+                    {
+                        return $"varchar({(dataLength == 0 ? 255 : dataLength > 255 ? 255 : dataLength)})";
+                    }
+                    else
+                    {
+                        return $"varchar({(dataLength == 0 ? 255 : dataLength)})";
+                    }
                 case "datetime":
                     return "datetime";
                 case "decimal":
@@ -485,7 +532,7 @@ namespace DataManagement.DAO
         }
 
 
-        private string GetAutoPropertyValue(AutoPropertyTypes type)
+        public static string GetAutoPropertyValue(AutoPropertyTypes type)
         {
             switch (type)
             {

@@ -14,5 +14,10 @@ namespace DataManagement.Extensions
         {
             return DataSerializer.ConvertDictionaryToListOfType(dictionary);
         }
+
+        public static IEnumerable<T> ToIEnumerable<TKey, T>(this Dictionary<TKey, T> dictionary) where T : new()
+        {
+            return DataSerializer.ConvertDictionaryToIEnumerableOfType(dictionary);
+        }
     }
 }

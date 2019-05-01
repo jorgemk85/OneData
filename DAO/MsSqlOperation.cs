@@ -230,7 +230,7 @@ namespace DataManagement.DAO
                 string limitQuery = queryOptions.MaximumResults > -1 ? $"FETCH NEXT {queryOptions.MaximumResults} ROWS ONLY" : string.Empty;
                 string offsetQuery = queryOptions.Offset > 0 ? $"OFFSET {queryOptions.Offset} ROWS" : string.Empty;
                 
-                _command.CommandText = $"SELECT * FROM {fullyQualifiedTableName} WHERE {ExpressionTools.ConvertExpressionToSQL(expression)} {offsetQuery} {limitQuery}";
+                _command.CommandText = $"SELECT * FROM {fullyQualifiedTableName} WHERE {ExpressionTools.ConvertExpressionToSQL(expression)} ORDER BY {Cope<T>.ModelComposition.DateModifiedProperty.Name} DESC {offsetQuery} {limitQuery}";
                 FillDictionaryWithReader(_command.ExecuteReader(), ref result);
             }
             return new Result<T>(new Dictionary<dynamic, T>(), false, true);

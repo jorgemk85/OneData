@@ -59,6 +59,11 @@ namespace DataManagement.Models
             return Manager<T>.SelectAll(null).Data.ToList();
         }
 
+        public static IEnumerable<T> SelectAllIEnumerable()
+        {
+            return Manager<T>.SelectAll(null).Data.ToIEnumerable();
+        }
+
         /// <summary>
         /// Obtiene un listado limitado de los objetos de tipo <typeparamref name="T"/> almacenados en la base de datos o en el cache. Se puede estipular un a partir de que registro se desea obtener.
         /// Este metodo usa la conexion predeterminada a la base de datos.
