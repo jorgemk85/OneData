@@ -245,14 +245,14 @@ namespace DataManagement.DAO
         }
 
         /// <summary>
-        /// Ejecuta una consulta de seleccion en la base de datos usando el objeto de tipo <typeparamref name="T"/> como referencia y los parametros proporcionados.
+        /// Ejecuta una consulta de seleccion en la base de datos usando el objeto de tipo <typeparamref name="T"/> como referencia y los parametros proporcionados en forma de una expresion lambda.
         /// </summary>
         /// <param name="connectionToUse">Especifica cual configuracion de tipo ConectionString se desea utilizar. Si se especifica nulo, entonces utiliza la conexion especificada en DefaultConnection.</param>
-        /// <param name="parameters">Formacion de objetos Parameter que contiene los parametros de la consulta.</param>
+        /// <param name="expression">Expresion Lambda que represnta un resultado verdadero de un boolean utilizado para la conversion a SQL y la execucion de la declaracion Select.</param>
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la seleccion.</returns>
-        public static Result<T> Select(QueryOptions queryOptions, params Parameter[] parameters)
+        public static Result<T> Select(Expression<Func<T, bool>> expression, QueryOptions queryOptions)
         {
-            return Command(DataSerializer.SetParametersInObject<T>(parameters), TransactionTypes.Select, queryOptions);
+            return Command(expression, TransactionTypes.Select, queryOptions);
         }
 
         /// <summary>
@@ -261,31 +261,9 @@ namespace DataManagement.DAO
         /// <param name="connectionToUse">Especifica cual configuracion de tipo ConectionString se desea utilizar. Si se especifica nulo, entonces utiliza la conexion especificada en DefaultConnection.</param>
         /// <param name="expression">Expresion Lambda que represnta un resultado verdadero de un boolean utilizado para la conversion a SQL y la execucion de la declaracion Select.</param>
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la seleccion.</returns>
-        public static Result<T> Select(Expression<Func<T, bool>> expression, QueryOptions queryOptions)
-        {
-            return Command(expression, TransactionTypes.SelectQuery, queryOptions);
-        }
-
-        /// <summary>
-        /// Ejecuta una consulta de seleccion en la base de datos usando el objeto de tipo <typeparamref name="T"/> como referencia y los parametros proporcionados usando Async.
-        /// </summary>
-        /// <param name="connectionToUse">Especifica cual configuracion de tipo ConectionString se desea utilizar. Si se especifica nulo, entonces utiliza la conexion especificada en DefaultConnection.</param>
-        /// <param name="parameters">Formacion de objetos Parameter que contiene los parametros de la consulta.</param>
-        /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la seleccion.</returns>
-        public static async Task<Result<T>> SelectAsync(QueryOptions queryOptions, params Parameter[] parameters)
-        {
-            return await Task.Run(() => Command(DataSerializer.SetParametersInObject<T>(parameters), TransactionTypes.Select, queryOptions));
-        }
-
-        /// <summary>
-        /// Ejecuta una consulta de seleccion en la base de datos usando el objeto de tipo <typeparamref name="T"/> como referencia y los parametros proporcionados en forma de una expresion lambda usando Async.
-        /// </summary>
-        /// <param name="connectionToUse">Especifica cual configuracion de tipo ConectionString se desea utilizar. Si se especifica nulo, entonces utiliza la conexion especificada en DefaultConnection.</param>
-        /// <param name="expression">Expresion Lambda que represnta un resultado verdadero de un boolean utilizado para la conversion a SQL y la execucion de la declaracion Select.</param>
-        /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la seleccion.</returns>
         public static async Task<Result<T>> SelectAsync(Expression<Func<T, bool>> expression, QueryOptions queryOptions)
         {
-            return await Task.Run(() => Command(expression, TransactionTypes.SelectQuery, queryOptions));
+            return await Task.Run(() => Command(expression, TransactionTypes.Select, queryOptions));
         }
 
         /// <summary>
@@ -354,9 +332,6 @@ namespace DataManagement.DAO
             switch (transactionType)
             {
                 case TransactionTypes.Select:
-                    OnSelectExecuted?.Invoke(new SelectExecutedEventArgs<T>(tableName, result));
-                    break;
-                case TransactionTypes.SelectQuery:
                     OnSelectQueryExecuted?.Invoke(new SelectQueryExecutedEventArgs<T>(tableName, result));
                     break;
                 case TransactionTypes.SelectAll:

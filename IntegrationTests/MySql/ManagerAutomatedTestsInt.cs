@@ -29,12 +29,6 @@ namespace DataManagement.IntegrationTests.MySql
             Assert.DoesNotThrow(() => Manager<LogTestInt>.Update(TestTools.GetLogTestIntModel(false), null));
         }
 
-        [Test, Order(2)]
-        public void Select_FullAutomation_DoesNotThrow()
-        {
-            Assert.DoesNotThrow(() => Manager<LogTestInt>.Select(null, new Parameter(nameof(LogTestInt.Id), 1)));
-        }
-
         [Test, Order(3)]
         public void SelectAll_FullAutomation_DoesNotThrow()
         {

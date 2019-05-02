@@ -3,7 +3,6 @@
     public enum TransactionTypes
     {
         Select,
-        SelectQuery,
         SelectAll,
         Delete,
         Insert,

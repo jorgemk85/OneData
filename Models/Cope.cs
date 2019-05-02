@@ -79,10 +79,10 @@ namespace DataManagement.Models
         /// Este metodo usa la conexion predeterminada a la base de datos.
         /// </summary>
         /// <returns>Regresa el resultado que incluye la coleccion obtenida por la consulta.</returns>
-        [Obsolete("Este metodo no debe de utilizarse. Por favor utilice el Select con expresion lambda.")]
+        [Obsolete("Este metodo no debe de utilizarse. Por favor utilice el Select con expresion lambda.", true)]
         public static Result<T> Select(params Parameter[] parameters)
         {
-            return Manager<T>.Select(null, parameters);
+            return null;
         }
 
         /// <summary>

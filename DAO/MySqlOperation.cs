@@ -81,9 +81,6 @@ namespace DataManagement.DAO
                 switch (transactionType)
                 {
                     case TransactionTypes.Select:
-                        result = ExecuteProcedure((T)obj, queryOptions, transactionType);
-                        break;
-                    case TransactionTypes.SelectQuery:
                         result = ExecuteSelectQuery(expression, queryOptions, transactionType);
                         break;
                     case TransactionTypes.SelectAll:

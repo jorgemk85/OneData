@@ -29,12 +29,6 @@ namespace DataManagement.IntegrationTests.MsSql
             Assert.DoesNotThrow(() => Manager<LogTestInt>.Update(TestTools.GetLogTestIntModel(false), null));
         }
 
-        [Test, Order(2)]
-        public void Select_FullAutomation_DoesNotThrow()
-        {
-            Assert.DoesNotThrow(() => Manager<LogTestInt>.Select(null, new Parameter(nameof(LogTestGuid.Id), 0), null));
-        }
-
         [Test, Order(3)]
         public void SelectAll_FullAutomation_DoesNotThrow()
         {

@@ -96,8 +96,6 @@ namespace DataManagement.DAO
             Logger.Info(string.Format("Getting {0} transaction for type {1}. DoAlter = {2}", transactionType.ToString(), typeof(T), doAlter));
             switch (transactionType)
             {
-                case TransactionTypes.Select:
-                    return _creator.CreateSelectStoredProcedure<T>(doAlter);
                 case TransactionTypes.SelectAll:
                     return _creator.CreateSelectAllStoredProcedure<T>(doAlter);
                 case TransactionTypes.Delete:
@@ -136,8 +134,6 @@ namespace DataManagement.DAO
         {
             switch (transactionType)
             {
-                case TransactionTypes.Select:
-                    return Manager.SelectSuffix;
                 case TransactionTypes.Delete:
                     return Manager.DeleteSuffix;
                 case TransactionTypes.Insert:
@@ -180,8 +176,6 @@ namespace DataManagement.DAO
                 return;
             }
 
-            SetParametersForQueryOptions(transactionType, queryOptions);
-
             foreach (KeyValuePair<string, PropertyInfo> property in Cope<T>.ModelComposition.FilteredProperties)
             {
                 if (property.Value.Equals(Cope<T>.ModelComposition.PrimaryKeyProperty) && property.Value.PropertyType.Equals(typeof(int?)) && !considerPrimary)
@@ -189,17 +183,6 @@ namespace DataManagement.DAO
                     continue;
                 }
                 _command.Parameters.Add(CreateDbParameter("_" + property.Value.Name, property.Value.GetValue(obj)));
-            }
-        }
-
-        protected void SetParametersForQueryOptions(TransactionTypes transactionType, QueryOptions queryOptions)
-        {
-            if (transactionType == TransactionTypes.Select || transactionType == TransactionTypes.SelectAll)
-            {
-                foreach (PropertyInfo property in typeof(QueryOptions).GetProperties().Where(options => options.GetCustomAttribute(typeof(NotParameter)) == null).OrderBy(option => option.Name))
-                {
-                    _command.Parameters.Add(CreateDbParameter("_" + property.Name, property.GetValue(queryOptions)));
-                }
             }
         }
 
@@ -212,8 +195,6 @@ namespace DataManagement.DAO
                 _command.Parameters.Add(CreateDbParameter(string.Format("_{0}", Cope<T>.ModelComposition.PrimaryKeyProperty.Name), Cope<T>.ModelComposition.PrimaryKeyProperty.GetValue(obj)));
                 return;
             }
-
-            SetParametersForQueryOptions(transactionType, queryOptions);
 
             foreach (KeyValuePair<string, PropertyInfo> propertyInfo in Cope<T>.ModelComposition.FilteredProperties)
             {
@@ -241,9 +222,6 @@ namespace DataManagement.DAO
             string storedProcedure;
             switch (transactionType)
             {
-                case TransactionTypes.Select:
-                    storedProcedure = $"{Manager.StoredProcedurePrefix}{Cope<T>.ModelComposition.TableName}{Manager.SelectSuffix}";
-                    break;
                 case TransactionTypes.SelectAll:
                     storedProcedure = $"{Manager.StoredProcedurePrefix}{Cope<T>.ModelComposition.TableName}{Manager.SelectAllSuffix}";
                     break;

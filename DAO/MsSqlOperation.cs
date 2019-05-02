@@ -1,4 +1,5 @@
-﻿using DataManagement.Enums;
+﻿using DataManagement.Attributes;
+using DataManagement.Enums;
 using DataManagement.Exceptions;
 using DataManagement.Interfaces;
 using DataManagement.Models;
@@ -7,7 +8,9 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
+using System.Linq;
 using System.Linq.Expressions;
+using System.Text;
 
 namespace DataManagement.DAO
 {
@@ -77,9 +80,6 @@ namespace DataManagement.DAO
                 switch (transactionType)
                 {
                     case TransactionTypes.Select:
-                        result = ExecuteProcedure((T)obj, queryOptions, transactionType);
-                        break;
-                    case TransactionTypes.SelectQuery:
                         throw new NotImplementedException();
                     case TransactionTypes.SelectAll:
                         result = ExecuteProcedure((T)obj, queryOptions, transactionType);
@@ -154,6 +154,25 @@ namespace DataManagement.DAO
             return result;
         }
 
+        private Result<T> ExecuteSelectAllQuery<T>(T obj, QueryOptions queryOptions, TransactionTypes transactionType) where T : Cope<T>, IManageable, new()
+        {
+            Result<T> result = new Result<T>(new Dictionary<dynamic, T>(), false, true);
+
+            using (SqlConnection connection = Connection.OpenMsSqlConnection(queryOptions.ConnectionToUse))
+            {
+                string limitQuery = queryOptions.MaximumResults > -1 ? $"FETCH NEXT {queryOptions.MaximumResults} ROWS ONLY" : string.Empty;
+                string offsetQuery = queryOptions.Offset > 0 ? $"OFFSET {queryOptions.Offset} ROWS" : string.Empty;
+
+                if (connection.State != ConnectionState.Open) throw new BadConnectionStateException();
+                _command = connection.CreateCommand();
+                _command.CommandType = CommandType.Text;
+
+                _command.CommandText = $"{GetSelectQuerySection<T>()} {GetFromQuerySection<T>()} ORDER BY {Cope<T>.ModelComposition.DateModifiedProperty.Name} DESC {offsetQuery} {limitQuery}";
+                FillDictionaryWithReader(_command.ExecuteReader(), ref result);
+            }
+            return result;
+        }
+
         private Result<T> ExecuteProcedure<T>(T obj, QueryOptions queryOptions, TransactionTypes transactionType) where T : Cope<T>, IManageable, new()
         {
             Result<T> result = new Result<T>(new Dictionary<dynamic, T>(), false, true);
@@ -167,14 +186,6 @@ namespace DataManagement.DAO
 
                 switch (transactionType)
                 {
-                    case TransactionTypes.Select:
-                        SetParameters(obj, transactionType, true, queryOptions);
-                        FillDictionaryWithReader(_command.ExecuteReader(), ref result);
-                        break;
-                    case TransactionTypes.SelectAll:
-                        SetParametersForQueryOptions(transactionType, queryOptions);
-                        FillDictionaryWithReader(_command.ExecuteReader(), ref result);
-                        break;
                     case TransactionTypes.Delete:
                         SetParameters(obj, transactionType, true, queryOptions);
                         _command.ExecuteNonQuery();
@@ -224,16 +235,60 @@ namespace DataManagement.DAO
             using (SqlConnection connection = Connection.OpenMsSqlConnection(queryOptions.ConnectionToUse))
             {
                 if (connection.State != ConnectionState.Open) throw new BadConnectionStateException();
-                _command = connection.CreateCommand();
-                _command.CommandType = CommandType.Text;
-                string fullyQualifiedTableName = string.Format("{0}.{1}{2}", Cope<T>.ModelComposition.Schema, Manager.TablePrefix, Cope<T>.ModelComposition.TableName);
+
                 string limitQuery = queryOptions.MaximumResults > -1 ? $"FETCH NEXT {queryOptions.MaximumResults} ROWS ONLY" : string.Empty;
                 string offsetQuery = queryOptions.Offset > 0 ? $"OFFSET {queryOptions.Offset} ROWS" : string.Empty;
-                
-                _command.CommandText = $"SELECT * FROM {fullyQualifiedTableName} WHERE {ExpressionTools.ConvertExpressionToSQL(expression)} ORDER BY {Cope<T>.ModelComposition.DateModifiedProperty.Name} DESC {offsetQuery} {limitQuery}";
+
+                _command = connection.CreateCommand();
+                _command.CommandType = CommandType.Text;
+                _command.CommandText = $"{GetSelectQuerySection<T>()} {GetFromQuerySection<T>()} WHERE {ExpressionTools.ConvertExpressionToSQL(expression)} ORDER BY {Cope<T>.ModelComposition.DateModifiedProperty.Name} DESC {offsetQuery} {limitQuery}";
                 FillDictionaryWithReader(_command.ExecuteReader(), ref result);
             }
             return new Result<T>(new Dictionary<dynamic, T>(), false, true);
+        }
+
+        private string GetSelectQuerySection<T>() where T : Cope<T>, IManageable, new()
+        {
+            StringBuilder selectBuilder = new StringBuilder();
+            IManageable foreignObject;
+            string foreignTableFullyQualifiedName;
+            string fullyQualifiedTableName = $"{Manager.TablePrefix}{Cope<T>.ModelComposition.TableName}";
+
+            selectBuilder.Append($"SELECT `{fullyQualifiedTableName}`.*");
+            if (Cope<T>.ModelComposition.ForeignDataAttributes.Count > 0)
+            {
+                foreach (ForeignData foreignAttribute in Cope<T>.ModelComposition.ForeignDataAttributes.Values)
+                {
+                    foreignObject = (IManageable)Activator.CreateInstance(foreignAttribute.JoinModel);
+                    foreignTableFullyQualifiedName = $"{Manager.TablePrefix}{foreignObject.Configuration.TableName}";
+                    selectBuilder.Append($",`{foreignTableFullyQualifiedName}`.`{foreignAttribute.ColumnName}` as `{foreignAttribute.PropertyName}`");
+                }
+            }
+
+            return selectBuilder.ToString();
+        }
+
+        private string GetFromQuerySection<T>() where T : Cope<T>, IManageable, new()
+        {
+            StringBuilder fromBuilder = new StringBuilder();
+            IManageable foreignModel;
+            IManageable foreignReferenceModel;
+            string foreignTableFullyQualifiedName;
+            string fullyQualifiedTableName = $"{Manager.TablePrefix}{Cope<T>.ModelComposition.TableName}";
+
+            fromBuilder.Append($" FROM `{fullyQualifiedTableName}`");
+            if (Cope<T>.ModelComposition.ForeignDataAttributes.Count > 0)
+            {
+                foreach (ForeignData foreignAttribute in Cope<T>.ModelComposition.ForeignDataAttributes.Values.GroupBy(x => x.JoinModel).Select(y => y.First()))
+                {
+                    foreignModel = (IManageable)Activator.CreateInstance(foreignAttribute.JoinModel);
+                    foreignReferenceModel = (IManageable)Activator.CreateInstance(foreignAttribute.ReferenceModel);
+                    foreignTableFullyQualifiedName = $"{Manager.TablePrefix}{foreignModel.Configuration.TableName}";
+                    fromBuilder.Append($" INNER JOIN `{foreignTableFullyQualifiedName}` ON `{Manager.TablePrefix}{foreignReferenceModel.Configuration.TableName}`.`{foreignAttribute.ReferenceIdName}` = `{foreignTableFullyQualifiedName}`.`{foreignModel.Configuration.PrimaryKeyProperty.Name}`");
+                }
+            }
+
+            return fromBuilder.ToString();
         }
 
         public void LogTransaction(string tableName, TransactionTypes transactionType, QueryOptions queryOptions)
