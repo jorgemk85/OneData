@@ -96,8 +96,6 @@ namespace DataManagement.DAO
             Logger.Info(string.Format("Getting {0} transaction for type {1}. DoAlter = {2}", transactionType.ToString(), typeof(T), doAlter));
             switch (transactionType)
             {
-                case TransactionTypes.SelectAll:
-                    return _creator.CreateSelectAllStoredProcedure<T>(doAlter);
                 case TransactionTypes.Delete:
                     return _creator.CreateDeleteStoredProcedure<T>(doAlter);
                 case TransactionTypes.Insert:
