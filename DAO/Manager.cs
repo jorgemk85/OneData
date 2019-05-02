@@ -141,6 +141,7 @@ namespace DataManagement.DAO
         public static event DeleteExecutedEventHandler<T> OnDeleteExecuted;
         public static event InsertExecutedEventHandler<T> OnInsertExecuted;
         public static event InsertMassiveExecutedEventHandler<T> OnInsertMassiveExecuted;
+        public static event UpdateMassiveExecutedEventHandler<T> OnUpdateMassiveExecuted;
         public static event UpdateExecutedEventHandler<T> OnUpdateExecuted;
         public static event StoredProcedureExecutedEventHandler<T> OnStoredProcedureExecuted;
         #endregion
@@ -190,6 +191,17 @@ namespace DataManagement.DAO
         }
 
         /// <summary>
+        /// Actualiza una lista de tipo <typeparamref name="T"/> en la base de datos.
+        /// </summary>
+        /// <param name="list">Objeto que contiene la informacion a insertar.</param>
+        /// <param name="connectionToUse">Especifica cual configuracion de tipo ConectionString se desea utilizar. Si se especifica nulo, entonces utiliza la conexion especificada en DefaultConnection.</param>
+        /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la insercion.</returns>
+        public static Result<T> UpdateMassive(IEnumerable<T> list, QueryOptions queryOptions)
+        {
+            return Command(list, TransactionTypes.UpdateMassive, queryOptions);
+        }
+
+        /// <summary>
         /// Inserta un objeto de tipo <typeparamref name="T"/> en la base de datos usando Async.
         /// </summary>
         /// <param name="obj">Objeto que contiene la informacion a insertar.</param>
@@ -198,6 +210,28 @@ namespace DataManagement.DAO
         public static async Task<Result<T>> InsertAsync(T obj, QueryOptions queryOptions)
         {
             return await Task.Run(() => Command(obj, TransactionTypes.Insert, queryOptions));
+        }
+
+        /// <summary>
+        /// Inserta un objeto de tipo <typeparamref name="T"/> en la base de datos usando Async.
+        /// </summary>
+        /// <param name="obj">Objeto que contiene la informacion a insertar.</param>
+        /// <param name="connectionToUse">Especifica cual configuracion de tipo ConectionString se desea utilizar. Si se especifica nulo, entonces utiliza la conexion especificada en DefaultConnection.</param>
+        /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la insercion.</returns>
+        public static async Task<Result<T>> InsertMassiveAsync(IEnumerable<T> list, QueryOptions queryOptions)
+        {
+            return await Task.Run(() => Command(list, TransactionTypes.InsertMassive, queryOptions));
+        }
+
+        /// <summary>
+        /// Actualiza un objeto de tipo <typeparamref name="T"/> en la base de datos usando Async.
+        /// </summary>
+        /// <param name="obj">Objeto que contiene la informacion a insertar.</param>
+        /// <param name="connectionToUse">Especifica cual configuracion de tipo ConectionString se desea utilizar. Si se especifica nulo, entonces utiliza la conexion especificada en DefaultConnection.</param>
+        /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la insercion.</returns>
+        public static async Task<Result<T>> UpdateMassiveAsync(IEnumerable<T> list, QueryOptions queryOptions)
+        {
+            return await Task.Run(() => Command(list, TransactionTypes.UpdateMassive, queryOptions));
         }
 
         /// <summary>
@@ -345,6 +379,9 @@ namespace DataManagement.DAO
                     break;
                 case TransactionTypes.InsertMassive:
                     OnInsertMassiveExecuted?.Invoke(new InsertMassiveExecutedEventArgs<T>(tableName, result));
+                    break;
+                case TransactionTypes.UpdateMassive:
+                    OnUpdateMassiveExecuted?.Invoke(new UpdateMassiveExecutedEventArgs<T>(tableName, result));
                     break;
                 case TransactionTypes.Update:
                     OnUpdateExecuted?.Invoke(new UpdateExecutedEventArgs<T>(tableName, result));

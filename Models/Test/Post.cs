@@ -25,8 +25,5 @@ namespace DataManagement.Models.Test
 
         [ForeignKey(typeof(Author))]
         public Guid? AuthorId { get; set; }
-
-        [ForeignCollection(typeof(Comment))]
-        public Dictionary<Guid, Comment> Comments { get; set; }
     }
 }

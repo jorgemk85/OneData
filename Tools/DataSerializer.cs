@@ -112,9 +112,9 @@ namespace DataManagement.Tools
             }
         }
 
-        public static MassiveTaskParameter GenerateCompatibleMassiveTaskXML<T>(IEnumerable<T> list, TransactionTypes transactionType) where T : Cope<T>, IManageable, new()
+        public static MassiveOperationParameter GenerateCompatibleMassiveOperationXML<T>(IEnumerable<T> list, TransactionTypes transactionType) where T : Cope<T>, IManageable, new()
         {
-            MassiveTaskParameter massiveTaskParameter = new MassiveTaskParameter();
+            MassiveOperationParameter massiveOperationParameter = new MassiveOperationParameter();
             StringBuilder builder = new StringBuilder();
 
             builder.Append("<columns>\n");
@@ -125,7 +125,7 @@ namespace DataManagement.Tools
                 builder.Append("  </column>\n");
             }
             builder.Append("</columns>");
-            massiveTaskParameter.XmlNames = builder.ToString();
+            massiveOperationParameter.XmlNames = builder.ToString();
 
             builder.Clear();
 
@@ -164,20 +164,20 @@ namespace DataManagement.Tools
             }
             builder.Append("</objects>");
 
-            massiveTaskParameter.XmlValues = builder.ToString();
+            massiveOperationParameter.XmlValues = builder.ToString();
             switch (transactionType)
             {
                 case TransactionTypes.InsertMassive:
-                    massiveTaskParameter.ProcedureName = $"`{Manager.StoredProcedurePrefix}{Cope<T>.ModelComposition.TableName}{Manager.InsertSuffix}`";
+                    massiveOperationParameter.ProcedureName = $"`{Manager.StoredProcedurePrefix}{Cope<T>.ModelComposition.TableName}{Manager.InsertSuffix}`";
                     break;
                 case TransactionTypes.UpdateMassive:
-                    massiveTaskParameter.ProcedureName = $"`{Manager.StoredProcedurePrefix}{Cope<T>.ModelComposition.TableName}{Manager.UpdateSuffix}`";
+                    massiveOperationParameter.ProcedureName = $"`{Manager.StoredProcedurePrefix}{Cope<T>.ModelComposition.TableName}{Manager.UpdateSuffix}`";
                     break;
                 default:
-                    throw new NotSupportedException($"El tipo de transaccion {transactionType.ToString()} no puede ser utilizado con la funcion {nameof(GenerateCompatibleMassiveTaskXML)}.");
+                    throw new NotSupportedException($"El tipo de transaccion {transactionType.ToString()} no puede ser utilizado con la funcion {nameof(GenerateCompatibleMassiveOperationXML)}.");
             }
 
-            return massiveTaskParameter;
+            return massiveOperationParameter;
         }
 
         /// <summary>

@@ -1,5 +1,4 @@
 ﻿using DataManagement.Enums;
-using DataManagement.Exceptions;
 using DataManagement.Extensions;
 using DataManagement.Interfaces;
 using DataManagement.Models;
@@ -8,8 +7,6 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
-using System.Text;
 
 namespace DataManagement.DAO
 {
@@ -24,7 +21,7 @@ namespace DataManagement.DAO
             operation = Operation.GetOperationBasedOnConnectionType(connectionType);
         }
 
-        public Result<T> Evaluate<T>(T obj, Expression<Func<T, bool>> expression, TransactionTypes transactionType, ref DataCache<T> dataCache, QueryOptions queryOptions) where T : Cope<T>, IManageable, new()
+        public Result<T> Evaluate<T>(object obj, Expression<Func<T, bool>> expression, TransactionTypes transactionType, ref DataCache<T> dataCache, QueryOptions queryOptions) where T : Cope<T>, IManageable, new()
         {
             Result<T> resultado = null;
             bool hasCache = dataCache.Cache == null ? false : true;
@@ -35,16 +32,22 @@ namespace DataManagement.DAO
                     EvaluateSelectQuery(expression, out resultado, hasCache, ref dataCache, queryOptions);
                     break;
                 case TransactionTypes.SelectAll:
-                    EvaluateSelectAll(obj, out resultado, hasCache, ref dataCache, queryOptions);
+                    EvaluateSelectAll((T)obj, out resultado, hasCache, ref dataCache, queryOptions);
                     break;
                 case TransactionTypes.Delete:
-                    EvaluateDelete(obj, out resultado, hasCache, ref dataCache, queryOptions);
+                    EvaluateDelete((T)obj, out resultado, hasCache, ref dataCache, queryOptions);
                     break;
                 case TransactionTypes.Insert:
-                    EvaluateInsert(obj, out resultado, hasCache, ref dataCache, queryOptions);
+                    EvaluateInsert((T)obj, out resultado, hasCache, ref dataCache, queryOptions);
+                    break;
+                case TransactionTypes.InsertMassive:
+                    EvaluateInsertMassive((IEnumerable<T>)obj, out resultado, hasCache, ref dataCache, queryOptions);
+                    break;
+                case TransactionTypes.UpdateMassive:
+                    EvaluateUpdateMassive((IEnumerable<T>)obj, out resultado, hasCache, ref dataCache, queryOptions);
                     break;
                 case TransactionTypes.Update:
-                    EvaluateUpdate(obj, out resultado, hasCache, ref dataCache, queryOptions);
+                    EvaluateUpdate((T)obj, out resultado, hasCache, ref dataCache, queryOptions);
                     break;
                 default:
                     throw new NotSupportedException($"El tipo de transaccion {transactionType.ToString()} no puede ser utilizado con esta funcion.");
@@ -93,6 +96,24 @@ namespace DataManagement.DAO
             if (hasCache && resultado.IsSuccessful)
             {
                 InsertInCache(obj, ref dataCache);
+            }
+        }
+
+        private void EvaluateInsertMassive<T>(IEnumerable<T> list, out Result<T> resultado, bool hasCache, ref DataCache<T> dataCache, QueryOptions queryOptions) where T : Cope<T>, IManageable, new()
+        {
+            resultado = operation.ExecuteProcedure<T>(queryOptions, TransactionTypes.InsertMassive, true, list, null);
+            if (hasCache && resultado.IsSuccessful)
+            {
+                InsertMassiveInCache(list, ref dataCache);
+            }
+        }
+
+        private void EvaluateUpdateMassive<T>(IEnumerable<T> list, out Result<T> resultado, bool hasCache, ref DataCache<T> dataCache, QueryOptions queryOptions) where T : Cope<T>, IManageable, new()
+        {
+            resultado = operation.ExecuteProcedure<T>(queryOptions, TransactionTypes.UpdateMassive, true, list, null);
+            if (hasCache && resultado.IsSuccessful)
+            {
+                UpdateMassiveInCache(list, ref dataCache);
             }
         }
 
@@ -185,6 +206,15 @@ namespace DataManagement.DAO
             foreach (T obj in list)
             {
                 dataCache.Cache.Data.Add(Cope<T>.ModelComposition.PrimaryKeyProperty.GetValue(obj), obj);
+            }
+        }
+
+        private void UpdateMassiveInCache<T>(IEnumerable<T> list, ref DataCache<T> dataCache) where T : Cope<T>, IManageable, new()
+        {
+            // TODO: Analizar si se puede optimizar este procedimiento de actualizacion de informacion
+            foreach (T obj in list)
+            {
+                dataCache.Cache.Data[Cope<T>.ModelComposition.PrimaryKeyProperty.GetValue(obj)] = obj;
             }
         }
 

@@ -27,6 +27,7 @@ namespace DataManagement.DAO
             _connectionType = ConnectionTypes.MySQL;
             _creator = new MySqlCreation();
             QueryForTableExistance = $"SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '{Manager.DefaultSchema}' AND TABLE_NAME = '{Manager.TablePrefix}" + "{0}'";
+            QueryForStoredProcedureExistance = $"SELECT ROUTINE_NAME FROM INFORMATION_SCHEMA.ROUTINES WHERE ROUTINE_SCHEMA = '{Manager.DefaultSchema}' AND ROUTINE_NAME = '" + "{0}'";
             QueryForColumnDefinition = $"SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = '{Manager.DefaultSchema}' AND TABLE_NAME = '{Manager.TablePrefix}" + "{0}'";
             // TODO: Tiene escrito la columna Id como si todas las primary keys se llamaran asi. Esto esta asi por que antes era obligatorio, pero desde que se implemento el atributo PrimaryKey esto podria tronar...
             QueryForKeyDefinition = $"SELECT * FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE TABLE_SCHEMA = '{Manager.DefaultSchema}' AND TABLE_NAME = '{Manager.TablePrefix}" + "{0}' AND COLUMN_NAME != 'Id'";
@@ -93,7 +94,10 @@ namespace DataManagement.DAO
                         result = ExecuteProcedure((T)obj, queryOptions, transactionType);
                         break;
                     case TransactionTypes.InsertMassive:
-                        result = ExecuteInsertMassive((IEnumerable<T>)obj, queryOptions, transactionType);
+                        result = ExecuteMassiveOperation((IEnumerable<T>)obj, queryOptions, transactionType);
+                        break;
+                    case TransactionTypes.UpdateMassive:
+                        result = ExecuteMassiveOperation((IEnumerable<T>)obj, queryOptions, transactionType);
                         break;
                     case TransactionTypes.Update:
                         result = ExecuteProcedure((T)obj, queryOptions, transactionType);
@@ -214,24 +218,49 @@ namespace DataManagement.DAO
             return result;
         }
 
-        private Result<T> ExecuteInsertMassive<T>(IEnumerable<T> list, QueryOptions queryOptions, TransactionTypes transactionType) where T : Cope<T>, IManageable, new()
+        private Result<T> ExecuteMassiveOperation<T>(IEnumerable<T> list, QueryOptions queryOptions, TransactionTypes transactionType) where T : Cope<T>, IManageable, new()
         {
+            bool canTryForAutoCreateStoredProcedure = true;
+
+        Start:
             using (MySqlConnection connection = Connection.OpenMySqlConnection(queryOptions.ConnectionToUse))
             {
                 if (connection.State != ConnectionState.Open) throw new BadConnectionStateException();
                 _command = connection.CreateCommand();
                 _command.CommandType = CommandType.StoredProcedure;
-                _command.CommandText = string.Format("{0}{1}{2}", Manager.StoredProcedurePrefix, Cope<T>.ModelComposition.TableName, GetFriendlyTransactionSuffix(transactionType));
+                _command.CommandText = $"`{Manager.StoredProcedurePrefix}massive_operation`";
 
-                switch (transactionType)
+                try
                 {
-                    case TransactionTypes.InsertMassive:
-                        SetParameters(list, transactionType, queryOptions);
-                        _command.ExecuteNonQuery();
-                        break;
-                    default:
-                        throw new NotSupportedException($"El tipo de transaccion {transactionType.ToString()} no puede ser utilizado con esta funcion.");
+                    switch (transactionType)
+                    {
+                        case TransactionTypes.InsertMassive:
+                            SetMassiveOperationParameters(list, transactionType, queryOptions);
+                            _command.ExecuteNonQuery();
+                            break;
+                        case TransactionTypes.UpdateMassive:
+                            SetMassiveOperationParameters(list, transactionType, queryOptions);
+                            _command.ExecuteNonQuery();
+                            break;
+                        default:
+                            throw new NotSupportedException($"El tipo de transaccion {transactionType.ToString()} no puede ser utilizado con esta funcion.");
+                    }
                 }
+                catch (MySqlException mySqlException) when (mySqlException.Number == ERR_STORED_PROCEDURE_NOT_FOUND)
+                {
+                    if (Manager.AutoCreateStoredProcedures)
+                    {
+                        if (canTryForAutoCreateStoredProcedure)
+                        {
+                            Logger.Warn(string.Format("Stored Procedure for {0} not found. Creating...", transactionType.ToString()));
+                            PerformStoredProcedureValidation<T>(transactionType, queryOptions);
+                            goto Start;
+                        }
+                    }
+                    Logger.Error(mySqlException);
+                    throw;
+                }
+
             }
             return new Result<T>(new Dictionary<dynamic, T>(), false, true);
         }

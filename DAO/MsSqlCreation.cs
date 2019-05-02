@@ -457,7 +457,7 @@ namespace DataManagement.DAO
             }
         }
 
-        public string CreateInsertMassiveStoredProcedure<T>(bool doAlter) where T : Cope<T>, IManageable, new()
+        public string CreateMassiveOperationStoredProcedure<T>(bool doAlter) where T : Cope<T>, IManageable, new()
         {
             throw new NotImplementedException();
         }

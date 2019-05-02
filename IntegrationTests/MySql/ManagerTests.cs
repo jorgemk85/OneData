@@ -45,6 +45,29 @@ namespace DataManagement.IntegrationTests.MySql
             Assert.AreNotEqual(result, null);
         }
 
+        [Test]
+        public void InsertMassive_ReturnsNoError()
+        {
+            List<Post> list = Post.SelectAll(new QueryOptions() { MaximumResults = 5 });
+            foreach (Post post in list)
+            {
+                post.Id = Guid.NewGuid();
+            }
+            Assert.DoesNotThrow(() => list.InsertMassive());
+        }
+
+        [Test]
+        public void UpdateMassive_ReturnsNoError()
+        {
+            Random random = new Random();
+            List<Post> list = Post.SelectAll(new QueryOptions() { MaximumResults = 5 });
+            foreach (Post post in list)
+            {
+                post.Name = $"Updated Post {random.Next()}";
+            }
+            Assert.DoesNotThrow(() => list.UpdateMassive());
+        }
+
         //[Test]
         //public void SelectInt_DataFromCache_ReturnsTrue()
         //{

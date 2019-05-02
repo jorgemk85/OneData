@@ -480,9 +480,57 @@ namespace DataManagement.DAO
             }
         }
 
-        public string CreateInsertMassiveStoredProcedure<T>(bool doAlter) where T : Cope<T>, IManageable, new()
+        public string CreateMassiveOperationStoredProcedure<T>(bool doAlter) where T : Cope<T>, IManageable, new()
         {
-            throw new NotImplementedException();
+            StringBuilder queryBuilder = new StringBuilder();
+
+            T obj = new T();
+
+            if (Cope<T>.ModelComposition.ManagedProperties.Count == 0) return string.Empty;
+
+            if (doAlter)
+            {
+                queryBuilder.Append($"DROP PROCEDURE `{Manager.StoredProcedurePrefix}massive_operation`;\n");
+            }
+
+            queryBuilder.Append($"CREATE PROCEDURE `{Manager.StoredProcedurePrefix}massive_operation` (\n");
+
+            // Aqui se colocan los parametros fijos
+            queryBuilder.Append("    IN `_xmlValues` LONGTEXT,\n");
+            queryBuilder.Append("    IN `_xmlNames` TEXT,\n");
+            queryBuilder.Append("    IN `_procedureName` VARCHAR(255))\n");
+
+            queryBuilder.Append("BEGIN\n");
+            queryBuilder.Append("  DECLARE indexValue INT UNSIGNED DEFAULT 1;\n");
+            queryBuilder.Append("  DECLARE indexName INT UNSIGNED DEFAULT 1;\n");
+            queryBuilder.Append("  DECLARE countValues INT UNSIGNED DEFAULT ExtractValue(_xmlValues, 'count(//object)');\n");
+            queryBuilder.Append("  DECLARE countNames INT UNSIGNED DEFAULT ExtractValue(_xmlNames, 'count(//column)');\n");
+            queryBuilder.Append("  DECLARE currentName varchar(255);\n");
+            queryBuilder.Append("  DECLARE currentValue TEXT;\n");
+            queryBuilder.Append("  DECLARE currentObject TEXT DEFAULT '';\n");
+            queryBuilder.Append("  DECLARE node varchar(255);\n");
+            queryBuilder.Append("  SET @@sql_mode:= TRADITIONAL;\n");
+            queryBuilder.Append("  WHILE indexValue <= countValues DO\n");
+            queryBuilder.Append("    SET indexName = 1;\n");
+            queryBuilder.Append("    SET currentObject = '';\n");
+            queryBuilder.Append("    WHILE indexName <= countNames  DO\n");
+            queryBuilder.Append("        SET currentName = ExtractValue(_xmlNames,  '//column[$indexName]/name');\n");
+            queryBuilder.Append("        SET node = concat('//object[$indexValue]/', currentName);\n");
+            queryBuilder.Append("        SET currentValue = ExtractValue(_xmlValues, node);\n");
+            queryBuilder.Append("        SET currentObject = concat(currentObject, currentValue, ',');\n");
+            queryBuilder.Append("        SET indexName = indexName + 1;\n");
+            queryBuilder.Append("    END WHILE;\n");
+            queryBuilder.Append("    SET currentObject = LEFT(currentObject, length(currentObject) -1);\n");
+            queryBuilder.Append("    SET @currentCommand = concat(' CALL ', _procedureName , ' (',  currentObject,')');\n");
+            queryBuilder.Append("    PREPARE stmt1 FROM @currentCommand;\n");
+            queryBuilder.Append("    EXECUTE stmt1;\n");
+            queryBuilder.Append("    SET indexValue = indexValue + 1;\n");
+            queryBuilder.Append("  END WHILE;\n");
+            queryBuilder.Append("END");
+
+            Logger.Info("(MySql) Created a new query for Massive Operacion Stored Procedure:");
+            Logger.Info(queryBuilder.ToString());
+            return queryBuilder.ToString();
         }
     }
 }

@@ -92,7 +92,10 @@ namespace DataManagement.DAO
                         result = ExecuteProcedure((T)obj, queryOptions, transactionType);
                         break;
                     case TransactionTypes.InsertMassive:
-                        result = ExecuteInsertMassive((IEnumerable<T>)obj, queryOptions, transactionType);
+                        result = ExecuteMassiveOperation((IEnumerable<T>)obj, queryOptions, transactionType);
+                        break;
+                    case TransactionTypes.UpdateMassive:
+                        result = ExecuteMassiveOperation((IEnumerable<T>)obj, queryOptions, transactionType);
                         break;
                     case TransactionTypes.Update:
                         result = ExecuteProcedure((T)obj, queryOptions, transactionType);
@@ -207,24 +210,49 @@ namespace DataManagement.DAO
             return result;
         }
 
-        private Result<T> ExecuteInsertMassive<T>(IEnumerable<T> list, QueryOptions queryOptions, TransactionTypes transactionType) where T : Cope<T>, IManageable, new()
+        private Result<T> ExecuteMassiveOperation<T>(IEnumerable<T> list, QueryOptions queryOptions, TransactionTypes transactionType) where T : Cope<T>, IManageable, new()
         {
+            bool canTryForAutoCreateStoredProcedure = true;
+
+        Start:
             using (SqlConnection connection = Connection.OpenMsSqlConnection(queryOptions.ConnectionToUse))
             {
                 if (connection.State != ConnectionState.Open) throw new BadConnectionStateException();
                 _command = connection.CreateCommand();
                 _command.CommandType = CommandType.StoredProcedure;
-                _command.CommandText = string.Format("{0}.{1}{2}{3}", Cope<T>.ModelComposition.Schema, Manager.StoredProcedurePrefix, Cope<T>.ModelComposition.TableName, GetFriendlyTransactionSuffix(transactionType));
+                _command.CommandText = $"{Manager.StoredProcedurePrefix}massive_operation";
 
-                switch (transactionType)
+                try
                 {
-                    case TransactionTypes.InsertMassive:
-                        SetParameters(list, transactionType, queryOptions);
-                        _command.ExecuteNonQuery();
-                        break;
-                    default:
-                        throw new NotSupportedException($"El tipo de transaccion {transactionType.ToString()} no puede ser utilizado con esta funcion.");
+                    switch (transactionType)
+                    {
+                        case TransactionTypes.InsertMassive:
+                            SetMassiveOperationParameters(list, transactionType, queryOptions);
+                            _command.ExecuteNonQuery();
+                            break;
+                        case TransactionTypes.UpdateMassive:
+                            SetMassiveOperationParameters(list, transactionType, queryOptions);
+                            _command.ExecuteNonQuery();
+                            break;
+                        default:
+                            throw new NotSupportedException($"El tipo de transaccion {transactionType.ToString()} no puede ser utilizado con esta funcion.");
+                    }
                 }
+                catch (SqlException sqlException) when (sqlException.Number == ERR_STORED_PROCEDURE_NOT_FOUND)
+                {
+                    if (Manager.AutoCreateStoredProcedures)
+                    {
+                        if (canTryForAutoCreateStoredProcedure)
+                        {
+                            Logger.Warn(string.Format("Stored Procedure for {0} not found. Creating...", transactionType.ToString()));
+                            PerformStoredProcedureValidation<T>(transactionType, queryOptions);
+                            goto Start;
+                        }
+                    }
+                    Logger.Error(sqlException);
+                    throw;
+                }
+
             }
             return new Result<T>(new Dictionary<dynamic, T>(), false, true);
         }
