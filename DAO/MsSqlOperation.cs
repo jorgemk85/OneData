@@ -72,7 +72,7 @@ namespace DataManagement.DAO
             try
             {
                 Logger.Info(string.Format("Starting {0} execution for object {1} using connection {2}", transactionType.ToString(), typeof(T), queryOptions));
-                if (Manager.ConstantTableConsolidation && (Manager.IsDebug || Manager.OverrideOnlyInDebug) && !overrideConsolidation && !obj.GetType().Equals(typeof(Log)))
+                if (Manager.ConstantTableConsolidation && (Manager.IsDebug || Manager.OverrideOnlyInDebug) && !overrideConsolidation)
                 {
                     PerformTableConsolidation<T>(queryOptions.ConnectionToUse, false);
                 }
@@ -80,9 +80,10 @@ namespace DataManagement.DAO
                 switch (transactionType)
                 {
                     case TransactionTypes.Select:
-                        throw new NotImplementedException();
+                        result = ExecuteSelect(expression, queryOptions, transactionType);
+                        break;
                     case TransactionTypes.SelectAll:
-                        result = ExecuteProcedure((T)obj, queryOptions, transactionType);
+                        result = ExecuteSelectAll((T)obj, queryOptions, transactionType);
                         break;
                     case TransactionTypes.Delete:
                         result = ExecuteProcedure((T)obj, queryOptions, transactionType);
@@ -91,7 +92,7 @@ namespace DataManagement.DAO
                         result = ExecuteProcedure((T)obj, queryOptions, transactionType);
                         break;
                     case TransactionTypes.InsertMassive:
-                        result = ExecuteProcedure((IEnumerable<T>)obj, queryOptions, transactionType);
+                        result = ExecuteInsertMassive((IEnumerable<T>)obj, queryOptions, transactionType);
                         break;
                     case TransactionTypes.Update:
                         result = ExecuteProcedure((T)obj, queryOptions, transactionType);
@@ -154,7 +155,7 @@ namespace DataManagement.DAO
             return result;
         }
 
-        private Result<T> ExecuteSelectAllQuery<T>(T obj, QueryOptions queryOptions, TransactionTypes transactionType) where T : Cope<T>, IManageable, new()
+        private Result<T> ExecuteSelectAll<T>(T obj, QueryOptions queryOptions, TransactionTypes transactionType) where T : Cope<T>, IManageable, new()
         {
             Result<T> result = new Result<T>(new Dictionary<dynamic, T>(), false, true);
 
@@ -206,7 +207,7 @@ namespace DataManagement.DAO
             return result;
         }
 
-        private Result<T> ExecuteProcedure<T>(IEnumerable<T> list, QueryOptions queryOptions, TransactionTypes transactionType) where T : Cope<T>, IManageable, new()
+        private Result<T> ExecuteInsertMassive<T>(IEnumerable<T> list, QueryOptions queryOptions, TransactionTypes transactionType) where T : Cope<T>, IManageable, new()
         {
             using (SqlConnection connection = Connection.OpenMsSqlConnection(queryOptions.ConnectionToUse))
             {
@@ -228,7 +229,7 @@ namespace DataManagement.DAO
             return new Result<T>(new Dictionary<dynamic, T>(), false, true);
         }
 
-        private Result<T> ExecuteProcedure<T>(Expression<Func<T, bool>> expression, QueryOptions queryOptions, TransactionTypes transactionType) where T : Cope<T>, IManageable, new()
+        private Result<T> ExecuteSelect<T>(Expression<Func<T, bool>> expression, QueryOptions queryOptions, TransactionTypes transactionType) where T : Cope<T>, IManageable, new()
         {
             Result<T> result = new Result<T>(new Dictionary<dynamic, T>(), false, true);
 
