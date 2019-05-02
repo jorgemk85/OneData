@@ -37,7 +37,7 @@ namespace DataManagement.IntegrationTests.MySql
         [Test]
         public void SelectGuid_DataFromCache_ReturnsTrue()
         {
-            List<Post> list = Post.SelectAllList();
+            List<Post> list = Post.SelectAll();
             Result<Post> result = Post.SelectResult(x => x.Id == list[0].Id);
 
             Assert.IsTrue(result.IsFromCache);
@@ -67,8 +67,8 @@ namespace DataManagement.IntegrationTests.MySql
         [Test]
         public void InsertPost_NewObject_ReturnsNoError()
         {
-            List<Blog> blogs = Blog.SelectAll().Data.ToList();
-            List<Author> authors = Author.SelectAll().Data.ToList();
+            List<Blog> blogs = Blog.SelectAllResult().Data.ToList();
+            List<Author> authors = Author.SelectAllResult().Data.ToList();
 
             TestTools.GetPostModel(true).BlogId = blogs[0].Id;
             TestTools.GetPostModel(false).AuthorId = authors[0].Id;
@@ -78,7 +78,7 @@ namespace DataManagement.IntegrationTests.MySql
         [Test]
         public void InsertComment_NewObject_ReturnsNoError()
         {
-            var posts = Post.SelectAll();
+            var posts = Post.SelectAllResult();
 
             TestTools.GetCommentModel(true).PostId = posts.Data[0].Id;
             Assert.DoesNotThrow(() => TestTools.GetCommentModel(false).Insert());

@@ -11,15 +11,15 @@ namespace DataManagement.Extensions
 {
     public static class IEnumerableExtensions
     {
-        public static void ToExcel<T>(this IEnumerable<T> list, string fullyQualifiedFileName)
-        {
-            ExcelSerializer.SerializeIEnumerableOfTypeToExcel(list, fullyQualifiedFileName);
-        }
+        //public static void ToExcel<T>(this IEnumerable<T> list, string fullyQualifiedFileName)
+        //{
+        //    ExcelSerializer.SerializeIEnumerableOfTypeToExcel(list, fullyQualifiedFileName);
+        //}
 
-        public static void FromExcel<T>(this IEnumerable<T> list, ref List<T> myList, string worksheetName, string fullyQualifiedFileName) where T : new()
-        {
-            myList = ExcelSerializer.DeserializeExcelToListOfType<T>(worksheetName, fullyQualifiedFileName);
-        }
+        //public static void FromExcel<T>(this IEnumerable<T> list, ref List<T> myList, string worksheetName, string fullyQualifiedFileName) where T : new()
+        //{
+        //    myList = ExcelSerializer.DeserializeExcelToListOfType<T>(worksheetName, fullyQualifiedFileName);
+        //}
 
         public static void ToFile<T>(this IEnumerable<T> list, string fullyQualifiedFileName, char separator)
         {

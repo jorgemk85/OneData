@@ -44,7 +44,7 @@ namespace DataManagement.Models
         /// Este metodo usa la conexion predeterminada a la base de datos.
         /// </summary>
         /// <returns>Regresa el resultado que incluye la coleccion obtenida por la consulta.</returns>
-        public static Result<T> SelectAll()
+        public static Result<T> SelectAllResult()
         {
             return Manager<T>.SelectAll(null);
         }
@@ -54,7 +54,7 @@ namespace DataManagement.Models
         /// Este metodo usa la conexion predeterminada a la base de datos.
         /// </summary>
         /// <returns>Regresa el resultado en forma de una lista que incluye la coleccion obtenida por la consulta.</returns>
-        public static List<T> SelectAllList()
+        public static List<T> SelectAll()
         {
             return Manager<T>.SelectAll(null).Data.ToList();
         }
@@ -69,7 +69,7 @@ namespace DataManagement.Models
         /// Este metodo usa la conexion predeterminada a la base de datos.
         /// </summary>
         /// <returns>Regresa el resultado en forma de una lista que incluye la coleccion obtenida por la consulta.</returns>
-        public static List<T> SelectAllList(QueryOptions queryOptions)
+        public static List<T> SelectAll(QueryOptions queryOptions)
         {
             return Manager<T>.SelectAll(queryOptions).Data.ToList();
         }

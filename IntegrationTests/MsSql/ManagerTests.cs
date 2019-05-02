@@ -23,7 +23,7 @@ namespace DataManagement.IntegrationTests.MsSql
         [Test]
         public void Select_DataFromCache_ReturnsTrue()
         {
-            List<LogTestGuid> list = LogTestGuid.SelectAll().Data.ToList();
+            List<LogTestGuid> list = LogTestGuid.SelectAllResult().Data.ToList();
             Result<LogTestGuid> result = LogTestGuid.SelectResult(q => q.Id == list[0].Id);
 
             Assert.IsTrue(result.IsFromCache);
@@ -40,8 +40,8 @@ namespace DataManagement.IntegrationTests.MsSql
         [Test]
         public void InsertPost_NewObject_ReturnsNoError()
         {
-            var blogs = Blog.SelectAll().Data.ToList();
-            var authors = Author.SelectAll().Data.ToList();
+            var blogs = Blog.SelectAllResult().Data.ToList();
+            var authors = Author.SelectAllResult().Data.ToList();
 
             TestTools.GetPostModel(true).BlogId = blogs[0].Id;
             TestTools.GetPostModel(false).AuthorId = authors[0].Id;
@@ -51,7 +51,7 @@ namespace DataManagement.IntegrationTests.MsSql
         [Test]
         public void InsertComment_NewObject_ReturnsNoError()
         {
-            var posts = Post.SelectAll().Data.ToList();
+            var posts = Post.SelectAllResult().Data.ToList();
 
             TestTools.GetCommentModel(true).PostId = posts[0].Id;
             Assert.DoesNotThrow(() => TestTools.GetCommentModel(false).Insert());
