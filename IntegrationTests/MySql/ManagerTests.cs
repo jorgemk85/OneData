@@ -68,6 +68,18 @@ namespace DataManagement.IntegrationTests.MySql
             Assert.DoesNotThrow(() => list.UpdateMassive());
         }
 
+        [Test]
+        public void DeleteMassive_ReturnsNoError()
+        {
+            List<Post> list = Post.SelectAll(new QueryOptions() { MaximumResults = 5 });
+            foreach (Post post in list)
+            {
+                post.Id = Guid.NewGuid();
+            }
+            list.InsertMassive();
+            Assert.DoesNotThrow(() => list.DeleteMassive());
+        }
+
         //[Test]
         //public void SelectInt_DataFromCache_ReturnsTrue()
         //{

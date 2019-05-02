@@ -118,11 +118,20 @@ namespace DataManagement.Tools
             StringBuilder builder = new StringBuilder();
 
             builder.Append("<columns>\n");
-            foreach (KeyValuePair<string, PropertyInfo> property in Cope<T>.ModelComposition.FilteredProperties)
+            if (transactionType == TransactionTypes.DeleteMassive)
             {
                 builder.Append("  <column>\n");
-                builder.Append($"      <name>{property.Value.Name}</name>\n");
+                builder.Append($"      <name>{Cope<T>.ModelComposition.PrimaryKeyProperty.Name}</name>\n");
                 builder.Append("  </column>\n");
+            }
+            else
+            {
+                foreach (KeyValuePair<string, PropertyInfo> property in Cope<T>.ModelComposition.FilteredProperties)
+                {
+                    builder.Append("  <column>\n");
+                    builder.Append($"      <name>{property.Value.Name}</name>\n");
+                    builder.Append("  </column>\n");
+                }
             }
             builder.Append("</columns>");
             massiveOperationParameter.XmlNames = builder.ToString();
@@ -130,38 +139,58 @@ namespace DataManagement.Tools
             builder.Clear();
 
             builder.Append("<objects>\n");
-            foreach (T obj in list)
+            if (transactionType == TransactionTypes.DeleteMassive)
             {
-                builder.Append("  <object>\n");
-                foreach (KeyValuePair<string, PropertyInfo> property in Cope<T>.ModelComposition.FilteredProperties)
+                foreach (T obj in list)
                 {
-                    if (property.Value.GetValue(obj) == null)
+                    builder.Append("  <object>\n");
+                    // Si es Numero o Boolean no agrega comillas sencillas, de lo contrario se las pone.
+                    if (long.TryParse(Cope<T>.ModelComposition.PrimaryKeyProperty.GetValue(obj).ToString(), out long n) || Cope<T>.ModelComposition.PrimaryKeyProperty.GetValue(obj) is bool)
                     {
-                        builder.Append($"     <{property.Value.Name}>{DBNull.Value}</{property.Value.Name}>\n");
+                        builder.Append($"     <{Cope<T>.ModelComposition.PrimaryKeyProperty.Name}>{Cope<T>.ModelComposition.PrimaryKeyProperty.GetValue(obj)}</{Cope<T>.ModelComposition.PrimaryKeyProperty.Name}>\n");
                     }
                     else
                     {
-                        // Si es Numero o Boolean no agrega comillas sencillas, de lo contrario se las pone.
-                        if (long.TryParse(property.Value.GetValue(obj).ToString(), out long n) || property.Value.GetValue(obj) is bool)
+                        builder.Append($"     <{Cope<T>.ModelComposition.PrimaryKeyProperty.Name}>'{Cope<T>.ModelComposition.PrimaryKeyProperty.GetValue(obj)}'</{Cope<T>.ModelComposition.PrimaryKeyProperty.Name}>\n");
+                    }
+                    builder.Append("  </object>\n");
+                }
+            }
+            else
+            {
+                foreach (T obj in list)
+                {
+                    builder.Append("  <object>\n");
+                    foreach (KeyValuePair<string, PropertyInfo> property in Cope<T>.ModelComposition.FilteredProperties)
+                    {
+                        if (property.Value.GetValue(obj) == null)
                         {
-                            builder.Append($"     <{property.Value.Name}>{property.Value.GetValue(obj)}</{property.Value.Name}>\n");
+                            builder.Append($"     <{property.Value.Name}>{DBNull.Value}</{property.Value.Name}>\n");
                         }
                         else
                         {
-                            if (property.Value.GetValue(obj) is DateTime)
+                            // Si es Numero o Boolean no agrega comillas sencillas, de lo contrario se las pone.
+                            if (long.TryParse(property.Value.GetValue(obj).ToString(), out long n) || property.Value.GetValue(obj) is bool)
                             {
-                                builder.Append($"     <{property.Value.Name}>'{((DateTime)property.Value.GetValue(obj)).ToString("yyyy-MM-dd H:mm:ss")}'</{property.Value.Name}>\n");
+                                builder.Append($"     <{property.Value.Name}>{property.Value.GetValue(obj)}</{property.Value.Name}>\n");
                             }
                             else
                             {
-                                builder.Append($"     <{property.Value.Name}>'{property.Value.GetValue(obj)}'</{property.Value.Name}>\n");
+                                if (property.Value.GetValue(obj) is DateTime)
+                                {
+                                    builder.Append($"     <{property.Value.Name}>'{((DateTime)property.Value.GetValue(obj)).ToString("yyyy-MM-dd H:mm:ss")}'</{property.Value.Name}>\n");
+                                }
+                                else
+                                {
+                                    builder.Append($"     <{property.Value.Name}>'{property.Value.GetValue(obj)}'</{property.Value.Name}>\n");
+                                }
                             }
-                           
                         }
                     }
+                    builder.Append("  </object>\n");
                 }
-                builder.Append("  </object>\n");
             }
+
             builder.Append("</objects>");
 
             massiveOperationParameter.XmlValues = builder.ToString();
@@ -172,6 +201,9 @@ namespace DataManagement.Tools
                     break;
                 case TransactionTypes.UpdateMassive:
                     massiveOperationParameter.ProcedureName = $"`{Manager.StoredProcedurePrefix}{Cope<T>.ModelComposition.TableName}{Manager.UpdateSuffix}`";
+                    break;
+                case TransactionTypes.DeleteMassive:
+                    massiveOperationParameter.ProcedureName = $"`{Manager.StoredProcedurePrefix}{Cope<T>.ModelComposition.TableName}{Manager.DeleteSuffix}`";
                     break;
                 default:
                     throw new NotSupportedException($"El tipo de transaccion {transactionType.ToString()} no puede ser utilizado con la funcion {nameof(GenerateCompatibleMassiveOperationXML)}.");
@@ -354,7 +386,7 @@ namespace DataManagement.Tools
                         }
                     }
                 }
-                
+
                 newList.Add(newObject);
             }
 

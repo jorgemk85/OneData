@@ -37,17 +37,20 @@ namespace DataManagement.DAO
                 case TransactionTypes.Delete:
                     EvaluateDelete((T)obj, out resultado, hasCache, ref dataCache, queryOptions);
                     break;
+                case TransactionTypes.DeleteMassive:
+                    EvaluateDeleteMassive((IEnumerable<T>)obj, out resultado, hasCache, ref dataCache, queryOptions);
+                    break;
                 case TransactionTypes.Insert:
                     EvaluateInsert((T)obj, out resultado, hasCache, ref dataCache, queryOptions);
                     break;
                 case TransactionTypes.InsertMassive:
                     EvaluateInsertMassive((IEnumerable<T>)obj, out resultado, hasCache, ref dataCache, queryOptions);
                     break;
-                case TransactionTypes.UpdateMassive:
-                    EvaluateUpdateMassive((IEnumerable<T>)obj, out resultado, hasCache, ref dataCache, queryOptions);
-                    break;
                 case TransactionTypes.Update:
                     EvaluateUpdate((T)obj, out resultado, hasCache, ref dataCache, queryOptions);
+                    break;
+                case TransactionTypes.UpdateMassive:
+                    EvaluateUpdateMassive((IEnumerable<T>)obj, out resultado, hasCache, ref dataCache, queryOptions);
                     break;
                 default:
                     throw new NotSupportedException($"El tipo de transaccion {transactionType.ToString()} no puede ser utilizado con esta funcion.");
@@ -114,6 +117,15 @@ namespace DataManagement.DAO
             if (hasCache && resultado.IsSuccessful)
             {
                 UpdateMassiveInCache(list, ref dataCache);
+            }
+        }
+
+        private void EvaluateDeleteMassive<T>(IEnumerable<T> list, out Result<T> resultado, bool hasCache, ref DataCache<T> dataCache, QueryOptions queryOptions) where T : Cope<T>, IManageable, new()
+        {
+            resultado = operation.ExecuteProcedure<T>(queryOptions, TransactionTypes.DeleteMassive, true, list, null);
+            if (hasCache && resultado.IsSuccessful)
+            {
+                DeleteMassiveInCache(list, ref dataCache);
             }
         }
 
@@ -215,6 +227,15 @@ namespace DataManagement.DAO
             foreach (T obj in list)
             {
                 dataCache.Cache.Data[Cope<T>.ModelComposition.PrimaryKeyProperty.GetValue(obj)] = obj;
+            }
+        }
+
+        private void DeleteMassiveInCache<T>(IEnumerable<T> list, ref DataCache<T> dataCache) where T : Cope<T>, IManageable, new()
+        {
+            // TODO: Analizar si se puede optimizar este procedimiento de eliminacion de informacion
+            foreach (T obj in list)
+            {
+                dataCache.Cache.Data.Remove(Cope<T>.ModelComposition.PrimaryKeyProperty.GetValue(obj));
             }
         }
 

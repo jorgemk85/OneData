@@ -29,6 +29,7 @@ namespace DataManagement.DAO
             _connectionType = ConnectionTypes.MSSQL;
             _creator = new MsSqlCreation();
             QueryForTableExistance = "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE' AND TABLE_NAME = '{0}{1}'";
+            QueryForStoredProcedureExistance = $"SELECT ROUTINE_NAME FROM INFORMATION_SCHEMA.ROUTINES WHERE ROUTINE_SCHEMA = '{Manager.DefaultSchema}' AND ROUTINE_NAME = '" + "{0}'";
             QueryForColumnDefinition = string.Format("SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '{0}'", string.Format("{0}{1}", Manager.TablePrefix, "{0}"));
             QueryForKeyDefinition = string.Format("SELECT * FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE TABLE_NAME = '{0}' AND COLUMN_NAME != 'Id'", string.Format("{0}{1}", Manager.TablePrefix, "{0}"));
         }
@@ -88,17 +89,20 @@ namespace DataManagement.DAO
                     case TransactionTypes.Delete:
                         result = ExecuteProcedure((T)obj, queryOptions, transactionType);
                         break;
+                    case TransactionTypes.DeleteMassive:
+                        result = ExecuteMassiveOperation((IEnumerable<T>)obj, queryOptions, transactionType);
+                        break;
                     case TransactionTypes.Insert:
                         result = ExecuteProcedure((T)obj, queryOptions, transactionType);
                         break;
                     case TransactionTypes.InsertMassive:
                         result = ExecuteMassiveOperation((IEnumerable<T>)obj, queryOptions, transactionType);
                         break;
-                    case TransactionTypes.UpdateMassive:
-                        result = ExecuteMassiveOperation((IEnumerable<T>)obj, queryOptions, transactionType);
-                        break;
                     case TransactionTypes.Update:
                         result = ExecuteProcedure((T)obj, queryOptions, transactionType);
+                        break;
+                    case TransactionTypes.UpdateMassive:
+                        result = ExecuteMassiveOperation((IEnumerable<T>)obj, queryOptions, transactionType);
                         break;
                     default:
                         throw new NotSupportedException($"El tipo de transaccion {transactionType.ToString()} no puede ser utilizado con esta funcion.");
@@ -231,6 +235,10 @@ namespace DataManagement.DAO
                             _command.ExecuteNonQuery();
                             break;
                         case TransactionTypes.UpdateMassive:
+                            SetMassiveOperationParameters(list, transactionType, queryOptions);
+                            _command.ExecuteNonQuery();
+                            break;
+                        case TransactionTypes.DeleteMassive:
                             SetMassiveOperationParameters(list, transactionType, queryOptions);
                             _command.ExecuteNonQuery();
                             break;

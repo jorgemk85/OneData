@@ -90,17 +90,20 @@ namespace DataManagement.DAO
                     case TransactionTypes.Delete:
                         result = ExecuteProcedure((T)obj, queryOptions, transactionType);
                         break;
+                    case TransactionTypes.DeleteMassive:
+                        result = ExecuteMassiveOperation((IEnumerable<T>)obj, queryOptions, transactionType);
+                        break;
                     case TransactionTypes.Insert:
                         result = ExecuteProcedure((T)obj, queryOptions, transactionType);
                         break;
                     case TransactionTypes.InsertMassive:
                         result = ExecuteMassiveOperation((IEnumerable<T>)obj, queryOptions, transactionType);
                         break;
-                    case TransactionTypes.UpdateMassive:
-                        result = ExecuteMassiveOperation((IEnumerable<T>)obj, queryOptions, transactionType);
-                        break;
                     case TransactionTypes.Update:
                         result = ExecuteProcedure((T)obj, queryOptions, transactionType);
+                        break;
+                    case TransactionTypes.UpdateMassive:
+                        result = ExecuteMassiveOperation((IEnumerable<T>)obj, queryOptions, transactionType);
                         break;
                     default:
                         throw new NotSupportedException($"El tipo de transaccion {transactionType.ToString()} no puede ser utilizado con esta funcion.");
@@ -239,6 +242,10 @@ namespace DataManagement.DAO
                             _command.ExecuteNonQuery();
                             break;
                         case TransactionTypes.UpdateMassive:
+                            SetMassiveOperationParameters(list, transactionType, queryOptions);
+                            _command.ExecuteNonQuery();
+                            break;
+                        case TransactionTypes.DeleteMassive:
                             SetMassiveOperationParameters(list, transactionType, queryOptions);
                             _command.ExecuteNonQuery();
                             break;

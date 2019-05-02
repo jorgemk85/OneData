@@ -5,6 +5,7 @@
         Select,
         SelectAll,
         Delete,
+        DeleteMassive,
         Insert,
         InsertMassive,
         Update,

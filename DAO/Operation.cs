@@ -99,14 +99,16 @@ namespace DataManagement.DAO
             {
                 case TransactionTypes.Delete:
                     return _creator.CreateDeleteStoredProcedure<T>(doAlter);
+                case TransactionTypes.DeleteMassive:
+                    return _creator.CreateMassiveOperationStoredProcedure<T>(doAlter);
                 case TransactionTypes.Insert:
                     return _creator.CreateInsertStoredProcedure<T>(doAlter);
                 case TransactionTypes.InsertMassive:
                     return _creator.CreateMassiveOperationStoredProcedure<T>(doAlter);
-                case TransactionTypes.UpdateMassive:
-                    return _creator.CreateMassiveOperationStoredProcedure<T>(doAlter);
                 case TransactionTypes.Update:
                     return _creator.CreateUpdateStoredProcedure<T>(doAlter);
+                case TransactionTypes.UpdateMassive:
+                    return _creator.CreateMassiveOperationStoredProcedure<T>(doAlter);
                 default:
                     ArgumentException argumentException = new ArgumentException("El tipo de transaccion no es valido para generar un nuevo procedimiento almacenado.");
                     Logger.Error(argumentException);
@@ -124,6 +126,9 @@ namespace DataManagement.DAO
                     break;
                 case TransactionTypes.UpdateMassive:
                     singleTransactionType = TransactionTypes.Update;
+                    break;
+                case TransactionTypes.DeleteMassive:
+                    singleTransactionType = TransactionTypes.Delete;
                     break;
                 default:
                     throw new NotSupportedException($"El tipo de transaccion {transactionType.ToString()} no puede ser utilizado con esta funcion.");

@@ -139,10 +139,11 @@ namespace DataManagement.DAO
         public static event SelectQueryExecutedEventHandler<T> OnSelectQueryExecuted;
         public static event SelectAllExecutedEventHandler<T> OnSelectAllExecuted;
         public static event DeleteExecutedEventHandler<T> OnDeleteExecuted;
+        public static event DeleteMassiveExecutedEventHandler<T> OnDeleteMassiveExecuted;
         public static event InsertExecutedEventHandler<T> OnInsertExecuted;
         public static event InsertMassiveExecutedEventHandler<T> OnInsertMassiveExecuted;
-        public static event UpdateMassiveExecutedEventHandler<T> OnUpdateMassiveExecuted;
         public static event UpdateExecutedEventHandler<T> OnUpdateExecuted;
+        public static event UpdateMassiveExecutedEventHandler<T> OnUpdateMassiveExecuted;
         public static event StoredProcedureExecutedEventHandler<T> OnStoredProcedureExecuted;
         #endregion
 
@@ -202,6 +203,17 @@ namespace DataManagement.DAO
         }
 
         /// <summary>
+        /// Borra una lista de tipo <typeparamref name="T"/> en la base de datos.
+        /// </summary>
+        /// <param name="list">Objeto que contiene la informacion a insertar.</param>
+        /// <param name="connectionToUse">Especifica cual configuracion de tipo ConectionString se desea utilizar. Si se especifica nulo, entonces utiliza la conexion especificada en DefaultConnection.</param>
+        /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la insercion.</returns>
+        public static Result<T> DeleteMassive(IEnumerable<T> list, QueryOptions queryOptions)
+        {
+            return Command(list, TransactionTypes.DeleteMassive, queryOptions);
+        }
+
+        /// <summary>
         /// Inserta un objeto de tipo <typeparamref name="T"/> en la base de datos usando Async.
         /// </summary>
         /// <param name="obj">Objeto que contiene la informacion a insertar.</param>
@@ -232,6 +244,17 @@ namespace DataManagement.DAO
         public static async Task<Result<T>> UpdateMassiveAsync(IEnumerable<T> list, QueryOptions queryOptions)
         {
             return await Task.Run(() => Command(list, TransactionTypes.UpdateMassive, queryOptions));
+        }
+
+        /// <summary>
+        /// Borra un objeto de tipo <typeparamref name="T"/> en la base de datos usando Async.
+        /// </summary>
+        /// <param name="obj">Objeto que contiene la informacion a insertar.</param>
+        /// <param name="connectionToUse">Especifica cual configuracion de tipo ConectionString se desea utilizar. Si se especifica nulo, entonces utiliza la conexion especificada en DefaultConnection.</param>
+        /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la insercion.</returns>
+        public static async Task<Result<T>> DeleteMassiveAsync(IEnumerable<T> list, QueryOptions queryOptions)
+        {
+            return await Task.Run(() => Command(list, TransactionTypes.DeleteMassive, queryOptions));
         }
 
         /// <summary>
@@ -374,17 +397,20 @@ namespace DataManagement.DAO
                 case TransactionTypes.Delete:
                     OnDeleteExecuted?.Invoke(new DeleteExecutedEventArgs<T>(tableName, result));
                     break;
+                case TransactionTypes.DeleteMassive:
+                    OnDeleteMassiveExecuted?.Invoke(new DeleteMassiveExecutedEventArgs<T>(tableName, result));
+                    break;
                 case TransactionTypes.Insert:
                     OnInsertExecuted?.Invoke(new InsertExecutedEventArgs<T>(tableName, result));
                     break;
                 case TransactionTypes.InsertMassive:
                     OnInsertMassiveExecuted?.Invoke(new InsertMassiveExecutedEventArgs<T>(tableName, result));
                     break;
-                case TransactionTypes.UpdateMassive:
-                    OnUpdateMassiveExecuted?.Invoke(new UpdateMassiveExecutedEventArgs<T>(tableName, result));
-                    break;
                 case TransactionTypes.Update:
                     OnUpdateExecuted?.Invoke(new UpdateExecutedEventArgs<T>(tableName, result));
+                    break;
+                case TransactionTypes.UpdateMassive:
+                    OnUpdateMassiveExecuted?.Invoke(new UpdateMassiveExecutedEventArgs<T>(tableName, result));
                     break;
                 case TransactionTypes.StoredProcedure:
                     OnStoredProcedureExecuted?.Invoke(new StoredProcedureExecutedEventArgs<T>(tableName, result));
