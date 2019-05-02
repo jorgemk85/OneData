@@ -6,7 +6,7 @@ using System.Collections.Generic;
 
 namespace DataManagement.Models.Test
 {
-    [DataTable("Posts", "operaciones")]
+    [DataTable("Posts", "operaciones"), CacheEnabled(360)]
     public class Post : Cope<Post>, IManageable
     {
         [PrimaryKeyProperty]
@@ -20,6 +20,8 @@ namespace DataManagement.Models.Test
 
         [ForeignKey(typeof(Blog))]
         public Guid? BlogId { get; set; }
+        [ForeignData(typeof(Blog))]
+        public string BlogName { get; set; }
 
         [ForeignKey(typeof(Author))]
         public Guid? AuthorId { get; set; }

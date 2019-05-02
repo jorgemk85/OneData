@@ -6,7 +6,6 @@ using DataManagement.Tools.Test;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 
 namespace DataManagement.IntegrationTests.MySql
 {
@@ -22,31 +21,42 @@ namespace DataManagement.IntegrationTests.MySql
             TestTools.SetConfigurationForAutoAlter(true);
         }
 
+        //[Test]
+        //public void SelectGuid_DataFromCache_ReturnsTrue()
+        //{
+        //    TestTools.GetBlogModel(true).Insert();
+        //    List<Blog> list = Blog.SelectAllList();
+        //    Result<Blog> result = Blog.SelectResult(x => x.Id == list[0].Id);
+        //    TestTools.GetBlogModel(false).Delete();
+
+        //    Assert.IsTrue(result.IsFromCache);
+        //    Assert.IsTrue(result.IsSuccessful);
+        //    Assert.AreNotEqual(result, null);
+        //}
+
         [Test]
         public void SelectGuid_DataFromCache_ReturnsTrue()
         {
-            TestTools.GetBlogModel(true).Insert();
-            List<Blog> list = Blog.SelectAll().Data.ToList();
-            Result<Blog> result = Blog.Select(new Parameter(nameof(Blog.Id), list[0].Id));
-            TestTools.GetBlogModel(false).Delete();
+            List<Post> list = Post.SelectAllList();
+            Result<Post> result = Post.SelectResult(x => x.Id == list[0].Id);
 
             Assert.IsTrue(result.IsFromCache);
             Assert.IsTrue(result.IsSuccessful);
-            Assert.AreNotEqual(result.Data.Count, 0);
+            Assert.AreNotEqual(result, null);
         }
 
-        [Test]
-        public void SelectInt_DataFromCache_ReturnsTrue()
-        {
-            TestTools.GetLogTestIntModel(true).Insert();
-            List<LogTestInt> list = LogTestInt.SelectAll().Data.ToList();
-            Result<LogTestInt> result = LogTestInt.Select(new Parameter("Id", list[0].Id));
-            TestTools.GetLogTestIntModel(false).Delete();
+        //[Test]
+        //public void SelectInt_DataFromCache_ReturnsTrue()
+        //{
+        //    TestTools.GetLogTestIntModel(true).Insert();
+        //    List<LogTestInt> list = LogTestInt.SelectAll().Data.ToList();
+        //    Result<LogTestInt> result = LogTestInt.Select(new Parameter("Id", list[0].Id));
+        //    TestTools.GetLogTestIntModel(false).Delete();
 
-            Assert.IsTrue(result.IsFromCache);
-            Assert.IsTrue(result.IsSuccessful);
-            Assert.AreNotEqual(result.Data.Count, 0);
-        }
+        //    Assert.IsTrue(result.IsFromCache);
+        //    Assert.IsTrue(result.IsSuccessful);
+        //    Assert.AreNotEqual(result.Data.Count, 0);
+        //}
 
         [Test]
         public void InsertBlog_NewObject_ReturnsNoError()
@@ -102,7 +112,7 @@ namespace DataManagement.IntegrationTests.MySql
         [Test]
         public void TestExpressionToSQL()
         {
- 
+
         }
     }
 }

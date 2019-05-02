@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace DataManagement.Models.Test
 {
-    [DataTable("Blogs", "operaciones"), CacheEnabled(60)]
+    [DataTable("Blogs", "operaciones"), CacheEnabled(360)]
     public class Blog : Cope<Blog>, IManageable
     {
         [PrimaryKeyProperty]

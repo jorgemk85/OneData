@@ -79,6 +79,7 @@ namespace DataManagement.Models
         /// Este metodo usa la conexion predeterminada a la base de datos.
         /// </summary>
         /// <returns>Regresa el resultado que incluye la coleccion obtenida por la consulta.</returns>
+        [Obsolete("Este metodo no debe de utilizarse. Por favor utilice el Select con expresion lambda.")]
         public static Result<T> Select(params Parameter[] parameters)
         {
             return Manager<T>.Select(null, parameters);
@@ -92,6 +93,16 @@ namespace DataManagement.Models
         public static T Select(Expression<Func<T, bool>> expression)
         {
             return Manager<T>.Select(expression, new QueryOptions() { MaximumResults = 1 }).Data.ToObject();
+        }
+
+        /// <summary>
+        /// Obtiene un objeto de tipo <typeparamref name="T"/> almacenados en la base de datos o en el cache segun los parametros indicados via una expresion.
+        /// Este metodo usa la conexion predeterminada a la base de datos.
+        /// </summary>
+        /// <returns>Regresa el resultado que incluye la coleccion obtenida por la consulta.</returns>
+        public static Result<T> SelectResult(Expression<Func<T, bool>> expression)
+        {
+            return Manager<T>.Select(expression, new QueryOptions() { MaximumResults = 1 });
         }
 
         /// <summary>
