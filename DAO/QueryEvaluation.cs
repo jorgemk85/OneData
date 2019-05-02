@@ -7,7 +7,6 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
-using System.Linq.Dynamic.Core;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
@@ -32,9 +31,9 @@ namespace DataManagement.DAO
 
             switch (transactionType)
             {
-                case TransactionTypes.Select:
-                    EvaluateSelect(obj, out resultado, hasCache, ref dataCache, queryOptions);
-                    break;
+                //case TransactionTypes.Select:
+                //    EvaluateSelect(obj, out resultado, hasCache, ref dataCache, queryOptions);
+                //    break;
                 case TransactionTypes.SelectQuery:
                     EvaluateSelectQuery(expression, out resultado, hasCache, ref dataCache, queryOptions);
                     break;
@@ -118,39 +117,39 @@ namespace DataManagement.DAO
             }
         }
 
-        private void EvaluateSelect<T>(T obj, out Result<T> resultado, bool hasCache, ref DataCache<T> dataCache, QueryOptions queryOptions) where T : Cope<T>, IManageable, new()
-        {
-            if (!dataCache.IsEnabled)
-            {
-                resultado = operation.ExecuteProcedure<T>(queryOptions, TransactionTypes.Select, true, obj, null);
-            }
-            else
-            {
-                resultado = hasCache == true ? SelectInCache(obj, dataCache) : operation.ExecuteProcedure<T>(queryOptions, TransactionTypes.Select, true, obj, null);
+        //private void EvaluateSelect<T>(T obj, out Result<T> resultado, bool hasCache, ref DataCache<T> dataCache, QueryOptions queryOptions) where T : Cope<T>, IManageable, new()
+        //{
+        //    if (!dataCache.IsEnabled)
+        //    {
+        //        resultado = operation.ExecuteProcedure<T>(queryOptions, TransactionTypes.Select, true, obj, null);
+        //    }
+        //    else
+        //    {
+        //        resultado = hasCache == true ? SelectInCache(obj, dataCache) : operation.ExecuteProcedure<T>(queryOptions, TransactionTypes.Select, true, obj, null);
 
-                if (hasCache && dataCache.IsPartialCache && resultado.Data.Count == 0)
-                {
-                    resultado = operation.ExecuteProcedure<T>(queryOptions, TransactionTypes.Select, true, obj, null);
-                    AlterCache(resultado, ref dataCache);
-                }
+        //        if (hasCache && dataCache.IsPartialCache && resultado.Data.Count == 0)
+        //        {
+        //            resultado = operation.ExecuteProcedure<T>(queryOptions, TransactionTypes.Select, true, obj, null);
+        //            AlterCache(resultado, ref dataCache);
+        //        }
 
-                if (!resultado.IsFromCache && hasCache)
-                {
-                    AlterCache(resultado, ref dataCache);
-                }
+        //        if (!resultado.IsFromCache && hasCache)
+        //        {
+        //            AlterCache(resultado, ref dataCache);
+        //        }
 
-                if (!hasCache && resultado.IsSuccessful)
-                {
-                    dataCache.Cache = resultado;
-                    dataCache.LastCacheUpdate = DateTime.Now.Ticks;
-                }
+        //        if (!hasCache && resultado.IsSuccessful)
+        //        {
+        //            dataCache.Cache = resultado;
+        //            dataCache.LastCacheUpdate = DateTime.Now.Ticks;
+        //        }
 
-                if (resultado.IsFromCache)
-                {
-                    resultado.Data = GetDataBasedFromCacheOnQueryOptions(ref dataCache, queryOptions);
-                }
-            }
-        }
+        //        if (resultado.IsFromCache)
+        //        {
+        //            resultado.Data = GetDataBasedFromCacheOnQueryOptions(ref dataCache, queryOptions);
+        //        }
+        //    }
+        //}
 
         private void EvaluateSelectAll<T>(T obj, out Result<T> resultado, bool hasCache, ref DataCache<T> dataCache, QueryOptions queryOptions) where T : Cope<T>, IManageable, new()
         {
@@ -195,37 +194,37 @@ namespace DataManagement.DAO
             return dataCache.Cache.Data;
         }
 
-        private Result<T> SelectInCache<T>(T obj, DataCache<T> dataCache) where T : Cope<T>, IManageable, new()
-        {
-            int valueIndex = 0;
-            List<object> values = new List<object>();
-            string predicate = string.Empty;
-            StringBuilder builder = new StringBuilder();
+        //private Result<T> SelectInCache<T>(T obj, DataCache<T> dataCache) where T : Cope<T>, IManageable, new()
+        //{
+        //    int valueIndex = 0;
+        //    List<object> values = new List<object>();
+        //    string predicate = string.Empty;
+        //    StringBuilder builder = new StringBuilder();
 
-            foreach (KeyValuePair<string, PropertyInfo> property in Cope<T>.ModelComposition.FilteredProperties)
-            {
-                if (property.Value.GetValue(obj) != null)
-                {
-                    builder.AppendFormat("{0} == @{1} and ", property.Value.Name, valueIndex);
-                    values.Add(property.Value.GetValue(obj));
-                    valueIndex++;
-                }
-            }
+        //    foreach (KeyValuePair<string, PropertyInfo> property in Cope<T>.ModelComposition.FilteredProperties)
+        //    {
+        //        if (property.Value.GetValue(obj) != null)
+        //        {
+        //            builder.AppendFormat("{0} == @{1} and ", property.Value.Name, valueIndex);
+        //            values.Add(property.Value.GetValue(obj));
+        //            valueIndex++;
+        //        }
+        //    }
 
-            predicate = builder.ToString();
-            if (string.IsNullOrEmpty(predicate))
-            {
-                throw new InvalidNumberOfParametersException();
-            }
-            else
-            {
-                predicate = predicate.Substring(0, predicate.Length - 5);
-                IQueryable<T> queryableList = dataCache.Cache.Data.Values.AsQueryable();
-                Dictionary<dynamic, T> resultList = queryableList.Where(predicate, values.ToArray()).ToDictionary(Cope<T>.ModelComposition.PrimaryKeyProperty.Name, Cope<T>.ModelComposition.PrimaryKeyProperty.PropertyType);
+        //    predicate = builder.ToString();
+        //    if (string.IsNullOrEmpty(predicate))
+        //    {
+        //        throw new InvalidNumberOfParametersException();
+        //    }
+        //    else
+        //    {
+        //        predicate = predicate.Substring(0, predicate.Length - 5);
+        //        IQueryable<T> queryableList = dataCache.Cache.Data.Values.AsQueryable();
+        //        Dictionary<dynamic, T> resultList = queryableList.Where(predicate, values.ToArray()).ToDictionary(Cope<T>.ModelComposition.PrimaryKeyProperty.Name, Cope<T>.ModelComposition.PrimaryKeyProperty.PropertyType);
 
-                return new Result<T>(resultList, true, true);
-            }
-        }
+        //        return new Result<T>(resultList, true, true);
+        //    }
+        //}
 
         private Result<T> SelectInCache<T>(Expression<Func<T, bool>> expression, DataCache<T> dataCache) where T : Cope<T>, IManageable, new()
         {
