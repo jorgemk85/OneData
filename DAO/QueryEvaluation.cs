@@ -1,5 +1,4 @@
 ﻿using DataManagement.Enums;
-using DataManagement.Exceptions;
 using DataManagement.Extensions;
 using DataManagement.Interfaces;
 using DataManagement.Models;
@@ -7,9 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
-using System.Linq.Dynamic.Core;
-using System.Reflection;
-using System.Text;
+using System.Linq.Expressions;
 
 namespace DataManagement.DAO
 {
@@ -24,233 +21,250 @@ namespace DataManagement.DAO
             operation = Operation.GetOperationBasedOnConnectionType(connectionType);
         }
 
-        public Result Evaluate<T, TKey>(T obj, TransactionTypes transactionType, ref DataCache dataCache, string connectionToUse) where T : Cope<T, TKey>, new() where TKey : struct
+        public Result<T> Evaluate<T>(object obj, Expression<Func<T, bool>> expression, TransactionTypes transactionType, ref DataCache<T> dataCache, QueryOptions queryOptions) where T : Cope<T>, IManageable, new()
         {
-            Result resultado = null;
+            Result<T> resultado = null;
             bool hasCache = dataCache.Cache == null ? false : true;
 
             switch (transactionType)
             {
                 case TransactionTypes.Select:
-                    EvaluateSelect<T, TKey>(obj, out resultado, hasCache, ref dataCache, connectionToUse);
+                    EvaluateSelectQuery(expression, out resultado, hasCache, ref dataCache, queryOptions);
                     break;
                 case TransactionTypes.SelectAll:
-                    EvaluateSelectAll<T, TKey>(obj, out resultado, hasCache, ref dataCache, connectionToUse);
+                    EvaluateSelectAll((T)obj, out resultado, hasCache, ref dataCache, queryOptions);
                     break;
                 case TransactionTypes.Delete:
-                    EvaluateDelete<T, TKey>(obj, out resultado, hasCache, ref dataCache, connectionToUse);
+                    EvaluateDelete((T)obj, out resultado, hasCache, ref dataCache, queryOptions);
+                    break;
+                case TransactionTypes.DeleteMassive:
+                    EvaluateDeleteMassive((IEnumerable<T>)obj, out resultado, hasCache, ref dataCache, queryOptions);
                     break;
                 case TransactionTypes.Insert:
-                    EvaluateInsert<T, TKey>(obj, out resultado, hasCache, ref dataCache, connectionToUse);
+                    EvaluateInsert((T)obj, out resultado, hasCache, ref dataCache, queryOptions);
+                    break;
+                case TransactionTypes.InsertMassive:
+                    EvaluateInsertMassive((IEnumerable<T>)obj, out resultado, hasCache, ref dataCache, queryOptions);
                     break;
                 case TransactionTypes.Update:
-                    EvaluateUpdate<T, TKey>(obj, out resultado, hasCache, ref dataCache, connectionToUse);
+                    EvaluateUpdate((T)obj, out resultado, hasCache, ref dataCache, queryOptions);
                     break;
-                case TransactionTypes.StoredProcedure:
-                    resultado = operation.ExecuteProcedure<T, TKey>(obj, connectionToUse, transactionType);
+                case TransactionTypes.UpdateMassive:
+                    EvaluateUpdateMassive((IEnumerable<T>)obj, out resultado, hasCache, ref dataCache, queryOptions);
                     break;
                 default:
-                    break;
+                    throw new NotSupportedException($"El tipo de transaccion {transactionType.ToString()} no puede ser utilizado con esta funcion.");
             }
 
             return resultado;
         }
 
-        public Result Evaluate<T, TKey>(IEnumerable<T> list, TransactionTypes transactionType, ref DataCache dataCache, string connectionToUse) where T : Cope<T, TKey>, new() where TKey : struct
-        {
-            throw new NotImplementedException();
-        }
-
-        private void EvaluateInsert<T, TKey>(T obj, out Result resultado, bool hasCache, ref DataCache dataCache, string connectionToUse) where T : Cope<T, TKey>, new() where TKey : struct
-        {
-            resultado = operation.ExecuteProcedure<T, TKey>(obj, connectionToUse, TransactionTypes.Insert);
-            if (hasCache && resultado.IsSuccessful)
-            {
-                InsertInCache<T, TKey>(obj, ref dataCache);
-            }
-        }
-
-        private void EvaluateUpdate<T, TKey>(T obj, out Result resultado, bool hasCache, ref DataCache dataCache, string connectionToUse) where T : Cope<T, TKey>, new() where TKey : struct
-        {
-            resultado = operation.ExecuteProcedure<T, TKey>(obj, connectionToUse, TransactionTypes.Update);
-            if (hasCache && resultado.IsSuccessful)
-            {
-                UpdateInCache<T, TKey>(obj, ref dataCache);
-            }
-        }
-
-        private void EvaluateDelete<T, TKey>(T obj, out Result resultado, bool hasCache, ref DataCache dataCache, string connectionToUse) where T : Cope<T, TKey>, new() where TKey : struct
-        {
-            resultado = operation.ExecuteProcedure<T, TKey>(obj, connectionToUse, TransactionTypes.Delete);
-            if (hasCache && resultado.IsSuccessful)
-            {
-                DeleteInCache<T, TKey>(obj, ref dataCache);
-            }
-        }
-
-        private void EvaluateSelect<T, TKey>(T obj, out Result resultado, bool hasCache, ref DataCache dataCache, string connectionToUse) where T : Cope<T, TKey>, new() where TKey : struct
+        private void EvaluateSelectQuery<T>(Expression<Func<T, bool>> expression, out Result<T> resultado, bool hasCache, ref DataCache<T> dataCache, QueryOptions queryOptions) where T : Cope<T>, IManageable, new()
         {
             if (!dataCache.IsEnabled)
             {
-                resultado = operation.ExecuteProcedure<T, TKey>(obj, connectionToUse, TransactionTypes.Select);
+                resultado = operation.ExecuteProcedure(queryOptions, TransactionTypes.Select, true, null, expression);
             }
             else
             {
-                resultado = hasCache == true ? SelectInCache<T, TKey>(obj, dataCache) : operation.ExecuteProcedure<T, TKey>(obj, connectionToUse, TransactionTypes.Select);
+                resultado = hasCache == true ? SelectInCache(expression, dataCache) : operation.ExecuteProcedure(queryOptions, TransactionTypes.Select, true, null, expression);
 
-                resultado.IsFromCache = hasCache == true ? true : false;
-                if (hasCache && dataCache.IsPartialCache && resultado.Data.Rows.Count == 0)
+                if (hasCache && dataCache.IsPartialCache && resultado.Data.Count == 0)
                 {
-                    resultado = operation.ExecuteProcedure<T, TKey>(obj, connectionToUse, TransactionTypes.Select);
+                    resultado = operation.ExecuteProcedure(queryOptions, TransactionTypes.Select, true, null, expression);
                     AlterCache(resultado, ref dataCache);
                 }
+
                 if (!resultado.IsFromCache && hasCache)
                 {
                     AlterCache(resultado, ref dataCache);
                 }
+
                 if (!hasCache && resultado.IsSuccessful)
                 {
                     dataCache.Cache = resultado;
                     dataCache.LastCacheUpdate = DateTime.Now.Ticks;
                 }
+
+                if (resultado.IsFromCache)
+                {
+                    resultado.Data = GetDataBasedFromCacheOnQueryOptions(ref dataCache, queryOptions);
+                }
             }
         }
 
-        private void EvaluateSelectAll<T, TKey>(T obj, out Result resultado, bool hasCache, ref DataCache dataCache, string connectionToUse) where T : Cope<T, TKey>, new() where TKey : struct
+        private void EvaluateInsert<T>(T obj, out Result<T> resultado, bool hasCache, ref DataCache<T> dataCache, QueryOptions queryOptions) where T : Cope<T>, IManageable, new()
+        {
+            resultado = operation.ExecuteProcedure<T>(queryOptions, TransactionTypes.Insert, true, obj, null);
+            if (hasCache && resultado.IsSuccessful)
+            {
+                InsertInCache(obj, ref dataCache);
+            }
+        }
+
+        private void EvaluateInsertMassive<T>(IEnumerable<T> list, out Result<T> resultado, bool hasCache, ref DataCache<T> dataCache, QueryOptions queryOptions) where T : Cope<T>, IManageable, new()
+        {
+            resultado = operation.ExecuteProcedure<T>(queryOptions, TransactionTypes.InsertMassive, true, list, null);
+            if (hasCache && resultado.IsSuccessful)
+            {
+                InsertMassiveInCache(list, ref dataCache);
+            }
+        }
+
+        private void EvaluateUpdateMassive<T>(IEnumerable<T> list, out Result<T> resultado, bool hasCache, ref DataCache<T> dataCache, QueryOptions queryOptions) where T : Cope<T>, IManageable, new()
+        {
+            resultado = operation.ExecuteProcedure<T>(queryOptions, TransactionTypes.UpdateMassive, true, list, null);
+            if (hasCache && resultado.IsSuccessful)
+            {
+                UpdateMassiveInCache(list, ref dataCache);
+            }
+        }
+
+        private void EvaluateDeleteMassive<T>(IEnumerable<T> list, out Result<T> resultado, bool hasCache, ref DataCache<T> dataCache, QueryOptions queryOptions) where T : Cope<T>, IManageable, new()
+        {
+            resultado = operation.ExecuteProcedure<T>(queryOptions, TransactionTypes.DeleteMassive, true, list, null);
+            if (hasCache && resultado.IsSuccessful)
+            {
+                DeleteMassiveInCache(list, ref dataCache);
+            }
+        }
+
+        private void EvaluateUpdate<T>(T obj, out Result<T> resultado, bool hasCache, ref DataCache<T> dataCache, QueryOptions queryOptions) where T : Cope<T>, IManageable, new()
+        {
+            resultado = operation.ExecuteProcedure<T>(queryOptions, TransactionTypes.Update, true, obj, null);
+            if (hasCache && resultado.IsSuccessful)
+            {
+                UpdateInCache(obj, ref dataCache);
+            }
+        }
+
+        private void EvaluateDelete<T>(T obj, out Result<T> resultado, bool hasCache, ref DataCache<T> dataCache, QueryOptions queryOptions) where T : Cope<T>, IManageable, new()
+        {
+            resultado = operation.ExecuteProcedure<T>(queryOptions, TransactionTypes.Delete, true, obj, null);
+            if (hasCache && resultado.IsSuccessful)
+            {
+                DeleteInCache(obj, ref dataCache);
+            }
+        }
+
+        private void EvaluateSelectAll<T>(T obj, out Result<T> resultado, bool hasCache, ref DataCache<T> dataCache, QueryOptions queryOptions) where T : Cope<T>, IManageable, new()
         {
             if (!dataCache.IsEnabled)
             {
-                resultado = operation.ExecuteProcedure<T, TKey>(obj, connectionToUse, TransactionTypes.SelectAll);
+                resultado = operation.ExecuteProcedure<T>(queryOptions, TransactionTypes.SelectAll, true, obj, null);
             }
             else
             {
                 if (hasCache && !dataCache.IsPartialCache)
                 {
-                    resultado = dataCache.Cache;
-                    resultado.IsFromCache = true;
+                    resultado = new Result<T>(GetDataBasedFromCacheOnQueryOptions(ref dataCache, queryOptions), true, true);
                 }
                 else
                 {
-                    resultado = operation.ExecuteProcedure<T, TKey>(obj, connectionToUse, TransactionTypes.SelectAll);
+                    resultado = operation.ExecuteProcedure<T>(queryOptions, TransactionTypes.SelectAll, true, obj, null);
                     dataCache.Cache = resultado;
-                    dataCache.LastCacheUpdate = DateTime.Now.Ticks;
                 }
             }
 
-            if (dataCache.IsEnabled && resultado.IsSuccessful && resultado.Data.Rows.Count > 0)
+            if (dataCache.IsEnabled && resultado.IsSuccessful && resultado.Data.Count > 0 && queryOptions.MaximumResults == -1 & queryOptions.Offset == 0)
             {
                 dataCache.IsPartialCache = false;
             }
         }
 
-        private Result SelectInCache<T, TKey>(T obj, DataCache dataCache) where T : Cope<T, TKey>, new() where TKey : struct
+        private Dictionary<dynamic, T> GetDataBasedFromCacheOnQueryOptions<T>(ref DataCache<T> dataCache, QueryOptions queryOptions) where T : Cope<T>, IManageable, new()
         {
-            int valueIndex = 0;
-            List<object> values = new List<object>();
-            string predicate = string.Empty;
-            StringBuilder builder = new StringBuilder();
-
-            foreach (KeyValuePair<string, PropertyInfo> property in Manager<T, TKey>.ModelComposition.FilteredProperties)
+            if (queryOptions.Offset > 0 && queryOptions.MaximumResults > 0)
             {
-                if (property.Value.GetValue(obj) != null)
-                {
-                    builder.AppendFormat("{0} == @{1} and ", property.Value.Name, valueIndex);
-                    values.Add(property.Value.GetValue(obj));
-                    valueIndex++;
-                }
+                return new Dictionary<dynamic, T>(dataCache.Cache.Data.Values.OrderByDescending(obj => Cope<T>.ModelComposition.DateModifiedProperty.GetValue(obj)).Skip(queryOptions.Offset).Take(queryOptions.MaximumResults).ToDictionary<dynamic, T>());
+            }
+            else if (queryOptions.Offset > 0)
+            {
+                return new Dictionary<dynamic, T>(dataCache.Cache.Data.Values.OrderByDescending(obj => Cope<T>.ModelComposition.DateModifiedProperty.GetValue(obj)).Skip(queryOptions.Offset).ToDictionary<dynamic, T>());
+            }
+            else if (queryOptions.MaximumResults > 0)
+            {
+                return new Dictionary<dynamic, T>(dataCache.Cache.Data.Values.OrderByDescending(obj => Cope<T>.ModelComposition.DateModifiedProperty.GetValue(obj)).Take(queryOptions.MaximumResults).ToDictionary<dynamic, T>());
             }
 
-            predicate = builder.ToString();
-            if (string.IsNullOrEmpty(predicate))
-            {
-                throw new InvalidNumberOfParametersException();
-            }
-            else
-            {
-                predicate = predicate.Substring(0, predicate.Length - 5);
-                var queryableList = dataCache.Cache.Data.ToList<T>().AsQueryable();
-                // Procedimiento LENTO en la primera ejecucion por el compilado del query.
-                var resultList = queryableList.Where(predicate, values.ToArray()).ToList().ToDataTable<T, TKey>();
-                return new Result(resultList, true, true);
-            }
+            return dataCache.Cache.Data;
         }
 
-        private DataRow SetRowData<T, TKey>(DataRow row, T obj) where T : Cope<T, TKey>, new() where TKey : struct
+        private Result<T> SelectInCache<T>(Expression<Func<T, bool>> expression, DataCache<T> dataCache) where T : Cope<T>, IManageable, new()
         {
-            foreach (PropertyInfo property in Manager<T, TKey>.ModelComposition.Properties)
-            {
-                if (row.Table.Columns.Contains(property.Name))
-                {
-                    row[property.Name] = property.GetValue(obj);
-                }
-            }
-            return row;
+            IQueryable<T> queryableList = dataCache.Cache.Data.Values.AsQueryable();
+            Dictionary<dynamic, T> resultList = queryableList.Where(expression).ToDictionary(Cope<T>.ModelComposition.PrimaryKeyProperty.Name, Cope<T>.ModelComposition.PrimaryKeyProperty.PropertyType);
+
+            return new Result<T>(resultList, true, true);
         }
 
-        private void UpdateInCache<T, TKey>(T obj, ref DataCache dataCache) where T : Cope<T, TKey>, new() where TKey : struct
+        private void UpdateInCache<T>(T obj, ref DataCache<T> dataCache) where T : Cope<T>, IManageable, new()
         {
-            SetRowData<T, TKey>(dataCache.Cache.Data.Rows.Find(obj.Id.GetValueOrDefault()), obj).AcceptChanges();
+            // TODO: En vez de especificar cada propiedad automatica, es mejor barrer la coleccion de propiedades automaticas y asignar el valor que corresponda.
+            Cope<T>.ModelComposition.DateModifiedProperty.SetValue(obj, DateTime.Now);
+            dataCache.Cache.Data[Cope<T>.ModelComposition.PrimaryKeyProperty.GetValue(obj)] = obj;
         }
 
-        private void InsertInCache<T, TKey>(T obj, ref DataCache dataCache) where T : Cope<T, TKey>, new() where TKey : struct
+        private void InsertInCache<T>(T obj, ref DataCache<T> dataCache) where T : Cope<T>, IManageable, new()
         {
-            dataCache.Cache.Data.Rows.Add(SetRowData<T, TKey>(dataCache.Cache.Data.NewRow(), obj));
-            dataCache.Cache.Data.AcceptChanges();
+            // TODO: En vez de especificar cada propiedad automatica, es mejor barrer la coleccion de propiedades automaticas y asignar el valor que corresponda.
+            Cope<T>.ModelComposition.DateCreatedProperty.SetValue(obj, DateTime.Now);
+            Cope<T>.ModelComposition.DateModifiedProperty.SetValue(obj, DateTime.Now);
+            dataCache.Cache.Data.Add(Cope<T>.ModelComposition.PrimaryKeyProperty.GetValue(obj), obj);
         }
 
-        private void InsertMassiveInCache<T, TKey>(IEnumerable<T> list, DataCache dataCache) where T : Cope<T, TKey>, new() where TKey : struct
+        private void InsertMassiveInCache<T>(IEnumerable<T> list, ref DataCache<T> dataCache) where T : Cope<T>, IManageable, new()
         {
             foreach (T obj in list)
             {
-                dataCache.Cache.Data.Rows.Add(SetRowData<T, TKey>(dataCache.Cache.Data.NewRow(), obj));
+                dataCache.Cache.Data.Add(Cope<T>.ModelComposition.PrimaryKeyProperty.GetValue(obj), obj);
             }
-            dataCache.Cache.Data.AcceptChanges();
         }
 
-        private void AlterCache(Result resultado, ref DataCache dataCache)
+        private void UpdateMassiveInCache<T>(IEnumerable<T> list, ref DataCache<T> dataCache) where T : Cope<T>, IManageable, new()
         {
-            foreach (DataRow row in resultado.Data.Rows)
+            // TODO: Analizar si se puede optimizar este procedimiento de actualizacion de informacion
+            foreach (T obj in list)
             {
-                AlterCache(row, ref dataCache);
+                dataCache.Cache.Data[Cope<T>.ModelComposition.PrimaryKeyProperty.GetValue(obj)] = obj;
+            }
+        }
+
+        private void DeleteMassiveInCache<T>(IEnumerable<T> list, ref DataCache<T> dataCache) where T : Cope<T>, IManageable, new()
+        {
+            // TODO: Analizar si se puede optimizar este procedimiento de eliminacion de informacion
+            foreach (T obj in list)
+            {
+                dataCache.Cache.Data.Remove(Cope<T>.ModelComposition.PrimaryKeyProperty.GetValue(obj));
+            }
+        }
+
+        private void AlterCache<T>(Result<T> resultado, ref DataCache<T> dataCache)
+        {
+            foreach (KeyValuePair<dynamic, T> item in resultado.Data)
+            {
+                AlterCache(item, ref dataCache);
             }
             dataCache.LastCacheUpdate = DateTime.Now.Ticks;
         }
 
-        public void AlterCache(DataRow row, ref DataCache dataCache)
+        public void AlterCache<T>(KeyValuePair<dynamic, T> item, ref DataCache<T> dataCache)
         {
-            DataRow cacheRow = dataCache.Cache.Data.Rows.Find(row[row.Table.PrimaryKey[0]]);
-            string columnName = string.Empty;
-
-            if (cacheRow == null)
+            if (dataCache.Cache.Data.ContainsKey(item.Key))
             {
-                // NO existe la fila: la agrega.
-                dataCache.Cache.Data.Rows.Add(row.ItemArray);
-                dataCache.Cache.Data.AcceptChanges();
+                // SI existe la fila: la actualiza.
+                dataCache.Cache.Data[item.Key] = item.Value;
             }
             else
             {
-                // SI existe la fila: la actualiza.
-                for (int i = 0; i < cacheRow.ItemArray.Length; i++)
-                {
-                    columnName = cacheRow.Table.Columns[i].ColumnName;
-                    cacheRow[columnName] = row[columnName];
-                }
+                // NO existe la fila: la agrega.
+                dataCache.Cache.Data.Add(item.Key, item.Value);
             }
-            dataCache.Cache.Data.AcceptChanges();
         }
 
-        private void DeleteInCache<T, TKey>(T obj, ref DataCache dataCache) where T : Cope<T, TKey>, new() where TKey : struct
+        private void DeleteInCache<T>(T obj, ref DataCache<T> dataCache) where T : Cope<T>, IManageable, new()
         {
-            for (int i = 0; i < dataCache.Cache.Data.Rows.Count; i++)
-            {
-                DataRow row = dataCache.Cache.Data.Rows[i];
-                if (row[row.Table.PrimaryKey[0]].Equals(obj.Id.GetValueOrDefault()))
-                {
-                    row.Delete();
-                    dataCache.Cache.Data.AcceptChanges();
-                    break;
-                }
-            }
+            dataCache.Cache.Data.Remove(obj);
         }
     }
 }

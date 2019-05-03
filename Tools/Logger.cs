@@ -7,11 +7,13 @@ namespace DataManagement.Tools
 {
     internal static class Logger
     {
+        private static readonly ILog log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
         public static void Error(Exception ex, [CallerMemberName] string callerName = "")
         {
             if (Manager.EnableLogInFile)
             {
-                LogManager.GetLogger("DataManagement.Standard", callerName).Error(ex);
+                log.Error(ex);
             }
         }
 
@@ -19,7 +21,7 @@ namespace DataManagement.Tools
         {
             if (Manager.EnableLogInFile)
             {
-                LogManager.GetLogger("DataManagement.Standard", callerName).Warn(message);
+                log.Warn(message);
             }
         }
 
@@ -27,7 +29,7 @@ namespace DataManagement.Tools
         {
             if (Manager.EnableLogInFile)
             {
-                LogManager.GetLogger("DataManagement.Standard", callerName).Info(message);
+                log.Info(message);
             }
         }
 
@@ -35,7 +37,7 @@ namespace DataManagement.Tools
         {
             if (Manager.EnableLogInFile)
             {
-                LogManager.GetLogger("DataManagement.Standard", callerName).Debug(message);
+                log.Debug(message);
             }
         }
     }

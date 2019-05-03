@@ -1,17 +1,17 @@
 ﻿using DataManagement.Enums;
 using DataManagement.Models;
-using System.Collections.Generic;
+using System;
+using System.Data;
+using System.Linq.Expressions;
 
 namespace DataManagement.Interfaces
 {
     public interface IOperable
     {
-        Result ExecuteProcedure(string tableName, string storedProcedure, string connectionToUse, Parameter[] parameters, bool logTransaction = true);
+        DataSet ExecuteProcedure(string tableName, string storedProcedure, QueryOptions queryOptions, Parameter[] parameters, bool logTransaction = true);
 
-        Result ExecuteProcedure<T, TKey>(T obj, string connectionToUse, TransactionTypes transactionType, bool logTransaction = true) where T : Cope<T, TKey>, new() where TKey : struct; 
+        Result<T> ExecuteProcedure<T>(QueryOptions queryOptions, TransactionTypes transactionType, bool logTransaction, object obj, Expression<Func<T, bool>> expression) where T : Cope<T>, IManageable, new();
 
-        Result ExecuteProcedure<T, TKey>(IEnumerable<T> list, string connectionToUse, TransactionTypes transactionType, bool logTransaction = true) where T : Cope<T, TKey>, new() where TKey : struct;
-
-        void LogTransaction(string tableName, TransactionTypes transactionType, string connectionToUse);
+        void LogTransaction(string tableName, TransactionTypes transactionType, QueryOptions queryOptions);
     }
 }

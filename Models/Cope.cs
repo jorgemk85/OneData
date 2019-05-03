@@ -1,110 +1,77 @@
 ﻿using DataManagement.Attributes;
 using DataManagement.DAO;
-using DataManagement.Enums;
 using DataManagement.Extensions;
 using DataManagement.Interfaces;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Linq.Expressions;
 
 namespace DataManagement.Models
 {
-    /// <summary>
-    /// Clase principal de la que tienen que heredar todos los objetos de negocio que se desee utilizar con la libreria DataManagement.
-    /// </summary>
-    /// <typeparam name="T">Representa el tipo de la clase que esta heredando de Cope<T, TKey>.</typeparam>
-    /// <typeparam name="TKey">Representa el tipo a utilizar para la llave primaria del Id.</typeparam>
     [Serializable]
-    public abstract class Cope<T, TKey> : IManageable<TKey> where T : Cope<T, TKey>, new() where TKey : struct
+    public abstract class Cope<T> where T : Cope<T>, IManageable, new()
     {
-        #region Fields
-        private readonly string _foreignIdName = string.Format("{0}Id", typeof(T).Name);
-        #endregion
+        [JsonIgnore]
+        static readonly ModelComposition _modelComposition = new ModelComposition(typeof(T));
+        [JsonIgnore]
+        static readonly Configuration _configuration = new Configuration();
 
-        #region Primary Property
-        [PrimaryProperty]
-        public TKey? Id { get; set; }
-        #endregion
+        [UnmanagedProperty, JsonIgnore]
+        internal static ModelComposition ModelComposition { get; } = _modelComposition;
+        [UnmanagedProperty, JsonIgnore]
+        public Configuration Configuration { get; } = _configuration;
 
-        #region Auto Properties
-        [DateCreatedProperty, AutoProperty(AutoPropertyTypes.DateTime)]
-        public DateTime? FechaCreacion { get; set; } = DateTime.Now;
-        [DateModifiedProperty, AutoProperty(AutoPropertyTypes.DateTime)]
-        public DateTime? FechaModificacion { get; set; } = DateTime.Now;
-        #endregion
-
-        #region Unmanaged Properties
-        [UnmanagedProperty]
-        public ModelComposition ModelComposition { get; } = Manager<T, TKey>.ModelComposition;
-
-        [UnmanagedProperty]
-        public string ForeignIdName { get; } = string.Format("{0}Id", typeof(T).Name);
-        #endregion
-
-        #region Static Methods
-        /// <summary>
-        /// Borra el objeto en la base de datos segun su Id y en su supuesto, tambien en el cache.
-        /// Este metodo usa la conexion predeterminada a la base de datos.
-        /// </summary>
-        public static void Delete(T obj)
+        static Cope()
         {
-            Manager<T, TKey>.Delete(obj);
+            SetupConfiguration();
         }
 
-        /// <summary>
-        /// Actualiza el objeto en la base de datos y en su supuesto, tambien en el cache.
-        /// Este metodo usa la conexion predeterminada a la base de datos.
-        /// </summary>
-        /// <param name="doValidation">Indica si se desea realizar la validacion de nulos.</param>
-        public static void Update(T obj, bool doValidation = false)
+        private static void SetupConfiguration()
         {
-            if (doValidation)
-            {
-                obj.Validate();
-            }
-            Manager<T, TKey>.Update(obj);
-        }
-
-        /// <summary>
-        /// Inserta el objeto en la base de datos y en su supuesto, tambien en el cache. 
-        /// Este metodo usa la conexion predeterminada a la base de datos.
-        /// </summary>
-        public static void Insert(T obj, bool doValidation = false)
-        {
-            if (doValidation)
-            {
-                obj.Validate();
-            }
-            Manager<T, TKey>.Insert(obj);
+            _configuration.PrimaryKeyProperty = _modelComposition.PrimaryKeyProperty;
+            _configuration.DateCreatedProperty = _modelComposition.DateCreatedProperty;
+            _configuration.DateModifiedProperty = _modelComposition.DateModifiedProperty;
+            _configuration.CacheExpiration = _modelComposition.CacheExpiration;
+            _configuration.ForeignPrimaryKeyName = _modelComposition.ForeignPrimaryKeyName;
+            _configuration.IsCacheEnabled = _modelComposition.IsCacheEnabled;
+            _configuration.Schema = _modelComposition.Schema;
+            _configuration.TableName = _modelComposition.TableName;
         }
 
         /// <summary>
         /// Obtiene un listado completo de los objetos de tipo <typeparamref name="T"/> almacenados en la base de datos o en el cache.
         /// Este metodo usa la conexion predeterminada a la base de datos.
         /// </summary>
-        /// <returns>Regresa la coleccion obtenida ya convertida en una lista del tipo <typeparamref name="T"/></returns>
+        /// <returns>Regresa el resultado que incluye la coleccion obtenida por la consulta.</returns>
+        public static Result<T> SelectAllResult()
+        {
+            return Manager<T>.SelectAll(null);
+        }
+
+        /// <summary>
+        /// Obtiene un listado completo de los objetos de tipo <typeparamref name="T"/> almacenados en la base de datos o en el cache.
+        /// Este metodo usa la conexion predeterminada a la base de datos.
+        /// </summary>
+        /// <returns>Regresa el resultado en forma de una lista que incluye la coleccion obtenida por la consulta.</returns>
         public static List<T> SelectAll()
         {
-            return Manager<T, TKey>.SelectAll().Data.ToList<T>();
+            return Manager<T>.SelectAll(null).Data.ToList();
+        }
+
+        public static IEnumerable<T> SelectAllIEnumerable()
+        {
+            return Manager<T>.SelectAll(null).Data.ToIEnumerable();
         }
 
         /// <summary>
-        /// Obtiene el primer objeto de tipo <typeparamref name="T"/> almacenado en la base de datos o en el cache segun los parametros indicados.
+        /// Obtiene un listado limitado de los objetos de tipo <typeparamref name="T"/> almacenados en la base de datos o en el cache. Se puede estipular un a partir de que registro se desea obtener.
         /// Este metodo usa la conexion predeterminada a la base de datos.
         /// </summary>
-        /// <returns>Regresa el resultado que incluye la coleccion obtenida por la consulta.</returns>
-        public static T Select(params Parameter[] parameters)
+        /// <returns>Regresa el resultado en forma de una lista que incluye la coleccion obtenida por la consulta.</returns>
+        public static List<T> SelectAll(QueryOptions queryOptions)
         {
-            return Manager<T, TKey>.Select(null, parameters).Data.ToObject<T>();
-        }
-
-        /// <summary>
-        /// Obtiene un listado de los objetos de tipo <typeparamref name="T"/> almacenados en la base de datos o en el cache segun los parametros indicados.
-        /// Este metodo usa la conexion predeterminada a la base de datos.
-        /// </summary>
-        /// <returns>Regresa la coleccion obtenida ya convertida en una lista del tipo <typeparamref name="T"/></returns>
-        public static List<T> SelectList(params Parameter[] parameters)
-        {
-            return Manager<T, TKey>.Select(null, parameters).Data.ToList<T>();
+            return Manager<T>.SelectAll(queryOptions).Data.ToList();
         }
 
         /// <summary>
@@ -112,44 +79,50 @@ namespace DataManagement.Models
         /// Este metodo usa la conexion predeterminada a la base de datos.
         /// </summary>
         /// <returns>Regresa el resultado que incluye la coleccion obtenida por la consulta.</returns>
-        public static Result SelectResult(params Parameter[] parameters)
+        [Obsolete("Este metodo no debe utilizarse. Por favor utilice el Select con expresion lambda.", true)]
+        public static Result<T> Select(params Parameter[] parameters)
         {
-            return Manager<T, TKey>.Select(null, parameters);
-        }
-        #endregion
-
-        #region Instance Methods
-        public T Include(IManageable<TKey> obj, Type target)
-        {
-            IManageable<TKey> foreignObject = (IManageable<TKey>)Activator.CreateInstance(target);
-            Result result = foreignObject.GetResultFromSelect(new Parameter(obj.ForeignIdName, obj.Id));
-            foreach (KeyValuePair<string, ForeignCollection> attribute in obj.ModelComposition.ForeignCollectionAttributes)
-            {
-                if (attribute.Value.Model.Equals(target))
-                {
-                    obj.GetType().GetProperty(attribute.Key).SetValue(obj, result.Collection);
-                }
-            }
-            return (T)obj;
+            return null;
         }
 
         /// <summary>
-        /// Obtiene un listado de los objetos de tipo <typeparamref name="T"/> almacenados en la base de datos o en el cache segun los parametros indicados.
+        /// Obtiene un objeto de tipo <typeparamref name="T"/> almacenados en la base de datos o en el cache segun los parametros indicados via una expresion.
         /// Este metodo usa la conexion predeterminada a la base de datos.
         /// </summary>
         /// <returns>Regresa el resultado que incluye la coleccion obtenida por la consulta.</returns>
-        public Result GetResultFromSelect(params Parameter[] parameters)
+        public static T Select(Expression<Func<T, bool>> expression)
         {
-            return Manager<T, TKey>.Select(null, parameters);
+            return Manager<T>.Select(expression, new QueryOptions() { MaximumResults = 1 }).Data.ToObject();
         }
-        #endregion
 
-        #region Constructors
-        // TODO: Necesitamos encontrar una manera mas facil de instanciar objetos con nuevos Ids irrepetibles. 
-        public Cope(TKey id)
+        /// <summary>
+        /// Obtiene un objeto de tipo <typeparamref name="T"/> almacenados en la base de datos o en el cache segun los parametros indicados via una expresion.
+        /// Este metodo usa la conexion predeterminada a la base de datos.
+        /// </summary>
+        /// <returns>Regresa el resultado que incluye la coleccion obtenida por la consulta.</returns>
+        public static Result<T> SelectResult(Expression<Func<T, bool>> expression)
         {
-            Id = id;
+            return Manager<T>.Select(expression, new QueryOptions() { MaximumResults = 1 });
         }
-        #endregion
+
+        /// <summary>
+        /// Obtiene un listado de los objetos de tipo <typeparamref name="T"/> almacenados en la base de datos o en el cache segun los parametros indicados via una expresion.
+        /// Este metodo usa la conexion predeterminada a la base de datos.
+        /// </summary>
+        /// <returns>Regresa el resultado en forma de una lista que incluye la coleccion obtenida por la consulta.</returns>
+        public static List<T> SelectList(Expression<Func<T, bool>> expression)
+        {
+            return Manager<T>.Select(expression, null).Data.ToList();
+        }
+
+        /// <summary>
+        /// Obtiene un listado de los objetos de tipo <typeparamref name="T"/> almacenados en la base de datos o en el cache segun los parametros indicados via una expresion.
+        /// Este metodo usa la conexion predeterminada a la base de datos.
+        /// </summary>
+        /// <returns>Regresa el resultado en forma de una lista que incluye la coleccion obtenida por la consulta.</returns>
+        public static List<T> SelectList(Expression<Func<T, bool>> expression, QueryOptions queryOptions)
+        {
+            return Manager<T>.Select(expression, queryOptions).Data.ToList();
+        }
     }
 }

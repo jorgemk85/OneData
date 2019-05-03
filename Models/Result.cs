@@ -1,28 +1,18 @@
-﻿using System.Collections;
-using System.Data;
+﻿using System.Collections.Generic;
 
 namespace DataManagement.Models
 {
-    public class Result
+    public class Result<T>
     {
-        public DataTable Data { get; set; }
-        public ICollection Collection { get; set; }
+        public Dictionary<dynamic, T> Data { get; set; }
         public bool IsFromCache { get; set; }
         public bool IsSuccessful { get; set; }
 
-        public Result(DataTable data, bool isFromCache, bool isSuccessful)
+        public Result(Dictionary<dynamic, T> data, bool isFromCache, bool isSuccessful)
         {
-            Data = data ?? new DataTable();
+            Data = data;
             IsFromCache = isFromCache;
             IsSuccessful = isSuccessful;
-        }
-
-        public Result(DataTable data, bool isFromCache, bool isSuccessful, ICollection collection)
-        {
-            Data = data ?? new DataTable();
-            IsFromCache = isFromCache;
-            IsSuccessful = isSuccessful;
-            Collection = collection;
         }
     }
 }

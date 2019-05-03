@@ -1,19 +1,23 @@
 ﻿using DataManagement.Attributes;
+using DataManagement.Interfaces;
 using System;
 using System.Collections.Generic;
 
 namespace DataManagement.Models.Test
 {
-    [DataTable("Blogs", "operaciones")]
-    public class Blog : Cope<Blog, Guid>
+    [DataTable("Blogs", "operaciones"), CacheEnabled(360)]
+    public class Blog : Cope<Blog>, IManageable
     {
+        [PrimaryKeyProperty]
+        public Guid? Id { get; set; }
+        [DateCreatedProperty]
+        public DateTime? DateCreated { get; set; }
+        [DateModifiedProperty]
+        public DateTime? DateModified { get; set; }
+
         public string Name { get; set; }
 
         [ForeignCollection(typeof(Post))]
-        public ICollection<Post> Posts { get; set; }
-
-        public Blog() : base(Guid.NewGuid()) { }
-
-        public Blog(Guid id) : base(id) { }
+        public Dictionary<Guid, Post> Posts { get; set; }
     }
 }

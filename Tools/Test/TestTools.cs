@@ -27,6 +27,7 @@ namespace DataManagement.Tools.Test
 
         private static Blog CurrentBlogModel { get; set; }
         private static Post CurrentPostModel { get; set; }
+        private static Comment CurrentCommentModel { get; set; }
         private static Author CurrentAuthorModel { get; set; }
         private static LogTestInt CurrentLogTestIntModel { get; set; }
 
@@ -51,11 +52,10 @@ namespace DataManagement.Tools.Test
         internal static void SetDefaultConfiguration(ConnectionTypes connectionType)
         {
             Manager.ConnectionType = connectionType;
-            Manager.DefaultSchema = "operaciones";
+            Manager.DefaultSchema = "jorgemk8_mancachan";
             Manager.DefaultConnection = connectionType.ToString();
             Manager.SelectSuffix = "_Select";
             Manager.InsertSuffix = "_Insert";
-            Manager.InsertMassiveSuffix = "_InsertList";
             Manager.UpdateSuffix = "_Update";
             Manager.DeleteSuffix = "_Delete";
             Manager.SelectAllSuffix = "_SelectAll";
@@ -88,6 +88,7 @@ namespace DataManagement.Tools.Test
                 Random random = new Random();
                 Blog newBlog = new Blog()
                 {
+                    Id = Guid.NewGuid(),
                     Name = string.Format("New Blog {0}", random.Next())
                 };
                 CurrentBlogModel = newBlog;
@@ -103,12 +104,29 @@ namespace DataManagement.Tools.Test
                 Random random = new Random();
                 Post newObj = new Post()
                 {
+                    Id = Guid.NewGuid(),
                     Name = string.Format("New Post {0}", random.Next())
                 };
                 CurrentPostModel = newObj;
             }
 
             return CurrentPostModel;
+        }
+
+        internal static Comment GetCommentModel(bool giveNew)
+        {
+            if (giveNew || CurrentCommentModel == null)
+            {
+                Random random = new Random();
+                Comment newObj = new Comment()
+                {
+                    Id = Guid.NewGuid(),
+                    Name = string.Format("New Comment {0}", random.Next())
+                };
+                CurrentCommentModel = newObj;
+            }
+
+            return CurrentCommentModel;
         }
 
         internal static Author GetAuthorModel(bool giveNew)
@@ -118,6 +136,7 @@ namespace DataManagement.Tools.Test
                 Random random = new Random();
                 Author newObj = new Author()
                 {
+                    Id = Guid.NewGuid(),
                     Name = string.Format("New Author {0}", random.Next())
                 };
                 CurrentAuthorModel = newObj;
@@ -130,8 +149,10 @@ namespace DataManagement.Tools.Test
         {
             if (giveNew || CurrentLogTestIntModel == null)
             {
+                Random random = new Random();
                 LogTestInt newLogTest = new LogTestInt()
                 {
+                    Id = random.Next(),
                     Ip = "192.168.0.1",
                     Parametros = "Sin parametros",
                     TablaAfectada = "logs",

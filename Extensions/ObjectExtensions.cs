@@ -1,4 +1,5 @@
 ﻿using DataManagement.Tools;
+using System.Text;
 
 namespace DataManagement.Extensions
 {
@@ -10,7 +11,7 @@ namespace DataManagement.Extensions
         /// <typeparam name="T">El tipo del objeto a asignar.</typeparam>
         /// <param name="values">Los valores usados en la asignacion de las propiedades. Se admiten objetos anonimos o predefinidos del mismo tipo enviado.</param>
         /// <returns>Regresa el objeto ya alimentado de los valores.</returns>
-        public static T Fill<T, TKey>(this T obj, dynamic values)
+        public static T Fill<T>(this T obj, dynamic values)
         {
             return ConsolidationTools.SetValuesIntoObjectOfType(obj, values);
         }
@@ -21,7 +22,7 @@ namespace DataManagement.Extensions
         /// <typeparam name="T">El tipo del objeto a asignar.</typeparam>
         /// <param name="values">Los valores usados en la asignacion de las propiedades. Se admiten objetos anonimos o predefinidos del mismo tipo enviado.</param>
         /// <returns>Regresa el objeto ya alimentado de los valores.</returns>
-        public static bool FillAndValidate<T, TKey>(this T obj, dynamic values)
+        public static bool FillAndValidate<T>(this T obj, dynamic values)
         {
             return Validate(ConsolidationTools.SetValuesIntoObjectOfType(obj, values), true);
         }
@@ -39,7 +40,7 @@ namespace DataManagement.Extensions
         /// Valida que no exista una sola propiedad con valor nulo.
         /// </summary>
         /// <returns>Regresa el objeto que fue validado.</returns>
-        public static T Validate<T, TKey>(this T obj)
+        public static T Validate<T>(this T obj)
         {
             ConsolidationTools.PerformNullValidation(obj, true);
 

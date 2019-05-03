@@ -3,10 +3,10 @@
     /// <summary>
     /// Provocado despues de ejecutar un comando de tipo STORED PROCEDURE en la base de datos.
     /// </summary>
-    public delegate void StoredProcedureExecutedEventHandler(StoredProcedureExecutedEventArgs e);
+    public delegate void StoredProcedureExecutedEventHandler<T>(StoredProcedureExecutedEventArgs<T> e);
 
-    public class StoredProcedureExecutedEventArgs : ExecutedEventArgs
+    public class StoredProcedureExecutedEventArgs<T> : ExecutedEventArgs<T>
     {
-        public StoredProcedureExecutedEventArgs(string tableName, Models.Result result) : base(tableName, result) { }
+        public StoredProcedureExecutedEventArgs(string tableName, Models.Result<T> result) : base(tableName, result) { }
     }
 }

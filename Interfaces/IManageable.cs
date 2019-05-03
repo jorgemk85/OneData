@@ -2,12 +2,8 @@
 
 namespace DataManagement.Interfaces
 {
-    public interface IManageable<TKey> where TKey : struct
+    public interface IManageable
     {
-        TKey? Id { get; set; }
-        ModelComposition ModelComposition { get; }
-        string ForeignIdName { get; }
-
-        Result GetResultFromSelect(params Parameter[] parameters);
+        Configuration Configuration { get; }
     }
 }

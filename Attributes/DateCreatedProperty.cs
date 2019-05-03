@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace DataManagement.Attributes
 {
     [AttributeUsage(AttributeTargets.Property)]
-    class DateCreatedProperty : Attribute
+    public class DateCreatedProperty : Attribute
     {
 
     }

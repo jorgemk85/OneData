@@ -60,7 +60,15 @@ namespace DataManagement.Tools
                             return DateTime.FromOADate(double.Parse(value));
                         }
                     default:
-                        return Convert.ChangeType(value, underlyingType);
+                        if (underlyingType.IsEnum)
+                        {
+                            return Enum.Parse(underlyingType, value);
+                        }
+                        else
+                        {
+                            return Convert.ChangeType(value, underlyingType);
+                        }
+
                 }
             }
             catch (FormatException e)

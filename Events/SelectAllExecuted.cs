@@ -3,10 +3,10 @@
     /// <summary>
     /// Provocado despues de ejecutar un comando de tipo SELECT ALL en la base de datos.
     /// </summary>
-    public delegate void SelectAllExecutedEventHandler(SelectAllExecutedEventArgs e);
+    public delegate void SelectAllExecutedEventHandler<T>(SelectAllExecutedEventArgs<T> e);
 
-    public class SelectAllExecutedEventArgs : ExecutedEventArgs
+    public class SelectAllExecutedEventArgs<T> : ExecutedEventArgs<T>
     {
-        public SelectAllExecutedEventArgs(string tableName, Models.Result result) : base(tableName, result) { }
+        public SelectAllExecutedEventArgs(string tableName, Models.Result<T> result) : base(tableName, result) { }
     }
 }

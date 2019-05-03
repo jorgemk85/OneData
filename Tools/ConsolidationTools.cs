@@ -1,12 +1,27 @@
 ﻿using DataManagement.Enums;
 using DataManagement.Exceptions;
+using Microsoft.Extensions.Configuration;
 using System.Configuration;
+using System.IO;
 using System.Reflection;
 
 namespace DataManagement.Tools
 {
     public class ConsolidationTools
     {
+#if NETSTANDARD2_0
+        private static IConfiguration _configuration;
+
+        static ConsolidationTools()
+        {
+            var builder = new ConfigurationBuilder()
+             .SetBasePath(Directory.GetCurrentDirectory())
+             .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
+
+            _configuration = builder.Build();
+        }
+#endif
+
         /// <summary>
         /// Valida que no exista una sola propiedad con valor nulo.
         /// </summary>
@@ -78,6 +93,7 @@ namespace DataManagement.Tools
         /// <returns>Regresa el valor obtenido del archivo de configuracion, si la llave fue encontrada.</returns>
         public static string GetValueFromConfiguration(string key, ConfigurationTypes type)
         {
+#if NET461
             switch (type)
             {
                 case ConfigurationTypes.ConnectionString:
@@ -88,7 +104,24 @@ namespace DataManagement.Tools
                     return ConfigurationManager.AppSettings[key];
                 default:
                     throw new ConfigurationNotFoundException(key);
+                    
             }
+#endif
+#if NETSTANDARD2_0
+            switch (type)
+            {
+                case ConfigurationTypes.ConnectionString:
+                    if (_configuration.GetSection("ConnectionStrings")[key] == null) throw new ConfigurationNotFoundException(key);
+                    return _configuration.GetSection("ConnectionStrings")[key];
+                case ConfigurationTypes.AppSetting:
+                    if (_configuration.GetSection("AppSettings")[key] == null) throw new ConfigurationNotFoundException(key);
+                    return _configuration.GetSection("AppSettings")[key];
+                default:
+                    throw new ConfigurationNotFoundException(key);
+            }
+#endif
         }
+
+
     }
 }

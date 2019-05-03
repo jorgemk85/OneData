@@ -1,5 +1,8 @@
-﻿using DataManagement.Tools;
+﻿using DataManagement.Interfaces;
+using DataManagement.Models;
+using DataManagement.Tools;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 
@@ -22,6 +25,16 @@ namespace DataManagement.Extensions
             return DataSerializer.ConvertDataTableToDictionary<TKey, T>(dataTable, keyName);
         }
 
+        public static Dictionary<TKey, T> ToDictionary<TKey, T>(this DataTable dataTable) where T : Cope<T>, IManageable, new()
+        {
+            return DataSerializer.ConvertDataTableToDictionaryOfType<TKey, T>(dataTable);
+        }
+
+        public static Dictionary<dynamic, T> ToDictionary<T>(this DataTable dataTable, string keyName, Type keyType) where T : Cope<T>, IManageable, new()
+        {
+            return DataSerializer.ConvertDataTableToDictionaryOfType<T>(dataTable, keyName, keyType);
+        }
+
         public static List<T> ToList<T>(this DataTable dataTable) where T : new()
         {
             return DataSerializer.ConvertDataTableToListOfType<T>(dataTable);
@@ -30,6 +43,21 @@ namespace DataManagement.Extensions
         public static ICollection<dynamic> ToList(this DataTable dataTable, Type target)
         {
             return DataSerializer.ConvertDataTableToListOfType(dataTable, target);
+        }
+
+        public static Hashtable ToHashtable(this DataTable dataTable, string keyName)
+        {
+            return DataSerializer.ConvertDataTableToHashtable(dataTable, keyName);
+        }
+
+        public static Hashtable ToHashtable<T>(this DataTable dataTable) where T : Cope<T>, IManageable, new()
+        {
+            return DataSerializer.ConvertDataTableToHashtableOfType<T>(dataTable);
+        }
+
+        public static HashSet<T> ToHashSet<T>(this DataTable dataTable) where T : new()
+        {
+            return DataSerializer.ConvertDataTableToHashSetOfType<T>(dataTable);
         }
 
         public static string ToJson<T>(this DataTable dataTable) where T : new()

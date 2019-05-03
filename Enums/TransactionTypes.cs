@@ -5,9 +5,11 @@
         Select,
         SelectAll,
         Delete,
+        DeleteMassive,
         Insert,
         InsertMassive,
         Update,
+        UpdateMassive,
         StoredProcedure
     }
 }

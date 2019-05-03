@@ -23,43 +23,60 @@ namespace DataManagement.IntegrationTests.MsSql
         [Test]
         public void Select_DataFromCache_ReturnsTrue()
         {
-            List<LogTestGuid> list = LogTestGuid.SelectAll();
-            Result result = LogTestGuid.SelectResult(new Parameter(nameof(LogTestGuid.Id), list[0].Id));
+            List<LogTestGuid> list = LogTestGuid.SelectAllResult().Data.ToList();
+            Result<LogTestGuid> result = LogTestGuid.SelectResult(q => q.Id == list[0].Id);
 
             Assert.IsTrue(result.IsFromCache);
             Assert.IsTrue(result.IsSuccessful);
-            Assert.AreNotEqual(result.Data.Rows.Count, 0);
+            Assert.AreNotEqual(result.Data.Count, 0);
         }
 
         [Test]
         public void InsertBlog_NewObject_ReturnsNoError()
         {
-            Assert.DoesNotThrow(() => Blog.Insert(TestTools.GetBlogModel(true)));
+            Assert.DoesNotThrow(() => TestTools.GetBlogModel(true).Insert());
         }
 
         [Test]
         public void InsertPost_NewObject_ReturnsNoError()
         {
-            List<Blog> blogs = Blog.SelectAll();
-            List<Author> authors = Author.SelectAll();
+            var blogs = Blog.SelectAllResult().Data.ToList();
+            var authors = Author.SelectAllResult().Data.ToList();
 
             TestTools.GetPostModel(true).BlogId = blogs[0].Id;
             TestTools.GetPostModel(false).AuthorId = authors[0].Id;
-            Assert.DoesNotThrow(() => Post.Insert(TestTools.GetPostModel(false)));
+            Assert.DoesNotThrow(() => TestTools.GetPostModel(false).Insert());
+        }
+
+        [Test]
+        public void InsertComment_NewObject_ReturnsNoError()
+        {
+            var posts = Post.SelectAllResult().Data.ToList();
+
+            TestTools.GetCommentModel(true).PostId = posts[0].Id;
+            Assert.DoesNotThrow(() => TestTools.GetCommentModel(false).Insert());
         }
 
         [Test]
         public void InsertAuthor_NewObject_ReturnsNoError()
         {
-            Assert.DoesNotThrow(() => Author.Insert(TestTools.GetAuthorModel(true)));
+            Assert.DoesNotThrow(() => TestTools.GetAuthorModel(true).Insert());
         }
 
         [Test]
         public void SelectBlog_DataFromDB_ReturnsNoError()
         {
-            var result = Blog.Select(new Parameter(nameof(Blog.Id), Guid.Parse("8B4870AC-2D19-4D1C-B6FB-6CE2C46C974A"))).Include(typeof(Post));
-            Assert.IsTrue(true);
+            //var result = Blog.Select(new Parameter(nameof(Blog.Id), Guid.Parse("8B4870AC-2D19-4D1C-B6FB-6CE2C46C974A")))
+            //                        .Include(typeof(Post)).Posts
+            //                        .Include(posts => posts.Comments, new Comment());
+            //Assert.IsTrue(true);
         }
 
+        [Test]
+        public void TestExpressionToSQL()
+        {
+            DateTime testingDateTime = DateTime.Now.AddDays(-30);
+            LogTestGuid data = LogTestGuid.Select(log => log.DateModified == testingDateTime || log.Id == Guid.Empty);
+        }
     }
 }

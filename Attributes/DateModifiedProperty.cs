@@ -3,7 +3,7 @@
 namespace DataManagement.Attributes
 {
     [AttributeUsage(AttributeTargets.Property)]
-    class DateModifiedProperty : Attribute
+    public class DateModifiedProperty : Attribute
     {
 
     }
