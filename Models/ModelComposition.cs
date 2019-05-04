@@ -79,20 +79,16 @@ namespace DataManagement.Models
             {
                 throw new RequiredAttributeNotFound("PrimaryKeyProperty", type.FullName);
             }
-            else if (Nullable.GetUnderlyingType(PrimaryKeyProperty.PropertyType) == null)
+            else if (!PrimaryKeyProperty.PropertyType.IsValueType)
             {
-                throw new InvalidDataType(PrimaryKeyProperty.Name, type.FullName, "Nullable<struct>");
-            }
-            else if (!Nullable.GetUnderlyingType(PrimaryKeyProperty.PropertyType).IsValueType)
-            {
-                throw new InvalidDataType(PrimaryKeyProperty.Name, type.FullName, "Nullable<struct>");
+                throw new InvalidDataType(PrimaryKeyProperty.Name, type.FullName, "struct");
             }
 
             if (DateCreatedProperty == null)
             {
                 throw new RequiredAttributeNotFound("DateCreatedProperty", type.FullName);
             }
-            else if (!DateCreatedProperty.PropertyType.Equals(typeof(DateTime)) && !Nullable.GetUnderlyingType(DateCreatedProperty.PropertyType).Equals(typeof(DateTime)))
+            else if (!DateCreatedProperty.PropertyType.Equals(typeof(DateTime)))
             {
                 throw new InvalidDataType(DateCreatedProperty.Name, type.FullName, "DateTime");
             }
@@ -101,7 +97,7 @@ namespace DataManagement.Models
             {
                 throw new RequiredAttributeNotFound("DateModifiedProperty", type.FullName);
             }
-            else if (!DateModifiedProperty.PropertyType.Equals(typeof(DateTime)) && !Nullable.GetUnderlyingType(DateModifiedProperty.PropertyType).Equals(typeof(DateTime)))
+            else if (!DateModifiedProperty.PropertyType.Equals(typeof(DateTime)))
             {
                 throw new InvalidDataType(DateModifiedProperty.Name, type.FullName, "DateTime");
             }
