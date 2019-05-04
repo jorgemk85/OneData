@@ -1,6 +1,6 @@
 ﻿using System.Reflection;
 
-namespace DataManagement.Models
+namespace OneData.Models
 {
     public sealed class Configuration
     {

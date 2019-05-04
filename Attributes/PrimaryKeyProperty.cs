@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace DataManagement.Attributes
+namespace OneData.Attributes
 {
     /// <summary>
     /// Especifica la propiedad usada como llave primaria. Solo para administracion interna de la libreria.

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace DataManagement.Models
+namespace OneData.Models
 {
     internal class DataCache<T>
     {

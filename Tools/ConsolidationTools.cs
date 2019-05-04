@@ -1,11 +1,11 @@
-﻿using DataManagement.Enums;
-using DataManagement.Exceptions;
+﻿using OneData.Enums;
+using OneData.Exceptions;
 using Microsoft.Extensions.Configuration;
 using System.Configuration;
 using System.IO;
 using System.Reflection;
 
-namespace DataManagement.Tools
+namespace OneData.Tools
 {
     public class ConsolidationTools
     {

@@ -1,8 +1,8 @@
-﻿using DataManagement.Tools;
+﻿using OneData.Tools;
 using System.Collections;
 using System.Collections.Generic;
 
-namespace DataManagement.Extensions
+namespace OneData.Extensions
 {
     public static class HashtableExtensions
     {

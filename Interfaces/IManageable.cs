@@ -1,6 +1,6 @@
-﻿using DataManagement.Models;
+﻿using OneData.Models;
 
-namespace DataManagement.Interfaces
+namespace OneData.Interfaces
 {
     public interface IManageable
     {

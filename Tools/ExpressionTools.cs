@@ -1,14 +1,14 @@
-﻿using DataManagement.DAO;
-using DataManagement.Enums;
-using DataManagement.Exceptions;
-using DataManagement.Interfaces;
-using DataManagement.Models;
+﻿using OneData.DAO;
+using OneData.Enums;
+using OneData.Exceptions;
+using OneData.Interfaces;
+using OneData.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Text;
 
-namespace DataManagement.Tools
+namespace OneData.Tools
 {
     public class ExpressionTools
     {

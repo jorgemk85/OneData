@@ -1,12 +1,12 @@
-﻿using DataManagement.Enums;
-using DataManagement.Exceptions;
-using DataManagement.Models.Test;
-using DataManagement.Tools;
-using DataManagement.Tools.Test;
+﻿using OneData.Enums;
+using OneData.Exceptions;
+using OneData.Models.Test;
+using OneData.Tools;
+using OneData.Tools.Test;
 using NUnit.Framework;
 using System;
 
-namespace DataManagement.UnitTests
+namespace OneData.UnitTests
 {
     [TestFixture]
     class ConsolidationToolsTests

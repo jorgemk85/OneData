@@ -1,8 +1,8 @@
-﻿using DataManagement.Attributes;
-using DataManagement.Interfaces;
+﻿using OneData.Attributes;
+using OneData.Interfaces;
 using System;
 
-namespace DataManagement.Models
+namespace OneData.Models
 {
     [DataTable("logs")]
     public class Log : Cope<Log>, IManageable

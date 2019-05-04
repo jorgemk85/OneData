@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace DataManagement.Exceptions
+namespace OneData.Exceptions
 {
     public class RequiredAttributeNotFound : Exception
     {

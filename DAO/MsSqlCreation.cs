@@ -1,15 +1,15 @@
-﻿using DataManagement.Attributes;
-using DataManagement.Enums;
-using DataManagement.Interfaces;
-using DataManagement.Models;
-using DataManagement.Tools;
+﻿using OneData.Attributes;
+using OneData.Enums;
+using OneData.Interfaces;
+using OneData.Models;
+using OneData.Tools;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
 
-namespace DataManagement.DAO
+namespace OneData.DAO
 {
     internal class MsSqlCreation : ICreatable
     {

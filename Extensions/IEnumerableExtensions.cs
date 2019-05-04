@@ -1,13 +1,13 @@
-﻿using DataManagement.Interfaces;
-using DataManagement.Models;
-using DataManagement.Tools;
+﻿using OneData.Interfaces;
+using OneData.Models;
+using OneData.Tools;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq.Expressions;
 using System.Text;
 
-namespace DataManagement.Extensions
+namespace OneData.Extensions
 {
     public static class IEnumerableExtensions
     {

@@ -1,4 +1,4 @@
-﻿namespace DataManagement.Models
+﻿namespace OneData.Models
 {
     public class MassiveOperationParameter
     {

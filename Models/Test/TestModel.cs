@@ -1,4 +1,4 @@
-﻿namespace DataManagement.Models.Test
+﻿namespace OneData.Models.Test
 {
     public sealed class TestModel
     {

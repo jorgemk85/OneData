@@ -1,7 +1,7 @@
-﻿using DataManagement.Models;
+﻿using OneData.Models;
 using System;
 
-namespace DataManagement.Events
+namespace OneData.Events
 {
     public class ExecutedEventArgs<T> : EventArgs
     {

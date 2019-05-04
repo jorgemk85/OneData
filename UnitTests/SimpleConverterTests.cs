@@ -1,5 +1,5 @@
-﻿using DataManagement.Exceptions;
-using DataManagement.Tools;
+﻿using OneData.Exceptions;
+using OneData.Tools;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DataManagement.UnitTests
+namespace OneData.UnitTests
 {
     [TestFixture]
     class SimpleConverterTests

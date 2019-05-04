@@ -1,6 +1,6 @@
-﻿using DataManagement.Attributes;
+﻿using OneData.Attributes;
 
-namespace DataManagement.Models
+namespace OneData.Models
 {
     public class ProcedureComposition
     {

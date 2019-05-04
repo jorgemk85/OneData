@@ -1,12 +1,12 @@
-﻿using DataManagement.DAO;
-using DataManagement.Enums;
-using DataManagement.Models.Test;
+﻿using OneData.DAO;
+using OneData.Enums;
+using OneData.Models.Test;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Reflection;
 
-namespace DataManagement.Tools.Test
+namespace OneData.Tools.Test
 {
     internal class TestTools
     {

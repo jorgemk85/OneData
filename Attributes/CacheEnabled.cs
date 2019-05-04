@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace DataManagement.Attributes
+namespace OneData.Attributes
 {
     [AttributeUsage(AttributeTargets.Class)]
     public class CacheEnabled : Attribute

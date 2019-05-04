@@ -1,15 +1,15 @@
-﻿using DataManagement.Enums;
-using DataManagement.Events;
-using DataManagement.Interfaces;
-using DataManagement.Models;
-using DataManagement.Tools;
+﻿using OneData.Enums;
+using OneData.Events;
+using OneData.Interfaces;
+using OneData.Models;
+using OneData.Tools;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 
-namespace DataManagement.DAO
+namespace OneData.DAO
 {
     /// <summary>
     /// Clase estatica donde se procesan las ejecuciones de procedimientos almacenados y se guardan propiedades predeterminadas de uso interno.

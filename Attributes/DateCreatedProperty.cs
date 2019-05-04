@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DataManagement.Attributes
+namespace OneData.Attributes
 {
     [AttributeUsage(AttributeTargets.Property)]
     public class DateCreatedProperty : Attribute

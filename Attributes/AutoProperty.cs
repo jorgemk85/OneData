@@ -1,7 +1,7 @@
-﻿using DataManagement.Enums;
+﻿using OneData.Enums;
 using System;
 
-namespace DataManagement.Attributes
+namespace OneData.Attributes
 {
     [AttributeUsage(AttributeTargets.Property)]
     public class AutoProperty : Attribute
