@@ -107,8 +107,8 @@ Please add them ALL to your project:
   "AppSettings": {
     "DefaultConnection": "<your default connection name as stated in ConnectionString>",
     "ConnectionType": "<MySQL or MSSQL>",
-    "InsertSuffix": "<the suffix to use in the UPDATE SPs>",
-    "UpdateSuffix": "<the suffix to use in the DELETE SPs>",
+    "InsertSuffix": "<the suffix to use in the INSERT SPs>",
+    "UpdateSuffix": "<the suffix to use in the UPDATE SPs>",
     "DeleteSuffix": "<the suffix to use in the DELETE SPs>",
     "StoredProcedurePrefix": "<the prefix for all the SPs>",
     "TablePrefix": "<the prefix for all the tables>",
