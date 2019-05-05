@@ -1,9 +1,9 @@
-﻿using DataManagement.Attributes;
-using DataManagement.DAO;
-using DataManagement.Interfaces;
+﻿using OneData.Attributes;
+using OneData.DAO;
+using OneData.Interfaces;
 using System;
 
-namespace DataManagement.Models.Test
+namespace OneData.Models.Test
 {
     [DataTable("Comments", "operaciones")]
     public class Comment : Cope<Comment>, IManageable

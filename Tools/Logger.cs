@@ -1,9 +1,9 @@
-﻿using DataManagement.DAO;
+﻿using OneData.DAO;
 using log4net;
 using System;
 using System.Runtime.CompilerServices;
 
-namespace DataManagement.Tools
+namespace OneData.Tools
 {
     internal static class Logger
     {

@@ -1,5 +1,5 @@
-﻿using DataManagement.Extensions;
-using DataManagement.Models.Test;
+﻿using OneData.Extensions;
+using OneData.Models.Test;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DataManagement.IntegrationTests.MySql
+namespace OneData.IntegrationTests.MySql
 {
     [TestFixture]
     public class ExpressionTests

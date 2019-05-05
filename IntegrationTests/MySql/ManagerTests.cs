@@ -1,13 +1,13 @@
-﻿using DataManagement.DAO;
-using DataManagement.Extensions;
-using DataManagement.Models;
-using DataManagement.Models.Test;
-using DataManagement.Tools.Test;
+﻿using OneData.DAO;
+using OneData.Extensions;
+using OneData.Models;
+using OneData.Models.Test;
+using OneData.Tools.Test;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 
-namespace DataManagement.IntegrationTests.MySql
+namespace OneData.IntegrationTests.MySql
 {
     [TestFixture]
     class ManagerTests

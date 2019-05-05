@@ -1,4 +1,4 @@
-﻿namespace DataManagement.Enums
+﻿namespace OneData.Enums
 {
     public enum TransactionTypes
     {

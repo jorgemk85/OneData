@@ -4,9 +4,9 @@
     <TargetFrameworks>net461;netstandard2.0</TargetFrameworks>
     <LangVersion>7.2</LangVersion>
     <Authors>Jorge Marcos Kawas</Authors>
-    <AssemblyVersion>1.9.6819.77</AssemblyVersion>
-    <FileVersion>1.9.6819.77</FileVersion>
-    <Version>1.9.71</Version>
+    <AssemblyVersion>0.1.6819.77</AssemblyVersion>
+    <FileVersion>0.1.6819.77</FileVersion>
+    <Version>0.1.0-alpha</Version>
     <AssemblyName>OneData</AssemblyName>
     <RootNamespace>OneData</RootNamespace>
   </PropertyGroup>

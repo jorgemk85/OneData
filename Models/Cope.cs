@@ -1,13 +1,13 @@
-﻿using DataManagement.Attributes;
-using DataManagement.DAO;
-using DataManagement.Extensions;
-using DataManagement.Interfaces;
+﻿using OneData.Attributes;
+using OneData.DAO;
+using OneData.Extensions;
+using OneData.Interfaces;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 
-namespace DataManagement.Models
+namespace OneData.Models
 {
     [Serializable]
     public abstract class Cope<T> where T : Cope<T>, IManageable, new()

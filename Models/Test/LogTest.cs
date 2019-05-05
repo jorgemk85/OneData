@@ -1,10 +1,10 @@
-﻿using DataManagement.Attributes;
-using DataManagement.DAO;
-using DataManagement.Interfaces;
+﻿using OneData.Attributes;
+using OneData.DAO;
+using OneData.Interfaces;
 using System;
 using System.Collections.Generic;
 
-namespace DataManagement.Models.Test
+namespace OneData.Models.Test
 {
     [DataTable("LogTestGuids"), CacheEnabled(60)]
     public class LogTestGuid : Cope<LogTestGuid>, IManageable

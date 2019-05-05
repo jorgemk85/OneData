@@ -1,12 +1,12 @@
-﻿using DataManagement.Extensions;
-using DataManagement.Models;
-using DataManagement.Models.Test;
-using DataManagement.Tools.Test;
+﻿using OneData.Extensions;
+using OneData.Models;
+using OneData.Models.Test;
+using OneData.Tools.Test;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 
-namespace DataManagement.IntegrationTests.MsSql
+namespace OneData.IntegrationTests.MsSql
 {
     [TestFixture]
     class ManagerTests

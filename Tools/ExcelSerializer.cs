@@ -1,4 +1,4 @@
-﻿using DataManagement.Attributes;
+﻿using OneData.Attributes;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -6,7 +6,7 @@ using System.IO;
 using System.Reflection;
 using System.Threading.Tasks;
 
-namespace DataManagement.Tools
+namespace OneData.Tools
 {
     public class ExcelSerializer
     {

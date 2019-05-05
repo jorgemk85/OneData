@@ -1,4 +1,4 @@
-﻿namespace DataManagement.Events
+﻿namespace OneData.Events
 {
     /// <summary>
     /// Provocado despues de ejecutar un comando de tipo INSERT MASSIVE en la base de datos.

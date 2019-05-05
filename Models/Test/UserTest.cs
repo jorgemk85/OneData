@@ -1,8 +1,8 @@
-﻿using DataManagement.Attributes;
-using DataManagement.Interfaces;
+﻿using OneData.Attributes;
+using OneData.Interfaces;
 using System;
 
-namespace DataManagement.Models.Test
+namespace OneData.Models.Test
 {
     [DataTable("UserTests")]
     public class UserTest : Cope<UserTest>, IManageable

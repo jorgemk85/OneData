@@ -1,4 +1,4 @@
-﻿using DataManagement.Attributes;
+﻿using OneData.Attributes;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -6,7 +6,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DataManagement.Tools
+namespace OneData.Tools
 {
     public class FileSerializer
     {

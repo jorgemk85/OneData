@@ -1,10 +1,10 @@
-﻿using DataManagement.Enums;
-using DataManagement.Models;
+﻿using OneData.Enums;
+using OneData.Models;
 using System;
 using System.Data;
 using System.Linq.Expressions;
 
-namespace DataManagement.Interfaces
+namespace OneData.Interfaces
 {
     public interface IOperable
     {

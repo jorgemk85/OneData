@@ -1,11 +1,11 @@
-﻿using DataManagement.DAO;
-using DataManagement.Models;
-using DataManagement.Models.Test;
-using DataManagement.Tools.Test;
+﻿using OneData.DAO;
+using OneData.Models;
+using OneData.Models.Test;
+using OneData.Tools.Test;
 using NUnit.Framework;
 using System;
 
-namespace DataManagement.IntegrationTests.MsSql
+namespace OneData.IntegrationTests.MsSql
 {
     [TestFixture]
     class ManagerAutomatedTestsInt

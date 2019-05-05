@@ -1,9 +1,9 @@
-﻿using DataManagement.Models;
+﻿using OneData.Models;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace DataManagement.Interfaces
+namespace OneData.Interfaces
 {
     internal interface ICreatable
     {

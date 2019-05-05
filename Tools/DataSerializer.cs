@@ -1,8 +1,8 @@
-﻿using DataManagement.Attributes;
-using DataManagement.DAO;
-using DataManagement.Enums;
-using DataManagement.Interfaces;
-using DataManagement.Models;
+﻿using OneData.Attributes;
+using OneData.DAO;
+using OneData.Enums;
+using OneData.Interfaces;
+using OneData.Models;
 using Newtonsoft.Json;
 using System;
 using System.Collections;
@@ -15,7 +15,7 @@ using System.Reflection;
 using System.Text;
 using System.Xml.Serialization;
 
-namespace DataManagement.Tools
+namespace OneData.Tools
 {
     public class DataSerializer
     {
@@ -541,7 +541,7 @@ namespace DataManagement.Tools
         }
 
         /// <summary>
-        /// Convierte un objeto de tipo System.Data.DataTable a un Diccionario del tipo <typeparamref name="T"/>. Requiere que el tipo sea una clase que herede de la clase abstracta Main del namespace DataManagement.BO ya que utilizara la propiedad Id de la clase como Llave.
+        /// Convierte un objeto de tipo System.Data.DataTable a un Diccionario del tipo <typeparamref name="T"/>. Requiere que el tipo sea una clase que herede de la clase abstracta Main del namespace OneData.BO ya que utilizara la propiedad Id de la clase como Llave.
         /// </summary>
         /// <typeparam name="T">Tipo referencia para serializar.</typeparam>
         /// <param name="dataTable">El contenido a convertir.</param>

@@ -1,11 +1,11 @@
-﻿using DataManagement.Exceptions;
+﻿using OneData.Exceptions;
 using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Globalization;
 
-namespace DataManagement.Tools
+namespace OneData.Tools
 {
     public class SimpleConverter
     {

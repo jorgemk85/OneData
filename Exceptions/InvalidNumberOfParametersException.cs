@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DataManagement.Exceptions
+namespace OneData.Exceptions
 {
     /// <summary>
     /// Ocurre cuando no se enviaron parametros al cache para el tipo de consulta Select. 

@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace DataManagement.Models
+namespace OneData.Models
 {
     public class Result<T>
     {

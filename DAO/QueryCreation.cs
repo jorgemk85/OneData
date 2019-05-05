@@ -1,10 +1,10 @@
-﻿using DataManagement.Enums;
-using DataManagement.Models;
-using DataManagement.Tools;
+﻿using OneData.Enums;
+using OneData.Models;
+using OneData.Tools;
 using System;
 using System.Linq.Expressions;
 
-namespace DataManagement.DAO
+namespace OneData.DAO
 {
     public class QueryCreation
     {

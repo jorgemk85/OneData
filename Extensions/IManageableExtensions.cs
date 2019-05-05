@@ -1,13 +1,13 @@
-﻿using DataManagement.DAO;
-using DataManagement.Enums;
-using DataManagement.Interfaces;
-using DataManagement.Models;
-using DataManagement.Tools;
+﻿using OneData.DAO;
+using OneData.Enums;
+using OneData.Interfaces;
+using OneData.Models;
+using OneData.Tools;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 
-namespace DataManagement.Extensions
+namespace OneData.Extensions
 {
     public static class IManageableExtensions
     {

@@ -1,14 +1,14 @@
-﻿using DataManagement.Enums;
-using DataManagement.Extensions;
-using DataManagement.Interfaces;
-using DataManagement.Models;
+﻿using OneData.Enums;
+using OneData.Extensions;
+using OneData.Interfaces;
+using OneData.Models;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
 
-namespace DataManagement.DAO
+namespace OneData.DAO
 {
     internal class QueryEvaluation
     {

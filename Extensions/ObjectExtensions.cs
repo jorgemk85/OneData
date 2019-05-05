@@ -1,7 +1,7 @@
-﻿using DataManagement.Tools;
+﻿using OneData.Tools;
 using System.Text;
 
-namespace DataManagement.Extensions
+namespace OneData.Extensions
 {
     public static class ObjectExtensions
     {

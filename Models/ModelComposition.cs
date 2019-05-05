@@ -1,12 +1,12 @@
-﻿using DataManagement.Attributes;
-using DataManagement.DAO;
-using DataManagement.Enums;
-using DataManagement.Exceptions;
+﻿using OneData.Attributes;
+using OneData.DAO;
+using OneData.Enums;
+using OneData.Exceptions;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
 
-namespace DataManagement.Models
+namespace OneData.Models
 {
     internal sealed class ModelComposition
     {
