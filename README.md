@@ -53,7 +53,7 @@ dotnet add package OneData
 
 ## Configuration
 
-Now that you have the library installed in your project, you need to set up your .config configuration file (if you are using .Net Framework) or your .json configuration file (if you are using .Net Core or .Net Standard). [What version should I use?](https://docs.microsoft.com/en-us/dotnet/standard/net-standard)
+Now that you have the library installed in your project, you need to set up your .config configuration file (if you are using .Net Framework) or your .json configuration file (if you are using .Net Core or .Net Standard). [Should I use .Net Standard?](https://docs.microsoft.com/en-us/dotnet/standard/net-standard)
 
 ### .Net Framework 4.6.1 and Later
 In case you don't have a ConnectionString section inside your configuration file, please add it (don't include the placeholders <>):
