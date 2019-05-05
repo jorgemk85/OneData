@@ -1,5 +1,5 @@
 # OneData
-[![OneData](https://img.icons8.com/cotton/64/000000/cloud-database.png)](https://github.com/jorgemk85/OneData) OneData
+[![OneData](https://img.icons8.com/cotton/64/000000/cloud-database.png)](https://github.com/jorgemk85/OneData)
 [![Build Status](https://travis-ci.org/joemccann/dillinger.svg?branch=master)](https://github.com/jorgemk85/OneData)
 
 So, you are looking for a VERY easy, Code-First solution to access your data inside a MySQL or MsSQL server...
@@ -39,7 +39,7 @@ Download the library from [GitHub](https://github.com/jorgemk85/OneData/).
 
 OR
 
-Install it via [NuGet](https://www.nuget.org/packages/OneData/).
+Install it via [NuGet](https://www.nuget.org/packages/OneData/). *Can't find it? Make sure you enable "Include prerelease" checkbox inside your NuGet Package Explorer.*
 
 #### Package Manager
 ```
