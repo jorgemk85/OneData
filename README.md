@@ -135,7 +135,7 @@ Ok, that wasn't hard, isn't it? We are done with the configuration!
 
 The last step is to setup your classes!
 
-But... Which one's should I setup? Well, every class you will need to connect / have-access-to in you database.
+But... Which one's should I setup? Well, every class you will need to connect / have-access-to in your database.
 
 Here's an example with the minimum required setup for the library to understand your class:
 ```c#
@@ -160,7 +160,7 @@ Please note the Generic class Cope<T> which NEEDS sent the class you are working
   
 Well done! You now have an up and running a complete relational data management solution inside your project.
 ## Usage
-### Configuration file Settings
+### Configuration:
 We have already explained where to put this configurations but haven't detailed what they are.
 
 The following table is a comprehensive list of available configurations with their respectic information:
@@ -168,7 +168,7 @@ The following table is a comprehensive list of available configurations with the
 | Configuration name          | Remarks                            | Description                    |
 |-----------------------------|-----------------------------------------|--------------------------------|
 |`DefaultConnection`          |None.                                    |Type the name of your default connection.|
-|`ConnectionType`             |MySQL or MsSQL                           |Choose to configure OneData to MySQL or MsSQL.|
+|`ConnectionType`             |MySQL or MsSQL                           |Choose to configure OneData for MySQL or MsSQL.|
 |`InsertSuffix`               |Can be Blank.                            |Literally the suffix to use with the Insert SPs.|
 |`UpdateSuffix`               |Can be Blank.                            |Literally the suffix to use with the Update SPs.|
 |`DeleteSuffix`               |Can be Blank.                            |Literally the suffix to use with the Delete SPs.|
@@ -183,7 +183,7 @@ The following table is a comprehensive list of available configurations with the
 |`OverrideOnlyInDebug`        |Override settings that run only in debug.|Will override those settings set to run only on Debug mode.|
 
 ### Attributes:
-Attributes inside OneData are used to configure the classes/models and properties.
+Attributes in OneData are used to configure the classes/models and properties.
 
 The following table is a comprehensive list of available attributes with their respectic information:
 
@@ -202,8 +202,13 @@ The following table is a comprehensive list of available attributes with their r
 | `UniqueKey`           | Properties | None.                              | Set a property to hold a unique value.   |
 | `UnmanagedProperty`   | Properties | None.                              | Used when you don't want OneData to interfere with.   |
 
+## Examples
+
+<Pending.>
 
 ## FAQ
+
+<Pending.>
 
 ## Contributing
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
@@ -213,5 +218,5 @@ Please make sure to update tests as appropriate.
 ## License
 [MIT](https://choosealicense.com/licenses/mit/)
 
-## Icons used
+## Icons
 [Icons by Icons8](https://icons8.com)
