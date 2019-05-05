@@ -26,6 +26,12 @@ So, you are looking for a VERY easy, Code-First solution to access your data ins
 
 Don't know SQL? Why should you? OneData got you covered ;)
 
+## Compatibility
+OneData is compatible with any project developed with the following:
+* .Net Framework 4.6.1 and later.
+* .Net Standard 2.0 and later.
+* .Net Core 2.0 and later.
+
 ## Steps
 Now that we got all the intro out of our way, let's stablish what tasks must be done to get your project up and running with OneData:
 
@@ -66,7 +72,7 @@ In case you don't have a ConnectionString section inside your configuration file
     <add name="<your connection name>" connectionString="server=<your server ip / hostname>;Uid=<db username>;Pwd=<db password>;persistsecurityinfo=True;database=<your database name>;SslMode=none;AllowUserVariables=True;CheckParameters=False" />
   </connectionStrings>
 ```
-Notice that there are some special settings in the connection string. Make you include them in EVERY connection string you got.
+Notice that there are some special settings in the connection string. Make sure you include them in EVERY connection string you got.
 ```
 SslMode=none;AllowUserVariables=True;CheckParameters=False
 ```
@@ -464,19 +470,20 @@ The parameter ```tableName``` is not really used to execute anything and it will
 The last parameter in this method accepts an array of ```Parameter``` objects. This means you could just pass a preconfigured array or parameters or pass one by one.
 
 #### Async Methods
-Every method corresponding to a transaction type can be called using Async, although this calls are not as easy as we wish them to be (yet!). Please read the following to undertand more.
+Every method corresponding to a transaction type can be called using Async, although this calls are not as easy as we wish them to be (yet!). Please read the following to understand more.
 
 This is the list of methods available for Async calls:
-* Manager\<T\>.InsertAsync(T obj, QueryOptions queryOptions)
-* Manager\<T\>.InsertMassiveAsync(IEnumerable<T> list, QueryOptions queryOptions)
-* Manager\<T\>.UpdateAsync(T obj, QueryOptions queryOptions)
-* Manager\<T\>.UpdateMassiveAsync(IEnumerable<T> list, QueryOptions queryOptions)
-* Manager\<T\>.DeleteAsync(T obj, QueryOptions queryOptions)
-* Manager\<T\>.DeleteMassiveAsync(IEnumerable<T> list, QueryOptions queryOptions)
-* Manager\<T\>.SelectAsync(Expression<Func<T, bool>> expression, QueryOptions queryOptions)
-* Manager\<T\>.SelectAllAsync(QueryOptions queryOptions)
-* Manager.StoredProcedureAsync(string tableName, string storedProcedure, QueryOptions queryOptions, params Parameter[] parameters)
-
+```c#
+Manager<T>.InsertAsync(T obj, QueryOptions queryOptions)
+Manager<T>.InsertMassiveAsync(IEnumerable<T> list, QueryOptions queryOptions)
+Manager<T>.UpdateAsync(T obj, QueryOptions queryOptions)
+Manager<T>.UpdateMassiveAsync(IEnumerable<T> list, QueryOptions queryOptions)
+Manager<T>.DeleteAsync(T obj, QueryOptions queryOptions)
+Manager<T>.DeleteMassiveAsync(IEnumerable<T> list, QueryOptions queryOptions)
+Manager<T>.SelectAsync(Expression<Func<T, bool>> expression, QueryOptions queryOptions)
+Manager<T>.SelectAllAsync(QueryOptions queryOptions)
+Manager.StoredProcedureAsync(string tableName, string storedProcedure, QueryOptions queryOptions, params Parameter[] parameters)
+```
 As an example, the following would be used to call an Async Insert method to add a new Log into the database:
 ```c#
 await Manager<Log>.InsertAsync(newLog, null);
