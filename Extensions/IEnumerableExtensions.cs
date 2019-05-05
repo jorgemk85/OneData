@@ -1,9 +1,11 @@
-﻿using OneData.Interfaces;
+﻿using OneData.DAO;
+using OneData.Interfaces;
 using OneData.Models;
 using OneData.Tools;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
 
@@ -49,6 +51,42 @@ namespace OneData.Extensions
         public static Dictionary<TKey, T> ToDictionary<TKey, T>(this IEnumerable<T> list) where T : Cope<T>, IManageable, new()
         {
             return DataSerializer.ConvertIEnumerableToDictionaryOfType<TKey, T>(list);
+        }
+
+        /// <summary>
+        /// Inserta una coleccion de objetos de forma masiva y en una sola llamada en la base de datos. 
+        /// Este metodo usa la conexion predeterminada a la base de datos.
+        /// </summary>
+        public static void InsertMassive<T>(this IEnumerable<T> list) where T : Cope<T>, IManageable, new()
+        {
+            if (list.Any())
+            {
+                Manager<T>.InsertMassive(list, null);
+            }
+        }
+
+        /// <summary>
+        /// Actualiza una coleccion de objetos de forma masiva y en una sola llamada en la base de datos.
+        /// Este metodo usa la conexion predeterminada a la base de datos.
+        /// </summary>
+        public static void UpdateMassive<T>(this IEnumerable<T> list) where T : Cope<T>, IManageable, new()
+        {
+            if (list.Any())
+            {
+                Manager<T>.UpdateMassive(list, null);
+            }
+        }
+
+        /// <summary>
+        /// Borra una coleccion de objetos de forma masiva y en una sola llamada en la base de datos.
+        /// Este metodo usa la conexion predeterminada a la base de datos.
+        /// </summary>
+        public static void DeleteMassive<T>(this IEnumerable<T> list) where T : Cope<T>, IManageable, new()
+        {
+            if (list.Any())
+            {
+                Manager<T>.DeleteMassive(list, null);
+            }
         }
     }
 }

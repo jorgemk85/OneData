@@ -112,7 +112,7 @@ namespace OneData.Tools
             }
         }
 
-        public static MassiveOperationParameter GenerateCompatibleMassiveOperationXML<T>(IEnumerable<T> list, TransactionTypes transactionType) where T : Cope<T>, IManageable, new()
+        internal static MassiveOperationParameter GenerateCompatibleMassiveOperationXML<T>(IEnumerable<T> list, TransactionTypes transactionType) where T : Cope<T>, IManageable, new()
         {
             MassiveOperationParameter massiveOperationParameter = new MassiveOperationParameter();
             StringBuilder builder = new StringBuilder();

@@ -14,6 +14,7 @@ So, you are looking for a VERY easy, Code-First solution to access your data ins
 * Supports simultaneous database connections.
 * Use your default database connection or switch with ease to use a diferent one.
 * Very easy query pagination on database.
+* Strongly typed.
 * Supports Async.
 * Events for every transaction type (Insert, Select, Update, Delete, etc).
 * Per class/model configuration.
@@ -39,7 +40,7 @@ Download the library from [GitHub](https://github.com/jorgemk85/OneData/).
 
 OR
 
-Install it via [NuGet](https://www.nuget.org/packages/OneData/). *Can't find it? Make sure you enable "Include prerelease" checkbox inside your NuGet Package Explorer.*
+Install it via [NuGet](https://www.nuget.org/packages/OneData/).
 
 #### Package Manager
 ```
@@ -50,6 +51,8 @@ Install-Package OneData
 ```
 dotnet add package OneData
 ```
+
+*Can't find it with NuGet? Make sure you enable "Include prerelease" checkbox inside your NuGet Package Explorer.*
 
 ## Configuration
 
@@ -144,15 +147,15 @@ using OneData.Interfaces;
 using OneData.Models;
 
 [DataTable("logs")]
-    public class Log : Cope<Log>, IManageable
-    {
-        [PrimaryKeyProperty]
-        public Guid Id { get; set; }
-        [DateCreatedProperty]
-        public DateTime DateCreated { get; set; }
-        [DateModifiedProperty]
-        public DateTime DateModified { get; set; }
-    }
+public class Log : Cope<Log>, IManageable
+{
+    [PrimaryKeyProperty]
+    public Guid Id { get; set; }
+    [DateCreatedProperty]
+    public DateTime DateCreated { get; set; }
+    [DateModifiedProperty]
+    public DateTime DateModified { get; set; }
+}
 ```
 
 The attributes DataTable, PrimaryKeyProperty, DateCreatedProperty and DateModifiedProperty will be explained with detail later in this document.
@@ -191,8 +194,8 @@ The following table is a comprehensive list of available attributes with their r
 | Attribute name        | Used with  | Remarks                            | Description                    |
 |-----------------------|------------|------------------------------------|--------------------------------|
 | `AutoProperty`        | Properties | None.                              | Data is completely managed by OneData based on your settings.   |
-| `CacheEnabled`        |  Classes   | Once per Class/Model.              |  Enables a class/model to use the On-RAM Cache. Uses minutes as expiration.|
-| `DataLength`          | Properties | None.                              |  Specify which data length you want to use. If not implemented, will use default.|
+| `CacheEnabled`        |  Classes   | Once per Class/Model.              | Enables a class/model to use the On-RAM Cache. Uses minutes as expiration.|
+| `DataLength`          | Properties | None.                              | Specify which data length you want to use. If not implemented, will use default.|
 | `DataTable`           |  Classes   | Required. Once per Class/Model.    | Sets the table name (and optinally the scheme) to use.|
 | `DateCreatedProperty` | Properties | Required. Once per Class/Model.    | Mark the property that will hold date and time of record creation.|
 | `DateModifiedProperty`| Properties | Required. Once per Class/Model.    | Mark the property that will hold date and time of record update.   |
@@ -203,9 +206,160 @@ The following table is a comprehensive list of available attributes with their r
 | `UniqueKey`           | Properties | None.                              | Set a property to hold a unique value.   |
 | `UnmanagedProperty`   | Properties | None.                              | Used when you don't want OneData to interfere with.   |
 
+### Transactions
+Let's talk a bit about transactions... First of all, we've got an enumeration called TransactionTypes which holds the following:
+* Select
+* SelectAll
+* Delete
+* DeleteMassive
+* Insert
+* InsertMassive
+* Update
+* UpdateMassive
+* StoredProcedure
+
+They are pretty self explanatory, except maybe DeleteMassive, InsertMassive, UpdateMassive and StoredProcedure. The first three types are used to execute the desired transaction but with a big set of data. The last one is used when you want to execute a generic stored procedure inside your database.
+
 ## Examples
 
-<Pending.>
+### Basics
+#### Changing my class/model
+In section **Setup**, we stablished a class/model called Log, which only have three properties. If we run our program, OneData will be creating the respective table called "logs" (as configured with the DataTable attribute). This table will also have three columns which reflects our class/model... But, what if I add a new property? Should I go into the table manually and change it as I please? NO! You just need to add this new property to your class/model and let OneData take care of the rest (make sure you have the corresponding settings inside your .config file)! Please see the following:
+
+This is our new Log class/model (note the new properties UserId and Transaction).
+```c#
+[DataTable("logs")]
+public class Log : Cope<Log>, IManageable
+{
+    [PrimaryKeyProperty]
+    public Guid Id { get; set; }
+    [DateCreatedProperty]
+    public DateTime DateCreated { get; set; }
+    [DateModifiedProperty]
+    public DateTime DateModified { get; set; }
+
+    public Guid UserId { get; set; }
+    public string Transaction { get; set; }
+}
+```
+Literally, the next time your program runs and tries to access this object in the database, OneData will make the changes it detected inside your class/model without prompting anything and as transparent as it should be.
+
+This exact steps will trigger if your change is as small as adding a new property or huge as adding twenty, changing datatypes of another three, modifying the datalength of a couple and updating the relationships between classes/models.
+
+#### Adding data to the database
+Let's say you have a single Log object with it's respective data already filled. How do I insert it into the corresponding table?
+```c#
+myNewLog.Insert();
+```
+A neat trick to ease your way when adding new objects of your desired type, is to add constructors to your class/model. This way, when ever you call ```new``` on your type, the Id will be filled automatically.
+
+This pair is pretty handy:
+```c#
+public Log()
+{
+    Id = Guid.NewGuid();
+}
+
+public Log(Guid id)
+{
+    Id = id;
+}
+```
+
+When you which to insert a set of information contained in a IEnumerable, say, a List, you can simply do the following:
+```c#
+myLogCollection.InsertMasssive();
+```
+
+OneData will then serialize your list and send it to the database for procesing, making just ONE call to insert every single one of your objects in the corresponding table. *Beware of your collection size, since even tho OneData has no cap or limit, your database or server might.*
+
+#### Updating data in the database
+Similarly to Insert, if you need to update a record, you can do the following:
+```c#
+myUpdatedLog.Update();
+```
+OneData uses the value inside the property identified as PrimaryKey to find the object in the database and update it as you wish. 
+
+**The Update stored procedure uses IFNULL(), so if you want to send partial information, you should send your object with every property set to null except those you really need to update, and of course your PrimaryKey value should be set.**
+
+When you which to update a set of information contained in a IEnumerable, say, a List, you can simply do the following:
+```c#
+myLogCollection.UpdateMasssive();
+```
+
+OneData will then serialize your list and send it to the database for procesing, making just ONE call to update every single one of your objects in the corresponding table. *Beware of your collection size, since even tho OneData has no cap or limit, your database or server might.*
+
+#### Deleting data in the database
+Similarly to Insert or Update, if you need to Delete a record, you can do the following:
+```c#
+myUpdatedLog.Delete();
+```
+You only need to send the id of your record inside the property you identified as PrimaryKey to find the object in the database and delete it.
+
+When you which to delete a set of information contained in a IEnumerable, say, a List, you can simply do the following:
+```c#
+myLogCollection.DeleteMasssive();
+```
+
+OneData will then serialize your list and send it to the database for procesing, making just ONE call to delete every single one of your objects in the corresponding table. *Beware of your collection size, since even tho OneData has no cap or limit, your database or server might.*
+
+#### Selecting data from the database
+Selecting data from the database is NOT performed using stored procedures as with Inserting, Updating or Deleting. This is because of the complex nature and wide variety of queries.
+
+OneData uses lambda expressions to work with queries, making it very readable and of course, refactor friendly along the way.
+
+Returns a list of logs found in the database that match the provided userId.
+```c#
+private List<Log> GimmeAllTheLogsFromUserId(Guid userId)
+{
+	return Log.SelectList(q => q.UserId == userId);
+}
+```
+Returns a list of logs found in the database that contain the provided transaction.
+```c#
+private List<Log> GimmeAllTheLogsThatContainTransaction(string transaction)
+{
+	return Log.SelectList(q => q.Transaction.Contains(transaction));
+}
+```
+Returns a list of logs found in the database that starts with the provided transaction.
+```c#
+private List<Log> GimmeAllTheLogsThatStartsWithTransaction(string transaction)
+{
+	return Log.SelectList(q => q.Transaction.StartsWith(transaction));
+}
+```
+Returns a list of logs found in the database that ends with the provided transaction.
+```c#
+private List<Log> GimmeAllTheLogsThatEndsWithTransaction(string transaction)
+{
+	return Log.SelectList(q => q.Transaction.EndsWith(transaction));
+}
+```
+You can, of course, also mix your queries as needed.
+```c#
+private List<Log> GimmeAllTheLogsFromUserIdThatEndsWithTransaction(Guid userId, string transaction)
+{
+	return Log.SelectList(q => q.UserId == userId && q.Transaction.EndsWith(transaction));
+}
+```
+
+If you wish to select just one object, you can do the following:
+```c#
+private Log GimmeTheLogFromUserIdThatEndsWithTransaction(Guid userId, string transaction)
+{
+	return Log.Select(q => q.UserId == userId && q.Transaction.EndsWith(transaction));
+}
+```
+The method SelectList has an overload which accepts an object called QueryOptions, intended to further configure your query with the following options:
+* ConnectionToUse
+> Can be null, and if set as such, will default be automatically set to the value you stated in DefaultConnection, inside your .config file. If you set a value, make sure it's a connection name that exists inside your .config file.
+* MaximumResults
+> Limits the results of the query. You can set it to -1, which means to bring every record found.
+* Offset
+> Brings back records starting from the specified offset in this property. If set to 0, will simply start from the beginning, as expected ;)
+
+Every query is returned with ordered records. OneData orders them by the descending value of the property marked with DateCreatedProperty attribute. 
 
 ## FAQ
 
