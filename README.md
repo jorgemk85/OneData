@@ -1,4 +1,3 @@
-=======
 # OneData
 [![Powered by C#](https://img.icons8.com/color/48/000000/c-sharp-logo-2.png)](https://docs.microsoft.com/en-us/dotnet/csharp/tutorials)
 [![Build Status](https://travis-ci.org/joemccann/dillinger.svg?branch=master)](https://github.com/jorgemk85/OneData)
@@ -167,7 +166,7 @@ We have already explained where to put this configurations but haven't detailed 
 
 The following table is a comprehensive list of available configurations with their respectic information:
 
-| Configuration name          | Remarks                            | Description                    |
+| Configuration name          | Remarks									| Description                    |
 |-----------------------------|-----------------------------------------|--------------------------------|
 |`DefaultConnection`          |None.                                    |Type the name of your default connection.|
 |`ConnectionType`             |MySQL or MsSQL                           |Choose to configure OneData for MySQL or MsSQL.|

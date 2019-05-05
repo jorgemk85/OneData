@@ -6,7 +6,7 @@
     <Authors>Jorge Marcos Kawas</Authors>
     <AssemblyVersion>0.1.6819.77</AssemblyVersion>
     <FileVersion>0.1.6819.77</FileVersion>
-    <Version>0.1.0-alpha</Version>
+    <Version>0.1.1-alpha</Version>
     <AssemblyName>OneData</AssemblyName>
     <RootNamespace>OneData</RootNamespace>
   </PropertyGroup>
