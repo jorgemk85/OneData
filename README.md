@@ -62,7 +62,7 @@ In case you don't have a ConnectionString section inside your configuration file
     <add name="<your connection name>" connectionString="server=<your server ip / hostname>;Uid=<db username>;Pwd=<db password>;persistsecurityinfo=True;database=<your database name>;SslMode=none;AllowUserVariables=True;CheckParameters=False" />
   </connectionStrings>
 ```
-Notice that there are some special settings in the connection string. Make you you include them in EVERY connection string you got.
+Notice that there are some special settings in the connection string. Make you include them in EVERY connection string you got.
 ```
 SslMode=none;AllowUserVariables=True;CheckParameters=False
 ```
@@ -96,7 +96,7 @@ In case you don't have a ConnectionString section inside your configuration file
       "<your connection name>": "server=<your server ip / hostname>;Uid=<db username>;Pwd=<db password>$;persistsecurityinfo=True;database=<your database name>;SslMode=none;AllowUserVariables=True;CheckParameters=False"
     }
 ```
-Notice that there are some special settings in the connection string. Make you you include them in EVERY connection string you got.
+Notice that there are some special settings in the connection string. Make you include them in EVERY connection string you got.
 ```
 SslMode=none;AllowUserVariables=True;CheckParameters=False
 ```
