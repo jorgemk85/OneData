@@ -1,5 +1,5 @@
 # OneData
-[![Powered by C#](https://img.icons8.com/color/48/000000/c-sharp-logo-2.png)](https://docs.microsoft.com/en-us/dotnet/csharp/tutorials)
+[![OneData](https://img.icons8.com/cotton/64/000000/cloud-database.png)](https://github.com/jorgemk85/OneData) OneData
 [![Build Status](https://travis-ci.org/joemccann/dillinger.svg?branch=master)](https://github.com/jorgemk85/OneData)
 
 So, you are looking for a VERY easy, Code-First solution to access your data inside a MySQL or MsSQL server...
