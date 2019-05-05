@@ -159,19 +159,26 @@ Please note the Generic class Cope<T> which NEEDS sent the class you are working
   
 Well done! You now have an up and running a complete relational data management solution inside your project.
 ## Usage
-Let's begin with a list of available attributes:
-| Name | Type | Description |
-| ------ | ------ |------ |
+### Attributes:
+Attributes inside OneData are used to configure the classes/models and properties.
 
-  
-Now
-```c#
-import foobar
+The following table is a comprehensive list of available attributes with their respectic information.
 
-foobar.pluralize('word') # returns 'words'
-foobar.pluralize('goose') # returns 'geese'
-foobar.singularize('phenomena') # returns 'phenomenon'
-```
+| Attribute name        | Used with  | Remarks                            | Description                    |
+|-----------------------|------------|------------------------------------|--------------------------------|
+| `AutoProperty`        | Properties | None.                              | Data is completely managed by OneData based on your settings.   |
+| `CacheEnabled`        |  Classes   | Once per Class/Model.              |  Enables a class/model to use the On-RAM Cache. Uses minutes as expiration.|
+| `DataLength`          | Properties | None.                              |  Specify which data length you want to use. If not implemented, will use default.|
+| `DataTable`           |  Classes   | Required. Once per Class/Model.    | Sets the table name (and optinally the scheme) to use.|
+| `DateCreatedProperty` | Properties | Required. Once per Class/Model.    | Mark the property that will hold date and time of record creation.|
+| `DateModifiedProperty`| Properties | Required. Once per Class/Model.    | Mark the property that will hold date and time of record update.   |
+| `ForeignData`         | Properties | None.                              | Used when you need to get information from a foreign table.   |
+| `ForeignKey`          | Properties | None.                              | Relates a property with the PrimaryKey of another class/model.   |
+| `HeaderName`          | Properties | None.                              | Specify the name to look for instead of the propery name.   |
+| `PrimaryKeyProperty`  | Properties | Required. Once per Class/Model.    | Mark the property that will be set as the PrimaryKey. |
+| `UniqueKey`           | Properties | None.                              | Set a property to hold a unique value.   |
+| `UnmanagedProperty`   | Properties | None.                              | Used when you don't want OneData to interfere with.   |
+
 
 ## FAQ
 
