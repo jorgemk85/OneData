@@ -20,6 +20,7 @@ So, you are looking for a VERY easy, Code-First solution to access your data ins
 * Per class/model configuration.
 * Get foreign data into your desired "local" property with ease.
 * Massive operations are supported! You can insert, update or delete in your database with ease.
+* Call any stored procedure of your liking with ease.
 
 ... And much more!
 
@@ -360,6 +361,127 @@ The method SelectList has an overload which accepts an object called QueryOption
 > Brings back records starting from the specified offset in this property. If set to 0, will simply start from the beginning, as expected ;)
 
 Every query is returned with ordered records. OneData orders them by the descending value of the property marked with DateCreatedProperty attribute. 
+### Intermediate
+#### Relationships
+We will talk a little about relationships between classes/models inside OneData.
+
+First, let's create a new class/model called User:
+```c#
+using OneData.Attributes;
+using OneData.Interfaces;
+using OneData.Models;
+
+[DataTable("users")]
+public class User : Cope<User>, IManageable
+{
+    [PrimaryKeyProperty]
+    public Guid Id { get; set; }
+    [DateCreatedProperty]
+    public DateTime DateCreated { get; set; }
+    [DateModifiedProperty]
+    public DateTime DateModified { get; set; }
+
+	public string Name { get; set; }
+	public string Lastname { get; set; }
+	public string Username { get; set; }
+	public string Password { get; set; }
+}
+```
+
+To achieve a relationship between Users and Logs, we just need to configure it in the Log class/model (note the new attribute on UserId property):
+```c#
+[DataTable("logs")]
+public class Log : Cope<Log>, IManageable
+{
+    [PrimaryKeyProperty]
+    public Guid Id { get; set; }
+    [DateCreatedProperty]
+    public DateTime DateCreated { get; set; }
+    [DateModifiedProperty]
+    public DateTime DateModified { get; set; }
+
+	[ForeignKey(typeof(User))]
+    public Guid UserId { get; set; }
+    public string Transaction { get; set; }
+}
+```
+And just like that, our classes/models are related! By default, OneData configures the relationship ON DELETE to NO ACTION, but you can configure this with an overload on the attribute. Also, the ON UPDATE is always set to NO ACTION at this point.
+
+The following should be used if you need to pull data from another table (related or not) into our class/model for ease of use (note the new property UserName and it's attribute).
+```c#
+[DataTable("logs")]
+public class Log : Cope<Log>, IManageable
+{
+    [PrimaryKeyProperty]
+    public Guid Id { get; set; }
+    [DateCreatedProperty]
+    public DateTime DateCreated { get; set; }
+    [DateModifiedProperty]
+    public DateTime DateModified { get; set; }
+
+	[ForeignKey(typeof(User))]
+    public Guid UserId { get; set; }
+    public string Transaction { get; set; }
+	[ForeignData(typeof(User))]
+	public string UserName { get; set; }
+}
+```
+With this configuration, OneData will look for the Name value inside our User class/model and get data based on the Log's UserId.
+
+ForeignData attribute has three constructors. In the example above, we used the simplest of them but may raise some eyebrows in confusion since it seems so magical at firsts. Next, you will find a detailed explanation:
+
+Just sending the JoinModel parameter:
+```c#
+[ForeignData(typeof(User))]
+```
+By doing this, OneData has to assume some configurations, which are: 
+* Your ReferenceModel is the model the property belongs to.
+* Your ReferenceIdName is using the name of your JoinModel plus the word 'Id'.
+* Your ColumnName is called Name.
+
+Just sending the JoinModel and ColumnName parameter:
+```c#
+[ForeignData(typeof(User), nameof(User.Name))]
+```
+By doing this, OneData has to assume some configurations, which are: 
+* Your ReferenceModel is the model the property belongs to.
+* Your ReferenceIdName is using the name of your JoinModel plus the word 'Id'.
+ 
+Sending every parameter:
+```c#
+[ForeignData(typeof(User), typeof(Log), nameof(UserId), nameof(User.Name))]
+```
+Even tho this seems a bit messy, it's VERY powerful when used on nested properties.
+
+All the magic will be done when you call any transaction of type Select.
+#### Generic Stored Procedures
+OneData knows that sometimes you need to call a stored procedure that's not a common transaction and for this, you can do the following:
+```c#
+Manager.StoredProcedure("<main table affected by your SP>", "<your stored procedure name>", <your connection name; null for default>, new Parameter("<parameter name>", <parameter value>));
+```
+The parameter ```tableName``` is not really used to execute anything and it will be removed in a future version.
+
+The last parameter in this method accepts an array of ```Parameter``` objects. This means you could just pass a preconfigured array or parameters or pass one by one.
+
+#### Async Methods
+Every method corresponding to a transaction type can be called using Async, although this calls are not as easy as we wish them to be (yet!). Please read the following to undertand more.
+
+This is the list of methods available for Async calls:
+* Manager\<T\>.InsertAsync(T obj, QueryOptions queryOptions)
+* Manager\<T\>.InsertMassiveAsync(IEnumerable<T> list, QueryOptions queryOptions)
+* Manager\<T\>.UpdateAsync(T obj, QueryOptions queryOptions)
+* Manager\<T\>.UpdateMassiveAsync(IEnumerable<T> list, QueryOptions queryOptions)
+* Manager\<T\>.DeleteAsync(T obj, QueryOptions queryOptions)
+* Manager\<T\>.DeleteMassiveAsync(IEnumerable<T> list, QueryOptions queryOptions)
+* Manager\<T\>.SelectAsync(Expression<Func<T, bool>> expression, QueryOptions queryOptions)
+* Manager\<T\>.SelectAllAsync(QueryOptions queryOptions)
+* Manager.StoredProcedureAsync(string tableName, string storedProcedure, QueryOptions queryOptions, params Parameter[] parameters)
+
+As an example, the following would be used to call an Async Insert method to add a new Log into the database:
+```c#
+await Manager<Log>.InsertAsync(newLog, null);
+```
+This method's last parameter corresponds to ```QueryOptions``` object, which can be sent as null to apply the defaults.
 
 ## FAQ
 
