@@ -3,7 +3,7 @@
 namespace OneData.Attributes
 {
     [AttributeUsage(AttributeTargets.Property)]
-    public class NotParameter : Attribute
+    internal class NotParameter : Attribute
     {
 
     }

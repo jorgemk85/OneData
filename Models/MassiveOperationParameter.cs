@@ -1,6 +1,6 @@
 ﻿namespace OneData.Models
 {
-    public class MassiveOperationParameter
+    internal class MassiveOperationParameter
     {
         public string XmlNames { get; set; }
         public string XmlValues { get; set; }

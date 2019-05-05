@@ -46,41 +46,5 @@ namespace OneData.Extensions
             }
             Manager<T>.Insert(obj, null);
         }
-
-        /// <summary>
-        /// Inserta una coleccion de objetos de forma masiva y en una sola llamada en la base de datos. Aun no integrado al pipeline regular de la aplicacion. ACTUALMENTE EN ALPHA.
-        /// Este metodo usa la conexion predeterminada a la base de datos.
-        /// </summary>
-        public static void InsertMassive<T>(this IEnumerable<T> list) where T : Cope<T>, IManageable, new()
-        {
-            if (list.Count() > 0)
-            {
-                Manager<T>.InsertMassive(list, null);
-            }
-        }
-
-        /// <summary>
-        /// Actualiza una coleccion de objetos de forma masiva y en una sola llamada en la base de datos. Aun no integrado al pipeline regular de la aplicacion. ACTUALMENTE EN ALPHA.
-        /// Este metodo usa la conexion predeterminada a la base de datos.
-        /// </summary>
-        public static void UpdateMassive<T>(this IEnumerable<T> list) where T : Cope<T>, IManageable, new()
-        {
-            if (list.Count() > 0)
-            {
-                Manager<T>.UpdateMassive(list, null);
-            }
-        }
-
-        /// <summary>
-        /// Borra una coleccion de objetos de forma masiva y en una sola llamada en la base de datos. Aun no integrado al pipeline regular de la aplicacion. ACTUALMENTE EN ALPHA.
-        /// Este metodo usa la conexion predeterminada a la base de datos.
-        /// </summary>
-        public static void DeleteMassive<T>(this IEnumerable<T> list) where T : Cope<T>, IManageable, new()
-        {
-            if (list.Count() > 0)
-            {
-                Manager<T>.DeleteMassive(list, null);
-            }
-        }
     }
 }
