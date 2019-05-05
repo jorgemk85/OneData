@@ -2,7 +2,7 @@
 [![Powered by C#](https://img.icons8.com/color/48/000000/c-sharp-logo-2.png)](https://docs.microsoft.com/en-us/dotnet/csharp/tutorials)
 [![Build Status](https://travis-ci.org/joemccann/dillinger.svg?branch=master)](https://github.com/jorgemk85/OneData)
 
-So, you are looking for a VERY easy solution to access your data inside a MySQL or MsSQL server...
+So, you are looking for a VERY easy, Code-First solution to access your data inside a MySQL or MsSQL server...
 
 ## Features
 * Very fast!
@@ -18,6 +18,7 @@ So, you are looking for a VERY easy solution to access your data inside a MySQL 
 * Events for every transaction type (Insert, Select, Update, Delete, etc).
 * Per class/model configuration.
 * Get foreign data into your "local" desired property with ease.
+* Massive operations are supported! You can insert, update or delete in your database with ease.
 
 ... And much more!
 
@@ -159,10 +160,32 @@ Please note the Generic class Cope<T> which NEEDS sent the class you are working
   
 Well done! You now have an up and running a complete relational data management solution inside your project.
 ## Usage
+### Configuration file Settings
+We have already explained where to put this configurations but haven't detailed what they are.
+
+The following table is a comprehensive list of available configurations with their respectic information:
+
+| Configuration name        | Remarks                            | Description                    |
+|---------------------------|-----------------------------------------|--------------------------------|
+|DefaultConnection          |None.                                    |Type the name of your default connection.|
+|ConnectionType             |MySQL or MsSQL                           |Choose to configure OneData to MySQL or MsSQL.|
+|InsertSuffix               |Can be Blank.                            |Literally the suffix to use with the Insert SPs.|
+|UpdateSuffix               |Can be Blank.                            |Literally the suffix to use with the Update SPs.|
+|DeleteSuffix               |Can be Blank.                            |Literally the suffix to use with the Delete SPs.|
+|StoredProcedurePrefix      |Can be Blank.                            |Prefix for every SP.|
+|AutoCreateTables           |true or false                            |If true, OneData will create a required table inside the database if it doesn't exist.|
+|AutoCreateStoredProcedures |true or false                            |If true, OneData will create a required stored procedure if it doesn't exist.|
+|AutoAlterStoredProcedures  |true or false                            |If true, OneData will alter a required stored procedure if it's not in sync with the class/model.|
+|AutoAlterTables            |true or false                            |If true, OneData will alter a required table if it's not in sync with the class/model.|
+|EnableLogInDatabase        |true or false                            |Choose to enable logging inside the database.|
+|DefaultSchema              |For MySQL it's the database name.        |Type the name of your default schema/database.|
+|ConstantTableConsolidation |true or false. Runs only in Debug.       |Heuristic approach to sync everything in your database based on your classes/models. Caution, it's a bit slow and is not recomended for production. Runs only on Debug mode.|
+|OverrideOnlyInDebug        |Override settings that run only in debug.|Will override those settings set to run only on Debug mode.|
+
 ### Attributes:
 Attributes inside OneData are used to configure the classes/models and properties.
 
-The following table is a comprehensive list of available attributes with their respectic information.
+The following table is a comprehensive list of available attributes with their respectic information:
 
 | Attribute name        | Used with  | Remarks                            | Description                    |
 |-----------------------|------------|------------------------------------|--------------------------------|
