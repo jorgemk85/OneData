@@ -141,6 +141,7 @@ Here's an example with the minimum required setup for the library to understand 
 ```c#
 using OneData.Attributes;
 using OneData.Interfaces;
+using OneData.Models;
 
 [DataTable("logs")]
     public class Log : Cope<Log>, IManageable
