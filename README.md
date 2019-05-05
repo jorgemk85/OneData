@@ -1,8 +1,31 @@
 # OneData
+[![Powered by C#](https://img.icons8.com/color/48/000000/c-sharp-logo-2.png)](https://docs.microsoft.com/en-us/dotnet/csharp/tutorials)
+[![Build Status](https://travis-ci.org/joemccann/dillinger.svg?branch=master)](https://github.com/jorgemk85/OneData)
 
 So, you are looking for a VERY easy solution to access your data inside a MySQL or MsSQL server...
 
+## Features
+* Very fast!
+* Ease of relational data access.
+* Automatic class/model binding.
+* On-RAM per class/model cache.
+* Automatic class/model structure sync inside your database.
+* Automatic logging in disk and database of every transaction (optional)
+* Supports simultaneous database connections.
+* Use your default database connection or switch with ease to use a diferent one.
+* Very easy query pagination on database.
+* Supports Async.
+* Events for every transaction type (Insert, Select, Update, Delete, etc).
+* Per class/model configuration.
+* Get foreign data into your "local" desired property with ease.
+
+... And much more!
+
+Don't know SQL? Why should you? OneData got you covered ;)
+
 ## Steps
+Now that we got all the intro out of our way, let's stablish what tasks must be done to get your project up and running with OneData:
+
 1) Install the package.
 2) Configure your project .config file.
 3) Setup your classes.
@@ -17,13 +40,19 @@ OR
 
 Install it via [NuGet](https://www.nuget.org/packages/OneData/).
 
-```bash
+#### Package Manager
+```
 Install-Package OneData
+```
+
+#### .NET CLI
+```
+dotnet add package OneData
 ```
 
 ## Configuration
 
-Now that you have the library installed in your project, you need to set up your .config configuration file (if you are using .Net Framework) or your .json configuration file (if you are using .Net Core or .Net Standard).
+Now that you have the library installed in your project, you need to set up your .config configuration file (if you are using .Net Framework) or your .json configuration file (if you are using .Net Core or .Net Standard). [What version should I use?](https://docs.microsoft.com/en-us/dotnet/standard/net-standard)
 
 ### .Net Framework 4.6.1 and Later
 In case you don't have a ConnectionString section inside your configuration file, please add it (don't include the placeholders <>):
@@ -103,12 +132,39 @@ In case you don't have a ConnectionString section inside your configuration file
 Ok, that wasn't hard, isn't it? We are done with the configuration!
 ## Setup
 
-The last step!
+The last step is to setup your classes!
 
+But... Which one's should I setup? Well, every class you will need to connect / have-access-to in you database.
 
+Here's an example with the minimum required setup for the library to understand your class:
+```c#
+using OneData.Attributes;
+using OneData.Interfaces;
 
+[DataTable("logs")]
+    public class Log : Cope<Log>, IManageable
+    {
+        [PrimaryKeyProperty]
+        public Guid Id { get; set; }
+        [DateCreatedProperty]
+        public DateTime DateCreated { get; set; }
+        [DateModifiedProperty]
+        public DateTime DateModified { get; set; }
+    }
+```
+
+The attributes DataTable, PrimaryKeyProperty, DateCreatedProperty and DateModifiedProperty will be explained with detail later in this document.
+
+Please note the Generic class Cope<T> which NEEDS sent the class you are working on. As the example shows, Log is the class name and the generic class is Cope<Log>. This is very important to setup properly since the compiler MIGHT not show a compilation error (it varies from class to class).
+  
+Well done! You now have an up and running a complete relational data management solution inside your project.
 ## Usage
+Let's begin with a list of available attributes:
+| Name | Type | Description |
+| ------ | ------ |------ |
 
+  
+Now
 ```c#
 import foobar
 
@@ -126,3 +182,6 @@ Please make sure to update tests as appropriate.
 
 ## License
 [MIT](https://choosealicense.com/licenses/mit/)
+
+## Icons used
+[Icons by Icons8](https://icons8.com)
