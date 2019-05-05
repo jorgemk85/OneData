@@ -17,7 +17,7 @@ So, you are looking for a VERY easy, Code-First solution to access your data ins
 * Supports Async.
 * Events for every transaction type (Insert, Select, Update, Delete, etc).
 * Per class/model configuration.
-* Get foreign data into your "local" desired property with ease.
+* Get foreign data into your desired "local" property with ease.
 * Massive operations are supported! You can insert, update or delete in your database with ease.
 
 ... And much more!
