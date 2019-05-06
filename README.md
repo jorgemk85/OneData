@@ -1,6 +1,7 @@
-# OneData
-[![OneData](https://img.icons8.com/cotton/64/000000/cloud-database.png)](https://github.com/jorgemk85/OneData)
-[![Build Status](https://travis-ci.org/joemccann/dillinger.svg?branch=master)](https://github.com/jorgemk85/OneData)
+# OneData [![Tweet](https://img.shields.io/twitter/url/http/shields.io.svg?style=social)](https://twitter.com/intent/tweet?text=Get%20the%20easiest,%20feature-rich%20ORM%20you%20were%20looking%20for.&url=https://github.com/jorgemk85/OneData&via=GitHub&hashtags=orm,design,c%23,database,dataaccess,developers)
+[![OneData](https://img.icons8.com/cotton/64/000000/cloud-database.png)](https://github.com/jorgemk85/OneData) 
+
+[![Build Status](https://img.shields.io/badge/build-passing-green.svg)](https://github.com/jorgemk85/OneData) [![Build Stage](https://img.shields.io/badge/stage-alpha-yellowgreen.svg)](https://github.com/jorgemk85/OneData)
 
 So, you are looking for a VERY easy, Code-First solution to access your data inside a MySQL or MsSQL server...
 
@@ -31,6 +32,8 @@ OneData is compatible with any project developed with the following:
 * .Net Framework 4.6.1 and later.
 * .Net Standard 2.0 and later.
 * .Net Core 2.0 and later.
+
+Are you using VB.net to develop your apps? Dont' worry, you can still use OneData without any kind of problems.
 
 ## Steps
 Now that we got all the intro out of our way, let's stablish what tasks must be done to get your project up and running with OneData:
@@ -63,10 +66,10 @@ dotnet add package OneData
 
 ## Configuration
 
-Now that you have the library installed in your project, you need to set up your .config configuration file (if you are using .Net Framework) or your .json configuration file (if you are using .Net Core or .Net Standard). [Should I use .Net Standard?](https://docs.microsoft.com/en-us/dotnet/standard/net-standard)
+Now that you have OneData installed in your project, you need to set up your .config configuration file (if you are using .Net Framework) or your .json configuration file (if you are using .Net Core or .Net Standard). [Should I use .Net Standard?](https://docs.microsoft.com/en-us/dotnet/standard/net-standard)
 
 ### .Net Framework 4.6.1 and Later
-In case you don't have a ConnectionString section inside your configuration file, please add it (don't include the placeholders <>):
+In case you don't have the connectionStrings section inside your configuration file, please add it (don't include the placeholders <>):
 ```xml
   <connectionStrings>
     <add name="<your connection name>" connectionString="server=<your server ip / hostname>;Uid=<db username>;Pwd=<db password>;persistsecurityinfo=True;database=<your database name>;SslMode=none;AllowUserVariables=True;CheckParameters=False" />
@@ -100,7 +103,7 @@ Please add them ALL to your project:
   </appSettings>
 ```
 ### .Net Standard 2.0 and Later / .NET Core 2.0 and Later
-In case you don't have a ConnectionString section inside your configuration file, please add it (don't include the placeholders <>):
+In case you don't have the ConnectionStrings section inside your configuration file, please add it (don't include the placeholders <>):
 ```json
   "ConnectionStrings": {
       "<your connection name>": "server=<your server ip / hostname>;Uid=<db username>;Pwd=<db password>$;persistsecurityinfo=True;database=<your database name>;SslMode=none;AllowUserVariables=True;CheckParameters=False"
@@ -136,7 +139,7 @@ Please add them ALL to your project:
 In case you don't have a ConnectionString section inside your configuration file, please add it:
 ```xml
   <connectionStrings>
-    <add name="MochaHost" connectionString="server=<your server ip / hostname>;Uid=<db username>;Pwd=<db password>;persistsecurityinfo=True;database=<your database name>;SslMode=none;AllowUserVariables=True;CheckParameters=False" />
+    <add name="<your connection name>" connectionString="server=<your server ip / hostname>;Uid=<db username>;Pwd=<db password>;persistsecurityinfo=True;database=<your database name>;SslMode=none;AllowUserVariables=True;CheckParameters=False" />
   </connectionStrings>
 ```
 
@@ -165,16 +168,16 @@ public class Log : Cope<Log>, IManageable
 }
 ```
 
-The attributes DataTable, PrimaryKeyProperty, DateCreatedProperty and DateModifiedProperty will be explained with detail later in this document.
+The attributes `DataTable`, `PrimaryKeyProperty`, `DateCreatedProperty` and `DateModifiedProperty` will be explained with detail later in this document. For now, know that they are used to indicate which property is used for what specific purpose. The name of your properties is completely up to you.
 
-Please note the Generic class Cope<T> which NEEDS sent the class you are working on. As the example shows, Log is the class name and the generic class is Cope<Log>. This is very important to setup properly since the compiler MIGHT not show a compilation error (it varies from class to class).
+Please note the Generic class `Cope<T>` which NEEDS sent the class you are working on. As the example shows, `Log` is the class name and the generic class is `Cope<Log>`. This is very important to setup properly since the compiler MIGHT not show a compilation error (it varies from class to class).
   
 Well done! You now have an up and running a complete relational data management solution inside your project.
 ## Usage
 ### Configuration:
 We have already explained where to put this configurations but haven't detailed what they are.
 
-The following table is a comprehensive list of available configurations with their respectic information:
+The following table is a comprehensive list of available configurations with their respective information:
 
 | Configuration name          | Remarks									| Description                    |
 |-----------------------------|-----------------------------------------|--------------------------------|
@@ -214,7 +217,7 @@ The following table is a comprehensive list of available attributes with their r
 | `UnmanagedProperty`   | Properties | None.                              | Used when you don't want OneData to interfere with.   |
 
 ### Transactions
-Let's talk a bit about transactions... First of all, we've got an enumeration called TransactionTypes which holds the following:
+Let's talk a bit about transactions... First of all, we've got an enumeration called `TransactionTypes` which holds the following:
 * Select
 * SelectAll
 * Delete
@@ -225,15 +228,15 @@ Let's talk a bit about transactions... First of all, we've got an enumeration ca
 * UpdateMassive
 * StoredProcedure
 
-They are pretty self explanatory, except maybe DeleteMassive, InsertMassive, UpdateMassive and StoredProcedure. The first three types are used to execute the desired transaction but with a big set of data. The last one is used when you want to execute a generic stored procedure inside your database.
+They are pretty self explanatory, except maybe `DeleteMassive`, `InsertMassive`, `UpdateMassive` and `StoredProcedure`. The first three types are used to execute the desired transaction but with a big set of data. The last one is used when you want to execute a generic stored procedure inside your database.
 
 ## Examples
 
 ### Basics
 #### Changing my class/model
-In section **Setup**, we stablished a class/model called Log, which only have three properties. If we run our program, OneData will be creating the respective table called "logs" (as configured with the DataTable attribute). This table will also have three columns which reflects our class/model... But, what if I add a new property? Should I go into the table manually and change it as I please? NO! You just need to add this new property to your class/model and let OneData take care of the rest (make sure you have the corresponding settings inside your .config file)! Please see the following:
+In section **Setup**, we stablished a class/model called `Log`, which only have three properties. If we run our program, OneData will be creating the respective table called "logs" (as configured with the `DataTable` attribute). This table will also have three columns which reflects our class/model... But, what if I add a new property? Should I go into the table manually and change it as I please? NO! You just need to add this new property to your class/model and let OneData take care of the rest (make sure you have the corresponding settings inside your .config file)! Please see the following:
 
-This is our new Log class/model (note the new properties UserId and Transaction).
+This is our new `Log` class/model (note the new properties `UserId` and Transaction).
 ```c#
 [DataTable("logs")]
 public class Log : Cope<Log>, IManageable
@@ -254,11 +257,11 @@ Literally, the next time your program runs and tries to access this object in th
 This exact steps will trigger if your change is as small as adding a new property or huge as adding twenty, changing datatypes of another three, modifying the datalength of a couple and updating the relationships between classes/models.
 
 #### Adding data to the database
-Let's say you have a single Log object with it's respective data already filled. How do I insert it into the corresponding table?
+Let's say you have a single `Log` object with it's respective data already filled. How do I insert it into the corresponding table?
 ```c#
 myNewLog.Insert();
 ```
-A neat trick to ease your way when adding new objects of your desired type, is to add constructors to your class/model. This way, when ever you call ```new``` on your type, the Id will be filled automatically.
+A neat trick to ease your way when adding new objects of your desired type, is to add constructors to your class/model. This way, whenever you call `new` on your type, the Id will be filled automatically.
 
 This pair is pretty handy:
 ```c#
@@ -273,7 +276,7 @@ public Log(Guid id)
 }
 ```
 
-When you which to insert a set of information contained in a IEnumerable, say, a List, you can simply do the following:
+When you which to insert a set of information contained in a `IEnumerable<T>`, say, a `List<T>`, you can simply do the following:
 ```c#
 myLogCollection.InsertMasssive();
 ```
@@ -285,11 +288,11 @@ Similarly to Insert, if you need to update a record, you can do the following:
 ```c#
 myUpdatedLog.Update();
 ```
-OneData uses the value inside the property identified as PrimaryKey to find the object in the database and update it as you wish. 
+OneData uses the value inside the property identified as `PrimaryKeyProperty` to find the object in the database and update it as you wish. 
 
-**The Update stored procedure uses IFNULL(), so if you want to send partial information, you should send your object with every property set to null except those you really need to update, and of course your PrimaryKey value should be set.**
+**The Update stored procedure uses IFNULL(), so if you want to send partial information, you should send your object with every property set to null except those you really need to update, and of course your `PrimaryKeyProperty` value should be set.**
 
-When you which to update a set of information contained in a IEnumerable, say, a List, you can simply do the following:
+When you which to update a set of information contained in a `IEnumerable<T>`, say, a `List<T>`, you can simply do the following:
 ```c#
 myLogCollection.UpdateMasssive();
 ```
@@ -301,9 +304,9 @@ Similarly to Insert or Update, if you need to Delete a record, you can do the fo
 ```c#
 myUpdatedLog.Delete();
 ```
-You only need to send the id of your record inside the property you identified as PrimaryKey to find the object in the database and delete it.
+You only need to send the id of your record inside the property you identified as `PrimaryKeyProperty` to find the object in the database and delete it.
 
-When you which to delete a set of information contained in a IEnumerable, say, a List, you can simply do the following:
+When you which to delete a set of information contained in a `IEnumerable<T>`, say, a `List<T>`, you can simply do the following:
 ```c#
 myLogCollection.DeleteMasssive();
 ```
@@ -313,30 +316,30 @@ OneData will then serialize your list and send it to the database for procesing,
 #### Selecting data from the database
 Selecting data from the database is NOT performed using stored procedures as with Inserting, Updating or Deleting. This is because of the complex nature and wide variety of queries.
 
-OneData uses lambda expressions to work with queries, making it very readable and of course, refactor friendly along the way.
+OneData uses lambda expressions to work with queries, making it very readable and of course, *refactor friendly* along the way.
 
-Returns a list of logs found in the database that match the provided userId.
+Returns a list of logs found in the database that match the provided `userId`.
 ```c#
 private List<Log> GimmeAllTheLogsFromUserId(Guid userId)
 {
 	return Log.SelectList(q => q.UserId == userId);
 }
 ```
-Returns a list of logs found in the database that contain the provided transaction.
+Returns a list of logs found in the database that contain the provided `transaction`.
 ```c#
 private List<Log> GimmeAllTheLogsThatContainTransaction(string transaction)
 {
 	return Log.SelectList(q => q.Transaction.Contains(transaction));
 }
 ```
-Returns a list of logs found in the database that starts with the provided transaction.
+Returns a list of logs found in the database that starts with the provided `transaction`.
 ```c#
 private List<Log> GimmeAllTheLogsThatStartsWithTransaction(string transaction)
 {
 	return Log.SelectList(q => q.Transaction.StartsWith(transaction));
 }
 ```
-Returns a list of logs found in the database that ends with the provided transaction.
+Returns a list of logs found in the database that ends with the provided `transaction`.
 ```c#
 private List<Log> GimmeAllTheLogsThatEndsWithTransaction(string transaction)
 {
@@ -358,20 +361,20 @@ private Log GimmeTheLogFromUserIdThatEndsWithTransaction(Guid userId, string tra
 	return Log.Select(q => q.UserId == userId && q.Transaction.EndsWith(transaction));
 }
 ```
-The method SelectList has an overload which accepts an object called QueryOptions, intended to further configure your query with the following options:
-* ConnectionToUse
-> Can be null, and if set as such, will default be automatically set to the value you stated in DefaultConnection, inside your .config file. If you set a value, make sure it's a connection name that exists inside your .config file.
-* MaximumResults
+The method `SelectList` has an overload which accepts an object of type `QueryOptions`, intended to further configure your query with the following parameters:
+* `ConnectionToUse`
+> Can be null, and if set as such, will default be automatically set to the value you stated in `DefaultConnection`, inside your .config file. If you set a value, make sure it's a connection name that exists inside your .config file.
+* `MaximumResults`
 > Limits the results of the query. You can set it to -1, which means to bring every record found.
-* Offset
+* `Offset`
 > Brings back records starting from the specified offset in this property. If set to 0, will simply start from the beginning, as expected ;)
 
-Every query is returned with ordered records. OneData orders them by the descending value of the property marked with DateCreatedProperty attribute. 
+Every query is returned with ordered records. OneData orders them by the descending value of the property marked with `DateCreatedProperty` attribute. 
 ### Intermediate
 #### Relationships
 We will talk a little about relationships between classes/models inside OneData.
 
-First, let's create a new class/model called User:
+First, let's create a new class/model called `User`:
 ```c#
 using OneData.Attributes;
 using OneData.Interfaces;
@@ -394,7 +397,7 @@ public class User : Cope<User>, IManageable
 }
 ```
 
-To achieve a relationship between Users and Logs, we just need to configure it in the Log class/model (note the new attribute on UserId property):
+To achieve a relationship between Users and Logs, we just need to configure it in the `Log` class/model (note the new attribute on `UserId` property):
 ```c#
 [DataTable("logs")]
 public class Log : Cope<Log>, IManageable
@@ -411,9 +414,9 @@ public class Log : Cope<Log>, IManageable
     public string Transaction { get; set; }
 }
 ```
-And just like that, our classes/models are related! By default, OneData configures the relationship ON DELETE to NO ACTION, but you can configure this with an overload on the attribute. Also, the ON UPDATE is always set to NO ACTION at this point.
+And just like that, our classes/models are related! By default, OneData configures the relationship `ON DELETE` to `NO ACTION`, but you can configure this with an overload on the attribute. Also, the `ON UPDATE` is always set to `NO ACTION` at this point.
 
-The following should be used if you need to pull data from another table (related or not) into our class/model for ease of use (note the new property UserName and it's attribute).
+The following should be used if you need to pull data from another table (related or not) into our class/model for ease of use (note the new property `UserName` and it's attribute).
 ```c#
 [DataTable("logs")]
 public class Log : Cope<Log>, IManageable
@@ -432,26 +435,26 @@ public class Log : Cope<Log>, IManageable
 	public string UserName { get; set; }
 }
 ```
-With this configuration, OneData will look for the Name value inside our User class/model and get data based on the Log's UserId.
+With this configuration, OneData will look for the `Name` property and get it's value inside our `User` class/model and get data based on the log's `UserId`.
 
-ForeignData attribute has three constructors. In the example above, we used the simplest of them but may raise some eyebrows in confusion since it seems so magical at firsts. Next, you will find a detailed explanation:
+`ForeignData` attribute has three constructors. In the example above, we used the simplest of them but may raise some eyebrows in confusion since it seems so magical at firsts. Next, you will find a detailed explanation:
 
-Just sending the JoinModel parameter:
+Just sending the `JoinModel` parameter:
 ```c#
 [ForeignData(typeof(User))]
 ```
 By doing this, OneData has to assume some configurations, which are: 
-* Your ReferenceModel is the model the property belongs to.
-* Your ReferenceIdName is using the name of your JoinModel plus the word 'Id'.
-* Your ColumnName is called Name.
+* Your `ReferenceModel` is the model the property belongs to.
+* Your `ReferenceIdName` is using the name of your `JoinModel` plus the word 'Id'.
+* Your `ColumnName` property inside your `JoinModel` is called `Name`.
 
-Just sending the JoinModel and ColumnName parameter:
+Just sending the `JoinModel` and `ColumnName` parameter:
 ```c#
 [ForeignData(typeof(User), nameof(User.Name))]
 ```
 By doing this, OneData has to assume some configurations, which are: 
-* Your ReferenceModel is the model the property belongs to.
-* Your ReferenceIdName is using the name of your JoinModel plus the word 'Id'.
+* Your `ReferenceModel` is the model the property belongs to.
+* Your `ReferenceIdName` is using the name of your `JoinModel` plus the word 'Id'.
  
 Sending every parameter:
 ```c#
@@ -461,18 +464,18 @@ Even tho this seems a bit messy, it's VERY powerful when used on nested properti
 
 All the magic will be done when you call any transaction of type Select.
 #### Generic Stored Procedures
-OneData knows that sometimes you need to call a stored procedure that's not a common transaction and for this, you can do the following:
+We know that sometimes you need to call a stored procedure that's not a common transaction and for this, you can do the following:
 ```c#
 Manager.StoredProcedure("<main table affected by your SP>", "<your stored procedure name>", <your connection name; null for default>, new Parameter("<parameter name>", <parameter value>));
 ```
-The parameter ```tableName``` is not really used to execute anything and it will be removed in a future version.
+The parameter `tableName` is not really used to execute anything and it will be removed in a future version.
 
-The last parameter in this method accepts an array of ```Parameter``` objects. This means you could just pass a preconfigured array or parameters or pass one by one.
+The last parameter in this method accepts an array of type `Parameter`. This means you could just pass a preconfigured array or pass one by one.
 
 #### Async Methods
-Every method corresponding to a transaction type can be called using Async, although this calls are not as easy as we wish them to be (yet!). Please read the following to understand more.
+Every method corresponding to a transaction type can be called using `Async`, although this calls are not as easy as we wish them to be (yet!). Please read the following to understand more.
 
-This is the list of methods available for Async calls:
+This is the list of methods available for `Async` calls:
 ```c#
 Manager<T>.InsertAsync(T obj, QueryOptions queryOptions)
 Manager<T>.InsertMassiveAsync(IEnumerable<T> list, QueryOptions queryOptions)
@@ -484,11 +487,11 @@ Manager<T>.SelectAsync(Expression<Func<T, bool>> expression, QueryOptions queryO
 Manager<T>.SelectAllAsync(QueryOptions queryOptions)
 Manager.StoredProcedureAsync(string tableName, string storedProcedure, QueryOptions queryOptions, params Parameter[] parameters)
 ```
-As an example, the following would be used to call an Async Insert method to add a new Log into the database:
+As an example, the following would be used to call an `Async` Insert method to add a new `Log` object into the database:
 ```c#
 await Manager<Log>.InsertAsync(newLog, null);
 ```
-This method's last parameter corresponds to ```QueryOptions``` object, which can be sent as null to apply the defaults.
+This method's last parameter corresponds to `QueryOptions` object, which can be sent as null to apply the defaults.
 
 ## FAQ
 
