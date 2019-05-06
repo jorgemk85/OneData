@@ -28,7 +28,7 @@ namespace OneData.DAO
         {
             _connectionType = ConnectionTypes.MSSQL;
             _creator = new MsSqlCreation();
-            QueryForTableExistance = "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE' AND TABLE_NAME = '{0}{1}'";
+            QueryForTableExistance = "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE' AND TABLE_NAME = '{0}'";
             QueryForStoredProcedureExistance = $"SELECT ROUTINE_NAME FROM INFORMATION_SCHEMA.ROUTINES WHERE ROUTINE_SCHEMA = '{Manager.DefaultSchema}' AND ROUTINE_NAME = '" + "{0}'";
             QueryForColumnDefinition = string.Format("SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '{0}'", string.Format("{0}{1}", Manager.TablePrefix, "{0}"));
             QueryForKeyDefinition = string.Format("SELECT * FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE TABLE_NAME = '{0}' AND COLUMN_NAME != 'Id'", string.Format("{0}{1}", Manager.TablePrefix, "{0}"));
@@ -175,7 +175,7 @@ namespace OneData.DAO
                 _command = connection.CreateCommand();
                 _command.CommandType = CommandType.Text;
 
-                _command.CommandText = $"{GetSelectQuerySection<T>()} {GetFromQuerySection<T>()} ORDER BY {Cope<T>.ModelComposition.DateModifiedProperty.Name} DESC {offsetQuery} {limitQuery}";
+                _command.CommandText = $"{GetSelectQuerySection<T>()} {GetFromQuerySection<T>()} ORDER BY [{Cope<T>.ModelComposition.DateModifiedProperty.Name}] DESC {offsetQuery} {limitQuery}";
                 FillDictionaryWithReader(_command.ExecuteReader(), ref result);
             }
             return result;
@@ -273,15 +273,16 @@ namespace OneData.DAO
             {
                 if (connection.State != ConnectionState.Open) throw new BadConnectionStateException();
 
-                string limitQuery = queryOptions.MaximumResults > -1 ? $"FETCH NEXT {queryOptions.MaximumResults} ROWS ONLY" : string.Empty;
-                string offsetQuery = queryOptions.Offset > 0 ? $"OFFSET {queryOptions.Offset} ROWS" : string.Empty;
+                string offsetQuery = queryOptions.Offset != 0 || queryOptions.MaximumResults > -1 ? $"OFFSET {queryOptions.Offset} ROWS" : "";
+                string fetchSetup = queryOptions.Offset == 0 ? "FETCH FIRST" : "FETCH NEXT";
+                string limitQuery = queryOptions.MaximumResults > -1 ? $"{fetchSetup} {queryOptions.MaximumResults} ROWS ONLY" : string.Empty;
 
                 _command = connection.CreateCommand();
                 _command.CommandType = CommandType.Text;
                 _command.CommandText = $"{GetSelectQuerySection<T>()} {GetFromQuerySection<T>()} WHERE {ExpressionTools.ConvertExpressionToSQL(expression)} ORDER BY {Cope<T>.ModelComposition.DateModifiedProperty.Name} DESC {offsetQuery} {limitQuery}";
                 FillDictionaryWithReader(_command.ExecuteReader(), ref result);
             }
-            return new Result<T>(new Dictionary<dynamic, T>(), false, true);
+            return result;
         }
 
         private string GetSelectQuerySection<T>() where T : Cope<T>, IManageable, new()
@@ -291,14 +292,14 @@ namespace OneData.DAO
             string foreignTableFullyQualifiedName;
             string fullyQualifiedTableName = $"{Manager.TablePrefix}{Cope<T>.ModelComposition.TableName}";
 
-            selectBuilder.Append($"SELECT `{fullyQualifiedTableName}`.*");
+            selectBuilder.Append($"SELECT [{fullyQualifiedTableName}].*");
             if (Cope<T>.ModelComposition.ForeignDataAttributes.Count > 0)
             {
                 foreach (ForeignData foreignAttribute in Cope<T>.ModelComposition.ForeignDataAttributes.Values)
                 {
                     foreignObject = (IManageable)Activator.CreateInstance(foreignAttribute.JoinModel);
                     foreignTableFullyQualifiedName = $"{Manager.TablePrefix}{foreignObject.Configuration.TableName}";
-                    selectBuilder.Append($",`{foreignTableFullyQualifiedName}`.`{foreignAttribute.ColumnName}` as `{foreignAttribute.PropertyName}`");
+                    selectBuilder.Append($",[{foreignTableFullyQualifiedName}].[{foreignAttribute.ColumnName}] as [{foreignAttribute.PropertyName}]");
                 }
             }
 
@@ -313,7 +314,7 @@ namespace OneData.DAO
             string foreignTableFullyQualifiedName;
             string fullyQualifiedTableName = $"{Manager.TablePrefix}{Cope<T>.ModelComposition.TableName}";
 
-            fromBuilder.Append($" FROM `{fullyQualifiedTableName}`");
+            fromBuilder.Append($" FROM [{fullyQualifiedTableName}]");
             if (Cope<T>.ModelComposition.ForeignDataAttributes.Count > 0)
             {
                 foreach (ForeignData foreignAttribute in Cope<T>.ModelComposition.ForeignDataAttributes.Values.GroupBy(x => x.JoinModel).Select(y => y.First()))
@@ -321,7 +322,7 @@ namespace OneData.DAO
                     foreignModel = (IManageable)Activator.CreateInstance(foreignAttribute.JoinModel);
                     foreignReferenceModel = (IManageable)Activator.CreateInstance(foreignAttribute.ReferenceModel);
                     foreignTableFullyQualifiedName = $"{Manager.TablePrefix}{foreignModel.Configuration.TableName}";
-                    fromBuilder.Append($" INNER JOIN `{foreignTableFullyQualifiedName}` ON `{Manager.TablePrefix}{foreignReferenceModel.Configuration.TableName}`.`{foreignAttribute.ReferenceIdName}` = `{foreignTableFullyQualifiedName}`.`{foreignModel.Configuration.PrimaryKeyProperty.Name}`");
+                    fromBuilder.Append($" INNER JOIN [{foreignTableFullyQualifiedName}] ON [{Manager.TablePrefix}{foreignReferenceModel.Configuration.TableName}].[{foreignAttribute.ReferenceIdName}] = [{foreignTableFullyQualifiedName}].[{foreignModel.Configuration.PrimaryKeyProperty.Name}]");
                 }
             }
 

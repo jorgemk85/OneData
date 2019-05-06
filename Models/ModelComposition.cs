@@ -88,7 +88,7 @@ namespace OneData.Models
             {
                 throw new RequiredAttributeNotFound("DateCreatedProperty", type.FullName);
             }
-            else if (!DateCreatedProperty.PropertyType.Equals(typeof(DateTime)))
+            else if (!DateCreatedProperty.PropertyType.Equals(typeof(DateTime)) && !Nullable.GetUnderlyingType(DateCreatedProperty.PropertyType).Equals(typeof(DateTime)))
             {
                 throw new InvalidDataType(DateCreatedProperty.Name, type.FullName, "DateTime");
             }
@@ -97,7 +97,7 @@ namespace OneData.Models
             {
                 throw new RequiredAttributeNotFound("DateModifiedProperty", type.FullName);
             }
-            else if (!DateModifiedProperty.PropertyType.Equals(typeof(DateTime)))
+            else if (!DateModifiedProperty.PropertyType.Equals(typeof(DateTime)) && !Nullable.GetUnderlyingType(DateCreatedProperty.PropertyType).Equals(typeof(DateTime)))
             {
                 throw new InvalidDataType(DateModifiedProperty.Name, type.FullName, "DateTime");
             }
