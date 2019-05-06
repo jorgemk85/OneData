@@ -75,7 +75,7 @@ In case you don't have the connectionStrings section inside your configuration f
     <add name="<your connection name>" connectionString="server=<your server ip / hostname>;Uid=<db username>;Pwd=<db password>;persistsecurityinfo=True;database=<your database name>;SslMode=none;AllowUserVariables=True;CheckParameters=False" />
   </connectionStrings>
 ```
-Notice that there are some special settings in the connection string. Make sure you include them in EVERY connection string you got.
+Notice that there are some special settings in the connection string, only applicable if you are using MySQL. Make sure you include them.
 ```
 SslMode=none;AllowUserVariables=True;CheckParameters=False
 ```
@@ -109,7 +109,7 @@ In case you don't have the ConnectionStrings section inside your configuration f
       "<your connection name>": "server=<your server ip / hostname>;Uid=<db username>;Pwd=<db password>$;persistsecurityinfo=True;database=<your database name>;SslMode=none;AllowUserVariables=True;CheckParameters=False"
     }
 ```
-Notice that there are some special settings in the connection string. Make you include them in EVERY connection string you got.
+Notice that there are some special settings in the connection string, only applicable if you are using MySQL. Make sure you include them.
 ```
 SslMode=none;AllowUserVariables=True;CheckParameters=False
 ```
@@ -135,12 +135,6 @@ Please add them ALL to your project:
     "ConstantTableConsolidation": "<true or false>",
     "OverrideOnlyInDebug": "<true or false>"
   }
-```
-In case you don't have a ConnectionString section inside your configuration file, please add it:
-```xml
-  <connectionStrings>
-    <add name="<your connection name>" connectionString="server=<your server ip / hostname>;Uid=<db username>;Pwd=<db password>;persistsecurityinfo=True;database=<your database name>;SslMode=none;AllowUserVariables=True;CheckParameters=False" />
-  </connectionStrings>
 ```
 
 Ok, that wasn't hard, isn't it? We are done with the configuration!

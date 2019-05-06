@@ -28,11 +28,9 @@ namespace OneData.DAO
         public static bool EnableLogInFile { get; internal set; }
         public static bool ConstantTableConsolidation { get; internal set; }
         public static bool OverrideOnlyInDebug { get; internal set; }
-        public static string SelectSuffix { get; internal set; }
         public static string InsertSuffix { get; internal set; }
         public static string UpdateSuffix { get; internal set; }
         public static string DeleteSuffix { get; internal set; }
-        public static string SelectAllSuffix { get; internal set; }
         public static string StoredProcedurePrefix { get; internal set; }
         public static string TablePrefix { get; internal set; }
         public static IManageable Identity { get; set; }
@@ -63,11 +61,9 @@ namespace OneData.DAO
         internal static void GetPrefixesAndSuffixes()
         {
             Logger.Info("Getting Manager configuration for prefixes and suffixes.");
-            SelectSuffix = ConsolidationTools.GetValueFromConfiguration("SelectSuffix", ConfigurationTypes.AppSetting);
             InsertSuffix = ConsolidationTools.GetValueFromConfiguration("InsertSuffix", ConfigurationTypes.AppSetting);
             UpdateSuffix = ConsolidationTools.GetValueFromConfiguration("UpdateSuffix", ConfigurationTypes.AppSetting);
             DeleteSuffix = ConsolidationTools.GetValueFromConfiguration("DeleteSuffix", ConfigurationTypes.AppSetting);
-            SelectAllSuffix = ConsolidationTools.GetValueFromConfiguration("SelectAllSuffix", ConfigurationTypes.AppSetting);
             StoredProcedurePrefix = ConsolidationTools.GetValueFromConfiguration("StoredProcedurePrefix", ConfigurationTypes.AppSetting);
             TablePrefix = ConsolidationTools.GetValueFromConfiguration("TablePrefix", ConfigurationTypes.AppSetting);
         }

@@ -172,8 +172,6 @@ namespace OneData.DAO
                     return Manager.InsertSuffix;
                 case TransactionTypes.Update:
                     return Manager.UpdateSuffix;
-                case TransactionTypes.SelectAll:
-                    return Manager.SelectAllSuffix;
                 default:
                     throw new NotSupportedException($"El tipo de transaccion {transactionType.ToString()} no puede ser utilizado con esta funcion.");
             }

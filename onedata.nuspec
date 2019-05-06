@@ -21,8 +21,6 @@
         <dependency id="Microsoft.Extensions.Configuration.FileExtensions" version="2.1.1" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Extensions.Configuration.Json" version="2.1.1" exclude="Build,Analyzers" />
         <dependency id="MySql.Data" version="8.0.16" exclude="Build,Analyzers" />
-        <dependency id="NUnit" version="3.11.0" exclude="Build,Analyzers" />
-        <dependency id="NUnit3TestAdapter" version="3.13.0" exclude="Build,Analyzers" />
         <dependency id="Newtonsoft.Json" version="12.0.2" exclude="Build,Analyzers" />
         <dependency id="System.Configuration.ConfigurationManager" version="4.5.0" exclude="Build,Analyzers" />
         <dependency id="System.Data.Common" version="4.3.0" exclude="Build,Analyzers" />
@@ -36,7 +34,6 @@
         <dependency id="Microsoft.Extensions.Configuration.FileExtensions" version="2.1.1" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Extensions.Configuration.Json" version="2.1.1" exclude="Build,Analyzers" />
         <dependency id="MySql.Data" version="8.0.16" exclude="Build,Analyzers" />
-        <dependency id="NUnit" version="3.11.0" exclude="Build,Analyzers" />
         <dependency id="Newtonsoft.Json" version="12.0.2" exclude="Build,Analyzers" />
         <dependency id="System.Configuration.ConfigurationManager" version="4.5.0" exclude="Build,Analyzers" />
         <dependency id="System.Data.Common" version="4.3.0" exclude="Build,Analyzers" />
