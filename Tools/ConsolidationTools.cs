@@ -6,6 +6,7 @@ using System.IO;
 using System.Reflection;
 using System.Data.Common;
 using System;
+using OneData.DAO;
 
 namespace OneData.Tools
 {
@@ -89,9 +90,14 @@ namespace OneData.Tools
 
         internal static string GetInitialCatalog(string connectionToUse)
         {
+            if (Manager.ConnectionType == ConnectionTypes.MySQL)
+            {
+                return "def";
+            }
+
             DbConnectionStringBuilder builder = new DbConnectionStringBuilder
             {
-                ConnectionString = ConsolidationTools.GetValueFromConfiguration(connectionToUse, ConfigurationTypes.ConnectionString)
+                ConnectionString = GetValueFromConfiguration(connectionToUse, ConfigurationTypes.ConnectionString)
             };
 
             bool dbNameFound = false;
