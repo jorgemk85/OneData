@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd">
   <metadata>    
     <id>OneData</id>
-    <version>0.1.2-alpha</version>
+    <version>0.1.3-alpha</version>
     <title>OneData</title>
     <authors>Jorge Marcos Kawas</authors>
     <owners>jorge marcos kawas</owners>
@@ -11,7 +11,7 @@
     <iconUrl>https://img.icons8.com/cotton/64/000000/cloud-database.png</iconUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>A fast and easy ORM focused on the reduction of development times and ease of work.</description>
-    <releaseNotes>Removed test data from project.</releaseNotes>
+    <releaseNotes>Solved some bugs with MSSQL.</releaseNotes>
     <copyright>JMK 2019</copyright>
     <tags>orm dataaccess utility database access serialization deserialization</tags>
     <dependencies>

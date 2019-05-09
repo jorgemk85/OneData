@@ -28,10 +28,6 @@ namespace OneData.DAO
         {
             _connectionType = ConnectionTypes.MSSQL;
             _creator = new MsSqlCreation();
-            QueryForTableExistance = "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE' AND TABLE_NAME = '{0}'";
-            QueryForStoredProcedureExistance = $"SELECT ROUTINE_NAME FROM INFORMATION_SCHEMA.ROUTINES WHERE ROUTINE_SCHEMA = '{Manager.DefaultSchema}' AND ROUTINE_NAME = '" + "{0}'";
-            QueryForColumnDefinition = string.Format("SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '{0}'", string.Format("{0}{1}", Manager.TablePrefix, "{0}"));
-            QueryForKeyDefinition = string.Format("SELECT * FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE TABLE_NAME = '{0}' AND COLUMN_NAME != 'Id'", string.Format("{0}{1}", Manager.TablePrefix, "{0}"));
         }
 
         public DataSet ExecuteProcedure(string tableName, string storedProcedure, QueryOptions queryOptions, Parameter[] parameters, bool logTransaction = true)
@@ -168,8 +164,9 @@ namespace OneData.DAO
 
             using (SqlConnection connection = Connection.OpenMsSqlConnection(queryOptions.ConnectionToUse))
             {
-                string limitQuery = queryOptions.MaximumResults > -1 ? $"FETCH NEXT {queryOptions.MaximumResults} ROWS ONLY" : string.Empty;
-                string offsetQuery = queryOptions.Offset > 0 ? $"OFFSET {queryOptions.Offset} ROWS" : string.Empty;
+                string offsetQuery = queryOptions.Offset != 0 || queryOptions.MaximumResults > -1 ? $"OFFSET {queryOptions.Offset} ROWS" : "";
+                string fetchSetup = queryOptions.Offset == 0 ? "FETCH FIRST" : "FETCH NEXT";
+                string limitQuery = queryOptions.MaximumResults > -1 ? $"{fetchSetup} {queryOptions.MaximumResults} ROWS ONLY" : string.Empty;
 
                 if (connection.State != ConnectionState.Open) throw new BadConnectionStateException();
                 _command = connection.CreateCommand();

@@ -26,11 +26,6 @@ namespace OneData.DAO
         {
             _connectionType = ConnectionTypes.MySQL;
             _creator = new MySqlCreation();
-            QueryForTableExistance = $"SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '{Manager.DefaultSchema}' AND TABLE_NAME = '{Manager.TablePrefix}" + "{0}'";
-            QueryForStoredProcedureExistance = $"SELECT ROUTINE_NAME FROM INFORMATION_SCHEMA.ROUTINES WHERE ROUTINE_SCHEMA = '{Manager.DefaultSchema}' AND ROUTINE_NAME = '" + "{0}'";
-            QueryForColumnDefinition = $"SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = '{Manager.DefaultSchema}' AND TABLE_NAME = '{Manager.TablePrefix}" + "{0}'";
-            // TODO: Tiene escrito la columna Id como si todas las primary keys se llamaran asi. Esto esta asi por que antes era obligatorio, pero desde que se implemento el atributo PrimaryKey esto podria tronar...
-            QueryForKeyDefinition = $"SELECT * FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE TABLE_SCHEMA = '{Manager.DefaultSchema}' AND TABLE_NAME = '{Manager.TablePrefix}" + "{0}' AND COLUMN_NAME != 'Id'";
         }
 
         public DataSet ExecuteProcedure(string tableName, string storedProcedure, QueryOptions queryOptions, Parameter[] parameters, bool logTransaction = true)

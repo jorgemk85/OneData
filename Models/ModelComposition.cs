@@ -47,7 +47,7 @@ namespace OneData.Models
         internal Dictionary<string, ForeignData> ForeignDataAttributes { get; private set; } = new Dictionary<string, ForeignData>();
         internal Dictionary<string, ForeignKey> ForeignKeyAttributes { get; private set; } = new Dictionary<string, ForeignKey>();
         internal Dictionary<string, AutoProperty> AutoPropertyAttributes { get; private set; } = new Dictionary<string, AutoProperty>();
-
+        internal string FullyQualifiedTableName { get; set; }
         internal PropertyInfo PrimaryKeyProperty { get; private set; }
         internal PropertyInfo DateCreatedProperty { get; private set; }
         internal PropertyInfo DateModifiedProperty { get; private set; }
@@ -56,7 +56,6 @@ namespace OneData.Models
         internal string Schema { get; private set; }
         internal bool IsCacheEnabled { get; private set; }
         internal long CacheExpiration { get; private set; }
-        internal string ForeignPrimaryKeyName { get; private set; }
 
         public ModelComposition(Type type)
         {
@@ -116,6 +115,7 @@ namespace OneData.Models
                         dataTableAttribute = type.GetCustomAttribute<DataTable>();
                         TableName = dataTableAttribute.TableName;
                         Schema = string.IsNullOrWhiteSpace(dataTableAttribute.Schema) ? Manager.DefaultSchema : dataTableAttribute.Schema;
+                        FullyQualifiedTableName = Manager.ConnectionType == ConnectionTypes.MSSQL ? $"[{Manager.DefaultSchema}.{Manager.TablePrefix}{TableName}]" : $"`{Manager.TablePrefix}{TableName}`";
                         break;
                     case "CacheEnabled":
                         cacheEnabledAttribute = type.GetCustomAttribute<CacheEnabled>();
@@ -129,6 +129,7 @@ namespace OneData.Models
                         break;
                 }
             }
+
             PerformClassValidation(type);
         }
 
@@ -154,7 +155,6 @@ namespace OneData.Models
                             break;
                         case "PrimaryKeyProperty":
                             PrimaryKeyProperty = property;
-                            ForeignPrimaryKeyName = $"{type.Name}{property.Name}";
                             break;
                         case "DateCreatedProperty":
                             DateCreatedProperty = property;

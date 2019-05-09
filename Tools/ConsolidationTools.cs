@@ -4,6 +4,8 @@ using Microsoft.Extensions.Configuration;
 using System.Configuration;
 using System.IO;
 using System.Reflection;
+using System.Data.Common;
+using System;
 
 namespace OneData.Tools
 {
@@ -83,6 +85,23 @@ namespace OneData.Tools
             }
 
             return obj;
+        }
+
+        internal static string GetInitialCatalog(string connectionToUse)
+        {
+            DbConnectionStringBuilder builder = new DbConnectionStringBuilder
+            {
+                ConnectionString = ConsolidationTools.GetValueFromConfiguration(connectionToUse, ConfigurationTypes.ConnectionString)
+            };
+
+            bool dbNameFound = false;
+            dbNameFound = builder.TryGetValue("Initial Catalog", out object dbName);
+            if (dbNameFound == false)
+                dbNameFound = builder.TryGetValue("Database", out dbName);
+            if (dbNameFound == false)
+                throw new Exception("Failed to extract database name from connection string.");
+
+            return Convert.ToString(dbName);
         }
 
         /// <summary>

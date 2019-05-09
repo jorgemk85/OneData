@@ -28,12 +28,16 @@ So, you are looking for a VERY easy, Code-First solution to access your data ins
 Don't know SQL? Why should you? OneData got you covered ;)
 
 ## Compatibility
-OneData is compatible with any project developed with the following:
+OneData is developed using C# and is compatible with any project that use the following:
 * .Net Framework 4.6.1 and later.
 * .Net Standard 2.0 and later.
 * .Net Core 2.0 and later.
 
-Are you using VB.net to develop your apps? Dont' worry, you can still use OneData without any kind of problems.
+>Are you using VB.net to develop your apps? Dont' worry, you can still use OneData without any kind of problems.
+
+When talking about database engines, OneData is ment to work with:
+* MySQL
+* Microsoft SQL
 
 ## Steps
 Now that we got all the intro out of our way, let's stablish what tasks must be done to get your project up and running with OneData:
@@ -186,6 +190,7 @@ The following table is a comprehensive list of available configurations with the
 |`AutoAlterStoredProcedures`  |true or false                            |If true, OneData will alter a required stored procedure if it's not in sync with the class/model.|
 |`AutoAlterTables`            |true or false                            |If true, OneData will alter a required table if it's not in sync with the class/model.|
 |`EnableLogInDatabase`        |true or false                            |Choose to enable logging inside the database.|
+|`EnableLogInFile`			  |true or false                            |Choose to enable logging on disk.|
 |`DefaultSchema`              |For MySQL it's the database name.        |Type the name of your default schema/database.|
 |`ConstantTableConsolidation` |true or false. Runs only in Debug.       |Heuristic approach to sync everything in your database based on your classes/models. Caution, it's a bit slow and is not recomended for production. Runs only on Debug mode.|
 |`OverrideOnlyInDebug`        |Override settings that run only in debug.|Will override those settings set to run only on Debug mode.|
@@ -272,7 +277,7 @@ public Log(Guid id)
 
 When you which to insert a set of information contained in a `IEnumerable<T>`, say, a `List<T>`, you can simply do the following:
 ```c#
-myLogCollection.InsertMasssive();
+myLogCollection.InsertMassive();
 ```
 
 OneData will then serialize your list and send it to the database for procesing, making just ONE call to insert every single one of your objects in the corresponding table. *Beware of your collection size, since even tho OneData has no cap or limit, your database or server might.*
@@ -288,7 +293,7 @@ OneData uses the value inside the property identified as `PrimaryKeyProperty` to
 
 When you which to update a set of information contained in a `IEnumerable<T>`, say, a `List<T>`, you can simply do the following:
 ```c#
-myLogCollection.UpdateMasssive();
+myLogCollection.UpdateMassive();
 ```
 
 OneData will then serialize your list and send it to the database for procesing, making just ONE call to update every single one of your objects in the corresponding table. *Beware of your collection size, since even tho OneData has no cap or limit, your database or server might.*
@@ -302,7 +307,7 @@ You only need to send the id of your record inside the property you identified a
 
 When you which to delete a set of information contained in a `IEnumerable<T>`, say, a `List<T>`, you can simply do the following:
 ```c#
-myLogCollection.DeleteMasssive();
+myLogCollection.DeleteMassive();
 ```
 
 OneData will then serialize your list and send it to the database for procesing, making just ONE call to delete every single one of your objects in the corresponding table. *Beware of your collection size, since even tho OneData has no cap or limit, your database or server might.*
@@ -488,8 +493,13 @@ await Manager<Log>.InsertAsync(newLog, null);
 This method's last parameter corresponds to `QueryOptions` object, which can be sent as null to apply the defaults.
 
 ## FAQ
+### How do I report any kind of issue?
+> Please add a new issue in the project's GitHub Issues section. Don't forget to use the proper bug template.
+### Can I ask for a new feature?
+> Yes! Please! Go ahead and submit your idea using the proper issue template in OneData's GitHub page.
+### Do you have any demos?
+> We have a demo project, you can find it [here](https://github.com/jorgemk85/OneData.Demo).
 
-<Pending.>
 
 ## Contributing
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
