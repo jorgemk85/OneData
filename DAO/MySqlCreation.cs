@@ -203,51 +203,6 @@ namespace OneData.DAO
             return queryBuilder.ToString();
         }
 
-        public string CreateQueryForTableCreation<T>() where T : Cope<T>, IManageable, new()
-        {
-            StringBuilder queryBuilder = new StringBuilder();
-            T obj = new T();
-
-            if (Cope<T>.ModelComposition.ManagedProperties.Count == 0) return string.Empty;
-
-            queryBuilder.AppendFormat("CREATE TABLE `{0}{1}` (\n", Manager.TablePrefix, Cope<T>.ModelComposition.TableName);
-
-            // Aqui se colocan las propiedades del objeto. Una por columna por supuesto.
-            foreach (KeyValuePair<string, PropertyInfo> property in Cope<T>.ModelComposition.ManagedProperties)
-            {
-                string isNullable = Nullable.GetUnderlyingType(property.Value.PropertyType) == null || property.Value.Equals(Cope<T>.ModelComposition.PrimaryKeyProperty) ? "NOT NULL" : string.Empty;
-                if (property.Value.Equals(Cope<T>.ModelComposition.PrimaryKeyProperty))
-                {
-                    if (property.Value.PropertyType.Equals(typeof(int?)))
-                    {
-                        queryBuilder.AppendFormat("`{0}` {1} NOT NULL AUTO_INCREMENT,\n", property.Value.Name, GetSqlDataType(property.Value.PropertyType, Cope<T>.ModelComposition.UniqueKeyProperties.ContainsKey(property.Value.Name), GetDataLengthFromProperty<T>(property.Key)));
-                    }
-                    else
-                    {
-                        queryBuilder.AppendFormat("`{0}` {1} NOT NULL,\n", property.Value.Name, GetSqlDataType(property.Value.PropertyType, Cope<T>.ModelComposition.UniqueKeyProperties.ContainsKey(property.Value.Name), GetDataLengthFromProperty<T>(property.Key)));
-                    }
-                }
-                else
-                {
-                    queryBuilder.AppendFormat("`{0}` {1} {2},\n", property.Value.Name, GetSqlDataType(property.Value.PropertyType, Cope<T>.ModelComposition.UniqueKeyProperties.ContainsKey(property.Value.Name), GetDataLengthFromProperty<T>(property.Key)), isNullable);
-                }
-            }
-
-            queryBuilder.Append($"PRIMARY KEY (`{Cope<T>.ModelComposition.PrimaryKeyProperty.Name}`),\n");
-
-            foreach (KeyValuePair<string, PropertyInfo> property in Cope<T>.ModelComposition.UniqueKeyProperties)
-            {
-                queryBuilder.Append($"UNIQUE KEY `{property.Value.Name}_UNIQUE` (`{property.Value.Name}`),\n");
-            }
-
-            queryBuilder.Append($"UNIQUE KEY `{Cope<T>.ModelComposition.PrimaryKeyProperty.Name}_UNIQUE` (`{Cope<T>.ModelComposition.PrimaryKeyProperty.Name}`))\n");
-            queryBuilder.Append("ENGINE=InnoDB;");
-
-            Logger.Info("(MySql) Created a new query for Create Table:");
-            Logger.Info(queryBuilder.ToString());
-            return queryBuilder.ToString();
-        }
-
         public string CreateQueryForTableAlteration(IManageable model, Dictionary<string, ColumnDefinition> columnDetails, Dictionary<string, KeyDefinition> keyDetails)
         {
             StringBuilder addQueryBuilder = new StringBuilder();
@@ -548,7 +503,46 @@ namespace OneData.DAO
 
         public string CreateQueryForTableCreation(IManageable model)
         {
-            throw new NotImplementedException();
+            StringBuilder queryBuilder = new StringBuilder();
+
+            if (model.Configuration.ManagedProperties.Count == 0) return string.Empty;
+
+            queryBuilder.AppendFormat("CREATE TABLE `{0}{1}` (\n", Manager.TablePrefix, model.Configuration.TableName);
+
+            // Aqui se colocan las propiedades del objeto. Una por columna por supuesto.
+            foreach (KeyValuePair<string, PropertyInfo> property in model.Configuration.ManagedProperties)
+            {
+                string isNullable = Nullable.GetUnderlyingType(property.Value.PropertyType) == null || property.Value.Equals(model.Configuration.PrimaryKeyProperty) ? "NOT NULL" : string.Empty;
+                if (property.Value.Equals(model.Configuration.PrimaryKeyProperty))
+                {
+                    if (property.Value.PropertyType.Equals(typeof(int?)))
+                    {
+                        queryBuilder.AppendFormat("`{0}` {1} NOT NULL AUTO_INCREMENT,\n", property.Value.Name, GetSqlDataType(property.Value.PropertyType, model.Configuration.UniqueKeyProperties.ContainsKey(property.Value.Name), GetDataLengthFromProperty(model, property.Key)));
+                    }
+                    else
+                    {
+                        queryBuilder.AppendFormat("`{0}` {1} NOT NULL,\n", property.Value.Name, GetSqlDataType(property.Value.PropertyType, model.Configuration.UniqueKeyProperties.ContainsKey(property.Value.Name), GetDataLengthFromProperty(model,property.Key)));
+                    }
+                }
+                else
+                {
+                    queryBuilder.AppendFormat("`{0}` {1} {2},\n", property.Value.Name, GetSqlDataType(property.Value.PropertyType, model.Configuration.UniqueKeyProperties.ContainsKey(property.Value.Name), GetDataLengthFromProperty(model, property.Key)), isNullable);
+                }
+            }
+
+            queryBuilder.Append($"PRIMARY KEY (`{model.Configuration.PrimaryKeyProperty.Name}`),\n");
+
+            foreach (KeyValuePair<string, PropertyInfo> property in model.Configuration.UniqueKeyProperties)
+            {
+                queryBuilder.Append($"UNIQUE KEY `{property.Value.Name}_UNIQUE` (`{property.Value.Name}`),\n");
+            }
+
+            queryBuilder.Append($"UNIQUE KEY `{model.Configuration.PrimaryKeyProperty.Name}_UNIQUE` (`{model.Configuration.PrimaryKeyProperty.Name}`))\n");
+            queryBuilder.Append("ENGINE=InnoDB;");
+
+            Logger.Info("(MySql) Created a new query for Create Table:");
+            Logger.Info(queryBuilder.ToString());
+            return queryBuilder.ToString();
         }
     }
 }

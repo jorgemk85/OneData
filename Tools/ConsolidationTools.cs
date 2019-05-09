@@ -88,9 +88,9 @@ namespace OneData.Tools
             return obj;
         }
 
-        internal static string GetInitialCatalog(string connectionToUse)
+        internal static string GetInitialCatalog(string connectionToUse, bool overrideMySqlSkip = false)
         {
-            if (Manager.ConnectionType == ConnectionTypes.MySQL)
+            if (Manager.ConnectionType == ConnectionTypes.MySQL && !overrideMySqlSkip)
             {
                 return "def";
             }
