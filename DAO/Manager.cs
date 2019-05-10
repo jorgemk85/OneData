@@ -19,7 +19,6 @@ namespace OneData.DAO
         public static string DefaultSchema { get; internal set; }
         public static string DefaultConnection { get; internal set; }
         public static ConnectionTypes ConnectionType { get; internal set; }
-        public static bool IsDebug { get; internal set; }
         public static bool AutoCreateStoredProcedures { get; internal set; }
         public static bool AutoCreateTables { get; internal set; }
         public static bool AutoAlterStoredProcedures { get; internal set; }
@@ -27,7 +26,6 @@ namespace OneData.DAO
         public static bool EnableLogInDatabase { get; internal set; }
         public static bool EnableLogInFile { get; internal set; }
         public static bool ConstantTableConsolidation { get; internal set; }
-        public static bool OverrideOnlyInDebug { get; internal set; }
         public static string InsertSuffix { get; internal set; }
         public static string UpdateSuffix { get; internal set; }
         public static string DeleteSuffix { get; internal set; }
@@ -43,7 +41,6 @@ namespace OneData.DAO
 
         internal static void GetConfigurationSettings()
         {
-            SetIfDebug();
             DefaultConnection = ConsolidationTools.GetValueFromConfiguration("DefaultConnection", ConfigurationTypes.AppSetting);
             DefaultSchema = ConsolidationTools.GetValueFromConfiguration("DefaultSchema", ConfigurationTypes.AppSetting);
             ConnectionType = (ConnectionTypes)Enum.Parse(typeof(ConnectionTypes), ConsolidationTools.GetValueFromConfiguration("ConnectionType", ConfigurationTypes.AppSetting));
@@ -54,7 +51,6 @@ namespace OneData.DAO
             ConstantTableConsolidation = bool.Parse(ConsolidationTools.GetValueFromConfiguration("ConstantTableConsolidation", ConfigurationTypes.AppSetting));
             AutoAlterStoredProcedures = bool.Parse(ConsolidationTools.GetValueFromConfiguration("AutoAlterStoredProcedures", ConfigurationTypes.AppSetting));
             AutoAlterTables = bool.Parse(ConsolidationTools.GetValueFromConfiguration("AutoAlterTables", ConfigurationTypes.AppSetting));
-            OverrideOnlyInDebug = bool.Parse(ConsolidationTools.GetValueFromConfiguration("OverrideOnlyInDebug", ConfigurationTypes.AppSetting));
             Logger.Info("Got Manager configuration settings.");
         }
 
@@ -66,17 +62,6 @@ namespace OneData.DAO
             DeleteSuffix = ConsolidationTools.GetValueFromConfiguration("DeleteSuffix", ConfigurationTypes.AppSetting);
             StoredProcedurePrefix = ConsolidationTools.GetValueFromConfiguration("StoredProcedurePrefix", ConfigurationTypes.AppSetting);
             TablePrefix = ConsolidationTools.GetValueFromConfiguration("TablePrefix", ConfigurationTypes.AppSetting);
-        }
-
-        internal static void SetIfDebug()
-        {
-#if DEBUG
-            IsDebug = true;
-            Logger.Info("Debug mode is set.");
-#else
-            IsDebug = false;
-            Logger.Info("Release mode is set.");
-#endif
         }
 
         /// <summary>

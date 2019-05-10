@@ -69,7 +69,7 @@ namespace OneData.DAO
             try
             {
                 Logger.Info(string.Format("Starting {0} execution for object {1} using connection {2}", transactionType.ToString(), typeof(T), queryOptions));
-                if (Manager.ConstantTableConsolidation && (Manager.IsDebug || Manager.OverrideOnlyInDebug) && !overrideConsolidation)
+                if (Manager.ConstantTableConsolidation && !overrideConsolidation)
                 {
                     PerformTableConsolidation<T>(queryOptions.ConnectionToUse, false);
                 }

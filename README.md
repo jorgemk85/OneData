@@ -103,7 +103,6 @@ Please add them ALL to your project:
     <add key="EnableLogInFile" value="<true or false>" />
     <add key="DefaultSchema" value="<name of your default schema>" />
     <add key="ConstantTableConsolidation" value="<true or false>" />
-    <add key="OverrideOnlyInDebug" value="<true or false>" />
   </appSettings>
 ```
 ### .Net Standard 2.0 and Later / .NET Core 2.0 and Later
@@ -136,8 +135,7 @@ Please add them ALL to your project:
     "EnableLogInDatabase": "<true or false>",
     "EnableLogInFile": "<true or false>",
     "DefaultSchema": "<name of your default schema>",
-    "ConstantTableConsolidation": "<true or false>",
-    "OverrideOnlyInDebug": "<true or false>"
+    "ConstantTableConsolidation": "<true or false>"
   }
 ```
 
@@ -192,8 +190,7 @@ The following table is a comprehensive list of available configurations with the
 |`EnableLogInDatabase`        |true or false                            |Choose to enable logging inside the database.|
 |`EnableLogInFile`			  |true or false                            |Choose to enable logging on disk.|
 |`DefaultSchema`              |For MySQL it's the database name.        |Type the name of your default schema/database.|
-|`ConstantTableConsolidation` |true or false. Runs only in Debug.       |Heuristic approach to sync everything in your database based on your classes/models. Caution, it's a bit slow and is not recomended for production. Runs only on Debug mode.|
-|`OverrideOnlyInDebug`        |Override settings that run only in debug.|Will override those settings set to run only on Debug mode.|
+|`ConstantTableConsolidation` |true or false.							|Heuristic approach to sync everything in your database based on your classes/models. Caution, it's a bit slow and is not recomended for production.|
 
 ### Attributes:
 Attributes in OneData are used to configure the classes/models and properties.
