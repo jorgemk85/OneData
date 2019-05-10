@@ -59,15 +59,16 @@ namespace OneData.DAO
                     }
                     else
                     {
+                        object scalar = null;
                         string[] queries = transaction.Split(new string[] { "|;|" }, StringSplitOptions.None);
                         for (int i = 0; i < queries.Length; i++)
                         {
                             _command.CommandText = queries[i];
-                            _command.ExecuteNonQuery();
+                            scalar = _command.ExecuteScalar();
                         }
 
                         Logger.Info(string.Format("Execution for transaction using connection {0} has finished successfully.", connectionToUse));
-                        return null;
+                        return scalar;
                     }
                 }
             }
