@@ -48,9 +48,10 @@ namespace OneData.DAO
                     if (connection.State != ConnectionState.Open) throw new BadConnectionStateException();
                     _command = connection.CreateCommand();
                     _command.CommandType = CommandType.Text;
-                    _command.CommandText = transaction;
+
                     if (returnDataTable)
                     {
+                        _command.CommandText = transaction;
                         System.Data.DataTable dataTable = new System.Data.DataTable();
                         dataTable.Load(_command.ExecuteReader());
                         Logger.Info(string.Format("Execution for transaction using connection {0} has finished successfully.", connectionToUse));
@@ -58,9 +59,15 @@ namespace OneData.DAO
                     }
                     else
                     {
-                        object scalar = _command.ExecuteScalar();
+                        string[] queries = transaction.Split(new string[] { "|;|" }, StringSplitOptions.None);
+                        for (int i = 0; i < queries.Length; i++)
+                        {
+                            _command.CommandText = queries[i];
+                            _command.ExecuteNonQuery();
+                        }
+
                         Logger.Info(string.Format("Execution for transaction using connection {0} has finished successfully.", connectionToUse));
-                        return scalar;
+                        return null;
                     }
                 }
             }
@@ -247,7 +254,7 @@ namespace OneData.DAO
                     return;
                 }
             }
-            ExecuteScalar(_creator.CreateQueryForTableAlteration(new T(), GetColumnDefinition(ConsolidationTools.GetInitialCatalog(connectionToUse), Cope<T>.ModelComposition.Schema, Cope<T>.ModelComposition.TableName, connectionToUse), GetKeyDefinition(ConsolidationTools.GetInitialCatalog(connectionToUse), Cope<T>.ModelComposition.Schema, Cope<T>.ModelComposition.TableName, connectionToUse)), connectionToUse, false);
+            ExecuteScalar(_creator.CreateQueryForTableAlteration(new T(), GetColumnDefinition(ConsolidationTools.GetInitialCatalog(connectionToUse), Cope<T>.ModelComposition.Schema, Cope<T>.ModelComposition.TableName, connectionToUse), GetKeyDefinition(Cope<T>.ModelComposition.PrimaryKeyProperty.Name, ConsolidationTools.GetInitialCatalog(connectionToUse), Cope<T>.ModelComposition.Schema, Cope<T>.ModelComposition.TableName, connectionToUse)), connectionToUse, false);
         }
 
         protected void ProcessTable<T>(string connectionToUse, bool doAlter) where T : Cope<T>, IManageable, new()
@@ -291,10 +298,10 @@ namespace OneData.DAO
             return ((System.Data.DataTable)ExecuteScalar(string.Format(QueryForColumnDefinition, initialCatalog, schema, tableName), connectionToUse, true)).ToDictionary<string, ColumnDefinition>(nameof(ColumnDefinition.Column_Name));
         }
 
-        private Dictionary<string, KeyDefinition> GetKeyDefinition(string initialCatalog, string schema, string tableName, string connectionToUse)
+        private Dictionary<string, KeyDefinition> GetKeyDefinition(string primaryKey, string initialCatalog, string schema, string tableName, string connectionToUse)
         {
             Logger.Info(string.Format("Getting Key definition for table {0} using connection {1}.", tableName, connectionToUse));
-            return ((System.Data.DataTable)ExecuteScalar(string.Format(QueryForKeyDefinition, initialCatalog, schema, tableName), connectionToUse, true)).ToDictionary<string, KeyDefinition>(nameof(KeyDefinition.Column_Name));
+            return ((System.Data.DataTable)ExecuteScalar(string.Format(QueryForKeyDefinition, primaryKey, initialCatalog, schema, tableName), connectionToUse, true)).ToDictionary<string, KeyDefinition>(nameof(KeyDefinition.Column_Name));
         }
 
         private void CreateOrAlterForeignTables(IManageable foreignModel, string connectionToUse, bool doAlter)
@@ -305,7 +312,7 @@ namespace OneData.DAO
             {
                 ExecuteScalar(_creator.CreateQueryForTableAlteration(foreignModel,
                                                          GetColumnDefinition(ConsolidationTools.GetInitialCatalog(connectionToUse), schema, foreignModel.Configuration.TableName, connectionToUse),
-                                                         GetKeyDefinition(ConsolidationTools.GetInitialCatalog(connectionToUse), schema, foreignModel.Configuration.TableName, connectionToUse)), connectionToUse, false);
+                                                         GetKeyDefinition(foreignModel.Configuration.PrimaryKeyProperty.Name, ConsolidationTools.GetInitialCatalog(connectionToUse), schema, foreignModel.Configuration.TableName, connectionToUse)), connectionToUse, false);
             }
             else
             {

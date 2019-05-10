@@ -289,7 +289,7 @@ namespace OneData.DAO
             return queryBuilder.ToString();
         }
 
-        public string CreateQueryForTableAlteration(IManageable model, Dictionary<string, ColumnDefinition> columnDetails, Dictionary<string, KeyDefinition> keyDetails) 
+        public string CreateQueryForTableAlteration(IManageable model, Dictionary<string, ColumnDefinition> columnDetails, Dictionary<string, KeyDefinition> keyDetails)
         {
             StringBuilder queryBuilder = new StringBuilder();
             List<string> columnsFound = new List<string>();
@@ -297,20 +297,25 @@ namespace OneData.DAO
 
             if (model.Configuration.ManagedProperties.Count == 0) return string.Empty;
 
-            string fullyQualifiedTableName = string.Format("{0}.{1}{2}", model.Configuration.Schema, Manager.TablePrefix, model.Configuration.TableName);
+            string fullyQualifiedTableName = string.Format("[{0}].[{1}{2}]", model.Configuration.Schema, Manager.TablePrefix, model.Configuration.TableName);
 
             foreach (KeyValuePair<string, PropertyInfo> property in model.Configuration.ManagedProperties)
             {
                 columnDetails.TryGetValue(property.Value.Name, out ColumnDefinition columnDefinition);
                 string sqlDataType = GetSqlDataType(property.Value.PropertyType, model.Configuration.UniqueKeyProperties.ContainsKey(property.Value.Name), GetDataLengthFromProperty(model, property.Key));
                 bool isNullable = Nullable.GetUnderlyingType(property.Value.PropertyType) == null ? false : true;
-                string nullWithDefault = isNullable == true ? string.Empty : string.Format("NOT NULL DEFAULT {0}", GetDefault(property.Value.PropertyType));
 
                 if (columnDefinition == null)
                 {
                     // Agregar propiedad a tabla ya que no existe.
                     queryBuilder.AppendFormat("ALTER TABLE {0} \n", fullyQualifiedTableName);
-                    queryBuilder.AppendFormat("ADD {0} {1} {2};\n", property.Value.Name, sqlDataType, nullWithDefault);
+                    queryBuilder.AppendFormat("ADD {0} {1}|;|\n", property.Value.Name, sqlDataType);
+                    if (!isNullable)
+                    {
+                        queryBuilder.Append($"UPDATE {fullyQualifiedTableName} SET {fullyQualifiedTableName}.[{property.Value.Name}] = {GetDefault(property.Value.PropertyType)}; \n");
+                        queryBuilder.Append($"ALTER TABLE {fullyQualifiedTableName} \n");
+                        queryBuilder.Append($"ALTER COLUMN {property.Value.Name} {sqlDataType} NOT NULL;\n");
+                    }
                     foundDiference = true;
                     continue;
                 }
