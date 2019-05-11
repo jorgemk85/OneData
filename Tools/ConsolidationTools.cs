@@ -4,6 +4,9 @@ using Microsoft.Extensions.Configuration;
 using System.Configuration;
 using System.IO;
 using System.Reflection;
+using System.Data.Common;
+using System;
+using OneData.DAO;
 
 namespace OneData.Tools
 {
@@ -83,6 +86,28 @@ namespace OneData.Tools
             }
 
             return obj;
+        }
+
+        internal static string GetInitialCatalog(string connectionToUse, bool overrideMySqlSkip = false)
+        {
+            if (Manager.ConnectionType == ConnectionTypes.MySQL && !overrideMySqlSkip)
+            {
+                return "def";
+            }
+
+            DbConnectionStringBuilder builder = new DbConnectionStringBuilder
+            {
+                ConnectionString = GetValueFromConfiguration(connectionToUse, ConfigurationTypes.ConnectionString)
+            };
+
+            bool dbNameFound = false;
+            dbNameFound = builder.TryGetValue("Initial Catalog", out object dbName);
+            if (dbNameFound == false)
+                dbNameFound = builder.TryGetValue("Database", out dbName);
+            if (dbNameFound == false)
+                throw new Exception("Failed to extract database name from connection string.");
+
+            return Convert.ToString(dbName);
         }
 
         /// <summary>

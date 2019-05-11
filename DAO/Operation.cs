@@ -1,5 +1,4 @@
-﻿using OneData.Attributes;
-using OneData.Enums;
+﻿using OneData.Enums;
 using OneData.Exceptions;
 using OneData.Extensions;
 using OneData.Interfaces;
@@ -26,6 +25,14 @@ namespace OneData.DAO
         protected ConnectionTypes _connectionType;
         protected DbCommand _command;
 
+        public Operation()
+        {
+            QueryForTableExistance = "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_CATALOG = '{0}' AND TABLE_SCHEMA = '{1}' AND TABLE_TYPE = 'BASE TABLE' AND TABLE_NAME = " + $"'{Manager.TablePrefix}" + "{2}'";
+            QueryForStoredProcedureExistance = "SELECT ROUTINE_NAME FROM INFORMATION_SCHEMA.ROUTINES WHERE ROUTINE_CATALOG = '{0}' AND ROUTINE_SCHEMA = '{1}' AND ROUTINE_NAME = '{2}'";
+            QueryForColumnDefinition = "SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_CATALOG = '{0}' AND TABLE_SCHEMA = '{1}' AND TABLE_NAME = " + $"'{Manager.TablePrefix}" + "{2}'";
+            QueryForKeyDefinition = "SELECT * FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE COLUMN_NAME != '{0}' AND TABLE_CATALOG = '{1}' AND TABLE_SCHEMA = '{2}' AND TABLE_NAME = " + $"'{Manager.TablePrefix}" + "{3}'";
+        }
+
         internal object ExecuteScalar(string transaction, string connectionToUse, bool returnDataTable)
         {
             if (string.IsNullOrWhiteSpace(transaction))
@@ -41,9 +48,10 @@ namespace OneData.DAO
                     if (connection.State != ConnectionState.Open) throw new BadConnectionStateException();
                     _command = connection.CreateCommand();
                     _command.CommandType = CommandType.Text;
-                    _command.CommandText = transaction;
+
                     if (returnDataTable)
                     {
+                        _command.CommandText = transaction;
                         System.Data.DataTable dataTable = new System.Data.DataTable();
                         dataTable.Load(_command.ExecuteReader());
                         Logger.Info(string.Format("Execution for transaction using connection {0} has finished successfully.", connectionToUse));
@@ -51,7 +59,14 @@ namespace OneData.DAO
                     }
                     else
                     {
-                        object scalar = _command.ExecuteScalar();
+                        object scalar = null;
+                        string[] queries = transaction.Split(new string[] { "|;|" }, StringSplitOptions.None);
+                        for (int i = 0; i < queries.Length; i++)
+                        {
+                            _command.CommandText = queries[i];
+                            scalar = _command.ExecuteScalar();
+                        }
+
                         Logger.Info(string.Format("Execution for transaction using connection {0} has finished successfully.", connectionToUse));
                         return scalar;
                     }
@@ -134,12 +149,13 @@ namespace OneData.DAO
                     throw new NotSupportedException($"El tipo de transaccion {transactionType.ToString()} no puede ser utilizado con esta funcion.");
             }
 
-            if (!DoStoredProcedureExist($"{Manager.StoredProcedurePrefix}massive_operation", queryOptions.ConnectionToUse))
+            string schema = Manager.ConnectionType == ConnectionTypes.MSSQL ? Cope<T>.ModelComposition.Schema : ConsolidationTools.GetInitialCatalog(queryOptions.ConnectionToUse, true);
+            if (!DoStoredProcedureExist(ConsolidationTools.GetInitialCatalog(queryOptions.ConnectionToUse), schema, $"{Manager.StoredProcedurePrefix}massive_operation", queryOptions.ConnectionToUse))
             {
                 ExecuteScalar(GetTransactionTextForProcedure<T>(transactionType, false), queryOptions.ConnectionToUse, false);
             }
 
-            if (!DoStoredProcedureExist($"{Manager.StoredProcedurePrefix}{Cope<T>.ModelComposition.TableName}{GetFriendlyTransactionSuffix(singleTransactionType)}", queryOptions.ConnectionToUse))
+            if (!DoStoredProcedureExist(ConsolidationTools.GetInitialCatalog(queryOptions.ConnectionToUse), schema, $"{Manager.StoredProcedurePrefix}{Cope<T>.ModelComposition.TableName}{GetFriendlyTransactionSuffix(singleTransactionType)}", queryOptions.ConnectionToUse))
             {
                 ExecuteScalar(GetTransactionTextForProcedure<T>(singleTransactionType, false), queryOptions.ConnectionToUse, false);
             }
@@ -172,8 +188,6 @@ namespace OneData.DAO
                     return Manager.InsertSuffix;
                 case TransactionTypes.Update:
                     return Manager.UpdateSuffix;
-                case TransactionTypes.SelectAll:
-                    return Manager.SelectAllSuffix;
                 default:
                     throw new NotSupportedException($"El tipo de transaccion {transactionType.ToString()} no puede ser utilizado con esta funcion.");
             }
@@ -234,13 +248,14 @@ namespace OneData.DAO
             Logger.Info(string.Format("Starting table consolidation for table {0} using connection {1}. DoAlter = {2}", Cope<T>.ModelComposition.TableName, connectionToUse, doAlter));
             if (!doAlter)
             {
-                if (!CheckIfTableExists(Cope<T>.ModelComposition.TableName, connectionToUse))
+                string schema = Manager.ConnectionType == ConnectionTypes.MSSQL ? Cope<T>.ModelComposition.Schema : ConsolidationTools.GetInitialCatalog(connectionToUse, true);
+                if (!DoTableExists(ConsolidationTools.GetInitialCatalog(connectionToUse), schema, Cope<T>.ModelComposition.TableName, connectionToUse))
                 {
                     ProcessTable<T>(connectionToUse, false);
                     return;
                 }
             }
-            ExecuteScalar(_creator.CreateQueryForTableAlteration<T>(GetColumnDefinition(Cope<T>.ModelComposition.TableName, connectionToUse), GetKeyDefinition(Cope<T>.ModelComposition.TableName, connectionToUse)), connectionToUse, false);
+            ExecuteScalar(_creator.CreateQueryForTableAlteration(new T(), GetColumnDefinition(ConsolidationTools.GetInitialCatalog(connectionToUse), Cope<T>.ModelComposition.Schema, Cope<T>.ModelComposition.TableName, connectionToUse), GetKeyDefinition(Cope<T>.ModelComposition.PrimaryKeyProperty.Name, ConsolidationTools.GetInitialCatalog(connectionToUse), Cope<T>.ModelComposition.Schema, Cope<T>.ModelComposition.TableName, connectionToUse)), connectionToUse, false);
         }
 
         protected void ProcessTable<T>(string connectionToUse, bool doAlter) where T : Cope<T>, IManageable, new()
@@ -252,9 +267,9 @@ namespace OneData.DAO
             }
             else
             {
-                ExecuteScalar(_creator.CreateQueryForTableCreation<T>(), connectionToUse, false);
-                VerifyForeignTables<T>(connectionToUse, doAlter);
-                string foreignKeyQuery = _creator.GetCreateForeignKeysQuery<T>();
+                ExecuteScalar(_creator.CreateQueryForTableCreation(new T()), connectionToUse, false);
+                VerifyForeignTables(new T(), connectionToUse, doAlter);
+                string foreignKeyQuery = _creator.GetCreateForeignKeysQuery(new T());
 
                 if (!string.IsNullOrWhiteSpace(foreignKeyQuery))
                 {
@@ -263,48 +278,50 @@ namespace OneData.DAO
             }
         }
 
-        private void VerifyForeignTables<T>(string connectionToUse, bool doAlter) where T : Cope<T>, IManageable, new()
+        private void VerifyForeignTables(IManageable model, string connectionToUse, bool doAlter)
         {
-            Logger.Info(string.Format("Verifying foreign tables for type {0} using connection {1}. DoAlter = {2}", typeof(T).ToString(), connectionToUse, doAlter));
+            Logger.Info(string.Format("Verifying foreign tables for type {0} using connection {1}. DoAlter = {2}", model.GetType().ToString(), connectionToUse, doAlter));
 
-            foreach (KeyValuePair<string, PropertyInfo> property in Cope<T>.ModelComposition.ForeignKeyProperties)
+            foreach (KeyValuePair<string, PropertyInfo> property in model.Configuration.ForeignKeyProperties)
             {
-                IManageable foreignKey = (IManageable)Activator.CreateInstance(Cope<T>.ModelComposition.ForeignKeyAttributes[property.Value.Name].Model);
-                if (!CheckIfTableExists(foreignKey.Configuration.TableName, connectionToUse))
+                IManageable foreignModel = (IManageable)Activator.CreateInstance(model.Configuration.ForeignKeyAttributes[property.Value.Name].Model);
+                string schema = Manager.ConnectionType == ConnectionTypes.MSSQL ? foreignModel.Configuration.Schema : ConsolidationTools.GetInitialCatalog(connectionToUse, true);
+                if (!DoTableExists(ConsolidationTools.GetInitialCatalog(connectionToUse), schema, foreignModel.Configuration.TableName, connectionToUse))
                 {
-                    CreateOrAlterForeignTables<T>(foreignKey, connectionToUse, false);
+                    CreateOrAlterForeignTables(foreignModel, connectionToUse, false);
                 }
             }
         }
 
-        private Dictionary<string, ColumnDefinition> GetColumnDefinition(string tableName, string connectionToUse)
+        private Dictionary<string, ColumnDefinition> GetColumnDefinition(string initialCatalog, string schema, string tableName, string connectionToUse)
         {
             Logger.Info(string.Format("Getting Column definition for table {0} using connection {1}.", tableName, connectionToUse));
-            return ((System.Data.DataTable)ExecuteScalar(string.Format(QueryForColumnDefinition, tableName), connectionToUse, true)).ToDictionary<string, ColumnDefinition>(nameof(ColumnDefinition.Column_Name));
+            return ((System.Data.DataTable)ExecuteScalar(string.Format(QueryForColumnDefinition, initialCatalog, schema, tableName), connectionToUse, true)).ToDictionary<string, ColumnDefinition>(nameof(ColumnDefinition.Column_Name));
         }
 
-        private Dictionary<string, KeyDefinition> GetKeyDefinition(string tableName, string connectionToUse)
+        private Dictionary<string, KeyDefinition> GetKeyDefinition(string primaryKey, string initialCatalog, string schema, string tableName, string connectionToUse)
         {
             Logger.Info(string.Format("Getting Key definition for table {0} using connection {1}.", tableName, connectionToUse));
-            return ((System.Data.DataTable)ExecuteScalar(string.Format(QueryForKeyDefinition, tableName), connectionToUse, true)).ToDictionary<string, KeyDefinition>(nameof(KeyDefinition.Column_Name));
+            return ((System.Data.DataTable)ExecuteScalar(string.Format(QueryForKeyDefinition, primaryKey, initialCatalog, schema, tableName), connectionToUse, true)).ToDictionary<string, KeyDefinition>(nameof(KeyDefinition.Column_Name));
         }
 
-        private void CreateOrAlterForeignTables<T>(IManageable foreignKey, string connectionToUse, bool doAlter) where T : Cope<T>, IManageable, new()
+        private void CreateOrAlterForeignTables(IManageable foreignModel, string connectionToUse, bool doAlter)
         {
-            Logger.Info(string.Format("Create or Alter foreign tables of {0} using connection {1}. DoAlter = {2}", foreignKey.Configuration.TableName, connectionToUse, doAlter));
+            Logger.Info(string.Format("Create or Alter foreign tables of {0} using connection {1}. DoAlter = {2}", foreignModel.Configuration.TableName, connectionToUse, doAlter));
+            string schema = Manager.ConnectionType == ConnectionTypes.MSSQL ? foreignModel.Configuration.Schema : ConsolidationTools.GetInitialCatalog(connectionToUse, true);
             if (doAlter)
             {
-                ExecuteScalar(_creator.CreateQueryForTableAlteration<T>(
-                                                         GetColumnDefinition(foreignKey.Configuration.TableName, connectionToUse),
-                                                         GetKeyDefinition(foreignKey.Configuration.TableName, connectionToUse)), connectionToUse, false);
+                ExecuteScalar(_creator.CreateQueryForTableAlteration(foreignModel,
+                                                         GetColumnDefinition(ConsolidationTools.GetInitialCatalog(connectionToUse), schema, foreignModel.Configuration.TableName, connectionToUse),
+                                                         GetKeyDefinition(foreignModel.Configuration.PrimaryKeyProperty.Name, ConsolidationTools.GetInitialCatalog(connectionToUse), schema, foreignModel.Configuration.TableName, connectionToUse)), connectionToUse, false);
             }
             else
             {
-                ExecuteScalar(_creator.CreateQueryForTableCreation<T>(), connectionToUse, false);
+                ExecuteScalar(_creator.CreateQueryForTableCreation(foreignModel), connectionToUse, false);
             }
 
-            VerifyForeignTables<T>(connectionToUse, false);
-            string foreignKeyQuery = _creator.GetCreateForeignKeysQuery<T>();
+            VerifyForeignTables(foreignModel, connectionToUse, false);
+            string foreignKeyQuery = _creator.GetCreateForeignKeysQuery(foreignModel);
 
             if (!string.IsNullOrWhiteSpace(foreignKeyQuery))
             {
@@ -312,10 +329,10 @@ namespace OneData.DAO
             }
         }
 
-        private bool CheckIfTableExists(string tableName, string connectionToUse)
+        private bool DoTableExists(string initialCatalog, string schema, string tableName, string connectionToUse)
         {
             Logger.Info(string.Format("Checking if table {0} exists using connection {1}.", tableName, connectionToUse));
-            string query = string.Format(QueryForTableExistance, $"{tableName}");
+            string query = string.Format(QueryForTableExistance, initialCatalog, schema, tableName);
 
             if (ExecuteScalar(query, connectionToUse, false) != null)
             {
@@ -327,10 +344,10 @@ namespace OneData.DAO
             }
         }
 
-        protected bool DoStoredProcedureExist(string storedProcedureName, string connectionToUse)
+        protected bool DoStoredProcedureExist(string initialCatalog, string schema, string storedProcedureName, string connectionToUse)
         {
             Logger.Info(string.Format("Checking if stored procedure {0} exists using connection {1}.", storedProcedureName, connectionToUse));
-            string query = string.Format(QueryForStoredProcedureExistance, $"{storedProcedureName}");
+            string query = string.Format(QueryForStoredProcedureExistance, initialCatalog, schema, storedProcedureName);
 
             if (ExecuteScalar(query, connectionToUse, false) != null)
             {

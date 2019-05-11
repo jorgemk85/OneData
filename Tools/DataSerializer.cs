@@ -1,9 +1,9 @@
-﻿using OneData.Attributes;
+﻿using Newtonsoft.Json;
+using OneData.Attributes;
 using OneData.DAO;
 using OneData.Enums;
 using OneData.Interfaces;
 using OneData.Models;
-using Newtonsoft.Json;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -197,13 +197,13 @@ namespace OneData.Tools
             switch (transactionType)
             {
                 case TransactionTypes.InsertMassive:
-                    massiveOperationParameter.ProcedureName = $"`{Manager.StoredProcedurePrefix}{Cope<T>.ModelComposition.TableName}{Manager.InsertSuffix}`";
+                    massiveOperationParameter.ProcedureName = Manager.ConnectionType == ConnectionTypes.MySQL ? $"`{Manager.StoredProcedurePrefix}{Cope<T>.ModelComposition.TableName}{Manager.InsertSuffix}`" : $"[{Manager.StoredProcedurePrefix}{Cope<T>.ModelComposition.TableName}{Manager.InsertSuffix}]";
                     break;
                 case TransactionTypes.UpdateMassive:
-                    massiveOperationParameter.ProcedureName = $"`{Manager.StoredProcedurePrefix}{Cope<T>.ModelComposition.TableName}{Manager.UpdateSuffix}`";
+                    massiveOperationParameter.ProcedureName = Manager.ConnectionType == ConnectionTypes.MySQL ? $"`{Manager.StoredProcedurePrefix}{Cope<T>.ModelComposition.TableName}{Manager.UpdateSuffix}`" : $"[{Manager.StoredProcedurePrefix}{Cope<T>.ModelComposition.TableName}{Manager.UpdateSuffix}]";
                     break;
                 case TransactionTypes.DeleteMassive:
-                    massiveOperationParameter.ProcedureName = $"`{Manager.StoredProcedurePrefix}{Cope<T>.ModelComposition.TableName}{Manager.DeleteSuffix}`";
+                    massiveOperationParameter.ProcedureName = Manager.ConnectionType == ConnectionTypes.MySQL ? $"`{Manager.StoredProcedurePrefix}{Cope<T>.ModelComposition.TableName}{Manager.DeleteSuffix}`" : $"[{Manager.StoredProcedurePrefix}{Cope<T>.ModelComposition.TableName}{Manager.DeleteSuffix}]";
                     break;
                 default:
                     throw new NotSupportedException($"El tipo de transaccion {transactionType.ToString()} no puede ser utilizado con la funcion {nameof(GenerateCompatibleMassiveOperationXML)}.");

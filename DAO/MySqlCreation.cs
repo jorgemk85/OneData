@@ -51,6 +51,20 @@ namespace OneData.DAO
             }
         }
 
+        private long GetDataLengthFromProperty(IManageable model, string propertyName)
+        {
+            model.Configuration.DataLengthAttributes.TryGetValue(propertyName, out DataLength dataLengthAttribute);
+
+            if (dataLengthAttribute != null)
+            {
+                return dataLengthAttribute.Length;
+            }
+            else
+            {
+                return 0;
+            }
+        }
+
         private void SetParametersForQueryOptions<T>(StringBuilder queryBuilder) where T : Cope<T>, IManageable, new()
         {
             foreach (PropertyInfo property in typeof(QueryOptions).GetProperties().Where(option => option.GetCustomAttribute(typeof(NotParameter)) == null).OrderBy(option => option.Name))
@@ -189,68 +203,22 @@ namespace OneData.DAO
             return queryBuilder.ToString();
         }
 
-        public string CreateQueryForTableCreation<T>() where T : Cope<T>, IManageable, new()
-        {
-            StringBuilder queryBuilder = new StringBuilder();
-            T obj = new T();
-
-            if (Cope<T>.ModelComposition.ManagedProperties.Count == 0) return string.Empty;
-
-            queryBuilder.AppendFormat("CREATE TABLE `{0}{1}` (\n", Manager.TablePrefix, Cope<T>.ModelComposition.TableName);
-
-            // Aqui se colocan las propiedades del objeto. Una por columna por supuesto.
-            foreach (KeyValuePair<string, PropertyInfo> property in Cope<T>.ModelComposition.ManagedProperties)
-            {
-                string isNullable = Nullable.GetUnderlyingType(property.Value.PropertyType) == null || property.Value.Equals(Cope<T>.ModelComposition.PrimaryKeyProperty) ? "NOT NULL" : string.Empty;
-                if (property.Value.Equals(Cope<T>.ModelComposition.PrimaryKeyProperty))
-                {
-                    if (property.Value.PropertyType.Equals(typeof(int?)))
-                    {
-                        queryBuilder.AppendFormat("`{0}` {1} NOT NULL AUTO_INCREMENT,\n", property.Value.Name, GetSqlDataType(property.Value.PropertyType, Cope<T>.ModelComposition.UniqueKeyProperties.ContainsKey(property.Value.Name), GetDataLengthFromProperty<T>(property.Key)));
-                    }
-                    else
-                    {
-                        queryBuilder.AppendFormat("`{0}` {1} NOT NULL,\n", property.Value.Name, GetSqlDataType(property.Value.PropertyType, Cope<T>.ModelComposition.UniqueKeyProperties.ContainsKey(property.Value.Name), GetDataLengthFromProperty<T>(property.Key)));
-                    }
-                }
-                else
-                {
-                    queryBuilder.AppendFormat("`{0}` {1} {2},\n", property.Value.Name, GetSqlDataType(property.Value.PropertyType, Cope<T>.ModelComposition.UniqueKeyProperties.ContainsKey(property.Value.Name), GetDataLengthFromProperty<T>(property.Key)), isNullable);
-                }
-            }
-
-            queryBuilder.Append($"PRIMARY KEY (`{Cope<T>.ModelComposition.PrimaryKeyProperty.Name}`),\n");
-
-            foreach (KeyValuePair<string, PropertyInfo> property in Cope<T>.ModelComposition.UniqueKeyProperties)
-            {
-                queryBuilder.Append($"UNIQUE KEY `{property.Value.Name}_UNIQUE` (`{property.Value.Name}`),\n");
-            }
-
-            queryBuilder.Append($"UNIQUE KEY `{Cope<T>.ModelComposition.PrimaryKeyProperty.Name}_UNIQUE` (`{Cope<T>.ModelComposition.PrimaryKeyProperty.Name}`))\n");
-            queryBuilder.Append("ENGINE=InnoDB;");
-
-            Logger.Info("(MySql) Created a new query for Create Table:");
-            Logger.Info(queryBuilder.ToString());
-            return queryBuilder.ToString();
-        }
-
-        public string CreateQueryForTableAlteration<T>(Dictionary<string, ColumnDefinition> columnDetails, Dictionary<string, KeyDefinition> keyDetails) where T : Cope<T>, IManageable, new()
+        public string CreateQueryForTableAlteration(IManageable model, Dictionary<string, ColumnDefinition> columnDetails, Dictionary<string, KeyDefinition> keyDetails)
         {
             StringBuilder addQueryBuilder = new StringBuilder();
             StringBuilder dropQueryBuilder = new StringBuilder();
             List<string> columnsFound = new List<string>();
             bool foundDiference = false;
             string fullQuery = string.Empty;
-            T obj = new T();
 
-            if (Cope<T>.ModelComposition.ManagedProperties.Count == 0) return string.Empty;
+            if (model.Configuration.ManagedProperties.Count == 0) return string.Empty;
 
-            fullQuery = $"ALTER TABLE `{Manager.TablePrefix}{Cope<T>.ModelComposition.TableName}` \n";
+            fullQuery = $"ALTER TABLE `{Manager.TablePrefix}{model.Configuration.TableName}` \n";
 
-            foreach (KeyValuePair<string, PropertyInfo> property in Cope<T>.ModelComposition.ManagedProperties)
+            foreach (KeyValuePair<string, PropertyInfo> property in model.Configuration.ManagedProperties)
             {
                 columnDetails.TryGetValue(property.Value.Name, out ColumnDefinition columnDefinition);
-                string sqlDataType = GetSqlDataType(property.Value.PropertyType, Cope<T>.ModelComposition.UniqueKeyProperties.ContainsKey(property.Value.Name), GetDataLengthFromProperty<T>(property.Key));
+                string sqlDataType = GetSqlDataType(property.Value.PropertyType, model.Configuration.UniqueKeyProperties.ContainsKey(property.Value.Name), GetDataLengthFromProperty(model, property.Key));
                 bool isNullable = Nullable.GetUnderlyingType(property.Value.PropertyType) == null ? false : true;
                 string nullable = isNullable == true ? string.Empty : "NOT NULL";
 
@@ -269,7 +237,7 @@ namespace OneData.DAO
                     goto AddAsFound;
                 }
 
-                if (!columnDefinition.Extra.Contains("auto_increment") && property.Value.Equals(Cope<T>.ModelComposition.PrimaryKeyProperty) && property.Value.PropertyType.Equals(typeof(int)))
+                if (!columnDefinition.Extra.Contains("auto_increment") && property.Value.Equals(model.Configuration.PrimaryKeyProperty) && property.Value.PropertyType.Equals(typeof(int)))
                 {
                     // La propiedad es Primaria, es INT y no esta marcada como auto-increment...
                     addQueryBuilder.AppendFormat("MODIFY COLUMN `{0}` {1} NOT NULL auto_increment,\n", property.Value.Name, sqlDataType);
@@ -277,14 +245,14 @@ namespace OneData.DAO
                     goto AddAsFound;
                 }
 
-                if (columnDefinition.Is_Nullable.Equals("YES") && !isNullable && !property.Value.Equals(Cope<T>.ModelComposition.PrimaryKeyProperty))
+                if (columnDefinition.Is_Nullable.Equals("YES") && !isNullable && !property.Value.Equals(model.Configuration.PrimaryKeyProperty))
                 {
                     // Si la propiedad ya no es nullable, entonces la cambia en la base de datos
                     addQueryBuilder.AppendFormat("MODIFY COLUMN `{0}` {1} NOT NULL,\n", property.Value.Name, sqlDataType);
                     foundDiference = true;
                     goto AddAsFound;
                 }
-                if (columnDefinition.Is_Nullable.Equals("NO") && isNullable && !property.Value.Equals(Cope<T>.ModelComposition.PrimaryKeyProperty))
+                if (columnDefinition.Is_Nullable.Equals("NO") && isNullable && !property.Value.Equals(model.Configuration.PrimaryKeyProperty))
                 {
                     // Si la propiedad ES nullable, entonces la cambia en la base de datos
                     addQueryBuilder.AppendFormat("MODIFY COLUMN `{0}` {1},\n", property.Value.Name, sqlDataType);
@@ -340,7 +308,7 @@ namespace OneData.DAO
                 {
                     dropQueryBuilder.Remove(dropQueryBuilder.Length - 2, 2);
                 }
-                
+
             }
 
             fullQuery = $"{fullQuery}\n{dropQueryBuilder.ToString()}\n{addQueryBuilder.ToString()};";
@@ -355,34 +323,34 @@ namespace OneData.DAO
                 Logger.Info(fullQuery);
             }
 
-            fullQuery = $"{fullQuery}\n{GetCreateForeignKeysQuery<T>(keyDetails)}";
+            fullQuery = $"{fullQuery}\n{GetCreateForeignKeysQuery(model, (keyDetails))}";
 
             return fullQuery;
         }
 
-        public string GetCreateForeignKeysQuery<T>(Dictionary<string, KeyDefinition> keyDetails = null) where T : Cope<T>, IManageable, new()
+        public string GetCreateForeignKeysQuery(IManageable model, Dictionary<string, KeyDefinition> keyDetails = null)
         {
             StringBuilder queryBuilder = new StringBuilder();
             Dictionary<string, PropertyInfo> properties;
 
             if (keyDetails == null)
             {
-                properties = Cope<T>.ModelComposition.ForeignKeyProperties;
+                properties = model.Configuration.ForeignKeyProperties;
             }
             else
             {
-                properties = Cope<T>.ModelComposition.ForeignKeyProperties.Where(q => !keyDetails.ContainsKey(q.Value.Name)).ToDictionary(q => q.Key, q => q.Value);
+                properties = model.Configuration.ForeignKeyProperties.Where(q => !keyDetails.ContainsKey(q.Value.Name)).ToDictionary(q => q.Key, q => q.Value);
             }
 
             if (properties.Count == 0) return string.Empty;
 
             foreach (KeyValuePair<string, PropertyInfo> property in properties)
             {
-                queryBuilder.AppendFormat("ALTER TABLE `{0}{1}`\n", Manager.TablePrefix, Cope<T>.ModelComposition.TableName);
+                queryBuilder.AppendFormat("ALTER TABLE `{0}{1}`\n", Manager.TablePrefix, model.Configuration.TableName);
                 ForeignKey foreignAttribute = property.Value.GetCustomAttribute<ForeignKey>();
                 IManageable foreignKey = (IManageable)Activator.CreateInstance(foreignAttribute.Model);
-                queryBuilder.AppendFormat("ADD CONSTRAINT `FK_{0}_{1}`\n", Cope<T>.ModelComposition.TableName, foreignKey.Configuration.TableName);
-                queryBuilder.Append($"FOREIGN KEY(`{property.Value.Name}`) REFERENCES {Manager.TablePrefix}{foreignKey.Configuration.TableName}({Cope<T>.ModelComposition.PrimaryKeyProperty.Name}) ON DELETE {foreignAttribute.Action.ToString().Replace("_", " ")} ON UPDATE NO ACTION;\n");
+                queryBuilder.AppendFormat("ADD CONSTRAINT `FK_{0}_{1}`\n", model.Configuration.TableName, foreignKey.Configuration.TableName);
+                queryBuilder.Append($"FOREIGN KEY(`{property.Value.Name}`) REFERENCES {Manager.TablePrefix}{foreignKey.Configuration.TableName}({model.Configuration.PrimaryKeyProperty.Name}) ON DELETE {foreignAttribute.Action.ToString().Replace("_", " ")} ON UPDATE NO ACTION;\n");
             }
 
             Logger.Info("(MySql) Created a new query for Create Foreign Keys:");
@@ -529,6 +497,50 @@ namespace OneData.DAO
             queryBuilder.Append("END");
 
             Logger.Info("(MySql) Created a new query for Massive Operacion Stored Procedure:");
+            Logger.Info(queryBuilder.ToString());
+            return queryBuilder.ToString();
+        }
+
+        public string CreateQueryForTableCreation(IManageable model)
+        {
+            StringBuilder queryBuilder = new StringBuilder();
+
+            if (model.Configuration.ManagedProperties.Count == 0) return string.Empty;
+
+            queryBuilder.AppendFormat("CREATE TABLE `{0}{1}` (\n", Manager.TablePrefix, model.Configuration.TableName);
+
+            // Aqui se colocan las propiedades del objeto. Una por columna por supuesto.
+            foreach (KeyValuePair<string, PropertyInfo> property in model.Configuration.ManagedProperties)
+            {
+                string isNullable = Nullable.GetUnderlyingType(property.Value.PropertyType) == null || property.Value.Equals(model.Configuration.PrimaryKeyProperty) ? "NOT NULL" : string.Empty;
+                if (property.Value.Equals(model.Configuration.PrimaryKeyProperty))
+                {
+                    if (property.Value.PropertyType.Equals(typeof(int?)))
+                    {
+                        queryBuilder.AppendFormat("`{0}` {1} NOT NULL AUTO_INCREMENT,\n", property.Value.Name, GetSqlDataType(property.Value.PropertyType, model.Configuration.UniqueKeyProperties.ContainsKey(property.Value.Name), GetDataLengthFromProperty(model, property.Key)));
+                    }
+                    else
+                    {
+                        queryBuilder.AppendFormat("`{0}` {1} NOT NULL,\n", property.Value.Name, GetSqlDataType(property.Value.PropertyType, model.Configuration.UniqueKeyProperties.ContainsKey(property.Value.Name), GetDataLengthFromProperty(model,property.Key)));
+                    }
+                }
+                else
+                {
+                    queryBuilder.AppendFormat("`{0}` {1} {2},\n", property.Value.Name, GetSqlDataType(property.Value.PropertyType, model.Configuration.UniqueKeyProperties.ContainsKey(property.Value.Name), GetDataLengthFromProperty(model, property.Key)), isNullable);
+                }
+            }
+
+            queryBuilder.Append($"PRIMARY KEY (`{model.Configuration.PrimaryKeyProperty.Name}`),\n");
+
+            foreach (KeyValuePair<string, PropertyInfo> property in model.Configuration.UniqueKeyProperties)
+            {
+                queryBuilder.Append($"UNIQUE KEY `{property.Value.Name}_UNIQUE` (`{property.Value.Name}`),\n");
+            }
+
+            queryBuilder.Append($"UNIQUE KEY `{model.Configuration.PrimaryKeyProperty.Name}_UNIQUE` (`{model.Configuration.PrimaryKeyProperty.Name}`))\n");
+            queryBuilder.Append("ENGINE=InnoDB;");
+
+            Logger.Info("(MySql) Created a new query for Create Table:");
             Logger.Info(queryBuilder.ToString());
             return queryBuilder.ToString();
         }

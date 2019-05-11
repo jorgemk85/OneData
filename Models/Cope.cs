@@ -1,8 +1,8 @@
-﻿using OneData.Attributes;
+﻿using Newtonsoft.Json;
+using OneData.Attributes;
 using OneData.DAO;
 using OneData.Extensions;
 using OneData.Interfaces;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
@@ -33,10 +33,15 @@ namespace OneData.Models
             _configuration.DateCreatedProperty = _modelComposition.DateCreatedProperty;
             _configuration.DateModifiedProperty = _modelComposition.DateModifiedProperty;
             _configuration.CacheExpiration = _modelComposition.CacheExpiration;
-            _configuration.ForeignPrimaryKeyName = _modelComposition.ForeignPrimaryKeyName;
             _configuration.IsCacheEnabled = _modelComposition.IsCacheEnabled;
             _configuration.Schema = _modelComposition.Schema;
             _configuration.TableName = _modelComposition.TableName;
+            _configuration.FullyQualifiedTableName = _modelComposition.FullyQualifiedTableName;
+            _configuration.ManagedProperties = _modelComposition.ManagedProperties;
+            _configuration.UniqueKeyProperties = _modelComposition.UniqueKeyProperties;
+            _configuration.DataLengthAttributes = _modelComposition.DataLengthAttributes;
+            _configuration.ForeignKeyAttributes = _modelComposition.ForeignKeyAttributes;
+            _configuration.ForeignKeyProperties = _modelComposition.ForeignKeyProperties;
         }
 
         /// <summary>

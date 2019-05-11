@@ -55,6 +55,20 @@ namespace OneData.DAO
             }
         }
 
+        private long GetDataLengthFromProperty(IManageable model, string propertyName)
+        {
+            model.Configuration.DataLengthAttributes.TryGetValue(propertyName, out DataLength dataLengthAttribute);
+
+            if (dataLengthAttribute != null)
+            {
+                return dataLengthAttribute.Length;
+            }
+            else
+            {
+                return 0;
+            }
+        }
+
         private void SetParametersForQueryOptions<T>(StringBuilder queryBuilder) where T : Cope<T>, IManageable, new()
         {
             foreach (PropertyInfo property in typeof(QueryOptions).GetProperties().Where(options => options.GetCustomAttribute(typeof(NotParameter)) == null).OrderBy(option => option.Name))
@@ -237,29 +251,71 @@ namespace OneData.DAO
             return queryBuilder.ToString();
         }
 
-        public string CreateQueryForTableAlteration<T>(Dictionary<string, ColumnDefinition> columnDetails, Dictionary<string, KeyDefinition> keyDetails) where T : Cope<T>, IManageable, new()
+
+        public string CreateQueryForTableCreation(IManageable model)
+        {
+            StringBuilder queryBuilder = new StringBuilder();
+
+            if (model.Configuration.ManagedProperties.Count == 0) return string.Empty;
+
+            queryBuilder.AppendFormat("CREATE TABLE {0}.{1}{2}\n", model.Configuration.Schema, Manager.TablePrefix, model.Configuration.TableName);
+
+            queryBuilder.Append("(");
+            // Aqui se colocan las propiedades del objeto. Una por columna por su puesto.
+            foreach (KeyValuePair<string, PropertyInfo> property in model.Configuration.ManagedProperties)
+            {
+                string isNullable = Nullable.GetUnderlyingType(property.Value.PropertyType) == null || property.Value.Equals(model.Configuration.PrimaryKeyProperty) ? "NOT NULL" : string.Empty;
+                if (property.Value.Equals(model.Configuration.PrimaryKeyProperty))
+                {
+                    if (property.Value.PropertyType.Equals(typeof(int?)))
+                    {
+                        queryBuilder.AppendFormat("{0} {1} IDENTITY(1,1) NOT NULL PRIMARY KEY,\n", property.Value.Name, GetSqlDataType(property.Value.PropertyType, model.Configuration.UniqueKeyProperties.ContainsKey(property.Value.Name), GetDataLengthFromProperty(model, property.Key)));
+                    }
+                    else
+                    {
+                        queryBuilder.AppendFormat("{0} {1} NOT NULL PRIMARY KEY,\n", property.Value.Name, GetSqlDataType(property.Value.PropertyType, model.Configuration.UniqueKeyProperties.ContainsKey(property.Value.Name), GetDataLengthFromProperty(model, property.Key)));
+                    }
+                }
+                else
+                {
+                    queryBuilder.AppendFormat("{0} {1} {2},\n", property.Value.Name, GetSqlDataType(property.Value.PropertyType, model.Configuration.UniqueKeyProperties.ContainsKey(property.Value.Name), GetDataLengthFromProperty(model, property.Key)), isNullable);
+                }
+            }
+            queryBuilder.Remove(queryBuilder.Length - 2, 2);
+            queryBuilder.Append(");");
+
+            Logger.Info("Created a new query for Create Table:");
+            Logger.Info(queryBuilder.ToString());
+            return queryBuilder.ToString();
+        }
+
+        public string CreateQueryForTableAlteration(IManageable model, Dictionary<string, ColumnDefinition> columnDetails, Dictionary<string, KeyDefinition> keyDetails)
         {
             StringBuilder queryBuilder = new StringBuilder();
             List<string> columnsFound = new List<string>();
             bool foundDiference = false;
-            T obj = new T();
 
-            if (Cope<T>.ModelComposition.ManagedProperties.Count == 0) return string.Empty;
+            if (model.Configuration.ManagedProperties.Count == 0) return string.Empty;
 
-            string fullyQualifiedTableName = string.Format("{0}.{1}{2}", Cope<T>.ModelComposition.Schema, Manager.TablePrefix, Cope<T>.ModelComposition.TableName);
+            string fullyQualifiedTableName = string.Format("[{0}].[{1}{2}]", model.Configuration.Schema, Manager.TablePrefix, model.Configuration.TableName);
 
-            foreach (KeyValuePair<string, PropertyInfo> property in Cope<T>.ModelComposition.ManagedProperties)
+            foreach (KeyValuePair<string, PropertyInfo> property in model.Configuration.ManagedProperties)
             {
                 columnDetails.TryGetValue(property.Value.Name, out ColumnDefinition columnDefinition);
-                string sqlDataType = GetSqlDataType(property.Value.PropertyType, Cope<T>.ModelComposition.UniqueKeyProperties.ContainsKey(property.Value.Name), GetDataLengthFromProperty<T>(property.Key));
+                string sqlDataType = GetSqlDataType(property.Value.PropertyType, model.Configuration.UniqueKeyProperties.ContainsKey(property.Value.Name), GetDataLengthFromProperty(model, property.Key));
                 bool isNullable = Nullable.GetUnderlyingType(property.Value.PropertyType) == null ? false : true;
-                string nullWithDefault = isNullable == true ? string.Empty : string.Format("NOT NULL DEFAULT {0}", GetDefault(property.Value.PropertyType));
 
                 if (columnDefinition == null)
                 {
                     // Agregar propiedad a tabla ya que no existe.
                     queryBuilder.AppendFormat("ALTER TABLE {0} \n", fullyQualifiedTableName);
-                    queryBuilder.AppendFormat("ADD {0} {1} {2};\n", property.Value.Name, sqlDataType, nullWithDefault);
+                    queryBuilder.AppendFormat("ADD {0} {1}|;|\n", property.Value.Name, sqlDataType);
+                    if (!isNullable)
+                    {
+                        queryBuilder.Append($"UPDATE {fullyQualifiedTableName} SET {fullyQualifiedTableName}.[{property.Value.Name}] = {GetDefault(property.Value.PropertyType)}; \n");
+                        queryBuilder.Append($"ALTER TABLE {fullyQualifiedTableName} \n");
+                        queryBuilder.Append($"ALTER COLUMN {property.Value.Name} {sqlDataType} NOT NULL;\n");
+                    }
                     foundDiference = true;
                     continue;
                 }
@@ -271,21 +327,21 @@ namespace OneData.DAO
                     queryBuilder.AppendFormat("ALTER COLUMN {0} {1};\n", property.Value.Name, sqlDataType);
                     foundDiference = true;
                 }
-                if (columnDefinition.Is_Nullable.Equals("YES") && !isNullable && !property.Value.Equals(Cope<T>.ModelComposition.PrimaryKeyProperty))
+                if (columnDefinition.Is_Nullable.Equals("YES") && !isNullable && !property.Value.Equals(model.Configuration.PrimaryKeyProperty))
                 {
                     // Si la propiedad ya no es nullable, entonces la cambia en la base de datos
                     queryBuilder.AppendFormat("ALTER TABLE {0} \n", fullyQualifiedTableName);
                     queryBuilder.AppendFormat("ALTER COLUMN {0} {1} NOT NULL;\n", property.Value.Name, sqlDataType);
                     foundDiference = true;
                 }
-                if (columnDefinition.Is_Nullable.Equals("NO") && isNullable && !property.Value.Equals(Cope<T>.ModelComposition.PrimaryKeyProperty))
+                if (columnDefinition.Is_Nullable.Equals("NO") && isNullable && !property.Value.Equals(model.Configuration.PrimaryKeyProperty))
                 {
                     // Si la propiedad ES nullable, entonces la cambia en la base de datos
                     queryBuilder.AppendFormat("ALTER TABLE {0} \n", fullyQualifiedTableName);
                     queryBuilder.AppendFormat("ALTER COLUMN {0} {1};\n", property.Value.Name, sqlDataType);
                     foundDiference = true;
                 }
-                if (keyDetails.TryGetValue(property.Value.Name, out KeyDefinition keyDefinition) && !property.Value.Equals(Cope<T>.ModelComposition.PrimaryKeyProperty))
+                if (keyDetails.TryGetValue(property.Value.Name, out KeyDefinition keyDefinition) && !property.Value.Equals(model.Configuration.PrimaryKeyProperty))
                 {
                     // Si existe una llave en la base de datos relacionada a esta propiedad entonces...
                     ForeignKey foreignAttribute = property.Value.GetCustomAttribute<ForeignKey>();
@@ -293,7 +349,7 @@ namespace OneData.DAO
                     {
                         // En el caso de que no tenga ya el atributo, significa que dejo de ser una propiedad relacionada con algun modelo foraneo y por ende, debemos de eliminar la llave foranea
                         queryBuilder.AppendFormat("ALTER TABLE {0} \n", fullyQualifiedTableName);
-                        queryBuilder.AppendFormat("DROP FOREIGN KEY {0};\n", keyDefinition.Constraint_Name);
+                        queryBuilder.AppendFormat("DROP CONSTRAINT {0};\n", keyDefinition.Constraint_Name);
                         keyDetails.Remove(property.Value.Name);
                         foundDiference = true;
                     }
@@ -320,7 +376,7 @@ namespace OneData.DAO
                 Logger.Info(queryBuilder.ToString());
             }
 
-            queryBuilder.Append(GetCreateForeignKeysQuery<T>(keyDetails));
+            queryBuilder.Append(GetCreateForeignKeysQuery(model, keyDetails));
 
             return queryBuilder.ToString();
         }
@@ -339,28 +395,28 @@ namespace OneData.DAO
             return 0;
         }
 
-        public string GetCreateForeignKeysQuery<T>(Dictionary<string, KeyDefinition> keyDetails = null) where T : Cope<T>, IManageable, new()
+        public string GetCreateForeignKeysQuery(IManageable model, Dictionary<string, KeyDefinition> keyDetails = null)
         {
             StringBuilder queryBuilder = new StringBuilder();
             Dictionary<string, PropertyInfo> properties;
             if (keyDetails == null)
             {
-                properties = Cope<T>.ModelComposition.ForeignKeyProperties;
+                properties = model.Configuration.ForeignKeyProperties;
             }
             else
             {
-                properties = Cope<T>.ModelComposition.ForeignKeyProperties.Where(q => !keyDetails.ContainsKey(q.Value.Name)).ToDictionary(q => q.Key, q => q.Value);
+                properties = model.Configuration.ForeignKeyProperties.Where(q => !keyDetails.ContainsKey(q.Value.Name)).ToDictionary(q => q.Key, q => q.Value);
             }
 
             if (properties.Count == 0) return string.Empty;
 
             foreach (KeyValuePair<string, PropertyInfo> property in properties)
             {
-                queryBuilder.AppendFormat("ALTER TABLE {0}.{1}{2}\n", Cope<T>.ModelComposition.Schema, Manager.TablePrefix, Cope<T>.ModelComposition.TableName);
+                queryBuilder.AppendFormat("ALTER TABLE {0}.{1}{2}\n", model.Configuration.Schema, Manager.TablePrefix, model.Configuration.TableName);
                 ForeignKey foreignAttribute = property.Value.GetCustomAttribute<ForeignKey>();
                 IManageable foreignKey = (IManageable)Activator.CreateInstance(foreignAttribute.Model);
-                queryBuilder.AppendFormat("ADD CONSTRAINT FK_{0}_{1}\n", Cope<T>.ModelComposition.TableName, foreignKey.Configuration.TableName);
-                queryBuilder.AppendFormat($"FOREIGN KEY({property.Value.Name}) REFERENCES {Cope<T>.ModelComposition.Schema}.{Manager.TablePrefix}{foreignKey.Configuration.TableName}({Cope<T>.ModelComposition.PrimaryKeyProperty.Name}) ON DELETE {foreignAttribute.Action.ToString().Replace("_", " ")} ON UPDATE NO ACTION;\n");
+                queryBuilder.AppendFormat("ADD CONSTRAINT FK_{0}_{1}\n", model.Configuration.TableName, foreignKey.Configuration.TableName);
+                queryBuilder.AppendFormat($"FOREIGN KEY({property.Value.Name}) REFERENCES { model.Configuration.Schema}.{Manager.TablePrefix}{foreignKey.Configuration.TableName}({ model.Configuration.PrimaryKeyProperty.Name}) ON DELETE {foreignAttribute.Action.ToString().Replace("_", " ")} ON UPDATE NO ACTION;\n");
             }
 
             Logger.Info("Created a new query for Create Foreign Keys:");
