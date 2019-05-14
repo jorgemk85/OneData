@@ -16,8 +16,10 @@ namespace OneData.Models
         public string FullyQualifiedTableName { get; set; }
         internal Dictionary<string, PropertyInfo> ManagedProperties { get; set; }
         internal Dictionary<string, PropertyInfo> UniqueKeyProperties { get; set; }
+        internal Dictionary<string, PropertyInfo> DefaultProperties { get; set; }
         internal Dictionary<string, PropertyInfo> ForeignKeyProperties { get; set; }
         internal Dictionary<string, DataLength> DataLengthAttributes { get; set; }
         internal Dictionary<string, ForeignKey> ForeignKeyAttributes { get; set; }
+        internal Dictionary<string, Default> DefaultAttributes { get; set; }
     }
 }

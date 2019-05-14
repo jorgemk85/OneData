@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace OneData.Attributes
 {
     [AttributeUsage(AttributeTargets.Property)]
-    public class DateCreatedProperty : Attribute
+    public class DateCreated : Attribute
     {
 
     }

@@ -1,10 +1,10 @@
-﻿using OneData.Attributes;
+﻿using MySql.Data.MySqlClient;
+using OneData.Attributes;
 using OneData.Enums;
 using OneData.Exceptions;
 using OneData.Interfaces;
 using OneData.Models;
 using OneData.Tools;
-using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -62,16 +62,18 @@ namespace OneData.DAO
         public Result<T> ExecuteProcedure<T>(QueryOptions queryOptions, TransactionTypes transactionType, bool logTransaction, object obj, Expression<Func<T, bool>> expression) where T : Cope<T>, IManageable, new()
         {
             Result<T> result = null;
-            bool overrideConsolidation = false;
-            bool nextTryRepairStoredProcedure = false;
+            bool throwIfError = false;
 
         Start:
             try
             {
                 Logger.Info(string.Format("Starting {0} execution for object {1} using connection {2}", transactionType.ToString(), typeof(T), queryOptions));
-                if (Manager.ConstantTableConsolidation && !overrideConsolidation)
+                if (Manager.ConstantTableConsolidation)
                 {
-                    PerformTableConsolidation<T>(queryOptions.ConnectionToUse, false);
+                    if (!typeof(T).Equals(typeof(Log)))
+                    {
+                        PerformFullTableCheck(new T(), queryOptions.ConnectionToUse);
+                    }
                 }
 
                 switch (transactionType)
@@ -107,11 +109,11 @@ namespace OneData.DAO
             }
             catch (MySqlException mySqlException) when (mySqlException.Number == ERR_STORED_PROCEDURE_NOT_FOUND)
             {
-                if (Manager.AutoCreateStoredProcedures)
+                if (Manager.AutoCreateStoredProcedures && !throwIfError)
                 {
                     Logger.Warn(string.Format("Stored Procedure for {0} not found. Creating...", transactionType.ToString()));
                     ExecuteScalar(GetTransactionTextForProcedure<T>(transactionType, false), queryOptions.ConnectionToUse, false);
-                    overrideConsolidation = true;
+                    throwIfError = true;
                     goto Start;
                 }
                 Logger.Error(mySqlException);
@@ -119,36 +121,23 @@ namespace OneData.DAO
             }
             catch (MySqlException mySqlException) when (mySqlException.Number == ERR_TABLE_NOT_FOUND)
             {
-                if (Manager.AutoCreateTables)
+                if (Manager.AutoCreateTables && !throwIfError)
                 {
                     Logger.Warn(string.Format("Table {0} not found. Creating...", Cope<T>.ModelComposition.TableName));
-                    ProcessTable<T>(queryOptions.ConnectionToUse, false);
-                    overrideConsolidation = true;
+                    PerformFullTableCheck(new T(), queryOptions.ConnectionToUse);
+                    throwIfError = true;
                     goto Start;
                 }
                 Logger.Error(mySqlException);
                 throw;
             }
-            catch (MySqlException mySqlException) when (mySqlException.Number == ERR_INCORRECT_NUMBER_OF_ARGUMENTS || (mySqlException.Number == ERR_UNKOWN_COLUMN && nextTryRepairStoredProcedure))
+            catch (MySqlException mySqlException) when (mySqlException.Number == ERR_INCORRECT_NUMBER_OF_ARGUMENTS || mySqlException.Number == ERR_UNKOWN_COLUMN || mySqlException.Number == ERR_UNKOWN_COLUMN || mySqlException.Number == ERR_NO_DEFAULT_VALUE_IN_FIELD)
             {
-                nextTryRepairStoredProcedure = false;
-                if (Manager.AutoAlterStoredProcedures)
+                if (Manager.AutoAlterTables && !throwIfError)
                 {
-                    Logger.Warn(string.Format("Incorrect number of arguments or unkown column related to the {0} stored procedure. Modifying...", transactionType.ToString()));
+                    PerformFullTableCheck(new T(), queryOptions.ConnectionToUse);
                     ExecuteScalar(GetTransactionTextForProcedure<T>(transactionType, true), queryOptions.ConnectionToUse, false);
-                    overrideConsolidation = true;
-                    goto Start;
-                }
-                Logger.Error(mySqlException);
-                throw;
-            }
-            catch (MySqlException mySqlException) when (mySqlException.Number == ERR_UNKOWN_COLUMN || mySqlException.Number == ERR_NO_DEFAULT_VALUE_IN_FIELD)
-            {
-                nextTryRepairStoredProcedure = true;
-                if (Manager.AutoAlterTables)
-                {
-                    ProcessTable<T>(queryOptions.ConnectionToUse, true);
-                    overrideConsolidation = true;
+                    throwIfError = true;
                     goto Start;
                 }
                 Logger.Error(mySqlException);
@@ -218,7 +207,7 @@ namespace OneData.DAO
 
         private Result<T> ExecuteMassiveOperation<T>(IEnumerable<T> list, QueryOptions queryOptions, TransactionTypes transactionType) where T : Cope<T>, IManageable, new()
         {
-            bool canTryForAutoCreateStoredProcedure = true;
+            bool throwIfError = false;
 
         Start:
             using (MySqlConnection connection = Connection.OpenMySqlConnection(queryOptions.ConnectionToUse))
@@ -250,14 +239,12 @@ namespace OneData.DAO
                 }
                 catch (MySqlException mySqlException) when (mySqlException.Number == ERR_STORED_PROCEDURE_NOT_FOUND)
                 {
-                    if (Manager.AutoCreateStoredProcedures)
+                    if (Manager.AutoCreateStoredProcedures && !throwIfError)
                     {
-                        if (canTryForAutoCreateStoredProcedure)
-                        {
-                            Logger.Warn(string.Format("Stored Procedure for {0} not found. Creating...", transactionType.ToString()));
-                            PerformStoredProcedureValidation<T>(transactionType, queryOptions);
-                            goto Start;
-                        }
+                        Logger.Warn(string.Format("Stored Procedure for {0} not found. Creating...", transactionType.ToString()));
+                        PerformStoredProcedureValidation<T>(transactionType, queryOptions);
+                        throwIfError = true;
+                        goto Start;
                     }
                     Logger.Error(mySqlException);
                     throw;

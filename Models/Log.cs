@@ -7,11 +7,11 @@ namespace OneData.Models
     [DataTable("logs")]
     public class Log : Cope<Log>, IManageable
     {
-        [PrimaryKeyProperty]
-        public Guid? Id { get; set; }
-        [DateCreatedProperty]
+        [PrimaryKey]
+        public Guid Id { get; set; }
+        [DateCreated]
         public DateTime? DateCreated { get; set; }
-        [DateModifiedProperty]
+        [DateModified]
         public DateTime? DateModified { get; set; }
         public dynamic IdentityId { get; set; }
         public string Transaccion { get; set; }

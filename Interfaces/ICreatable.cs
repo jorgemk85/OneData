@@ -13,8 +13,8 @@ namespace OneData.Interfaces
         string CreateUpdateStoredProcedure<T>(bool doAlter) where T : Cope<T>, IManageable, new();
         string CreateDeleteStoredProcedure<T>(bool doAlter) where T : Cope<T>, IManageable, new();
         string CreateQueryForTableCreation(IManageable model);
-        string CreateQueryForTableAlteration(IManageable model, Dictionary<string, ColumnDefinition> columnDetails, Dictionary<string, KeyDefinition> keyDetails);
-        string GetCreateForeignKeysQuery(IManageable model, Dictionary<string, KeyDefinition> keyDetails = null);
+        string CreateQueryForTableAlteration(IManageable model, Dictionary<string, ColumnDefinition> columnDetails, Dictionary<string, ConstraintDefinition> constraints);
+        string GetCreateForeignKeysQuery(IManageable model, Dictionary<string, ConstraintDefinition> constraints = null);
         string GetSqlDataType(Type codeType, bool isUniqueKey, long dataLength);
     }
 }

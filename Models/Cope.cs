@@ -16,11 +16,20 @@ namespace OneData.Models
         static readonly ModelComposition _modelComposition = new ModelComposition(typeof(T));
         [JsonIgnore]
         static readonly Configuration _configuration = new Configuration();
+        [JsonIgnore]
+        static bool _isFullyValidated = false;
 
         [UnmanagedProperty, JsonIgnore]
         internal static ModelComposition ModelComposition { get; } = _modelComposition;
         [UnmanagedProperty, JsonIgnore]
         public Configuration Configuration { get; } = _configuration;
+        [UnmanagedProperty, JsonIgnore]
+        public bool IsFullyValidated
+        {
+            get { return _isFullyValidated; }
+            set { _isFullyValidated = value; }
+        }
+
 
         static Cope()
         {
@@ -39,6 +48,8 @@ namespace OneData.Models
             _configuration.FullyQualifiedTableName = _modelComposition.FullyQualifiedTableName;
             _configuration.ManagedProperties = _modelComposition.ManagedProperties;
             _configuration.UniqueKeyProperties = _modelComposition.UniqueKeyProperties;
+            _configuration.DefaultProperties = _modelComposition.DefaultProperties;
+            _configuration.DefaultAttributes = _modelComposition.DefaultAttributes;
             _configuration.DataLengthAttributes = _modelComposition.DataLengthAttributes;
             _configuration.ForeignKeyAttributes = _modelComposition.ForeignKeyAttributes;
             _configuration.ForeignKeyProperties = _modelComposition.ForeignKeyProperties;

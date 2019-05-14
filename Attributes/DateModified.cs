@@ -3,7 +3,7 @@
 namespace OneData.Attributes
 {
     [AttributeUsage(AttributeTargets.Property)]
-    public class DateModifiedProperty : Attribute
+    public class DateModified : Attribute
     {
 
     }

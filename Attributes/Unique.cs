@@ -3,7 +3,7 @@
 namespace OneData.Attributes
 {
     [AttributeUsage(AttributeTargets.Property)]
-    public class UniqueKey: Attribute
+    public class Unique: Attribute
     {
     }
 }
