@@ -155,16 +155,16 @@ using OneData.Models;
 [DataTable("logs")]
 public class Log : Cope<Log>, IManageable
 {
-    [PrimaryKeyProperty]
+    [PrimaryKey]
     public Guid Id { get; set; }
-    [DateCreatedProperty]
+    [DateCreated]
     public DateTime DateCreated { get; set; }
-    [DateModifiedProperty]
+    [DateModified]
     public DateTime DateModified { get; set; }
 }
 ```
 
-The attributes `DataTable`, `PrimaryKeyProperty`, `DateCreatedProperty` and `DateModifiedProperty` will be explained with detail later in this document. For now, know that they are used to indicate which property is used for what specific purpose. The name of your properties is completely up to you.
+The attributes `DataTable`, `PrimaryKey`, `DateCreated` and `DateModified` will be explained with detail later in this document. For now, know that they are used to indicate which property is used for what specific purpose. The name of your properties is completely up to you.
 
 Please note the Generic class `Cope<T>` which NEEDS sent the class you are working on. As the example shows, `Log` is the class name and the generic class is `Cope<Log>`. This is very important to setup properly since the compiler MIGHT not show a compilation error (it varies from class to class).
   
@@ -203,13 +203,14 @@ The following table is a comprehensive list of available attributes with their r
 | `CacheEnabled`        |  Classes   | Once per Class/Model.              | Enables a class/model to use the On-RAM Cache. Uses minutes as expiration.|
 | `DataLength`          | Properties | None.                              | Specify which data length you want to use. If not implemented, will use default.|
 | `DataTable`           |  Classes   | Required. Once per Class/Model.    | Sets the table name (and optinally the scheme) to use.|
-| `DateCreatedProperty` | Properties | Required. Once per Class/Model.    | Mark the property that will hold date and time of record creation.|
-| `DateModifiedProperty`| Properties | Required. Once per Class/Model.    | Mark the property that will hold date and time of record update.   |
+| `DateCreated`			| Properties | Required. Once per Class/Model.    | Mark the property that will hold date and time of record creation.|
+| `DateModified`		| Properties | Required. Once per Class/Model.    | Mark the property that will hold date and time of record update.   |
 | `ForeignData`         | Properties | None.                              | Used when you need to get information from a foreign table.   |
 | `ForeignKey`          | Properties | None.                              | Relates a property with the PrimaryKey of another class/model.   |
 | `HeaderName`          | Properties | None.                              | Specify the name to look for instead of the propery name.   |
-| `PrimaryKeyProperty`  | Properties | Required. Once per Class/Model.    | Mark the property that will be set as the PrimaryKey. |
-| `UniqueKey`           | Properties | None.                              | Set a property to hold a unique value.   |
+| `PrimaryKey`			| Properties | Required. Once per Class/Model.    | Mark the property that will be set as the PrimaryKey. |
+| `Unique`				| Properties | None.                              | Set a property to hold a unique value.   |
+| `Default`				| Properties | None.                              | Sets a default value to a property inside the database.   |
 | `UnmanagedProperty`   | Properties | None.                              | Used when you don't want OneData to interfere with.   |
 
 ### Transactions
@@ -237,11 +238,11 @@ This is our new `Log` class/model (note the new properties `UserId` and Transact
 [DataTable("logs")]
 public class Log : Cope<Log>, IManageable
 {
-    [PrimaryKeyProperty]
+    [PrimaryKey]
     public Guid Id { get; set; }
-    [DateCreatedProperty]
+    [DateCreated]
     public DateTime DateCreated { get; set; }
-    [DateModifiedProperty]
+    [DateModified]
     public DateTime DateModified { get; set; }
 
     public Guid UserId { get; set; }
@@ -272,7 +273,7 @@ public Log(Guid id)
 }
 ```
 
-When you which to insert a set of information contained in a `IEnumerable<T>`, say, a `List<T>`, you can simply do the following:
+When you wish to insert a set of information contained in a `IEnumerable<T>`, say, a `List<T>`, you can simply do the following:
 ```c#
 myLogCollection.InsertMassive();
 ```
@@ -284,11 +285,11 @@ Similarly to Insert, if you need to update a record, you can do the following:
 ```c#
 myUpdatedLog.Update();
 ```
-OneData uses the value inside the property identified as `PrimaryKeyProperty` to find the object in the database and update it as you wish. 
+OneData uses the value inside the property identified as `PrimaryKey` to find the object in the database and update it as you wish. 
 
-**The Update stored procedure uses IFNULL(), so if you want to send partial information, you should send your object with every property set to null except those you really need to update, and of course your `PrimaryKeyProperty` value should be set.**
+**The Update stored procedure uses IFNULL(), so if you want to send partial information, you should send your object with every property set to null except those you really need to update, and of course your `PrimaryKey` value should be set.**
 
-When you which to update a set of information contained in a `IEnumerable<T>`, say, a `List<T>`, you can simply do the following:
+When you wish to update a set of information contained in a `IEnumerable<T>`, say, a `List<T>`, you can simply do the following:
 ```c#
 myLogCollection.UpdateMassive();
 ```
@@ -300,9 +301,9 @@ Similarly to Insert or Update, if you need to Delete a record, you can do the fo
 ```c#
 myUpdatedLog.Delete();
 ```
-You only need to send the id of your record inside the property you identified as `PrimaryKeyProperty` to find the object in the database and delete it.
+You only need to send the id of your record inside the property you identified as `PrimaryKey` to find the object in the database and delete it.
 
-When you which to delete a set of information contained in a `IEnumerable<T>`, say, a `List<T>`, you can simply do the following:
+When you wish to delete a set of information contained in a `IEnumerable<T>`, say, a `List<T>`, you can simply do the following:
 ```c#
 myLogCollection.DeleteMassive();
 ```
@@ -365,7 +366,7 @@ The method `SelectList` has an overload which accepts an object of type `QueryOp
 * `Offset`
 > Brings back records starting from the specified offset in this property. If set to 0, will simply start from the beginning, as expected ;)
 
-Every query is returned with ordered records. OneData orders them by the descending value of the property marked with `DateCreatedProperty` attribute. 
+Every query is returned with ordered records. OneData orders them by the descending value of the property marked with `DateCreated` attribute. 
 ### Intermediate
 #### Relationships
 We will talk a little about relationships between classes/models inside OneData.
@@ -379,11 +380,11 @@ using OneData.Models;
 [DataTable("users")]
 public class User : Cope<User>, IManageable
 {
-    [PrimaryKeyProperty]
+    [PrimaryKey]
     public Guid Id { get; set; }
-    [DateCreatedProperty]
+    [DateCreated]
     public DateTime DateCreated { get; set; }
-    [DateModifiedProperty]
+    [DateModified]
     public DateTime DateModified { get; set; }
 
 	public string Name { get; set; }
@@ -398,11 +399,11 @@ To achieve a relationship between Users and Logs, we just need to configure it i
 [DataTable("logs")]
 public class Log : Cope<Log>, IManageable
 {
-    [PrimaryKeyProperty]
+    [PrimaryKey]
     public Guid Id { get; set; }
-    [DateCreatedProperty]
+    [DateCreated]
     public DateTime DateCreated { get; set; }
-    [DateModifiedProperty]
+    [DateModified]
     public DateTime DateModified { get; set; }
 
 	[ForeignKey(typeof(User))]
@@ -417,11 +418,11 @@ The following should be used if you need to pull data from another table (relate
 [DataTable("logs")]
 public class Log : Cope<Log>, IManageable
 {
-    [PrimaryKeyProperty]
+    [PrimaryKey]
     public Guid Id { get; set; }
-    [DateCreatedProperty]
+    [DateCreated]
     public DateTime DateCreated { get; set; }
-    [DateModifiedProperty]
+    [DateModified]
     public DateTime DateModified { get; set; }
 
 	[ForeignKey(typeof(User))]
@@ -442,7 +443,7 @@ Just sending the `JoinModel` parameter:
 By doing this, OneData has to assume some configurations, which are: 
 * Your `ReferenceModel` is the model the property belongs to.
 * Your `ReferenceIdName` is using the name of your `JoinModel` plus the word 'Id'.
-* Your `ColumnName` property inside your `JoinModel` is called `Name`.
+* Your `ColumnName` is called `Name` inside your `JoinModel`.
 
 Just sending the `JoinModel` and `ColumnName` parameter:
 ```c#

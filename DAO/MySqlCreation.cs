@@ -11,7 +11,7 @@ using System.Text;
 
 namespace OneData.DAO
 {
-    internal class MySqlCreation : ICreatable
+    internal class MySqlCreation : ICreatable, IValidatable
     {
         public void SetStoredProceduresParameters<T>(StringBuilder queryBuilder, bool setDefaultNull, bool considerPrimary) where T : Cope<T>, IManageable, new()
         {
@@ -203,154 +203,81 @@ namespace OneData.DAO
             return queryBuilder.ToString();
         }
 
-        public string CreateQueryForTableAlteration(IManageable model, Dictionary<string, ColumnDefinition> columnDetails, Dictionary<string, KeyDefinition> keyDetails)
+        public string CreateQueryForTableAlteration(IManageable model, Dictionary<string, ColumnDefinition> columnDetails, Dictionary<string, ConstraintDefinition> constraints)
         {
-            StringBuilder addQueryBuilder = new StringBuilder();
-            StringBuilder dropQueryBuilder = new StringBuilder();
-            List<string> columnsFound = new List<string>();
-            bool foundDiference = false;
-            string fullQuery = string.Empty;
-
             if (model.Configuration.ManagedProperties.Count == 0) return string.Empty;
 
-            fullQuery = $"ALTER TABLE `{Manager.TablePrefix}{model.Configuration.TableName}` \n";
+            StringBuilder queryBuilder = new StringBuilder();
+            ITransactionable sqlTransaction = new MySqlTransaction();
+            FullyQualifiedTableName tableName = new FullyQualifiedTableName(model.Configuration.Schema, $"{Manager.TablePrefix}{model.Configuration.TableName}");
 
             foreach (KeyValuePair<string, PropertyInfo> property in model.Configuration.ManagedProperties)
             {
                 columnDetails.TryGetValue(property.Value.Name, out ColumnDefinition columnDefinition);
                 string sqlDataType = GetSqlDataType(property.Value.PropertyType, model.Configuration.UniqueKeyProperties.ContainsKey(property.Value.Name), GetDataLengthFromProperty(model, property.Key));
-                bool isNullable = Nullable.GetUnderlyingType(property.Value.PropertyType) == null ? false : true;
-                string nullable = isNullable == true ? string.Empty : "NOT NULL";
 
-                if (columnDefinition == null)
+                if (IsNewColumn(columnDefinition))
                 {
-                    // Agregar propiedad a tabla ya que no existe.
-                    addQueryBuilder.AppendFormat("ADD `{0}` {1} {2},\n", property.Value.Name, sqlDataType, nullable);
-                    foundDiference = true;
-                    goto AddAsFound;
+                    queryBuilder.Append(sqlTransaction.AddColumn(tableName, property.Value.Name, sqlDataType));
+                    continue;
                 }
-                if (!sqlDataType.Equals(columnDefinition.Column_Type))
+                if (IsColumnDataTypeChanged(columnDefinition, sqlDataType))
                 {
-                    // Si el data type cambio, entonces lo modifica.
-                    addQueryBuilder.AppendFormat("MODIFY COLUMN `{0}` {1},\n", property.Value.Name, sqlDataType);
-                    foundDiference = true;
-                    goto AddAsFound;
-                }
-
-                if (!columnDefinition.Extra.Contains("auto_increment") && property.Value.Equals(model.Configuration.PrimaryKeyProperty) && property.Value.PropertyType.Equals(typeof(int)))
-                {
-                    // La propiedad es Primaria, es INT y no esta marcada como auto-increment...
-                    addQueryBuilder.AppendFormat("MODIFY COLUMN `{0}` {1} NOT NULL auto_increment,\n", property.Value.Name, sqlDataType);
-                    foundDiference = true;
-                    goto AddAsFound;
-                }
-
-                if (columnDefinition.Is_Nullable.Equals("YES") && !isNullable && !property.Value.Equals(model.Configuration.PrimaryKeyProperty))
-                {
-                    // Si la propiedad ya no es nullable, entonces la cambia en la base de datos
-                    addQueryBuilder.AppendFormat("MODIFY COLUMN `{0}` {1} NOT NULL,\n", property.Value.Name, sqlDataType);
-                    foundDiference = true;
-                    goto AddAsFound;
-                }
-                if (columnDefinition.Is_Nullable.Equals("NO") && isNullable && !property.Value.Equals(model.Configuration.PrimaryKeyProperty))
-                {
-                    // Si la propiedad ES nullable, entonces la cambia en la base de datos
-                    addQueryBuilder.AppendFormat("MODIFY COLUMN `{0}` {1},\n", property.Value.Name, sqlDataType);
-                    foundDiference = true;
-                    goto AddAsFound;
-                }
-                if (columnDefinition.Column_Key.Equals("UNI") && property.Value.GetCustomAttribute<UniqueKey>() == null)
-                {
-                    // Si la columna esta marcada como UNIQUE pero la propiedad no tiene el atributo, entonces hay que quitarlo
-                    addQueryBuilder.Append($"DROP INDEX `{property.Value.Name}_UNIQUE`,\n");
-                    foundDiference = true;
-                    goto AddAsFound;
-                }
-                if (!columnDefinition.Column_Key.Equals("UNI") && property.Value.GetCustomAttribute<UniqueKey>() != null)
-                {
-                    // Si la propiedad tiene el atributo UniqueKey y la columna no, entonces agregamos
-                    addQueryBuilder.Append($"ADD UNIQUE INDEX `{property.Value.Name}_UNIQUE` (`{property.Value.Name}` ASC),\n");
-                    foundDiference = true;
-                    goto AddAsFound;
-                }
-                if (keyDetails.TryGetValue(property.Value.Name, out KeyDefinition keyDefinition) && !columnDefinition.Column_Key.Equals("UNI"))
-                {
-                    // Si existe una llave foranea en la base de datos relacionada a esta propiedad entonces...
-                    ForeignKey foreignAttribute = property.Value.GetCustomAttribute<ForeignKey>();
-                    if (foreignAttribute == null)
+                    if (!string.IsNullOrWhiteSpace(columnDefinition.Column_Default))
                     {
-                        // En el caso de que no tenga ya el atributo, significa que dejo de ser una propiedad relacionada con algun modelo foraneo y por ende, debemos de eliminar la llave foranea
-                        addQueryBuilder.AppendFormat("DROP FOREIGN KEY `{0}`,\n", keyDefinition.Constraint_Name);
-                        keyDetails.Remove(property.Value.Name);
-                        foundDiference = true;
-                        goto AddAsFound;
+                        queryBuilder.Append(sqlTransaction.RemoveDefaultFromColumn(tableName, $"DF_{tableName.Schema}_{tableName.Table}_{property.Value.Name}"));
+                        columnDefinition.Column_Default = null;
                     }
-                }
-            AddAsFound:
-                columnsFound.Add(property.Value.Name);
-            }
 
-            // Extraemos las columnas en la tabla que ya no estan en las propiedades del modelo para quitarlas.
-            foreach (KeyValuePair<string, ColumnDefinition> detail in columnDetails.Where(q => !columnsFound.Contains(q.Key)))
-            {
-                dropQueryBuilder.AppendFormat("DROP `{0}`,\n", detail.Value.Column_Name);
-                foundDiference = true;
-                continue;
-            }
-
-            if (addQueryBuilder.Length > 0)
-            {
-                addQueryBuilder.Remove(addQueryBuilder.Length - 2, 2);
-            }
-            if (dropQueryBuilder.Length > 0)
-            {
-                if (addQueryBuilder.Length == 0)
-                {
-                    dropQueryBuilder.Remove(dropQueryBuilder.Length - 2, 2);
+                    queryBuilder.Append(sqlTransaction.ChangeColumnDataType(tableName, property.Value.Name, sqlDataType));
+                    columnDefinition.Is_Nullable = null;
                 }
 
+                queryBuilder.Append(IsNowNullable(columnDefinition, property.Value) ? sqlTransaction.RemoveNotNullFromColumn(tableName, property.Value.Name, sqlDataType) : string.Empty);
+                queryBuilder.Append(IsNoLongerNullable(columnDefinition, property.Value) ? sqlTransaction.AddNotNullToColumn(tableName, property.Value.Name, sqlDataType) : string.Empty);
+
+                queryBuilder.Append(IsNowUnique(constraints, $"UQ_{tableName.Schema}_{tableName.Table}_{property.Value.Name}", property.Value) ? sqlTransaction.AddUniqueToColumn(tableName, property.Value.Name) : string.Empty);
+                queryBuilder.Append(IsNoLongerUnique(constraints, $"UQ_{tableName.Schema}_{tableName.Table}_{property.Value.Name}", property.Value) ? sqlTransaction.RemoveUniqueFromColumn(tableName, $"UQ_{tableName.Schema}_{tableName.Table}_{property.Value.Name}") : string.Empty);
+
+                queryBuilder.Append(IsNowDefault(columnDefinition, property.Value) ? sqlTransaction.AddDefaultToColumn(tableName, property.Value.Name, model.Configuration.DefaultAttributes[property.Value.Name].Value) : string.Empty);
+                queryBuilder.Append(IsDefaultChanged(columnDefinition, property.Value) ? sqlTransaction.RenewDefaultInColumn(tableName, property.Value.Name, model.Configuration.DefaultAttributes[property.Value.Name].Value) : string.Empty);
+                queryBuilder.Append(IsNoLongerDefault(columnDefinition, property.Value) ? sqlTransaction.RemoveDefaultFromColumn(tableName, $"DF_{tableName.Schema}_{tableName.Table}_{property.Value.Name}") : string.Empty);
+
+                queryBuilder.Append(IsNowPrimaryKey(constraints, $"PK_{tableName.Schema}_{tableName.Table}_{property.Value.Name}", property.Value) ? sqlTransaction.AddPrimaryKeyToColumn(tableName, property.Value.Name) : string.Empty);
+                queryBuilder.Append(IsNoLongerPrimaryKey(constraints, $"PK_{tableName.Schema}_{tableName.Table}_{property.Value.Name}", property.Value) ? sqlTransaction.RemovePrimaryKeyFromColumn(tableName, $"PK_{tableName.Schema}_{tableName.Table}_{property.Value.Name}") : string.Empty);
+
+                queryBuilder.Append(IsNoLongerForeignKey(constraints, $"FK_{tableName.Schema}_{tableName.Table}_{property.Value.Name}", property.Value) ? sqlTransaction.RemoveForeignKeyFromColumn(tableName, $"FK_{tableName.Schema}_{tableName.Table}_{property.Value.Name}") : string.Empty);
             }
 
-            fullQuery = $"{fullQuery}\n{dropQueryBuilder.ToString()}\n{addQueryBuilder.ToString()};";
-
-            if (!foundDiference)
+            foreach (KeyValuePair<string, ColumnDefinition> columnDetail in columnDetails.Where(q => !model.Configuration.ManagedProperties.Keys.Contains(q.Key)))
             {
-                fullQuery = string.Empty;
-            }
-            else
-            {
-                Logger.Info("Created a new query for Alter Table:");
-                Logger.Info(fullQuery);
+                queryBuilder.Append(sqlTransaction.RemoveColumn(tableName, columnDetail.Key));
             }
 
-            fullQuery = $"{fullQuery}\n{GetCreateForeignKeysQuery(model, (keyDetails))}";
-
-            return fullQuery;
+            return queryBuilder.ToString();
         }
 
-        public string GetCreateForeignKeysQuery(IManageable model, Dictionary<string, KeyDefinition> keyDetails = null)
+        public string GetCreateForeignKeysQuery(IManageable model, Dictionary<string, ConstraintDefinition> constraints = null)
         {
             StringBuilder queryBuilder = new StringBuilder();
             Dictionary<string, PropertyInfo> properties;
+            ITransactionable sqlTransaction = new MySqlTransaction();
+            FullyQualifiedTableName tableName = new FullyQualifiedTableName(model.Configuration.Schema, $"{Manager.TablePrefix}{model.Configuration.TableName}");
 
-            if (keyDetails == null)
+            if (constraints == null)
             {
                 properties = model.Configuration.ForeignKeyProperties;
             }
             else
             {
-                properties = model.Configuration.ForeignKeyProperties.Where(q => !keyDetails.ContainsKey(q.Value.Name)).ToDictionary(q => q.Key, q => q.Value);
+                properties = model.Configuration.ForeignKeyProperties.Where(q => !constraints.ContainsKey(q.Value.Name)).ToDictionary(q => q.Key, q => q.Value);
             }
 
             if (properties.Count == 0) return string.Empty;
 
             foreach (KeyValuePair<string, PropertyInfo> property in properties)
             {
-                queryBuilder.AppendFormat("ALTER TABLE `{0}{1}`\n", Manager.TablePrefix, model.Configuration.TableName);
-                ForeignKey foreignAttribute = property.Value.GetCustomAttribute<ForeignKey>();
-                IManageable foreignKey = (IManageable)Activator.CreateInstance(foreignAttribute.Model);
-                queryBuilder.AppendFormat("ADD CONSTRAINT `FK_{0}_{1}`\n", model.Configuration.TableName, foreignKey.Configuration.TableName);
-                queryBuilder.Append($"FOREIGN KEY(`{property.Value.Name}`) REFERENCES {Manager.TablePrefix}{foreignKey.Configuration.TableName}({model.Configuration.PrimaryKeyProperty.Name}) ON DELETE {foreignAttribute.Action.ToString().Replace("_", " ")} ON UPDATE NO ACTION;\n");
+                queryBuilder.Append(sqlTransaction.AddForeignKeyToColumn(tableName, property.Value));
             }
 
             Logger.Info("(MySql) Created a new query for Create Foreign Keys:");
@@ -503,46 +430,123 @@ namespace OneData.DAO
 
         public string CreateQueryForTableCreation(IManageable model)
         {
-            StringBuilder queryBuilder = new StringBuilder();
-
             if (model.Configuration.ManagedProperties.Count == 0) return string.Empty;
 
-            queryBuilder.AppendFormat("CREATE TABLE `{0}{1}` (\n", Manager.TablePrefix, model.Configuration.TableName);
+            StringBuilder queryBuilder = new StringBuilder();
+            ITransactionable sqlTransaction = new MySqlTransaction();
+            // TODO: This schema setting should be set depending on which connection is beign used.
+            FullyQualifiedTableName tableName = new FullyQualifiedTableName(model.Configuration.Schema, $"{Manager.TablePrefix}{model.Configuration.TableName}");
 
-            // Aqui se colocan las propiedades del objeto. Una por columna por supuesto.
-            foreach (KeyValuePair<string, PropertyInfo> property in model.Configuration.ManagedProperties)
+            queryBuilder.Append(sqlTransaction.AddTable(tableName, model.Configuration.PrimaryKeyProperty.Name, GetSqlDataType(model.Configuration.PrimaryKeyProperty.PropertyType, false, 0), model.Configuration.PrimaryKeyProperty.PropertyType.Equals(typeof(int?)) || model.Configuration.PrimaryKeyProperty.PropertyType.Equals(typeof(int))));
+
+            // Aqui se colocan las propiedades del objeto. Una por columna por su puesto.
+            foreach (KeyValuePair<string, PropertyInfo> property in model.Configuration.ManagedProperties.Where(q => q.Key != model.Configuration.PrimaryKeyProperty.Name))
             {
-                string isNullable = Nullable.GetUnderlyingType(property.Value.PropertyType) == null || property.Value.Equals(model.Configuration.PrimaryKeyProperty) ? "NOT NULL" : string.Empty;
-                if (property.Value.Equals(model.Configuration.PrimaryKeyProperty))
-                {
-                    if (property.Value.PropertyType.Equals(typeof(int?)))
-                    {
-                        queryBuilder.AppendFormat("`{0}` {1} NOT NULL AUTO_INCREMENT,\n", property.Value.Name, GetSqlDataType(property.Value.PropertyType, model.Configuration.UniqueKeyProperties.ContainsKey(property.Value.Name), GetDataLengthFromProperty(model, property.Key)));
-                    }
-                    else
-                    {
-                        queryBuilder.AppendFormat("`{0}` {1} NOT NULL,\n", property.Value.Name, GetSqlDataType(property.Value.PropertyType, model.Configuration.UniqueKeyProperties.ContainsKey(property.Value.Name), GetDataLengthFromProperty(model,property.Key)));
-                    }
-                }
-                else
-                {
-                    queryBuilder.AppendFormat("`{0}` {1} {2},\n", property.Value.Name, GetSqlDataType(property.Value.PropertyType, model.Configuration.UniqueKeyProperties.ContainsKey(property.Value.Name), GetDataLengthFromProperty(model, property.Key)), isNullable);
-                }
+                string sqlDataType = GetSqlDataType(property.Value.PropertyType, model.Configuration.UniqueKeyProperties.ContainsKey(property.Value.Name), GetDataLengthFromProperty(model, property.Key));
+
+                queryBuilder.Append(sqlTransaction.AddColumn(tableName, property.Value.Name, sqlDataType));
+                queryBuilder.Append(!IsNullable(property.Value) ? sqlTransaction.AddNotNullToColumn(tableName, property.Value.Name, sqlDataType) : string.Empty);
+                queryBuilder.Append(IsUnique(model, property.Value.Name) ? sqlTransaction.AddUniqueToColumn(tableName, property.Value.Name) : string.Empty);
+                queryBuilder.Append(IsDefault(model, property.Value.Name) ? sqlTransaction.AddDefaultToColumn(tableName, property.Value.Name, model.Configuration.DefaultAttributes[property.Value.Name].Value) : string.Empty);
             }
-
-            queryBuilder.Append($"PRIMARY KEY (`{model.Configuration.PrimaryKeyProperty.Name}`),\n");
-
-            foreach (KeyValuePair<string, PropertyInfo> property in model.Configuration.UniqueKeyProperties)
-            {
-                queryBuilder.Append($"UNIQUE KEY `{property.Value.Name}_UNIQUE` (`{property.Value.Name}`),\n");
-            }
-
-            queryBuilder.Append($"UNIQUE KEY `{model.Configuration.PrimaryKeyProperty.Name}_UNIQUE` (`{model.Configuration.PrimaryKeyProperty.Name}`))\n");
-            queryBuilder.Append("ENGINE=InnoDB;");
 
             Logger.Info("(MySql) Created a new query for Create Table:");
             Logger.Info(queryBuilder.ToString());
             return queryBuilder.ToString();
+        }
+
+        public bool IsNewColumn(ColumnDefinition columnDefinition)
+        {
+            return columnDefinition == null;
+        }
+
+        public bool IsColumnDataTypeChanged(ColumnDefinition columnDefinition, string sqlDataType)
+        {
+            string columnMax = columnDefinition.Character_Maximum_Length != null ? $"({columnDefinition.Character_Maximum_Length})" : columnDefinition.Numeric_Precision != null ? $"({columnDefinition.Numeric_Precision})" : string.Empty;
+            return columnDefinition.Data_Type == null ? false : $"{columnDefinition.Data_Type}{columnMax}" != sqlDataType;
+        }
+
+        public bool IsColumnRemoved(Dictionary<string, PropertyInfo> properties, string columnName)
+        {
+            return !properties.ContainsKey(columnName);
+        }
+
+        public bool IsNowNullable(ColumnDefinition columnDefinition, PropertyInfo property)
+        {
+            return Nullable.GetUnderlyingType(property.PropertyType) != null && (columnDefinition.Is_Nullable == "NO" || columnDefinition.Is_Nullable == null);
+        }
+
+        public bool IsNowUnique(Dictionary<string, ConstraintDefinition> constraints, string uniqueConstraintName, PropertyInfo property)
+        {
+            return !constraints.ContainsKey(uniqueConstraintName) && property.GetCustomAttribute<Unique>() != null;
+        }
+
+        public bool IsNowDefault(ColumnDefinition columnDefinition, PropertyInfo property)
+        {
+            return string.IsNullOrWhiteSpace(columnDefinition.Column_Default) && property.GetCustomAttribute<Default>() != null;
+        }
+
+        public bool IsNowPrimaryKey(Dictionary<string, ConstraintDefinition> constraints, string primaryKeyConstraintName, PropertyInfo property)
+        {
+            return !constraints.ContainsKey(primaryKeyConstraintName) && property.GetCustomAttribute<PrimaryKey>() != null;
+        }
+
+        public bool IsNowForeignKey(Dictionary<string, ConstraintDefinition> constraints, string foreignKeyConstraintName, PropertyInfo property)
+        {
+            return !constraints.ContainsKey(foreignKeyConstraintName) && property.GetCustomAttribute<ForeignKey>() != null;
+        }
+
+        public bool IsNoLongerNullable(ColumnDefinition columnDefinition, PropertyInfo property)
+        {
+            return Nullable.GetUnderlyingType(property.PropertyType) == null && (columnDefinition.Is_Nullable == "YES" || columnDefinition.Is_Nullable == null);
+        }
+
+        public bool IsNoLongerUnique(Dictionary<string, ConstraintDefinition> constraints, string uniqueConstraintName, PropertyInfo property)
+        {
+            return constraints.ContainsKey(uniqueConstraintName) && property.GetCustomAttribute<Unique>() == null;
+        }
+
+        public bool IsNoLongerDefault(ColumnDefinition columnDefinition, PropertyInfo property)
+        {
+            return !string.IsNullOrWhiteSpace(columnDefinition.Column_Default) && property.GetCustomAttribute<Default>() == null;
+        }
+
+        public bool IsNoLongerPrimaryKey(Dictionary<string, ConstraintDefinition> constraints, string uniqueConstraintName, PropertyInfo property)
+        {
+            return constraints.ContainsKey(uniqueConstraintName) && property.GetCustomAttribute<PrimaryKey>() == null;
+        }
+
+        public bool IsNoLongerForeignKey(Dictionary<string, ConstraintDefinition> constraints, string foreignKeyConstraintName, PropertyInfo property)
+        {
+            return constraints.ContainsKey(foreignKeyConstraintName) && property.GetCustomAttribute<ForeignKey>() == null;
+        }
+
+        public bool IsDefaultChanged(ColumnDefinition columnDefinition, PropertyInfo property)
+        {
+            Default defaultValueAttribute = property.GetCustomAttribute<Default>();
+            string currentDefaultValue = columnDefinition.Column_Default?.Replace("(", string.Empty).Replace(")", string.Empty).Replace("'", string.Empty);
+
+            return !string.IsNullOrWhiteSpace(columnDefinition.Column_Default) ? defaultValueAttribute != null ? !currentDefaultValue.Equals($"{defaultValueAttribute.Value}") : false : false;
+        }
+
+        public bool IsNullable(PropertyInfo property)
+        {
+            return Nullable.GetUnderlyingType(property.PropertyType) != null;
+        }
+
+        public bool IsUnique(IManageable model, string propertyName)
+        {
+            return model.Configuration.UniqueKeyProperties.ContainsKey(propertyName);
+        }
+
+        public bool IsDefault(IManageable model, string propertyName)
+        {
+            return model.Configuration.DefaultProperties.ContainsKey(propertyName);
+        }
+
+        public bool IsPrimaryKey(IManageable model, string propertyName)
+        {
+            return model.Configuration.PrimaryKeyProperty.Name.Equals(propertyName);
         }
     }
 }

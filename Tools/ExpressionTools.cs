@@ -43,7 +43,7 @@ namespace OneData.Tools
         internal static string ConvertExpressionToSQL<T>(Expression<Func<T, bool>> expression) where T : Cope<T>, IManageable, new()
         {
             StringBuilder builder = new StringBuilder();
-            string qualifiedTableName = Manager.ConnectionType == ConnectionTypes.MySQL ? $"`{Manager.TablePrefix}{Cope<T>.ModelComposition.TableName}`" : $"[{Manager.TablePrefix}{Cope<T>.ModelComposition.TableName}]"; ;
+            string qualifiedTableName = Manager.ConnectionType == ConnectionTypes.MySQL ? $"`{Manager.TablePrefix}{Cope<T>.ModelComposition.TableName}`" : $"[{Manager.TablePrefix}{Cope<T>.ModelComposition.TableName}]";
 
             try
             {

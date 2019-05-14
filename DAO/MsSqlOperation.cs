@@ -63,15 +63,18 @@ namespace OneData.DAO
         public Result<T> ExecuteProcedure<T>(QueryOptions queryOptions, TransactionTypes transactionType, bool logTransaction, object obj, Expression<Func<T, bool>> expression) where T : Cope<T>, IManageable, new()
         {
             Result<T> result = null;
-            bool overrideConsolidation = false;
+            bool throwIfError = false;
 
         Start:
             try
             {
                 Logger.Info(string.Format("Starting {0} execution for object {1} using connection {2}", transactionType.ToString(), typeof(T), queryOptions));
-                if (Manager.ConstantTableConsolidation && !overrideConsolidation)
+                if (Manager.ConstantTableConsolidation)
                 {
-                    PerformTableConsolidation<T>(queryOptions.ConnectionToUse, false);
+                    if (!typeof(T).Equals(typeof(Log)))
+                    {
+                        PerformFullTableCheck(new T(), queryOptions.ConnectionToUse);
+                    }
                 }
 
                 switch (transactionType)
@@ -108,11 +111,11 @@ namespace OneData.DAO
             }
             catch (SqlException sqlException) when (sqlException.Number == ERR_STORED_PROCEDURE_NOT_FOUND)
             {
-                if (Manager.AutoCreateStoredProcedures)
+                if (Manager.AutoCreateStoredProcedures && !throwIfError)
                 {
                     Logger.Warn(string.Format("Stored Procedure for {0} not found. Creating...", transactionType.ToString()));
                     ExecuteScalar(GetTransactionTextForProcedure<T>(transactionType, false), queryOptions.ConnectionToUse, false);
-                    overrideConsolidation = true;
+                    throwIfError = true;
                     goto Start;
                 }
                 Logger.Error(sqlException);
@@ -120,11 +123,11 @@ namespace OneData.DAO
             }
             catch (SqlException sqlException) when (sqlException.Number == ERR_OBJECT_NOT_FOUND)
             {
-                if (Manager.AutoCreateTables)
+                if (Manager.AutoCreateTables && !throwIfError)
                 {
                     Logger.Warn(string.Format("Table {0} not found. Creating...", Cope<T>.ModelComposition.TableName));
-                    ProcessTable<T>(queryOptions.ConnectionToUse, false);
-                    overrideConsolidation = true;
+                    PerformFullTableCheck(new T(), queryOptions.ConnectionToUse);
+                    throwIfError = true;
                     goto Start;
                 }
                 Logger.Error(sqlException);
@@ -136,12 +139,12 @@ namespace OneData.DAO
                                                     sqlException.Number == ERR_CANNOT_UPDATE_IDENTITY_VALUE ||
                                                     sqlException.Number == ERR_NOT_A_PARAMETER_FOR_PROCEDURE)
             {
-                if (Manager.AutoAlterStoredProcedures)
+                if (Manager.AutoAlterStoredProcedures && !throwIfError)
                 {
                     Logger.Warn(string.Format("Incorrect number of arguments or is identity explicit value related to the {0} stored procedure. Modifying...", transactionType.ToString()));
-                    PerformTableConsolidation<T>(queryOptions.ConnectionToUse, true);
+                    PerformFullTableCheck(new T(), queryOptions.ConnectionToUse);
                     ExecuteScalar(GetTransactionTextForProcedure<T>(transactionType, true), queryOptions.ConnectionToUse, false);
-                    overrideConsolidation = true;
+                    throwIfError = true;
                     goto Start;
                 }
                 Logger.Error(sqlException);
@@ -213,7 +216,7 @@ namespace OneData.DAO
 
         private Result<T> ExecuteMassiveOperation<T>(IEnumerable<T> list, QueryOptions queryOptions, TransactionTypes transactionType) where T : Cope<T>, IManageable, new()
         {
-            bool canTryForAutoCreateStoredProcedure = true;
+            bool throwIfError = false;
 
         Start:
             using (SqlConnection connection = Connection.OpenMsSqlConnection(queryOptions.ConnectionToUse))
@@ -245,14 +248,12 @@ namespace OneData.DAO
                 }
                 catch (SqlException sqlException) when (sqlException.Number == ERR_STORED_PROCEDURE_NOT_FOUND)
                 {
-                    if (Manager.AutoCreateStoredProcedures)
+                    if (Manager.AutoCreateStoredProcedures && !throwIfError)
                     {
-                        if (canTryForAutoCreateStoredProcedure)
-                        {
-                            Logger.Warn(string.Format("Stored Procedure for {0} not found. Creating...", transactionType.ToString()));
-                            PerformStoredProcedureValidation<T>(transactionType, queryOptions);
-                            goto Start;
-                        }
+                        Logger.Warn(string.Format("Stored Procedure for {0} not found. Creating...", transactionType.ToString()));
+                        PerformStoredProcedureValidation<T>(transactionType, queryOptions);
+                        throwIfError = true;
+                        goto Start;
                     }
                     Logger.Error(sqlException);
                     throw;

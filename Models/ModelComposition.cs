@@ -36,13 +36,11 @@ namespace OneData.Models
         /// </summary>
         internal Dictionary<string, PropertyInfo> ForeignKeyProperties { get; private set; } = new Dictionary<string, PropertyInfo>();
         internal Dictionary<string, PropertyInfo> UniqueKeyProperties { get; private set; } = new Dictionary<string, PropertyInfo>();
+        internal Dictionary<string, PropertyInfo> DefaultProperties { get; private set; } = new Dictionary<string, PropertyInfo>();
         internal Dictionary<string, PropertyInfo> DataLengthProperties { get; private set; } = new Dictionary<string, PropertyInfo>();
         internal Dictionary<string, PropertyInfo> ForeignDataProperties { get; private set; } = new Dictionary<string, PropertyInfo>();
 
-        internal Dictionary<string, PropertyInfo> ForeignCollectionProperties { get; private set; } = new Dictionary<string, PropertyInfo>();
-        internal Dictionary<string, ForeignCollection> ForeignCollectionAttributes { get; private set; } = new Dictionary<string, ForeignCollection>();
-
-        internal Dictionary<string, UniqueKey> UniqueKeyAttributes { get; private set; } = new Dictionary<string, UniqueKey>();
+        internal Dictionary<string, Default> DefaultAttributes { get; private set; } = new Dictionary<string, Default>();
         internal Dictionary<string, DataLength> DataLengthAttributes { get; private set; } = new Dictionary<string, DataLength>();
         internal Dictionary<string, ForeignData> ForeignDataAttributes { get; private set; } = new Dictionary<string, ForeignData>();
         internal Dictionary<string, ForeignKey> ForeignKeyAttributes { get; private set; } = new Dictionary<string, ForeignKey>();
@@ -68,7 +66,7 @@ namespace OneData.Models
         {
             if (string.IsNullOrWhiteSpace(TableName))
             {
-                throw new RequiredAttributeNotFound("DataTable", type.FullName);
+                throw new RequiredAttributeNotFound(nameof(DataTable), type.FullName);
             }
         }
 
@@ -76,16 +74,16 @@ namespace OneData.Models
         {
             if (PrimaryKeyProperty == null)
             {
-                throw new RequiredAttributeNotFound("PrimaryKeyProperty", type.FullName);
+                throw new RequiredAttributeNotFound(nameof(PrimaryKey), type.FullName);
             }
-            else if (!PrimaryKeyProperty.PropertyType.IsValueType)
+            else if (!PrimaryKeyProperty.PropertyType.IsValueType || Nullable.GetUnderlyingType(PrimaryKeyProperty.PropertyType) != null)
             {
-                throw new InvalidDataType(PrimaryKeyProperty.Name, type.FullName, "struct");
+                throw new InvalidDataType(PrimaryKeyProperty.Name, type.FullName, "not nullable struct");
             }
 
             if (DateCreatedProperty == null)
             {
-                throw new RequiredAttributeNotFound("DateCreatedProperty", type.FullName);
+                throw new RequiredAttributeNotFound(nameof(DateCreated), type.FullName);
             }
             else if (!DateCreatedProperty.PropertyType.Equals(typeof(DateTime)) && !Nullable.GetUnderlyingType(DateCreatedProperty.PropertyType).Equals(typeof(DateTime)))
             {
@@ -94,7 +92,7 @@ namespace OneData.Models
 
             if (DateModifiedProperty == null)
             {
-                throw new RequiredAttributeNotFound("DateModifiedProperty", type.FullName);
+                throw new RequiredAttributeNotFound(nameof(DateModified), type.FullName);
             }
             else if (!DateModifiedProperty.PropertyType.Equals(typeof(DateTime)) && !Nullable.GetUnderlyingType(DateCreatedProperty.PropertyType).Equals(typeof(DateTime)))
             {
@@ -111,19 +109,16 @@ namespace OneData.Models
             {
                 switch (attribute.AttributeType.Name)
                 {
-                    case "DataTable":
+                    case nameof(DataTable):
                         dataTableAttribute = type.GetCustomAttribute<DataTable>();
                         TableName = dataTableAttribute.TableName;
                         Schema = string.IsNullOrWhiteSpace(dataTableAttribute.Schema) ? Manager.DefaultSchema : dataTableAttribute.Schema;
                         FullyQualifiedTableName = Manager.ConnectionType == ConnectionTypes.MSSQL ? $"[{Manager.DefaultSchema}.{Manager.TablePrefix}{TableName}]" : $"`{Manager.TablePrefix}{TableName}`";
                         break;
-                    case "CacheEnabled":
+                    case nameof(CacheEnabled):
                         cacheEnabledAttribute = type.GetCustomAttribute<CacheEnabled>();
                         IsCacheEnabled = true;
                         CacheExpiration = cacheEnabledAttribute.Expiration * TimeSpan.TicksPerSecond;
-                        break;
-                    case "IdentityModel":
-                        IsIdentityModel = true;
                         break;
                     default:
                         break;
@@ -143,52 +138,49 @@ namespace OneData.Models
                 {
                     switch (attribute.AttributeType.Name)
                     {
-                        case "UnmanagedProperty":
+                        case nameof(UnmanagedProperty):
                             UnmanagedProperties.Add(property.Name, property);
                             ManagedProperties.Remove(property.Name);
                             FilteredProperties.Remove(property.Name);
                             break;
-                        case "AutoProperty":
+                        case nameof(AutoProperty):
                             AutoProperties.Add(property.Name, property);
                             AutoPropertyAttributes.Add(property.Name, property.GetCustomAttribute<AutoProperty>());
                             FilteredProperties.Remove(property.Name);
                             break;
-                        case "PrimaryKeyProperty":
+                        case nameof(PrimaryKey):
                             PrimaryKeyProperty = property;
                             break;
-                        case "DateCreatedProperty":
+                        case nameof(DateCreated):
                             DateCreatedProperty = property;
                             AutoProperties.Add(property.Name, property);
                             AutoPropertyAttributes.Add(property.Name, new AutoProperty(AutoPropertyTypes.DateTime));
                             FilteredProperties.Remove(property.Name);
                             break;
-                        case "DateModifiedProperty":
+                        case nameof(DateModified):
                             DateModifiedProperty = property;
                             AutoProperties.Add(property.Name, property);
                             AutoPropertyAttributes.Add(property.Name, new AutoProperty(AutoPropertyTypes.DateTime));
                             FilteredProperties.Remove(property.Name);
                             break;
-                        case "ForeignKey":
+                        case nameof(ForeignKey):
                             ForeignKeyProperties.Add(property.Name, property);
                             ForeignKeyAttributes.Add(property.Name, property.GetCustomAttribute<ForeignKey>());
                             break;
-                        case "UniqueKey":
+                        case nameof(Unique):
                             UniqueKeyProperties.Add(property.Name, property);
-                            UniqueKeyAttributes.Add(property.Name, property.GetCustomAttribute<UniqueKey>());
                             break;
-                        case "DataLength":
+                        case nameof(Default):
+                            DefaultProperties.Add(property.Name, property);
+                            DefaultAttributes.Add(property.Name, property.GetCustomAttribute<Default>());
+                            break;
+                        case nameof(DataLength):
                             DataLengthProperties.Add(property.Name, property);
                             DataLengthAttributes.Add(property.Name, property.GetCustomAttribute<DataLength>());
                             break;
-                        case "ForeignData":
+                        case nameof(ForeignData):
                             ForeignDataProperties.Add(property.Name, property);
                             ForeignDataAttributes.Add(property.Name, ConfigureForeignDataAttribute(property.GetCustomAttribute<ForeignData>(), property));
-                            ManagedProperties.Remove(property.Name);
-                            FilteredProperties.Remove(property.Name);
-                            break;
-                        case "ForeignCollection":
-                            ForeignCollectionProperties.Add(property.Name, property);
-                            ForeignCollectionAttributes.Add(property.Name, property.GetCustomAttribute<ForeignCollection>());
                             ManagedProperties.Remove(property.Name);
                             FilteredProperties.Remove(property.Name);
                             break;
