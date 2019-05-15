@@ -18,24 +18,20 @@
     <Description>A fast and easy ORM focused on the reduction of development times and ease of work.</Description>
     <PackageTags>orm dataaccess utility database access serialization deserialization</PackageTags>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <PackageReleaseNotes>Updated classes to perform a much cleaner validation.
 
 Fixed several bugs.</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="Interfaces.rar" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="log4net" Version="2.0.8" />
     <PackageReference Include="Microsoft.CSharp" Version="4.5.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="2.1.1" />
     <PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="2.1.1" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="2.1.1" />
     <PackageReference Include="MySql.Data" Version="8.0.16" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
+    <PackageReference Include="NLog" Version="4.6.3" />
     <PackageReference Include="System.Configuration.ConfigurationManager" Version="4.5.0" />
     <PackageReference Include="System.Data.Common" Version="4.3.0" />
     <PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
@@ -43,9 +39,32 @@ Fixed several bugs.</PackageReleaseNotes>
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="log4net.config">
+    <None Update="OneData.nlog">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include=".\bin\Release\net461\OneData.pdb">
+      <Pack>true</Pack>
+      <PackagePath>\lib\net461\</PackagePath>
+    </Content>
+    <Content Include=".\bin\Release\netstandard2.0\OneData.pdb">
+      <Pack>true</Pack>
+      <PackagePath>\lib\netstandard2.0\</PackagePath>
+    </Content>
+    <Content Include="OneData.nlog">
+      <Pack>true</Pack>
+      <PackagePath>\lib\net461\</PackagePath>
+    </Content>
+    <Content Include="OneData.nlog">
+      <Pack>true</Pack>
+      <PackagePath>\lib\netstandard2.0\</PackagePath>
+    </Content>
+    <Content Include="README.md">
+      <Pack>true</Pack>
+      <PackagePath>\</PackagePath>
+    </Content>
   </ItemGroup>
 
 </Project>

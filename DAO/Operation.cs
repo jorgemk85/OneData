@@ -42,7 +42,7 @@ namespace OneData.DAO
 
             try
             {
-                Logger.Info(string.Format("Starting execution for transaction using connection {0}", connectionToUse));
+                Logger.Info($"Starting execution for transaction using connection {connectionToUse}");
                 using (DbConnection connection = _connectionType == ConnectionTypes.MySQL ? (DbConnection)Connection.OpenMySqlConnection(connectionToUse) : (DbConnection)Connection.OpenMsSqlConnection(connectionToUse))
                 {
                     if (connection.State != ConnectionState.Open) throw new BadConnectionStateException();
@@ -54,7 +54,7 @@ namespace OneData.DAO
                         _command.CommandText = transaction;
                         System.Data.DataTable dataTable = new System.Data.DataTable();
                         dataTable.Load(_command.ExecuteReader());
-                        Logger.Info(string.Format("Execution for transaction using connection {0} has finished successfully.", connectionToUse));
+                        Logger.Info($"Execution for transaction using connection {connectionToUse} has finished successfully.");
                         return dataTable;
                     }
                     else
@@ -67,7 +67,7 @@ namespace OneData.DAO
                             scalar = _command.ExecuteScalar();
                         }
 
-                        Logger.Info(string.Format("Execution for transaction using connection {0} has finished successfully.", connectionToUse));
+                        Logger.Info($"Execution for transaction using connection {connectionToUse} has finished successfully.");
                         return scalar;
                     }
                 }
@@ -109,7 +109,7 @@ namespace OneData.DAO
 
         protected string GetTransactionTextForProcedure<T>(TransactionTypes transactionType, bool doAlter) where T : Cope<T>, IManageable, new()
         {
-            Logger.Info(string.Format("Getting {0} transaction for type {1}. DoAlter = {2}", transactionType.ToString(), typeof(T), doAlter));
+            Logger.Info($"Getting {transactionType.ToString()} transaction for type {typeof(T)}. DoAlter = {doAlter}");
             switch (transactionType)
             {
                 case TransactionTypes.Delete:
@@ -163,7 +163,7 @@ namespace OneData.DAO
 
         private string GetStringParameters()
         {
-            Logger.Info(string.Format("Getting string parameters"));
+            Logger.Info("Getting string parameters");
 
             StringBuilder builder = new StringBuilder();
 
@@ -205,7 +205,7 @@ namespace OneData.DAO
 
         protected void SetParameters(Parameter[] parameters)
         {
-            Logger.Info(string.Format("Setting parameters in command."));
+            Logger.Info("Setting parameters in command.");
             for (int i = 0; i < parameters.Length; i++)
             {
                 _command.Parameters.Add(CreateDbParameter(parameters[i].Name, parameters[i].Value));
@@ -214,7 +214,7 @@ namespace OneData.DAO
 
         protected void SetParameters<T>(T obj, TransactionTypes transactionType, bool considerPrimary, QueryOptions queryOptions) where T : Cope<T>, IManageable, new()
         {
-            Logger.Info(string.Format("Setting parameters in command based on type {0} for transaction type {1}.", typeof(T), transactionType.ToString()));
+            Logger.Info($"Setting parameters in command based on type {typeof(T)} for transaction type {transactionType.ToString()}.");
 
             if (transactionType == TransactionTypes.Delete)
             {
@@ -234,7 +234,7 @@ namespace OneData.DAO
 
         protected void SetMassiveOperationParameters<T>(IEnumerable<T> obj, TransactionTypes transactionType, QueryOptions queryOptions) where T : Cope<T>, IManageable, new()
         {
-            Logger.Info(string.Format("Setting parameters in command based massive operation transaction type {1}.", typeof(T), transactionType.ToString()));
+            Logger.Info($"Setting parameters in command based massive operation transaction type {transactionType.ToString()}.");
 
             MassiveOperationParameter parameters = DataSerializer.GenerateCompatibleMassiveOperationXML(obj, transactionType);
 
@@ -277,7 +277,7 @@ namespace OneData.DAO
 
         private void VerifyForeignTables(IManageable model, string connectionToUse)
         {
-            Logger.Info(string.Format("Verifying foreign tables for type {0} using connection {1}.", model.GetType().ToString(), connectionToUse));
+            Logger.Info($"Verifying foreign tables for type {model.GetType().ToString()} using connection {connectionToUse}.");
 
             foreach (KeyValuePair<string, PropertyInfo> property in model.Configuration.ForeignKeyProperties)
             {
@@ -289,19 +289,19 @@ namespace OneData.DAO
 
         private Dictionary<string, ColumnDefinition> GetColumnDefinition(string initialCatalog, string schema, string tableName, string connectionToUse)
         {
-            Logger.Info(string.Format("Getting Column definition for table {0} using connection {1}.", tableName, connectionToUse));
+            Logger.Info($"Getting Column definition for table {tableName} using connection {connectionToUse}.");
             return ((System.Data.DataTable)ExecuteScalar(string.Format(QueryForColumnDefinition, initialCatalog, schema, tableName), connectionToUse, true)).ToDictionary<string, ColumnDefinition>(nameof(ColumnDefinition.Column_Name));
         }
 
         private Dictionary<string, ConstraintDefinition> GetConstraints(string initialCatalog, string schema, string tableName, string connectionToUse)
         {
-            Logger.Info(string.Format("Getting Key definition for table {0} using connection {1}.", tableName, connectionToUse));
+            Logger.Info($"Getting Constraints definition for table {tableName} using connection {connectionToUse}.");
             return ((System.Data.DataTable)ExecuteScalar(string.Format(QueryForConstraints, initialCatalog, schema, tableName), connectionToUse, true)).ToDictionary<string, ConstraintDefinition>(nameof(ConstraintDefinition.Constraint_Name));
         }
 
         private bool DoTableExist(string initialCatalog, string schema, string tableName, string connectionToUse)
         {
-            Logger.Info(string.Format("Checking if table {0} exists using connection {1}.", tableName, connectionToUse));
+            Logger.Info($"Checking if table {tableName} exists using connection {connectionToUse}.");
             string query = string.Format(QueryForTableExistance, initialCatalog, schema, tableName);
 
             if (ExecuteScalar(query, connectionToUse, false) != null)
@@ -316,7 +316,7 @@ namespace OneData.DAO
 
         protected bool DoStoredProcedureExist(string initialCatalog, string schema, string storedProcedureName, string connectionToUse)
         {
-            Logger.Info(string.Format("Checking if stored procedure {0} exists using connection {1}.", storedProcedureName, connectionToUse));
+            Logger.Info($"Checking if stored procedure {storedProcedureName} exists using connection {connectionToUse}.");
             string query = string.Format(QueryForStoredProcedureExistance, initialCatalog, schema, storedProcedureName);
 
             if (ExecuteScalar(query, connectionToUse, false) != null)
@@ -347,7 +347,7 @@ namespace OneData.DAO
                 Parametros = GetStringParameters()
             };
 
-            Logger.Info(string.Format("Created new log object for affected table {0}, transaction used {1}, with the following parameters: {2}", Cope<Log>.ModelComposition.TableName, newLog.Transaccion, newLog.Parametros));
+            Logger.Info($"Created new log object for affected table {Cope<Log>.ModelComposition.TableName}, transaction used {newLog.Transaccion}, with the following parameters: {newLog.Parametros}");
 
             return newLog;
         }

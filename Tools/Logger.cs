@@ -1,19 +1,32 @@
-﻿using OneData.DAO;
-using log4net;
+﻿using NLog;
+using NLog.Config;
+using OneData.DAO;
 using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 
 namespace OneData.Tools
 {
     internal static class Logger
     {
-        private static readonly ILog log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+        private static readonly NLog.Logger log;
+
+        static Logger()
+        {
+            Assembly thisAssembly = Assembly.GetExecutingAssembly();
+            LogFactory logFactory = new LogFactory();
+            logFactory.Configuration = new XmlLoggingConfiguration(Path.ChangeExtension(thisAssembly.Location, ".nlog"), true, logFactory);
+
+            log = logFactory.GetLogger(thisAssembly.GetName().Name);
+        }
 
         public static void Error(Exception ex, [CallerMemberName] string callerName = "")
         {
             if (Manager.EnableLogInFile)
             {
-                log.Error(ex);
+                log.Error(ex, callerName);
             }
         }
 
@@ -21,7 +34,7 @@ namespace OneData.Tools
         {
             if (Manager.EnableLogInFile)
             {
-                log.Warn(message);
+                log.Warn($"{callerName}: {message}");
             }
         }
 
@@ -29,7 +42,7 @@ namespace OneData.Tools
         {
             if (Manager.EnableLogInFile)
             {
-                log.Info(message);
+                log.Info($"{callerName}: {message}");
             }
         }
 
@@ -37,7 +50,7 @@ namespace OneData.Tools
         {
             if (Manager.EnableLogInFile)
             {
-                log.Debug(message);
+                log.Debug($"{callerName}: {message}");
             }
         }
     }

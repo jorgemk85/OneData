@@ -234,8 +234,11 @@ namespace OneData.DAO
                 queryBuilder.Append(IsDefault(model, property.Value.Name) ? sqlTransaction.AddDefaultToColumn(tableName, property.Value.Name, model.Configuration.DefaultAttributes[property.Value.Name].Value) : string.Empty);
             }
 
-            Logger.Info("Created a new query for Create Table:");
-            Logger.Info(queryBuilder.ToString());
+            if (!string.IsNullOrWhiteSpace(queryBuilder.ToString()))
+            {
+                Logger.Info("Created a new query for Create Table:");
+                Logger.Info(queryBuilder.ToString());
+            }
             return queryBuilder.ToString();
         }
 
@@ -290,6 +293,11 @@ namespace OneData.DAO
                 queryBuilder.Append(sqlTransaction.RemoveColumn(tableName, columnDetail.Key));
             }
 
+            if (!string.IsNullOrWhiteSpace(queryBuilder.ToString()))
+            {
+                Logger.Info("Created a new query for Alter Table:");
+                Logger.Info(queryBuilder.ToString());
+            }
             return queryBuilder.ToString();
         }
 
@@ -326,8 +334,12 @@ namespace OneData.DAO
                 }
             }
 
-            Logger.Info("Created a new query for Create Foreign Keys:");
-            Logger.Info(queryBuilder.ToString());
+            if (!string.IsNullOrWhiteSpace(queryBuilder.ToString()))
+            {
+                Logger.Info("Created a new query for Create Foreign Keys:");
+                Logger.Info(queryBuilder.ToString());
+            }
+
             return queryBuilder.ToString();
         }
 

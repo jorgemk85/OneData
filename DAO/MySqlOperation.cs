@@ -34,7 +34,7 @@ namespace OneData.DAO
 
             try
             {
-                Logger.Info(string.Format("Starting execution of stored procedure {0} using connection {1}.", storedProcedure, queryOptions));
+                Logger.Info($"Starting execution of stored procedure {storedProcedure} using connection {queryOptions.ConnectionToUse}.");
                 using (MySqlConnection connection = Connection.OpenMySqlConnection(queryOptions.ConnectionToUse))
                 {
                     if (connection.State != ConnectionState.Open) throw new BadConnectionStateException();
@@ -46,7 +46,7 @@ namespace OneData.DAO
                     var adapter = new MySqlDataAdapter((MySqlCommand)_command);
                     adapter.Fill(dataSet);
                 }
-                Logger.Info(string.Format("Execution of stored procedure {0} using connection {1} has finished successfully.", storedProcedure, queryOptions));
+                Logger.Info($"Execution of stored procedure {storedProcedure} using connection {queryOptions.ConnectionToUse} has finished successfully.");
             }
             catch (MySqlException mySqlException)
             {
@@ -67,7 +67,7 @@ namespace OneData.DAO
         Start:
             try
             {
-                Logger.Info(string.Format("Starting {0} execution for object {1} using connection {2}", transactionType.ToString(), typeof(T), queryOptions));
+                Logger.Info($"Starting {transactionType.ToString()} execution for object {typeof(T)} using connection {queryOptions.ConnectionToUse}");
                 if (Manager.ConstantTableConsolidation)
                 {
                     if (!typeof(T).Equals(typeof(Log)))
@@ -105,13 +105,13 @@ namespace OneData.DAO
                     default:
                         throw new NotSupportedException($"El tipo de transaccion {transactionType.ToString()} no puede ser utilizado con esta funcion.");
                 }
-                Logger.Info(string.Format("Execution {0} for object {1} using connection {2} has finished successfully.", transactionType.ToString(), typeof(T), queryOptions));
+                Logger.Info($"Execution {transactionType.ToString()} for object {typeof(T)} using connection {queryOptions.ConnectionToUse} has finished successfully.");
             }
             catch (MySqlException mySqlException) when (mySqlException.Number == ERR_STORED_PROCEDURE_NOT_FOUND)
             {
                 if (Manager.AutoCreateStoredProcedures && !throwIfError)
                 {
-                    Logger.Warn(string.Format("Stored Procedure for {0} not found. Creating...", transactionType.ToString()));
+                    Logger.Warn($"Stored Procedure for {transactionType.ToString()} not found. Creating...");
                     ExecuteScalar(GetTransactionTextForProcedure<T>(transactionType, false), queryOptions.ConnectionToUse, false);
                     throwIfError = true;
                     goto Start;
@@ -123,7 +123,7 @@ namespace OneData.DAO
             {
                 if (Manager.AutoCreateTables && !throwIfError)
                 {
-                    Logger.Warn(string.Format("Table {0} not found. Creating...", Cope<T>.ModelComposition.TableName));
+                    Logger.Warn($"Table {Cope<T>.ModelComposition.TableName} not found. Creating...");
                     PerformFullTableCheck(new T(), queryOptions.ConnectionToUse);
                     throwIfError = true;
                     goto Start;
@@ -241,7 +241,7 @@ namespace OneData.DAO
                 {
                     if (Manager.AutoCreateStoredProcedures && !throwIfError)
                     {
-                        Logger.Warn(string.Format("Stored Procedure for {0} not found. Creating...", transactionType.ToString()));
+                        Logger.Warn($"Stored Procedure for {transactionType.ToString()} not found. Creating...");
                         PerformStoredProcedureValidation<T>(transactionType, queryOptions);
                         throwIfError = true;
                         goto Start;
@@ -324,7 +324,7 @@ namespace OneData.DAO
                 return;
             }
 
-            Logger.Info(string.Format("Saving log information into the database."));
+            Logger.Info("Saving log information into the database.");
             Log newLog = NewLog(tableName, transactionType);
             ExecuteProcedure<Log>(queryOptions, TransactionTypes.Insert, false, newLog, null);
         }
