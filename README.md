@@ -9,7 +9,7 @@ So, you are looking for a VERY easy, Code-First solution to access your data ins
 * Very fast!
 * Ease of relational data access.
 * Automatic class/model binding.
-* On-RAM per class/model cache.
+* In-RAM per class/model cache.
 * Automatic class/model structure sync inside your database.
 * Automatic logging in disk and database of every transaction (optional)
 * Supports simultaneous database connections.
