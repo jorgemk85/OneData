@@ -71,10 +71,7 @@ namespace OneData.DAO
                 Logger.Info($"Starting {transactionType.ToString()} execution for object {typeof(T)} using connection {queryOptions.ConnectionToUse}");
                 if (Manager.ConstantTableConsolidation)
                 {
-                    if (!typeof(T).Equals(typeof(Log)))
-                    {
-                        PerformFullTableCheck(new T(), queryOptions.ConnectionToUse);
-                    }
+                    PerformFullTableCheck(new T(), queryOptions.ConnectionToUse);
                 }
 
                 switch (transactionType)
