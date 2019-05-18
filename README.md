@@ -200,7 +200,7 @@ The following table is a comprehensive list of available attributes with their r
 | Attribute name        | Used with  | Remarks                            | Description                    |
 |-----------------------|------------|------------------------------------|--------------------------------|
 | `AutoProperty`        | Properties | None.                              | Data is completely managed by OneData based on your settings.   |
-| `CacheEnabled`        |  Classes   | Once per Class/Model.              | Enables a class/model to use the On-RAM Cache. Uses minutes as expiration.|
+| `CacheEnabled`        |  Classes   | Once per Class/Model.              | Enables a class/model to use the In-RAM Cache. Uses minutes as expiration.|
 | `DataLength`          | Properties | None.                              | Specify which data length you want to use. If not implemented, will use default.|
 | `DataTable`           |  Classes   | Required. Once per Class/Model.    | Sets the table name (and optinally the scheme) to use.|
 | `DateCreated`			| Properties | Required. Once per Class/Model.    | Mark the property that will hold date and time of record creation.|

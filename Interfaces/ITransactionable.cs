@@ -1,4 +1,5 @@
 ﻿using OneData.Models;
+using System;
 using System.Reflection;
 
 namespace OneData.Interfaces
@@ -25,5 +26,6 @@ namespace OneData.Interfaces
         string RemoveDefaultFromColumn(FullyQualifiedTableName tableName, string defaultConstraintName);
 
         string RenewDefaultInColumn(FullyQualifiedTableName tableName, string columnName, string defaultValue);
+        string UpdateColumnValueToDefault(FullyQualifiedTableName tableName, string columnName, Type columnType);
     }
 }

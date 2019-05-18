@@ -9,9 +9,9 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 
-namespace OneData.DAO
+namespace OneData.DAO.MySql
 {
-    internal class MySqlCreation : ICreatable, IValidatable
+    internal class MySqlCreation : ICreatable
     {
         public void SetStoredProceduresParameters<T>(StringBuilder queryBuilder, bool setDefaultNull, bool considerPrimary) where T : Cope<T>, IManageable, new()
         {
@@ -208,7 +208,8 @@ namespace OneData.DAO
             if (model.Configuration.ManagedProperties.Count == 0) return string.Empty;
 
             StringBuilder queryBuilder = new StringBuilder();
-            ITransactionable sqlTransaction = new MySqlTransaction();
+            ITransactionable transaction = new MySqlTransaction();
+            IValidatable validation = new MySqlValidation();
             FullyQualifiedTableName tableName = new FullyQualifiedTableName(model.Configuration.Schema, $"{Manager.TablePrefix}{model.Configuration.TableName}");
 
             foreach (KeyValuePair<string, PropertyInfo> property in model.Configuration.ManagedProperties)
@@ -216,42 +217,43 @@ namespace OneData.DAO
                 columnDetails.TryGetValue(property.Value.Name, out ColumnDefinition columnDefinition);
                 string sqlDataType = GetSqlDataType(property.Value.PropertyType, model.Configuration.UniqueKeyProperties.ContainsKey(property.Value.Name), GetDataLengthFromProperty(model, property.Key));
 
-                if (IsNewColumn(columnDefinition))
+                if (validation.IsNewColumn(columnDefinition))
                 {
-                    queryBuilder.Append(sqlTransaction.AddColumn(tableName, property.Value.Name, sqlDataType));
-                    continue;
+                    queryBuilder.Append($"{transaction.AddColumn(tableName, property.Value.Name, sqlDataType)}|;|");
+                    queryBuilder.Append(transaction.UpdateColumnValueToDefault(tableName, property.Value.Name, property.Value.PropertyType));
+                    columnDefinition = new ColumnDefinition();
                 }
-                if (IsColumnDataTypeChanged(columnDefinition, sqlDataType))
+                if (validation.IsColumnDataTypeChanged(columnDefinition, sqlDataType))
                 {
                     if (!string.IsNullOrWhiteSpace(columnDefinition.Column_Default))
                     {
-                        queryBuilder.Append(sqlTransaction.RemoveDefaultFromColumn(tableName, $"DF_{tableName.Schema}_{tableName.Table}_{property.Value.Name}"));
+                        queryBuilder.Append(transaction.RemoveDefaultFromColumn(tableName, $"DF_{tableName.Schema}_{tableName.Table}_{property.Value.Name}"));
                         columnDefinition.Column_Default = null;
                     }
 
-                    queryBuilder.Append(sqlTransaction.ChangeColumnDataType(tableName, property.Value.Name, sqlDataType));
+                    queryBuilder.Append(transaction.ChangeColumnDataType(tableName, property.Value.Name, sqlDataType));
                     columnDefinition.Is_Nullable = null;
                 }
 
-                queryBuilder.Append(IsNowNullable(columnDefinition, property.Value) ? sqlTransaction.RemoveNotNullFromColumn(tableName, property.Value.Name, sqlDataType) : string.Empty);
-                queryBuilder.Append(IsNoLongerNullable(columnDefinition, property.Value) ? sqlTransaction.AddNotNullToColumn(tableName, property.Value.Name, sqlDataType) : string.Empty);
+                queryBuilder.Append(validation.IsNowNullable(columnDefinition, property.Value) ? transaction.RemoveNotNullFromColumn(tableName, property.Value.Name, sqlDataType) : string.Empty);
+                queryBuilder.Append(validation.IsNoLongerNullable(columnDefinition, property.Value) ? transaction.AddNotNullToColumn(tableName, property.Value.Name, sqlDataType) : string.Empty);
 
-                queryBuilder.Append(IsNowUnique(constraints, $"UQ_{tableName.Schema}_{tableName.Table}_{property.Value.Name}", property.Value) ? sqlTransaction.AddUniqueToColumn(tableName, property.Value.Name) : string.Empty);
-                queryBuilder.Append(IsNoLongerUnique(constraints, $"UQ_{tableName.Schema}_{tableName.Table}_{property.Value.Name}", property.Value) ? sqlTransaction.RemoveUniqueFromColumn(tableName, $"UQ_{tableName.Schema}_{tableName.Table}_{property.Value.Name}") : string.Empty);
+                queryBuilder.Append(validation.IsNowUnique(constraints, $"UQ_{tableName.Schema}_{tableName.Table}_{property.Value.Name}", property.Value) ? transaction.AddUniqueToColumn(tableName, property.Value.Name) : string.Empty);
+                queryBuilder.Append(validation.IsNoLongerUnique(constraints, $"UQ_{tableName.Schema}_{tableName.Table}_{property.Value.Name}", property.Value) ? transaction.RemoveUniqueFromColumn(tableName, $"UQ_{tableName.Schema}_{tableName.Table}_{property.Value.Name}") : string.Empty);
 
-                queryBuilder.Append(IsNowDefault(columnDefinition, property.Value) ? sqlTransaction.AddDefaultToColumn(tableName, property.Value.Name, model.Configuration.DefaultAttributes[property.Value.Name].Value) : string.Empty);
-                queryBuilder.Append(IsDefaultChanged(columnDefinition, property.Value) ? sqlTransaction.RenewDefaultInColumn(tableName, property.Value.Name, model.Configuration.DefaultAttributes[property.Value.Name].Value) : string.Empty);
-                queryBuilder.Append(IsNoLongerDefault(columnDefinition, property.Value) ? sqlTransaction.RemoveDefaultFromColumn(tableName, $"DF_{tableName.Schema}_{tableName.Table}_{property.Value.Name}") : string.Empty);
+                queryBuilder.Append(validation.IsNowDefault(columnDefinition, property.Value) ? transaction.AddDefaultToColumn(tableName, property.Value.Name, model.Configuration.DefaultAttributes[property.Value.Name].Value) : string.Empty);
+                queryBuilder.Append(validation.IsDefaultChanged(columnDefinition, property.Value) ? transaction.RenewDefaultInColumn(tableName, property.Value.Name, model.Configuration.DefaultAttributes[property.Value.Name].Value) : string.Empty);
+                queryBuilder.Append(validation.IsNoLongerDefault(columnDefinition, property.Value) ? transaction.RemoveDefaultFromColumn(tableName, $"DF_{tableName.Schema}_{tableName.Table}_{property.Value.Name}") : string.Empty);
 
-                queryBuilder.Append(IsNowPrimaryKey(constraints, $"PK_{tableName.Schema}_{tableName.Table}_{property.Value.Name}", property.Value) ? sqlTransaction.AddPrimaryKeyToColumn(tableName, property.Value.Name) : string.Empty);
-                queryBuilder.Append(IsNoLongerPrimaryKey(constraints, $"PK_{tableName.Schema}_{tableName.Table}_{property.Value.Name}", property.Value) ? sqlTransaction.RemovePrimaryKeyFromColumn(tableName, $"PK_{tableName.Schema}_{tableName.Table}_{property.Value.Name}") : string.Empty);
+                queryBuilder.Append(validation.IsNowPrimaryKey(constraints, $"PK_{tableName.Schema}_{tableName.Table}_{property.Value.Name}", property.Value) ? transaction.AddPrimaryKeyToColumn(tableName, property.Value.Name) : string.Empty);
+                queryBuilder.Append(validation.IsNoLongerPrimaryKey(constraints, $"PK_{tableName.Schema}_{tableName.Table}_{property.Value.Name}", property.Value) ? transaction.RemovePrimaryKeyFromColumn(tableName, $"PK_{tableName.Schema}_{tableName.Table}_{property.Value.Name}") : string.Empty);
 
-                queryBuilder.Append(IsNoLongerForeignKey(constraints, $"FK_{tableName.Schema}_{tableName.Table}_{property.Value.Name}", property.Value) ? sqlTransaction.RemoveForeignKeyFromColumn(tableName, $"FK_{tableName.Schema}_{tableName.Table}_{property.Value.Name}") : string.Empty);
+                queryBuilder.Append(validation.IsNoLongerForeignKey(constraints, $"FK_{tableName.Schema}_{tableName.Table}_{property.Value.Name}", property.Value) ? transaction.RemoveForeignKeyFromColumn(tableName, $"FK_{tableName.Schema}_{tableName.Table}_{property.Value.Name}") : string.Empty);
             }
 
             foreach (KeyValuePair<string, ColumnDefinition> columnDetail in columnDetails.Where(q => !model.Configuration.ManagedProperties.Keys.Contains(q.Key)))
             {
-                queryBuilder.Append(sqlTransaction.RemoveColumn(tableName, columnDetail.Key));
+                queryBuilder.Append(transaction.RemoveColumn(tableName, columnDetail.Key));
             }
 
             if (!string.IsNullOrWhiteSpace(queryBuilder.ToString()))
@@ -441,21 +443,22 @@ namespace OneData.DAO
             if (model.Configuration.ManagedProperties.Count == 0) return string.Empty;
 
             StringBuilder queryBuilder = new StringBuilder();
-            ITransactionable sqlTransaction = new MySqlTransaction();
+            ITransactionable transaction = new MySqlTransaction();
+            IValidatable valitation = new MySqlValidation();
             // TODO: This schema setting should be set depending on which connection is beign used.
             FullyQualifiedTableName tableName = new FullyQualifiedTableName(model.Configuration.Schema, $"{Manager.TablePrefix}{model.Configuration.TableName}");
 
-            queryBuilder.Append(sqlTransaction.AddTable(tableName, model.Configuration.PrimaryKeyProperty.Name, GetSqlDataType(model.Configuration.PrimaryKeyProperty.PropertyType, false, 0), model.Configuration.PrimaryKeyProperty.PropertyType.Equals(typeof(int?)) || model.Configuration.PrimaryKeyProperty.PropertyType.Equals(typeof(int))));
+            queryBuilder.Append(transaction.AddTable(tableName, model.Configuration.PrimaryKeyProperty.Name, GetSqlDataType(model.Configuration.PrimaryKeyProperty.PropertyType, false, 0), model.Configuration.PrimaryKeyProperty.PropertyType.Equals(typeof(int?)) || model.Configuration.PrimaryKeyProperty.PropertyType.Equals(typeof(int))));
 
             // Aqui se colocan las propiedades del objeto. Una por columna por su puesto.
             foreach (KeyValuePair<string, PropertyInfo> property in model.Configuration.ManagedProperties.Where(q => q.Key != model.Configuration.PrimaryKeyProperty.Name))
             {
                 string sqlDataType = GetSqlDataType(property.Value.PropertyType, model.Configuration.UniqueKeyProperties.ContainsKey(property.Value.Name), GetDataLengthFromProperty(model, property.Key));
 
-                queryBuilder.Append(sqlTransaction.AddColumn(tableName, property.Value.Name, sqlDataType));
-                queryBuilder.Append(!IsNullable(property.Value) ? sqlTransaction.AddNotNullToColumn(tableName, property.Value.Name, sqlDataType) : string.Empty);
-                queryBuilder.Append(IsUnique(model, property.Value.Name) ? sqlTransaction.AddUniqueToColumn(tableName, property.Value.Name) : string.Empty);
-                queryBuilder.Append(IsDefault(model, property.Value.Name) ? sqlTransaction.AddDefaultToColumn(tableName, property.Value.Name, model.Configuration.DefaultAttributes[property.Value.Name].Value) : string.Empty);
+                queryBuilder.Append(transaction.AddColumn(tableName, property.Value.Name, sqlDataType));
+                queryBuilder.Append(!valitation.IsNullable(property.Value) ? transaction.AddNotNullToColumn(tableName, property.Value.Name, sqlDataType) : string.Empty);
+                queryBuilder.Append(valitation.IsUnique(model, property.Value.Name) ? transaction.AddUniqueToColumn(tableName, property.Value.Name) : string.Empty);
+                queryBuilder.Append(valitation.IsDefault(model, property.Value.Name) ? transaction.AddDefaultToColumn(tableName, property.Value.Name, model.Configuration.DefaultAttributes[property.Value.Name].Value) : string.Empty);
             }
             if (!string.IsNullOrWhiteSpace(queryBuilder.ToString()))
             {
@@ -465,98 +468,6 @@ namespace OneData.DAO
             return queryBuilder.ToString();
         }
 
-        public bool IsNewColumn(ColumnDefinition columnDefinition)
-        {
-            return columnDefinition == null;
-        }
-
-        public bool IsColumnDataTypeChanged(ColumnDefinition columnDefinition, string sqlDataType)
-        {
-            string columnMax = columnDefinition.Character_Maximum_Length != null ? $"({columnDefinition.Character_Maximum_Length})" : columnDefinition.Numeric_Precision != null ? $"({columnDefinition.Numeric_Precision})" : string.Empty;
-            return columnDefinition.Data_Type == null ? false : $"{columnDefinition.Data_Type}{columnMax}" != sqlDataType;
-        }
-
-        public bool IsColumnRemoved(Dictionary<string, PropertyInfo> properties, string columnName)
-        {
-            return !properties.ContainsKey(columnName);
-        }
-
-        public bool IsNowNullable(ColumnDefinition columnDefinition, PropertyInfo property)
-        {
-            return Nullable.GetUnderlyingType(property.PropertyType) != null && (columnDefinition.Is_Nullable == "NO" || columnDefinition.Is_Nullable == null);
-        }
-
-        public bool IsNowUnique(Dictionary<string, ConstraintDefinition> constraints, string uniqueConstraintName, PropertyInfo property)
-        {
-            return !constraints.ContainsKey(uniqueConstraintName) && property.GetCustomAttribute<Unique>() != null;
-        }
-
-        public bool IsNowDefault(ColumnDefinition columnDefinition, PropertyInfo property)
-        {
-            return string.IsNullOrWhiteSpace(columnDefinition.Column_Default) && property.GetCustomAttribute<Default>() != null;
-        }
-
-        public bool IsNowPrimaryKey(Dictionary<string, ConstraintDefinition> constraints, string primaryKeyConstraintName, PropertyInfo property)
-        {
-            return !constraints.ContainsKey(primaryKeyConstraintName) && property.GetCustomAttribute<PrimaryKey>() != null;
-        }
-
-        public bool IsNowForeignKey(Dictionary<string, ConstraintDefinition> constraints, string foreignKeyConstraintName, PropertyInfo property)
-        {
-            return !constraints.ContainsKey(foreignKeyConstraintName) && property.GetCustomAttribute<ForeignKey>() != null;
-        }
-
-        public bool IsNoLongerNullable(ColumnDefinition columnDefinition, PropertyInfo property)
-        {
-            return Nullable.GetUnderlyingType(property.PropertyType) == null && (columnDefinition.Is_Nullable == "YES" || columnDefinition.Is_Nullable == null);
-        }
-
-        public bool IsNoLongerUnique(Dictionary<string, ConstraintDefinition> constraints, string uniqueConstraintName, PropertyInfo property)
-        {
-            return constraints.ContainsKey(uniqueConstraintName) && property.GetCustomAttribute<Unique>() == null;
-        }
-
-        public bool IsNoLongerDefault(ColumnDefinition columnDefinition, PropertyInfo property)
-        {
-            return !string.IsNullOrWhiteSpace(columnDefinition.Column_Default) && property.GetCustomAttribute<Default>() == null;
-        }
-
-        public bool IsNoLongerPrimaryKey(Dictionary<string, ConstraintDefinition> constraints, string uniqueConstraintName, PropertyInfo property)
-        {
-            return constraints.ContainsKey(uniqueConstraintName) && property.GetCustomAttribute<PrimaryKey>() == null;
-        }
-
-        public bool IsNoLongerForeignKey(Dictionary<string, ConstraintDefinition> constraints, string foreignKeyConstraintName, PropertyInfo property)
-        {
-            return constraints.ContainsKey(foreignKeyConstraintName) && property.GetCustomAttribute<ForeignKey>() == null;
-        }
-
-        public bool IsDefaultChanged(ColumnDefinition columnDefinition, PropertyInfo property)
-        {
-            Default defaultValueAttribute = property.GetCustomAttribute<Default>();
-            string currentDefaultValue = columnDefinition.Column_Default?.Replace("(", string.Empty).Replace(")", string.Empty).Replace("'", string.Empty);
-
-            return !string.IsNullOrWhiteSpace(columnDefinition.Column_Default) ? defaultValueAttribute != null ? !currentDefaultValue.Equals($"{defaultValueAttribute.Value}") : false : false;
-        }
-
-        public bool IsNullable(PropertyInfo property)
-        {
-            return Nullable.GetUnderlyingType(property.PropertyType) != null;
-        }
-
-        public bool IsUnique(IManageable model, string propertyName)
-        {
-            return model.Configuration.UniqueKeyProperties.ContainsKey(propertyName);
-        }
-
-        public bool IsDefault(IManageable model, string propertyName)
-        {
-            return model.Configuration.DefaultProperties.ContainsKey(propertyName);
-        }
-
-        public bool IsPrimaryKey(IManageable model, string propertyName)
-        {
-            return model.Configuration.PrimaryKeyProperty.Name.Equals(propertyName);
-        }
+        
     }
 }

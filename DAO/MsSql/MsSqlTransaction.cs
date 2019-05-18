@@ -4,7 +4,7 @@ using OneData.Models;
 using System;
 using System.Reflection;
 
-namespace OneData.DAO
+namespace OneData.DAO.MsSql
 {
     internal class MsSqlTransaction : ITransactionable
     {
@@ -91,6 +91,25 @@ namespace OneData.DAO
         public string RenewDefaultInColumn(FullyQualifiedTableName tableName, string columnName, string defaultValue)
         {
             return $"{RemoveDefaultFromColumn(tableName, $"DF_{tableName.Schema}_{tableName.Table}_{columnName}")}{AddDefaultToColumn(tableName, columnName, defaultValue)}";
+        }
+
+        public string UpdateColumnValueToDefault(FullyQualifiedTableName tableName, string columnName, Type columnType)
+        {
+            return $"UPDATE [{tableName.Schema}].[{tableName.Table}] SET [{columnName}] = {GetDefault(columnType)}; \n";
+        }
+
+        private object GetDefault(Type type)
+        {
+            if (type.IsValueType)
+            {
+                object value = Activator.CreateInstance(type);
+                if (string.IsNullOrWhiteSpace(value.ToString()))
+                {
+                    value = "''";
+                }
+                return value;
+            }
+            return 0;
         }
     }
 }

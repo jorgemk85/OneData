@@ -12,7 +12,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
 
-namespace OneData.DAO
+namespace OneData.DAO.MySql
 {
     internal class MySqlOperation : Operation, IOperable
     {

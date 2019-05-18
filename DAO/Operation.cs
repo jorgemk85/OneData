@@ -1,4 +1,6 @@
-﻿using OneData.Enums;
+﻿using OneData.DAO.MsSql;
+using OneData.DAO.MySql;
+using OneData.Enums;
 using OneData.Exceptions;
 using OneData.Extensions;
 using OneData.Interfaces;
@@ -103,7 +105,7 @@ namespace OneData.DAO
                 case ConnectionTypes.MSSQL:
                     return new MsSqlOperation();
                 default:
-                    return new MsSqlOperation();
+                    throw new NotSupportedException($"El tipo de coneccion {connectionType.ToString()} no puede ser utilizado con la funcion {nameof(GetOperationBasedOnConnectionType)}.");
             }
         }
 
