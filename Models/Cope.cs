@@ -3,6 +3,7 @@ using OneData.Attributes;
 using OneData.DAO;
 using OneData.Extensions;
 using OneData.Interfaces;
+using OneData.Models.QueryBuilder;
 using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
@@ -139,6 +140,11 @@ namespace OneData.Models
         public static List<T> SelectList(Expression<Func<T, bool>> expression, QueryOptions queryOptions)
         {
             return Manager<T>.Select(expression, queryOptions).Data.ToList();
+        }
+
+        public static SelectStatement<T> Select(params Expression<Func<T, dynamic>>[] parameters)
+        {
+            return new SelectStatement<T>();
         }
     }
 }
