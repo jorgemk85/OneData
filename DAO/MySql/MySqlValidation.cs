@@ -90,17 +90,17 @@ namespace OneData.DAO.MySql
 
         public bool IsUnique(IManageable model, string propertyName)
         {
-            return model.Configuration.UniqueKeyProperties.ContainsKey(propertyName);
+            return model.Composition.UniqueKeyProperties.ContainsKey(propertyName);
         }
 
         public bool IsDefault(IManageable model, string propertyName)
         {
-            return model.Configuration.DefaultProperties.ContainsKey(propertyName);
+            return model.Composition.DefaultProperties.ContainsKey(propertyName);
         }
 
         public bool IsPrimaryKey(IManageable model, string propertyName)
         {
-            return model.Configuration.PrimaryKeyProperty.Name.Equals(propertyName);
+            return model.Composition.PrimaryKeyProperty.Name.Equals(propertyName);
         }
     }
 }

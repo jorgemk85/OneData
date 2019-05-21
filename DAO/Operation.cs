@@ -251,21 +251,21 @@ namespace OneData.DAO
 
         protected void PerformFullTableCheck(IManageable model, string connectionToUse)
         {
-            if (model.IsFullyValidated)
+            if (model.Composition.IsFullySynced)
             {
-                Logger.Info($"Table {model.Configuration.TableName} has already been validated with it's current state.");
+                Logger.Info($"Table {model.Composition.TableName} has already been validated with it's current state.");
                 return;
             }
 
-            Logger.Info($"Processing table {model.Configuration.TableName} using connection {connectionToUse}.");
-            model.IsFullyValidated = true;
-            string schema = Manager.ConnectionType == ConnectionTypes.MSSQL ? model.Configuration.Schema : ConsolidationTools.GetInitialCatalog(connectionToUse, true);
+            Logger.Info($"Processing table {model.Composition.TableName} using connection {connectionToUse}.");
+            model.Composition.IsFullySynced = true;
+            string schema = Manager.ConnectionType == ConnectionTypes.MSSQL ? model.Composition.Schema : ConsolidationTools.GetInitialCatalog(connectionToUse, true);
             string initialCatalog = ConsolidationTools.GetInitialCatalog(connectionToUse);
-            Dictionary<string, ConstraintDefinition> constraints = GetConstraints(initialCatalog, schema, model.Configuration.TableName, connectionToUse);
+            Dictionary<string, ConstraintDefinition> constraints = GetConstraints(initialCatalog, schema, model.Composition.TableName, connectionToUse);
 
-            if (DoTableExist(initialCatalog, schema, model.Configuration.TableName, connectionToUse))
+            if (DoTableExist(initialCatalog, schema, model.Composition.TableName, connectionToUse))
             {
-                ExecuteScalar(_creator.CreateQueryForTableAlteration(model, GetColumnDefinition(initialCatalog, model.Configuration.Schema, model.Configuration.TableName, connectionToUse), constraints), connectionToUse, false);
+                ExecuteScalar(_creator.CreateQueryForTableAlteration(model, GetColumnDefinition(initialCatalog, model.Composition.Schema, model.Composition.TableName, connectionToUse), constraints), connectionToUse, false);
             }
             else
             {
@@ -285,10 +285,10 @@ namespace OneData.DAO
         {
             Logger.Info($"Verifying foreign tables for type {model.GetType().ToString()} using connection {connectionToUse}.");
 
-            foreach (KeyValuePair<string, PropertyInfo> property in model.Configuration.ForeignKeyProperties)
+            foreach (KeyValuePair<string, PropertyInfo> property in model.Composition.ForeignKeyProperties)
             {
-                IManageable foreignModel = (IManageable)Activator.CreateInstance(model.Configuration.ForeignKeyAttributes[property.Value.Name].Model);
-                string schema = Manager.ConnectionType == ConnectionTypes.MSSQL ? foreignModel.Configuration.Schema : ConsolidationTools.GetInitialCatalog(connectionToUse, true);
+                IManageable foreignModel = (IManageable)Activator.CreateInstance(model.Composition.ForeignKeyAttributes[property.Value.Name].Model);
+                string schema = Manager.ConnectionType == ConnectionTypes.MSSQL ? foreignModel.Composition.Schema : ConsolidationTools.GetInitialCatalog(connectionToUse, true);
                 PerformFullTableCheck(foreignModel, connectionToUse);
             }
         }
@@ -341,7 +341,7 @@ namespace OneData.DAO
 
             if (Manager.Identity != null)
             {
-                identityId = Manager.Identity.Configuration.PrimaryKeyProperty.GetValue(Manager.Identity);
+                identityId = Manager.Identity.Composition.PrimaryKeyProperty.GetValue(Manager.Identity);
             }
 
             Log newLog = new Log

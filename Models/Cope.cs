@@ -14,48 +14,10 @@ namespace OneData.Models
     public abstract class Cope<T> where T : Cope<T>, IManageable, new()
     {
         [JsonIgnore]
-        static readonly ModelComposition _modelComposition = new ModelComposition(typeof(T));
-        [JsonIgnore]
-        static readonly Configuration _configuration = new Configuration();
-        [JsonIgnore]
-        static bool _isFullyValidated = false;
+        public static ModelComposition ModelComposition { get; } = new ModelComposition(typeof(T));
 
         [UnmanagedProperty, JsonIgnore]
-        internal static ModelComposition ModelComposition { get; } = _modelComposition;
-        [UnmanagedProperty, JsonIgnore]
-        public Configuration Configuration { get; } = _configuration;
-        [UnmanagedProperty, JsonIgnore]
-        public bool IsFullyValidated
-        {
-            get { return _isFullyValidated; }
-            set { _isFullyValidated = value; }
-        }
-
-
-        static Cope()
-        {
-            SetupConfiguration();
-        }
-
-        private static void SetupConfiguration()
-        {
-            _configuration.PrimaryKeyProperty = _modelComposition.PrimaryKeyProperty;
-            _configuration.DateCreatedProperty = _modelComposition.DateCreatedProperty;
-            _configuration.DateModifiedProperty = _modelComposition.DateModifiedProperty;
-            _configuration.PrimaryKeyAttribute = _modelComposition.PrimaryKeyAttribute;
-            _configuration.CacheExpiration = _modelComposition.CacheExpiration;
-            _configuration.IsCacheEnabled = _modelComposition.IsCacheEnabled;
-            _configuration.Schema = _modelComposition.Schema;
-            _configuration.TableName = _modelComposition.TableName;
-            _configuration.FullyQualifiedTableName = _modelComposition.FullyQualifiedTableName;
-            _configuration.ManagedProperties = _modelComposition.ManagedProperties;
-            _configuration.UniqueKeyProperties = _modelComposition.UniqueKeyProperties;
-            _configuration.DefaultProperties = _modelComposition.DefaultProperties;
-            _configuration.DefaultAttributes = _modelComposition.DefaultAttributes;
-            _configuration.DataLengthAttributes = _modelComposition.DataLengthAttributes;
-            _configuration.ForeignKeyAttributes = _modelComposition.ForeignKeyAttributes;
-            _configuration.ForeignKeyProperties = _modelComposition.ForeignKeyProperties;
-        }
+        public ModelComposition Composition { get; } = ModelComposition;
 
         /// <summary>
         /// Obtiene un listado completo de los objetos de tipo <typeparamref name="T"/> almacenados en la base de datos o en el cache.

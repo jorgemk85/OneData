@@ -22,9 +22,9 @@ namespace OneData.DAO.MsSql
         {
             ForeignKey foreignAttribute = property.GetCustomAttribute<ForeignKey>();
             IManageable foreignModel = (IManageable)Activator.CreateInstance(foreignAttribute.Model);
-            FullyQualifiedTableName foreignTableName = new FullyQualifiedTableName(foreignModel.Configuration.Schema, $"{Manager.TablePrefix}{foreignModel.Configuration.TableName}");
+            FullyQualifiedTableName foreignTableName = new FullyQualifiedTableName(foreignModel.Composition.Schema, $"{Manager.TablePrefix}{foreignModel.Composition.TableName}");
 
-            return $"ALTER TABLE [{tableName.Schema}].[{tableName.Table}] ADD CONSTRAINT FK_{tableName.Schema}_{tableName.Table}_{property.Name} FOREIGN KEY([{property.Name}]) REFERENCES [{foreignTableName.Schema}].[{foreignTableName.Table}]([{foreignModel.Configuration.PrimaryKeyProperty.Name}]); \n";
+            return $"ALTER TABLE [{tableName.Schema}].[{tableName.Table}] ADD CONSTRAINT FK_{tableName.Schema}_{tableName.Table}_{property.Name} FOREIGN KEY([{property.Name}]) REFERENCES [{foreignTableName.Schema}].[{foreignTableName.Table}]([{foreignModel.Composition.PrimaryKeyProperty.Name}]); \n";
         }
 
         public string AddNotNullToColumn(FullyQualifiedTableName tableName, string columnName, string sqlDataType)

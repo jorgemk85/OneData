@@ -5,7 +5,7 @@ using System.Reflection;
 
 namespace OneData.Models
 {
-    internal sealed class ModelComposition
+    public sealed class ModelComposition
     {
         /// <summary>
         /// Arreglo completo de las propiedades sin filtrar.
@@ -53,6 +53,7 @@ namespace OneData.Models
         internal string Schema { get; set; }
         internal bool IsCacheEnabled { get; set; }
         internal long CacheExpiration { get; set; }
+        internal bool IsFullySynced { get; set; }
 
         public ModelComposition(Type type)
         {

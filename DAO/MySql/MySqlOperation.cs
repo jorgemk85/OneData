@@ -283,7 +283,7 @@ namespace OneData.DAO.MySql
                 foreach (ForeignData foreignAttribute in Cope<T>.ModelComposition.ForeignDataAttributes.Values)
                 {
                     foreignObject = (IManageable)Activator.CreateInstance(foreignAttribute.JoinModel);
-                    foreignTableFullyQualifiedName = $"{Manager.TablePrefix}{foreignObject.Configuration.TableName}";
+                    foreignTableFullyQualifiedName = $"{Manager.TablePrefix}{foreignObject.Composition.TableName}";
                     selectBuilder.Append($",`{foreignTableFullyQualifiedName}`.`{foreignAttribute.ColumnName}` as `{foreignAttribute.PropertyName}`");
                 }
             }
@@ -306,8 +306,8 @@ namespace OneData.DAO.MySql
                 {
                     foreignModel = (IManageable)Activator.CreateInstance(foreignAttribute.JoinModel);
                     foreignReferenceModel = (IManageable)Activator.CreateInstance(foreignAttribute.ReferenceModel);
-                    foreignTableFullyQualifiedName = $"{Manager.TablePrefix}{foreignModel.Configuration.TableName}";
-                    fromBuilder.Append($" INNER JOIN `{foreignTableFullyQualifiedName}` ON `{Manager.TablePrefix}{foreignReferenceModel.Configuration.TableName}`.`{foreignAttribute.ReferenceIdName}` = `{foreignTableFullyQualifiedName}`.`{foreignModel.Configuration.PrimaryKeyProperty.Name}`");
+                    foreignTableFullyQualifiedName = $"{Manager.TablePrefix}{foreignModel.Composition.TableName}";
+                    fromBuilder.Append($" INNER JOIN `{foreignTableFullyQualifiedName}` ON `{Manager.TablePrefix}{foreignReferenceModel.Composition.TableName}`.`{foreignAttribute.ReferenceIdName}` = `{foreignTableFullyQualifiedName}`.`{foreignModel.Composition.PrimaryKeyProperty.Name}`");
                 }
             }
 

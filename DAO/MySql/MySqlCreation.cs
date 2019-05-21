@@ -53,7 +53,7 @@ namespace OneData.DAO.MySql
 
         private long GetDataLengthFromProperty(IManageable model, string propertyName)
         {
-            model.Configuration.DataLengthAttributes.TryGetValue(propertyName, out DataLength dataLengthAttribute);
+            model.Composition.DataLengthAttributes.TryGetValue(propertyName, out DataLength dataLengthAttribute);
 
             if (dataLengthAttribute != null)
             {
@@ -205,17 +205,17 @@ namespace OneData.DAO.MySql
 
         public string CreateQueryForTableAlteration(IManageable model, Dictionary<string, ColumnDefinition> columnDetails, Dictionary<string, ConstraintDefinition> constraints)
         {
-            if (model.Configuration.ManagedProperties.Count == 0) return string.Empty;
+            if (model.Composition.ManagedProperties.Count == 0) return string.Empty;
 
             StringBuilder queryBuilder = new StringBuilder();
             ITransactionable transaction = new MySqlTransaction();
             IValidatable validation = new MySqlValidation();
-            FullyQualifiedTableName tableName = new FullyQualifiedTableName(model.Configuration.Schema, $"{Manager.TablePrefix}{model.Configuration.TableName}");
+            FullyQualifiedTableName tableName = new FullyQualifiedTableName(model.Composition.Schema, $"{Manager.TablePrefix}{model.Composition.TableName}");
 
-            foreach (KeyValuePair<string, PropertyInfo> property in model.Configuration.ManagedProperties)
+            foreach (KeyValuePair<string, PropertyInfo> property in model.Composition.ManagedProperties)
             {
                 columnDetails.TryGetValue(property.Value.Name, out ColumnDefinition columnDefinition);
-                string sqlDataType = GetSqlDataType(property.Value.PropertyType, model.Configuration.UniqueKeyProperties.ContainsKey(property.Value.Name), GetDataLengthFromProperty(model, property.Key));
+                string sqlDataType = GetSqlDataType(property.Value.PropertyType, model.Composition.UniqueKeyProperties.ContainsKey(property.Value.Name), GetDataLengthFromProperty(model, property.Key));
 
                 if (validation.IsNewColumn(columnDefinition))
                 {
@@ -241,8 +241,8 @@ namespace OneData.DAO.MySql
                 queryBuilder.Append(validation.IsNowUnique(constraints, $"UQ_{tableName.Schema}_{tableName.Table}_{property.Value.Name}", property.Value) ? transaction.AddUniqueToColumn(tableName, property.Value.Name) : string.Empty);
                 queryBuilder.Append(validation.IsNoLongerUnique(constraints, $"UQ_{tableName.Schema}_{tableName.Table}_{property.Value.Name}", property.Value) ? transaction.RemoveUniqueFromColumn(tableName, $"UQ_{tableName.Schema}_{tableName.Table}_{property.Value.Name}") : string.Empty);
 
-                queryBuilder.Append(validation.IsNowDefault(columnDefinition, property.Value) ? transaction.AddDefaultToColumn(tableName, property.Value.Name, model.Configuration.DefaultAttributes[property.Value.Name].Value) : string.Empty);
-                queryBuilder.Append(validation.IsDefaultChanged(columnDefinition, property.Value) ? transaction.RenewDefaultInColumn(tableName, property.Value.Name, model.Configuration.DefaultAttributes[property.Value.Name].Value) : string.Empty);
+                queryBuilder.Append(validation.IsNowDefault(columnDefinition, property.Value) ? transaction.AddDefaultToColumn(tableName, property.Value.Name, model.Composition.DefaultAttributes[property.Value.Name].Value) : string.Empty);
+                queryBuilder.Append(validation.IsDefaultChanged(columnDefinition, property.Value) ? transaction.RenewDefaultInColumn(tableName, property.Value.Name, model.Composition.DefaultAttributes[property.Value.Name].Value) : string.Empty);
                 queryBuilder.Append(validation.IsNoLongerDefault(columnDefinition, property.Value) ? transaction.RemoveDefaultFromColumn(tableName, $"DF_{tableName.Schema}_{tableName.Table}_{property.Value.Name}") : string.Empty);
 
                 queryBuilder.Append(validation.IsNowPrimaryKey(constraints, $"PK_{tableName.Schema}_{tableName.Table}_{property.Value.Name}", property.Value) ? transaction.AddPrimaryKeyToColumn(tableName, property.Value.Name) : string.Empty);
@@ -251,7 +251,7 @@ namespace OneData.DAO.MySql
                 queryBuilder.Append(validation.IsNoLongerForeignKey(constraints, $"FK_{tableName.Schema}_{tableName.Table}_{property.Value.Name}", property.Value) ? transaction.RemoveForeignKeyFromColumn(tableName, $"FK_{tableName.Schema}_{tableName.Table}_{property.Value.Name}") : string.Empty);
             }
 
-            foreach (KeyValuePair<string, ColumnDefinition> columnDetail in columnDetails.Where(q => !model.Configuration.ManagedProperties.Keys.Contains(q.Key)))
+            foreach (KeyValuePair<string, ColumnDefinition> columnDetail in columnDetails.Where(q => !model.Composition.ManagedProperties.Keys.Contains(q.Key)))
             {
                 queryBuilder.Append(transaction.RemoveColumn(tableName, columnDetail.Key));
             }
@@ -269,15 +269,15 @@ namespace OneData.DAO.MySql
             StringBuilder queryBuilder = new StringBuilder();
             Dictionary<string, PropertyInfo> properties;
             ITransactionable sqlTransaction = new MySqlTransaction();
-            FullyQualifiedTableName tableName = new FullyQualifiedTableName(model.Configuration.Schema, $"{Manager.TablePrefix}{model.Configuration.TableName}");
+            FullyQualifiedTableName tableName = new FullyQualifiedTableName(model.Composition.Schema, $"{Manager.TablePrefix}{model.Composition.TableName}");
 
             if (constraints == null)
             {
-                properties = model.Configuration.ForeignKeyProperties;
+                properties = model.Composition.ForeignKeyProperties;
             }
             else
             {
-                properties = model.Configuration.ForeignKeyProperties.Where(q => !constraints.ContainsKey(q.Value.Name)).ToDictionary(q => q.Key, q => q.Value);
+                properties = model.Composition.ForeignKeyProperties.Where(q => !constraints.ContainsKey(q.Value.Name)).ToDictionary(q => q.Key, q => q.Value);
             }
 
             if (properties.Count == 0) return string.Empty;
@@ -440,25 +440,25 @@ namespace OneData.DAO.MySql
 
         public string CreateQueryForTableCreation(IManageable model)
         {
-            if (model.Configuration.ManagedProperties.Count == 0) return string.Empty;
+            if (model.Composition.ManagedProperties.Count == 0) return string.Empty;
 
             StringBuilder queryBuilder = new StringBuilder();
             ITransactionable transaction = new MySqlTransaction();
             IValidatable valitation = new MySqlValidation();
             // TODO: This schema setting should be set depending on which connection is beign used.
-            FullyQualifiedTableName tableName = new FullyQualifiedTableName(model.Configuration.Schema, $"{Manager.TablePrefix}{model.Configuration.TableName}");
+            FullyQualifiedTableName tableName = new FullyQualifiedTableName(model.Composition.Schema, $"{Manager.TablePrefix}{model.Composition.TableName}");
 
-            queryBuilder.Append(transaction.AddTable(tableName, model.Configuration.PrimaryKeyProperty.Name, GetSqlDataType(model.Configuration.PrimaryKeyProperty.PropertyType, false, 0), model.Configuration.PrimaryKeyAttribute.IsAutoIncrement));
+            queryBuilder.Append(transaction.AddTable(tableName, model.Composition.PrimaryKeyProperty.Name, GetSqlDataType(model.Composition.PrimaryKeyProperty.PropertyType, false, 0), model.Composition.PrimaryKeyAttribute.IsAutoIncrement));
 
             // Aqui se colocan las propiedades del objeto. Una por columna por su puesto.
-            foreach (KeyValuePair<string, PropertyInfo> property in model.Configuration.ManagedProperties.Where(q => q.Key != model.Configuration.PrimaryKeyProperty.Name))
+            foreach (KeyValuePair<string, PropertyInfo> property in model.Composition.ManagedProperties.Where(q => q.Key != model.Composition.PrimaryKeyProperty.Name))
             {
-                string sqlDataType = GetSqlDataType(property.Value.PropertyType, model.Configuration.UniqueKeyProperties.ContainsKey(property.Value.Name), GetDataLengthFromProperty(model, property.Key));
+                string sqlDataType = GetSqlDataType(property.Value.PropertyType, model.Composition.UniqueKeyProperties.ContainsKey(property.Value.Name), GetDataLengthFromProperty(model, property.Key));
 
                 queryBuilder.Append(transaction.AddColumn(tableName, property.Value.Name, sqlDataType));
                 queryBuilder.Append(!valitation.IsNullable(property.Value) ? transaction.AddNotNullToColumn(tableName, property.Value.Name, sqlDataType) : string.Empty);
                 queryBuilder.Append(valitation.IsUnique(model, property.Value.Name) ? transaction.AddUniqueToColumn(tableName, property.Value.Name) : string.Empty);
-                queryBuilder.Append(valitation.IsDefault(model, property.Value.Name) ? transaction.AddDefaultToColumn(tableName, property.Value.Name, model.Configuration.DefaultAttributes[property.Value.Name].Value) : string.Empty);
+                queryBuilder.Append(valitation.IsDefault(model, property.Value.Name) ? transaction.AddDefaultToColumn(tableName, property.Value.Name, model.Composition.DefaultAttributes[property.Value.Name].Value) : string.Empty);
             }
             if (!string.IsNullOrWhiteSpace(queryBuilder.ToString()))
             {
