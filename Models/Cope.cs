@@ -42,6 +42,7 @@ namespace OneData.Models
             _configuration.PrimaryKeyProperty = _modelComposition.PrimaryKeyProperty;
             _configuration.DateCreatedProperty = _modelComposition.DateCreatedProperty;
             _configuration.DateModifiedProperty = _modelComposition.DateModifiedProperty;
+            _configuration.PrimaryKeyAttribute = _modelComposition.PrimaryKeyAttribute;
             _configuration.CacheExpiration = _modelComposition.CacheExpiration;
             _configuration.IsCacheEnabled = _modelComposition.IsCacheEnabled;
             _configuration.Schema = _modelComposition.Schema;

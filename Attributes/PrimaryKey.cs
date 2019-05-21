@@ -8,5 +8,11 @@ namespace OneData.Attributes
     [AttributeUsage(AttributeTargets.Property)]
     public class PrimaryKey : Attribute
     {
+        public bool IsAutoIncrement { get; set; }
+
+        public PrimaryKey(bool isAutoIncrement = false)
+        {
+            IsAutoIncrement = isAutoIncrement;
+        }
     }
 }

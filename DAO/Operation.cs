@@ -226,9 +226,13 @@ namespace OneData.DAO
 
             foreach (KeyValuePair<string, PropertyInfo> property in Cope<T>.ModelComposition.FilteredProperties)
             {
-                if (property.Value.Equals(Cope<T>.ModelComposition.PrimaryKeyProperty) && property.Value.PropertyType.Equals(typeof(int?)) && !considerPrimary)
+                // Si la llave es primaria y es identity (autoincrement) entonces no la debe agregar como parametro.
+                if (property.Value.Equals(Cope<T>.ModelComposition.PrimaryKeyProperty) && !considerPrimary)
                 {
-                    continue;
+                    if (Cope<T>.ModelComposition.PrimaryKeyAttribute.IsAutoIncrement && !considerPrimary)
+                    {
+                        continue;
+                    }
                 }
                 _command.Parameters.Add(CreateDbParameter("_" + property.Value.Name, property.Value.GetValue(obj)));
             }

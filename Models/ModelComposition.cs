@@ -28,7 +28,7 @@ namespace OneData.Models
         /// </summary>
         internal Dictionary<string, PropertyInfo> AutoProperties { get; private set; } = new Dictionary<string, PropertyInfo>();
         /// <summary>
-        /// Esta propiedad controla las propiedades del objeto que NO estan marcadas con el atributo UnmanagedProperty NI AutoProperty NI ForeignCollection.
+        /// Esta propiedad controla las propiedades del objeto que NO estan marcadas con el atributo UnmanagedProperty NI AutoProperty.
         /// </summary>
         internal Dictionary<string, PropertyInfo> FilteredProperties { get; private set; } = new Dictionary<string, PropertyInfo>();
         /// <summary>
@@ -49,6 +49,7 @@ namespace OneData.Models
         internal PropertyInfo PrimaryKeyProperty { get; private set; }
         internal PropertyInfo DateCreatedProperty { get; private set; }
         internal PropertyInfo DateModifiedProperty { get; private set; }
+        internal PrimaryKey PrimaryKeyAttribute { get; set; }
         internal bool IsIdentityModel { get; private set; }
         internal string TableName { get; private set; }
         internal string Schema { get; private set; }
@@ -76,9 +77,16 @@ namespace OneData.Models
             {
                 throw new RequiredAttributeNotFound(nameof(PrimaryKey), type.FullName);
             }
-            else if (!PrimaryKeyProperty.PropertyType.IsValueType || Nullable.GetUnderlyingType(PrimaryKeyProperty.PropertyType) != null)
+            else
             {
-                throw new InvalidDataType(PrimaryKeyProperty.Name, type.FullName, "not nullable struct");
+                if (!PrimaryKeyProperty.PropertyType.IsValueType || Nullable.GetUnderlyingType(PrimaryKeyProperty.PropertyType) != null)
+                {
+                    throw new InvalidDataType(PrimaryKeyProperty.Name, type.FullName, "not nullable struct");
+                }
+                if (PrimaryKeyAttribute.IsAutoIncrement && !PrimaryKeyProperty.PropertyType.Equals(typeof(int)))
+                {
+                    throw new NotSupportedException($"PrimaryKey inside {type.FullName} is set to AutoIncrement but it's value type is not 'int'.");
+                }
             }
 
             if (DateCreatedProperty == null)
@@ -150,6 +158,7 @@ namespace OneData.Models
                             break;
                         case nameof(PrimaryKey):
                             PrimaryKeyProperty = property;
+                            PrimaryKeyAttribute = property.GetCustomAttribute<PrimaryKey>();
                             break;
                         case nameof(DateCreated):
                             DateCreatedProperty = property;
