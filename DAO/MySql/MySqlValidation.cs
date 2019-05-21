@@ -16,7 +16,7 @@ namespace OneData.DAO.MySql
 
         public bool IsColumnDataTypeChanged(ColumnDefinition columnDefinition, string sqlDataType)
         {
-            string columnMax = columnDefinition.Character_Maximum_Length != null ? $"({columnDefinition.Character_Maximum_Length})" : columnDefinition.Numeric_Precision != null ? $"({columnDefinition.Numeric_Precision})" : string.Empty;
+            string columnMax = columnDefinition.Character_Maximum_Length != null ? $"({columnDefinition.Character_Maximum_Length})" : string.Empty;
             return columnDefinition.Data_Type == null ? false : $"{columnDefinition.Data_Type}{columnMax}" != sqlDataType;
         }
 
@@ -27,7 +27,7 @@ namespace OneData.DAO.MySql
 
         public bool IsNowNullable(ColumnDefinition columnDefinition, PropertyInfo property)
         {
-            return Nullable.GetUnderlyingType(property.PropertyType) != null && (columnDefinition.Is_Nullable == "NO" || columnDefinition.Is_Nullable == null);
+            return (Nullable.GetUnderlyingType(property.PropertyType) != null || property.GetCustomAttribute<AllowNull>() != null) && (columnDefinition.Is_Nullable == "NO" || columnDefinition.Is_Nullable == null);
         }
 
         public bool IsNowUnique(Dictionary<string, ConstraintDefinition> constraints, string uniqueConstraintName, PropertyInfo property)
@@ -52,7 +52,7 @@ namespace OneData.DAO.MySql
 
         public bool IsNoLongerNullable(ColumnDefinition columnDefinition, PropertyInfo property)
         {
-            return Nullable.GetUnderlyingType(property.PropertyType) == null && (columnDefinition.Is_Nullable == "YES" || columnDefinition.Is_Nullable == null);
+            return (Nullable.GetUnderlyingType(property.PropertyType) == null && property.GetCustomAttribute<AllowNull>() == null) && (columnDefinition.Is_Nullable == "YES" || columnDefinition.Is_Nullable == null);
         }
 
         public bool IsNoLongerUnique(Dictionary<string, ConstraintDefinition> constraints, string uniqueConstraintName, PropertyInfo property)
@@ -85,7 +85,7 @@ namespace OneData.DAO.MySql
 
         public bool IsNullable(PropertyInfo property)
         {
-            return Nullable.GetUnderlyingType(property.PropertyType) != null;
+            return Nullable.GetUnderlyingType(property.PropertyType) != null || property.GetCustomAttribute<AllowNull>() != null;
         }
 
         public bool IsUnique(IManageable model, string propertyName)

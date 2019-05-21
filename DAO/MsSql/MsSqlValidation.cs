@@ -7,7 +7,7 @@ using System.Reflection;
 
 namespace OneData.DAO.MsSql
 {
-    internal class MsSqlValidation: IValidatable
+    internal class MsSqlValidation : IValidatable
     {
         public bool IsNewColumn(ColumnDefinition columnDefinition)
         {
@@ -27,7 +27,7 @@ namespace OneData.DAO.MsSql
 
         public bool IsNowNullable(ColumnDefinition columnDefinition, PropertyInfo property)
         {
-            return Nullable.GetUnderlyingType(property.PropertyType) != null && (columnDefinition.Is_Nullable == "NO" || columnDefinition.Is_Nullable == null);
+            return (Nullable.GetUnderlyingType(property.PropertyType) != null || property.GetCustomAttribute<AllowNull>() != null) && (columnDefinition.Is_Nullable == "NO" || columnDefinition.Is_Nullable == null);
         }
 
         public bool IsNowUnique(Dictionary<string, ConstraintDefinition> constraints, string uniqueConstraintName, PropertyInfo property)
@@ -52,7 +52,7 @@ namespace OneData.DAO.MsSql
 
         public bool IsNoLongerNullable(ColumnDefinition columnDefinition, PropertyInfo property)
         {
-            return Nullable.GetUnderlyingType(property.PropertyType) == null && (columnDefinition.Is_Nullable == "YES" || columnDefinition.Is_Nullable == null);
+            return (Nullable.GetUnderlyingType(property.PropertyType) == null && property.GetCustomAttribute<AllowNull>() == null) && (columnDefinition.Is_Nullable == "YES" || columnDefinition.Is_Nullable == null);
         }
 
         public bool IsNoLongerUnique(Dictionary<string, ConstraintDefinition> constraints, string uniqueConstraintName, PropertyInfo property)
@@ -85,7 +85,7 @@ namespace OneData.DAO.MsSql
 
         public bool IsNullable(PropertyInfo property)
         {
-            return Nullable.GetUnderlyingType(property.PropertyType) != null;
+            return Nullable.GetUnderlyingType(property.PropertyType) != null || property.GetCustomAttribute<AllowNull>() != null;
         }
 
         public bool IsUnique(IManageable model, string propertyName)
