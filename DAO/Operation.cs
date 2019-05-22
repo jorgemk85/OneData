@@ -200,7 +200,7 @@ namespace OneData.DAO
             DbParameter dbParameter = _command.CreateParameter();
 
             dbParameter.ParameterName = name;
-            dbParameter.Value = value;
+            dbParameter.Value = value ?? DBNull.Value;
 
             return dbParameter;
         }

@@ -23,6 +23,7 @@ namespace OneData.DAO.MsSql
         const int ERR_EXPECTED_PARAMETER_NOT_SUPPLIED = 201;
         const int ERR_CANNOT_INSERT_EXPLICIT_VALUE_FOR_IDENTITY = 544;
         const int ERR_CANNOT_UPDATE_IDENTITY_VALUE = 8102;
+        const int ERR_OPERAND_TYPE_CLASH = 206;
 
         public MsSqlOperation() : base()
         {
@@ -134,7 +135,8 @@ namespace OneData.DAO.MsSql
                                                     sqlException.Number == ERR_CANNOT_INSERT_EXPLICIT_VALUE_FOR_IDENTITY ||
                                                     sqlException.Number == ERR_EXPECTED_PARAMETER_NOT_SUPPLIED ||
                                                     sqlException.Number == ERR_CANNOT_UPDATE_IDENTITY_VALUE ||
-                                                    sqlException.Number == ERR_NOT_A_PARAMETER_FOR_PROCEDURE)
+                                                    sqlException.Number == ERR_NOT_A_PARAMETER_FOR_PROCEDURE ||
+                                                    sqlException.Number == ERR_OPERAND_TYPE_CLASH)
             {
                 if (Manager.AutoAlterStoredProcedures && !throwIfError)
                 {
@@ -143,7 +145,7 @@ namespace OneData.DAO.MsSql
                     {
                         PerformFullTableCheck(new T(), queryOptions.ConnectionToUse);
                     }
-                    
+
                     ExecuteScalar(GetTransactionTextForProcedure<T>(transactionType, true), queryOptions.ConnectionToUse, false);
                     throwIfError = true;
                     goto Start;

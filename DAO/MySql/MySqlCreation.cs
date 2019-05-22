@@ -19,9 +19,9 @@ namespace OneData.DAO.MySql
             // Aqui se colocan los parametros segun las propiedades del objeto 
             foreach (KeyValuePair<string, PropertyInfo> property in Cope<T>.ModelComposition.FilteredProperties)
             {
-                // Si la propiedad actual es la primaria y esta es del tipo int? y no se debe considerar para estos parametros, entonces se salta a la sig propiedad.
+                // Si la propiedad actual es la primaria y es auto increment y no se debe considerar para estos parametros, entonces se salta a la sig propiedad.
                 // Esto significa que la propiedad primaria es Identity o Auto Increment y no se debe de mandar como parametro en un Insert.
-                if (property.Value.Equals(Cope<T>.ModelComposition.PrimaryKeyProperty) && property.Value.PropertyType.Equals(typeof(int?)) && !considerPrimary)
+                if (property.Value.Equals(Cope<T>.ModelComposition.PrimaryKeyProperty) && Cope<T>.ModelComposition.PrimaryKeyAttribute.IsAutoIncrement && !considerPrimary)
                 {
                     continue;
                 }
@@ -102,7 +102,7 @@ namespace OneData.DAO.MySql
             // Seccion para especificar a que columnas se va a insertar y sus valores.
             foreach (KeyValuePair<string, PropertyInfo> property in Cope<T>.ModelComposition.ManagedProperties)
             {
-                if (property.Value.Equals(Cope<T>.ModelComposition.PrimaryKeyProperty) && property.Value.PropertyType.Equals(typeof(int?)))
+                if (property.Value.Equals(Cope<T>.ModelComposition.PrimaryKeyProperty) && Cope<T>.ModelComposition.PrimaryKeyAttribute.IsAutoIncrement)
                 {
                     continue;
                 }
