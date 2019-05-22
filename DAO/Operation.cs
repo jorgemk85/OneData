@@ -1,4 +1,5 @@
-﻿using OneData.DAO.MsSql;
+﻿using OneData.Attributes;
+using OneData.DAO.MsSql;
 using OneData.DAO.MySql;
 using OneData.Enums;
 using OneData.Exceptions;
@@ -214,7 +215,7 @@ namespace OneData.DAO
             }
         }
 
-        protected void SetParameters<T>(T obj, TransactionTypes transactionType, bool considerPrimary, QueryOptions queryOptions) where T : Cope<T>, IManageable, new()
+        protected void SetParameters<T>(T obj, TransactionTypes transactionType, bool considerPrimaryKey, QueryOptions queryOptions) where T : Cope<T>, IManageable, new()
         {
             Logger.Info($"Setting parameters in command based on type {typeof(T)} for transaction type {transactionType.ToString()}.");
 
@@ -226,16 +227,38 @@ namespace OneData.DAO
 
             foreach (KeyValuePair<string, PropertyInfo> property in Cope<T>.ModelComposition.FilteredProperties)
             {
-                // Si la llave es primaria y es identity (autoincrement) entonces no la debe agregar como parametro.
-                if (property.Value.Equals(Cope<T>.ModelComposition.PrimaryKeyProperty) && !considerPrimary)
+                if (!CheckForPrimaryKeyWithAutoIncrement<T>(property.Value.Name, considerPrimaryKey))
                 {
-                    if (Cope<T>.ModelComposition.PrimaryKeyAttribute.IsAutoIncrement && !considerPrimary)
-                    {
-                        continue;
-                    }
+                    _command.Parameters.Add(CreateDbParameter("_" + property.Value.Name, CheckAndApplyDefaultValue<T>(property.Value.Name, property.Value.GetValue(obj), transactionType)));
                 }
-                _command.Parameters.Add(CreateDbParameter("_" + property.Value.Name, property.Value.GetValue(obj)));
             }
+        }
+
+        private bool CheckForPrimaryKeyWithAutoIncrement<T>(string propertyName, bool considerPrimaryKey) where T : Cope<T>, IManageable, new()
+        {
+            // Si la llave es primaria y es identity (autoincrement) entonces no la debe agregar como parametro.
+            if (propertyName.Equals(Cope<T>.ModelComposition.PrimaryKeyProperty.Name))
+            {
+                if (Cope<T>.ModelComposition.PrimaryKeyAttribute.IsAutoIncrement && !considerPrimaryKey)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private object CheckAndApplyDefaultValue<T>(string propertyName, object propertyValue, TransactionTypes transactionType) where T : Cope<T>, IManageable, new()
+        {
+            if (propertyValue == null && transactionType.Equals(TransactionTypes.Insert))
+            {
+                if (Cope<T>.ModelComposition.DefaultAttributes.TryGetValue(propertyName, out Default defaultAttribute))
+                {
+                    propertyValue = defaultAttribute.Value;
+                }
+            }
+
+            return propertyValue;
         }
 
         protected void SetMassiveOperationParameters<T>(IEnumerable<T> obj, TransactionTypes transactionType, QueryOptions queryOptions) where T : Cope<T>, IManageable, new()
