@@ -1,7 +1,8 @@
 # OneData [![Tweet](https://img.shields.io/twitter/url/http/shields.io.svg?style=social)](https://twitter.com/intent/tweet?text=Get%20the%20easiest,%20feature-rich%20ORM%20you%20were%20looking%20for.&url=https://github.com/jorgemk85/OneData&via=GitHub&hashtags=orm,design,c%23,database,dataaccess,developers)
 [![OneData](https://img.icons8.com/cotton/64/000000/cloud-database.png)](https://github.com/jorgemk85/OneData) 
 
-[![Build Status](https://img.shields.io/badge/build-passing-green.svg)](https://github.com/jorgemk85/OneData) [![Build Stage](https://img.shields.io/badge/stage-alpha-yellowgreen.svg)](https://github.com/jorgemk85/OneData)
+[![Build Status](https://img.shields.io/badge/build-passing-green.svg)](https://github.com/jorgemk85/OneData) [![Build Stage](https://img.shields.io/badge/stage-alpha-yellowgreen.svg)](https://github.com/jorgemk85/OneData) [![CodeFactor](https://www.codefactor.io/repository/github/jorgemk85/onedata/badge)](https://www.codefactor.io/repository/github/jorgemk85/onedata)
+
 
 So, you are looking for a VERY easy, Code-First solution to access your data inside a MySQL or MsSQL server...
 
