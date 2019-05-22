@@ -67,7 +67,7 @@ Install-Package OneData
 dotnet add package OneData
 ```
 
-*Can't find it with NuGet? Make sure you enable "Include prerelease" checkbox inside your NuGet Package Explorer.*
+*Can't find it with NuGet Package Manager? Make sure you enable "Include prerelease" checkbox inside your NuGet Package Explorer.*
 
 ## Configuration
 
@@ -253,6 +253,11 @@ public class Log : Cope<Log>, IManageable
 Literally, the next time your program runs and tries to access this object in the database, OneData will make the changes it detected inside your class/model without prompting anything and as transparent as it should be.
 
 This exact steps will trigger if your change is as small as adding a new property or huge as adding twenty, changing datatypes of another three, modifying the datalength of a couple and updating the relationships between classes/models.
+
+> #### Warning
+>
+> Please note, OneData does NOT change column names. Once a property is created, it's name is used for the column inside your specified table. If you change your property name within your class, OneData will consider this as a drop column and proceed to add the "new" one. This might lead to **data loss**.
+> If you need to rename your column, please do so manually in your database and make sure you reflect the changes in your class. This way, OneData will only adjust the related stored procedures without making any structural changes inside the table.
 
 #### Adding data to the database
 Let's say you have a single `Log` object with it's respective data already filled. How do I insert it into the corresponding table?
