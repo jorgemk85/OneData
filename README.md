@@ -463,9 +463,8 @@ All the magic will be done when you call any transaction of type Select.
 #### Generic Stored Procedures
 We know that sometimes you need to call a stored procedure that's not a common transaction and for this, you can do the following:
 ```c#
-Manager.StoredProcedure("<main table affected by your SP>", "<your stored procedure name>", <your connection name; null for default>, new Parameter("<parameter name>", <parameter value>));
+Manager.StoredProcedure("<your stored procedure name>", <your connection name; null for default>, new Parameter("<parameter name>", <parameter value>));
 ```
-The parameter `tableName` is not really used to execute anything and it will be removed in a future version.
 
 The last parameter in this method accepts an array of type `Parameter`. This means you could just pass a preconfigured array or pass one by one.
 
@@ -482,7 +481,7 @@ Manager<T>.DeleteAsync(T obj, QueryOptions queryOptions)
 Manager<T>.DeleteMassiveAsync(IEnumerable<T> list, QueryOptions queryOptions)
 Manager<T>.SelectAsync(Expression<Func<T, bool>> expression, QueryOptions queryOptions)
 Manager<T>.SelectAllAsync(QueryOptions queryOptions)
-Manager.StoredProcedureAsync(string tableName, string storedProcedure, QueryOptions queryOptions, params Parameter[] parameters)
+Manager.StoredProcedureAsync(string storedProcedure, QueryOptions queryOptions, params Parameter[] parameters)
 ```
 As an example, the following would be used to call an `Async` Insert method to add a new `Log` object into the database:
 ```c#

@@ -72,9 +72,9 @@ namespace OneData.DAO
         /// <param name="connectionToUse">Especifica cual configuracion de tipo ConectionString se desea utilizar. Si se especifica nulo, entonces utiliza la conexion especificada en DefaultConnection.</param>
         /// <param name="parameters">Formacion de objetos Parameter que contiene los parametros de la consulta.</param>
         /// <returns>Regresa un nuevo DataSet que contiene la informacion resultante de la ejecucion.</returns>
-        public static DataSet StoredProcedure(string tableName, string storedProcedure, QueryOptions queryOptions, params Parameter[] parameters)
+        public static DataSet StoredProcedure(string storedProcedure, QueryOptions queryOptions, params Parameter[] parameters)
         {
-            return ExecuteStoredProcedure(tableName, storedProcedure, queryOptions, parameters);
+            return ExecuteStoredProcedure(storedProcedure, queryOptions, parameters);
         }
 
         /// <summary>
@@ -85,12 +85,12 @@ namespace OneData.DAO
         /// <param name="connectionToUse">Especifica cual configuracion de tipo ConectionString se desea utilizar. Si se especifica nulo, entonces utiliza la conexion especificada en DefaultConnection.</param>
         /// <param name="parameters">Formacion de objetos Parameter que contiene los parametros de la consulta.</param>
         /// <returns>Regresa un nuevo objeto Result que contiene la informacion resultante de la ejecucion.</returns>
-        public static async Task<DataSet> StoredProcedureAsync(string tableName, string storedProcedure, QueryOptions queryOptions, params Parameter[] parameters)
+        public static async Task<DataSet> StoredProcedureAsync(string storedProcedure, QueryOptions queryOptions, params Parameter[] parameters)
         {
-            return await Task.Run(() => ExecuteStoredProcedure(tableName, storedProcedure, queryOptions, parameters));
+            return await Task.Run(() => ExecuteStoredProcedure(storedProcedure, queryOptions, parameters));
         }
 
-        private static DataSet ExecuteStoredProcedure(string tableName, string storedProcedure, QueryOptions queryOptions, Parameter[] parameters)
+        private static DataSet ExecuteStoredProcedure(string storedProcedure, QueryOptions queryOptions, Parameter[] parameters)
         {
             if (queryOptions == null)
             {
@@ -102,7 +102,7 @@ namespace OneData.DAO
             }
 
             IOperable operation = Operation.GetOperationBasedOnConnectionType(ConnectionType);
-            return operation.ExecuteProcedure(tableName, storedProcedure, queryOptions, parameters);
+            return operation.ExecuteProcedure(string.Empty, storedProcedure, queryOptions, parameters);
         }
     }
 
@@ -117,7 +117,6 @@ namespace OneData.DAO
         #region Events
         public static event CommandExecutedEventHandler<T> OnCommandExecuted;
         public static event SelectExecutedEventHandler<T> OnSelectExecuted;
-        public static event SelectQueryExecutedEventHandler<T> OnSelectQueryExecuted;
         public static event SelectAllExecutedEventHandler<T> OnSelectAllExecuted;
         public static event DeleteExecutedEventHandler<T> OnDeleteExecuted;
         public static event DeleteMassiveExecutedEventHandler<T> OnDeleteMassiveExecuted;
@@ -370,7 +369,7 @@ namespace OneData.DAO
             switch (transactionType)
             {
                 case TransactionTypes.Select:
-                    OnSelectQueryExecuted?.Invoke(new SelectQueryExecutedEventArgs<T>(tableName, result));
+                    OnSelectExecuted?.Invoke(new SelectExecutedEventArgs<T>(tableName, result));
                     break;
                 case TransactionTypes.SelectAll:
                     OnSelectAllExecuted?.Invoke(new SelectAllExecutedEventArgs<T>(tableName, result));

@@ -57,9 +57,8 @@ namespace OneData.Tools
                     BinaryExpression body = (BinaryExpression)expression.Body;
                     BuildQueryFromBinaryExpressionBody(body, ref builder, qualifiedTableName);
                 }
-
             }
-            catch (Exception ex)
+            catch
             {
                 throw new NotSupportedException($"La instruccion '{expression.ToString()}' no es comprendida por el analizador de consultas. Intente colocar una expresion diferente.");
             }
