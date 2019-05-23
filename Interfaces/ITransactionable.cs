@@ -1,5 +1,6 @@
 ﻿using OneData.Models;
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 
 namespace OneData.Interfaces
@@ -17,7 +18,7 @@ namespace OneData.Interfaces
         string AddUniqueToColumn(FullyQualifiedTableName tableName, string columnName);
         string AddPrimaryKeyToColumn(FullyQualifiedTableName tableName, string columnName);
         string AddForeignKeyToColumn(FullyQualifiedTableName tableName, PropertyInfo property);
-        string AddDefaultToColumn(FullyQualifiedTableName tableName, string columnName, string defaultValue);
+        string AddDefaultToColumn(FullyQualifiedTableName tableName, string columnName, object defaultValue);
 
         string RemoveNotNullFromColumn(FullyQualifiedTableName tableName, string columnName, string sqlDataType);
         string RemoveUniqueFromColumn(FullyQualifiedTableName tableName, string uniqueConstraintName);
@@ -25,7 +26,9 @@ namespace OneData.Interfaces
         string RemoveForeignKeyFromColumn(FullyQualifiedTableName tableName, string foreignKeyName);
         string RemoveDefaultFromColumn(FullyQualifiedTableName tableName, string defaultConstraintName);
 
-        string RenewDefaultInColumn(FullyQualifiedTableName tableName, string columnName, string defaultValue);
+        string RenewDefaultInColumn(FullyQualifiedTableName tableName, string columnName, object defaultValue);
         string UpdateColumnValueToDefault(FullyQualifiedTableName tableName, string columnName, Type columnType);
+
+        string AlterColumnWithConstraintValidation(string alterQuery, FullyQualifiedTableName tableName, Dictionary<string, ConstraintDefinition> constraints, ColumnDefinition columnDefinition, string propertyName, string sqlDataType);
     }
 }

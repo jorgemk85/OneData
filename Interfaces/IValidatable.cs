@@ -13,7 +13,9 @@ namespace OneData.Interfaces
 
         bool IsNullable(PropertyInfo property);
         bool IsUnique(IManageable model, string propertyName);
+        bool IsUnique(Dictionary<string, ConstraintDefinition> constraints, string uniqueConstraintName);
         bool IsDefault(IManageable model, string propertyName);
+        bool IsDefault(ColumnDefinition columnDefinition);
         bool IsPrimaryKey(IManageable model, string propertyName);
 
         bool IsNowNullable(ColumnDefinition columnDefinition, PropertyInfo property);

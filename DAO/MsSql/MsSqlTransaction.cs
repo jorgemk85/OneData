@@ -2,7 +2,9 @@
 using OneData.Interfaces;
 using OneData.Models;
 using System;
+using System.Collections.Generic;
 using System.Reflection;
+using System.Text;
 
 namespace OneData.DAO.MsSql
 {
@@ -13,9 +15,10 @@ namespace OneData.DAO.MsSql
             return $"ALTER TABLE [{tableName.Schema}].[{tableName.Table}] ADD [{columnName}] {sqlDataType}; \n";
         }
 
-        public string AddDefaultToColumn(FullyQualifiedTableName tableName, string columnName, string defaultValue)
+        public string AddDefaultToColumn(FullyQualifiedTableName tableName, string columnName, object defaultValue)
         {
-            return $"ALTER TABLE [{tableName.Schema}].[{tableName.Table}] ADD CONSTRAINT DF_{tableName.Schema}_{tableName.Table}_{columnName} DEFAULT '{defaultValue}' FOR [{columnName}]; \n";
+            object value = defaultValue is string ? $"'{defaultValue}'" : defaultValue;
+            return $"ALTER TABLE [{tableName.Schema}].[{tableName.Table}] ADD CONSTRAINT DF_{tableName.Schema}_{tableName.Table}_{columnName} DEFAULT {value} FOR [{columnName}]; \n";
         }
 
         public string AddForeignKeyToColumn(FullyQualifiedTableName tableName, PropertyInfo property)
@@ -30,6 +33,29 @@ namespace OneData.DAO.MsSql
         public string AddNotNullToColumn(FullyQualifiedTableName tableName, string columnName, string sqlDataType)
         {
             return $"ALTER TABLE [{tableName.Schema}].[{tableName.Table}] ALTER COLUMN [{columnName}] {sqlDataType} NOT NULL; \n";
+        }
+
+        public string AlterColumnWithConstraintValidation(string alterQuery, FullyQualifiedTableName tableName, Dictionary<string, ConstraintDefinition> constraints, ColumnDefinition columnDefinition, string propertyName, string sqlDataType)
+        {
+            MsSqlValidation validation = new MsSqlValidation();
+            StringBuilder stringBuilder = new StringBuilder();
+            bool isUnique = validation.IsUnique(constraints, $"UQ_{tableName.Schema}_{tableName.Table}_{propertyName}");
+            bool isDefault = validation.IsDefault(columnDefinition);
+            object currentDefaultValue = null;
+
+            if (isDefault)
+            {
+                currentDefaultValue = columnDefinition.Column_Default.ToString().Replace("(", string.Empty).Replace(")", string.Empty).Replace("'", string.Empty);
+                currentDefaultValue = columnDefinition.Column_Default.ToString().StartsWith("('") ? currentDefaultValue : Convert.ToDecimal(currentDefaultValue);
+            }
+
+            stringBuilder.Append(isUnique ? RemoveUniqueFromColumn(tableName, $"UQ_{tableName.Schema}_{tableName.Table}_{propertyName}") : string.Empty);
+            stringBuilder.Append(isDefault ? RemoveDefaultFromColumn(tableName, $"DF_{tableName.Schema}_{tableName.Table}_{propertyName}") : string.Empty);
+            stringBuilder.Append(alterQuery);
+            stringBuilder.Append(isUnique ? AddUniqueToColumn(tableName, propertyName) : string.Empty);
+            stringBuilder.Append(isDefault ? AddDefaultToColumn(tableName, propertyName, currentDefaultValue) : string.Empty);
+
+            return stringBuilder.ToString();
         }
 
         public string AddPrimaryKeyToColumn(FullyQualifiedTableName tableName, string columnName)
@@ -88,7 +114,7 @@ namespace OneData.DAO.MsSql
             return $"ALTER TABLE [{tableName.Schema}].[{tableName.Table}] DROP CONSTRAINT {uniqueKeyName}; \n";
         }
 
-        public string RenewDefaultInColumn(FullyQualifiedTableName tableName, string columnName, string defaultValue)
+        public string RenewDefaultInColumn(FullyQualifiedTableName tableName, string columnName, object defaultValue)
         {
             return $"{RemoveDefaultFromColumn(tableName, $"DF_{tableName.Schema}_{tableName.Table}_{columnName}")}{AddDefaultToColumn(tableName, columnName, defaultValue)}";
         }

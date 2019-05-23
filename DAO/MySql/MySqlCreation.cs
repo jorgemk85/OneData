@@ -216,34 +216,28 @@ namespace OneData.DAO.MySql
             {
                 columnDetails.TryGetValue(property.Value.Name, out ColumnDefinition columnDefinition);
                 string sqlDataType = GetSqlDataType(property.Value.PropertyType, model.Composition.UniqueKeyProperties.ContainsKey(property.Value.Name), GetDataLengthFromProperty(model, property.Key));
+                model.Composition.DefaultAttributes.TryGetValue(property.Key, out Default defaultAttribute);
 
                 if (validation.IsNewColumn(columnDefinition))
                 {
                     queryBuilder.Append($"{transaction.AddColumn(tableName, property.Value.Name, sqlDataType)}|;|");
-                    queryBuilder.Append(transaction.UpdateColumnValueToDefault(tableName, property.Value.Name, property.Value.PropertyType));
                     columnDefinition = new ColumnDefinition();
+                    queryBuilder.Append(validation.IsNowNullable(columnDefinition, property.Value) ? string.Empty : transaction.UpdateColumnValueToDefault(tableName, property.Value.Name, property.Value.PropertyType));
                 }
                 if (validation.IsColumnDataTypeChanged(columnDefinition, sqlDataType))
                 {
-                    if (!string.IsNullOrWhiteSpace(columnDefinition.Column_Default))
-                    {
-                        queryBuilder.Append(transaction.RemoveDefaultFromColumn(tableName, $"DF_{tableName.Schema}_{tableName.Table}_{property.Value.Name}"));
-                        columnDefinition.Column_Default = null;
-                    }
-
-                    queryBuilder.Append(transaction.ChangeColumnDataType(tableName, property.Value.Name, sqlDataType));
-                    columnDefinition.Is_Nullable = null;
+                    queryBuilder.Append(transaction.AlterColumnWithConstraintValidation(transaction.ChangeColumnDataType(tableName, property.Value.Name, sqlDataType), tableName, constraints, columnDefinition, property.Value.Name, sqlDataType));
                 }
-
-                queryBuilder.Append(validation.IsNowNullable(columnDefinition, property.Value) ? transaction.RemoveNotNullFromColumn(tableName, property.Value.Name, sqlDataType) : string.Empty);
-                queryBuilder.Append(validation.IsNoLongerNullable(columnDefinition, property.Value) ? transaction.AddNotNullToColumn(tableName, property.Value.Name, sqlDataType) : string.Empty);
 
                 queryBuilder.Append(validation.IsNowUnique(constraints, $"UQ_{tableName.Schema}_{tableName.Table}_{property.Value.Name}", property.Value) ? transaction.AddUniqueToColumn(tableName, property.Value.Name) : string.Empty);
                 queryBuilder.Append(validation.IsNoLongerUnique(constraints, $"UQ_{tableName.Schema}_{tableName.Table}_{property.Value.Name}", property.Value) ? transaction.RemoveUniqueFromColumn(tableName, $"UQ_{tableName.Schema}_{tableName.Table}_{property.Value.Name}") : string.Empty);
 
-                queryBuilder.Append(validation.IsNowDefault(columnDefinition, property.Value) ? transaction.AddDefaultToColumn(tableName, property.Value.Name, model.Composition.DefaultAttributes[property.Value.Name].Value) : string.Empty);
-                queryBuilder.Append(validation.IsDefaultChanged(columnDefinition, property.Value) ? transaction.RenewDefaultInColumn(tableName, property.Value.Name, model.Composition.DefaultAttributes[property.Value.Name].Value) : string.Empty);
+                queryBuilder.Append(validation.IsNowDefault(columnDefinition, property.Value) ? transaction.AddDefaultToColumn(tableName, property.Value.Name, defaultAttribute.Value) : string.Empty);
+                queryBuilder.Append(validation.IsDefaultChanged(columnDefinition, property.Value) ? transaction.RenewDefaultInColumn(tableName, property.Value.Name, defaultAttribute.Value) : string.Empty);
                 queryBuilder.Append(validation.IsNoLongerDefault(columnDefinition, property.Value) ? transaction.RemoveDefaultFromColumn(tableName, $"DF_{tableName.Schema}_{tableName.Table}_{property.Value.Name}") : string.Empty);
+
+                queryBuilder.Append(validation.IsNowNullable(columnDefinition, property.Value) ? transaction.RemoveNotNullFromColumn(tableName, property.Value.Name, sqlDataType) : string.Empty);
+                queryBuilder.Append(validation.IsNoLongerNullable(columnDefinition, property.Value) ? transaction.AlterColumnWithConstraintValidation(transaction.AddNotNullToColumn(tableName, property.Value.Name, sqlDataType), tableName, constraints, columnDefinition, property.Value.Name, sqlDataType) : string.Empty);
 
                 queryBuilder.Append(validation.IsNowPrimaryKey(constraints, $"PK_{tableName.Schema}_{tableName.Table}_{property.Value.Name}", property.Value) ? transaction.AddPrimaryKeyToColumn(tableName, property.Value.Name) : string.Empty);
                 queryBuilder.Append(validation.IsNoLongerPrimaryKey(constraints, $"PK_{tableName.Schema}_{tableName.Table}_{property.Value.Name}", property.Value) ? transaction.RemovePrimaryKeyFromColumn(tableName, $"PK_{tableName.Schema}_{tableName.Table}_{property.Value.Name}") : string.Empty);
@@ -251,9 +245,11 @@ namespace OneData.DAO.MySql
                 queryBuilder.Append(validation.IsNoLongerForeignKey(constraints, $"FK_{tableName.Schema}_{tableName.Table}_{property.Value.Name}", property.Value) ? transaction.RemoveForeignKeyFromColumn(tableName, $"FK_{tableName.Schema}_{tableName.Table}_{property.Value.Name}") : string.Empty);
             }
 
-            foreach (KeyValuePair<string, ColumnDefinition> columnDetail in columnDetails.Where(q => !model.Composition.ManagedProperties.Keys.Contains(q.Key)))
+            foreach (KeyValuePair<string, ColumnDefinition> columnDefinition in columnDetails.Where(q => !model.Composition.ManagedProperties.Keys.Contains(q.Key)))
             {
-                queryBuilder.Append(transaction.RemoveColumn(tableName, columnDetail.Key));
+                queryBuilder.Append(validation.IsNoLongerDefault(columnDefinition.Value, null) ? $"{transaction.RemoveDefaultFromColumn(tableName, $"DF_{tableName.Schema}_{tableName.Table}_{columnDefinition.Key}")}|;|" : string.Empty);
+                queryBuilder.Append(validation.IsNoLongerUnique(constraints, $"UQ_{tableName.Schema}_{tableName.Table}_{columnDefinition.Key}", null) ? transaction.RemoveUniqueFromColumn(tableName, $"UQ_{tableName.Schema}_{tableName.Table}_{columnDefinition.Key}") : string.Empty);
+                queryBuilder.Append(transaction.RemoveColumn(tableName, columnDefinition.Key));
             }
 
             if (!string.IsNullOrWhiteSpace(queryBuilder.ToString()))

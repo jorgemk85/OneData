@@ -37,7 +37,7 @@ namespace OneData.DAO.MsSql
 
         public bool IsNowDefault(ColumnDefinition columnDefinition, PropertyInfo property)
         {
-            return string.IsNullOrWhiteSpace(columnDefinition.Column_Default) && property.GetCustomAttribute<Default>() != null;
+            return string.IsNullOrWhiteSpace(columnDefinition.Column_Default?.ToString()) && property.GetCustomAttribute<Default>() != null;
         }
 
         public bool IsNowPrimaryKey(Dictionary<string, ConstraintDefinition> constraints, string primaryKeyConstraintName, PropertyInfo property)
@@ -57,12 +57,12 @@ namespace OneData.DAO.MsSql
 
         public bool IsNoLongerUnique(Dictionary<string, ConstraintDefinition> constraints, string uniqueConstraintName, PropertyInfo property)
         {
-            return constraints.ContainsKey(uniqueConstraintName) && property.GetCustomAttribute<Unique>() == null;
+            return constraints.ContainsKey(uniqueConstraintName) && (property == null || property.GetCustomAttribute<Unique>() == null);
         }
 
         public bool IsNoLongerDefault(ColumnDefinition columnDefinition, PropertyInfo property)
         {
-            return !string.IsNullOrWhiteSpace(columnDefinition.Column_Default) && property.GetCustomAttribute<Default>() == null;
+            return !string.IsNullOrWhiteSpace(columnDefinition.Column_Default?.ToString()) && (property == null || property.GetCustomAttribute<Default>() == null);
         }
 
         public bool IsNoLongerPrimaryKey(Dictionary<string, ConstraintDefinition> constraints, string uniqueConstraintName, PropertyInfo property)
@@ -78,9 +78,9 @@ namespace OneData.DAO.MsSql
         public bool IsDefaultChanged(ColumnDefinition columnDefinition, PropertyInfo property)
         {
             Default defaultValueAttribute = property.GetCustomAttribute<Default>();
-            string currentDefaultValue = columnDefinition.Column_Default?.Replace("(", string.Empty).Replace(")", string.Empty).Replace("'", string.Empty);
+            string currentDefaultValue = columnDefinition.Column_Default?.ToString().Replace("(", string.Empty).Replace(")", string.Empty).Replace("'", string.Empty);
 
-            return !string.IsNullOrWhiteSpace(columnDefinition.Column_Default) ? defaultValueAttribute != null ? !currentDefaultValue.Equals($"{defaultValueAttribute.Value}") : false : false;
+            return !string.IsNullOrWhiteSpace(columnDefinition.Column_Default?.ToString()) ? defaultValueAttribute != null ? !currentDefaultValue.Equals($"{defaultValueAttribute.Value}") : false : false;
         }
 
         public bool IsNullable(PropertyInfo property)
@@ -93,9 +93,19 @@ namespace OneData.DAO.MsSql
             return model.Composition.UniqueKeyProperties.ContainsKey(propertyName);
         }
 
+        public bool IsUnique(Dictionary<string, ConstraintDefinition> constraints, string uniqueConstraintName)
+        {
+            return constraints.ContainsKey(uniqueConstraintName);
+        }
+
         public bool IsDefault(IManageable model, string propertyName)
         {
             return model.Composition.DefaultProperties.ContainsKey(propertyName);
+        }
+
+        public bool IsDefault(ColumnDefinition columnDefinition)
+        {
+            return !string.IsNullOrWhiteSpace(columnDefinition.Column_Default?.ToString());
         }
 
         public bool IsPrimaryKey(IManageable model, string propertyName)

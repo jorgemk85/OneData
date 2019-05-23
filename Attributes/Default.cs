@@ -2,12 +2,19 @@
 
 namespace OneData.Attributes
 {
+    /// <summary>
+    /// Use this attribute to set a default value in a column inside your table.
+    /// </summary>
     [AttributeUsage(AttributeTargets.Property)]
     public class Default : Attribute
     {
-        public string Value { get; set; }
+        public object Value { get; set; }
 
-        public Default(string value)
+        /// <summary>
+        /// Use this attribute to set a default value in a column inside your table.
+        /// </summary>
+        /// <param name="value">The value to be set as default when you perform an 'Insert' and send null in the property that this attribute is currently set.</param>
+        public Default(object value)
         {
             Value = value;
         }
