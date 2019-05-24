@@ -4,9 +4,9 @@
     <TargetFrameworks>net461;netstandard2.0</TargetFrameworks>
     <LangVersion>7.2</LangVersion>
     <Authors>Jorge Marcos Kawas</Authors>
-    <AssemblyVersion>0.1.54.63</AssemblyVersion>
-    <FileVersion>0.1.54.63</FileVersion>
-    <Version>0.1.54.63-alpha</Version>
+    <AssemblyVersion>0.1.55.4</AssemblyVersion>
+    <FileVersion>0.1.55.4</FileVersion>
+    <Version>0.1.55.4-alpha</Version>
     <AssemblyName>OneData</AssemblyName>
     <RootNamespace>OneData</RootNamespace>
     <PackageLicenseUrl>https://github.com/jorgemk85/OneData/blob/development/LICENSE</PackageLicenseUrl>
@@ -19,9 +19,9 @@
     <PackageTags>orm dataaccess utility database access serialization deserialization</PackageTags>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-    <PackageReleaseNotes>Default attribute is fully operational.
+    <PackageReleaseNotes>Removed AutoAlter, AutoCreate and Consolidation settings from the Manager class and thus, from .config files. OneData now uses IsReactiveModeEnabled and IsPreventiveModeEnabled.
 
-Several bug fixes related to structural changes inside a class.</PackageReleaseNotes>
+This changes are reflected inside the README.</PackageReleaseNotes>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net461|AnyCPU'">

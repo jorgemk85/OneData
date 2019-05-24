@@ -19,18 +19,15 @@ namespace OneData.DAO
         public static string DefaultSchema { get; internal set; }
         public static string DefaultConnection { get; internal set; }
         public static ConnectionTypes ConnectionType { get; internal set; }
-        public static bool AutoCreateStoredProcedures { get; internal set; }
-        public static bool AutoCreateTables { get; internal set; }
-        public static bool AutoAlterStoredProcedures { get; internal set; }
-        public static bool AutoAlterTables { get; internal set; }
         public static bool EnableLogInDatabase { get; internal set; }
         public static bool EnableLogInFile { get; internal set; }
-        public static bool ConstantTableConsolidation { get; internal set; }
         public static string InsertSuffix { get; internal set; }
         public static string UpdateSuffix { get; internal set; }
         public static string DeleteSuffix { get; internal set; }
         public static string StoredProcedurePrefix { get; internal set; }
         public static string TablePrefix { get; internal set; }
+        public static bool IsReactiveModeEnabled { get; internal set; }
+        public static bool IsPreventiveModeEnabled { get; internal set; }
         public static IManageable Identity { get; set; }
 
         static Manager()
@@ -44,13 +41,10 @@ namespace OneData.DAO
             DefaultConnection = ConsolidationTools.GetValueFromConfiguration("DefaultConnection", ConfigurationTypes.AppSetting);
             DefaultSchema = ConsolidationTools.GetValueFromConfiguration("DefaultSchema", ConfigurationTypes.AppSetting);
             ConnectionType = (ConnectionTypes)Enum.Parse(typeof(ConnectionTypes), ConsolidationTools.GetValueFromConfiguration("ConnectionType", ConfigurationTypes.AppSetting));
-            AutoCreateStoredProcedures = bool.Parse(ConsolidationTools.GetValueFromConfiguration("AutoCreateStoredProcedures", ConfigurationTypes.AppSetting));
-            AutoCreateTables = bool.Parse(ConsolidationTools.GetValueFromConfiguration("AutoCreateTables", ConfigurationTypes.AppSetting));
             EnableLogInDatabase = bool.Parse(ConsolidationTools.GetValueFromConfiguration("EnableLogInDatabase", ConfigurationTypes.AppSetting));
             EnableLogInFile = bool.Parse(ConsolidationTools.GetValueFromConfiguration("EnableLogInFile", ConfigurationTypes.AppSetting));
-            ConstantTableConsolidation = bool.Parse(ConsolidationTools.GetValueFromConfiguration("ConstantTableConsolidation", ConfigurationTypes.AppSetting));
-            AutoAlterStoredProcedures = bool.Parse(ConsolidationTools.GetValueFromConfiguration("AutoAlterStoredProcedures", ConfigurationTypes.AppSetting));
-            AutoAlterTables = bool.Parse(ConsolidationTools.GetValueFromConfiguration("AutoAlterTables", ConfigurationTypes.AppSetting));
+            IsReactiveModeEnabled = bool.Parse(ConsolidationTools.GetValueFromConfiguration("IsReactiveModeEnabled", ConfigurationTypes.AppSetting));
+            IsPreventiveModeEnabled = bool.Parse(ConsolidationTools.GetValueFromConfiguration("IsPreventiveModeEnabled", ConfigurationTypes.AppSetting));
             Logger.Info("Got Manager configuration settings.");
         }
 

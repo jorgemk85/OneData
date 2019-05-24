@@ -8,6 +8,7 @@ So, you are looking for a VERY easy, Code-First solution to access your data ins
 
 ## Features
 * Very fast!
+* Reactive and Preventive modes.
 * Ease of relational data access.
 * Automatic class/model binding.
 * In-RAM per class/model cache.
@@ -96,14 +97,11 @@ Please add them ALL to your project:
     <add key="DeleteSuffix" value="<the suffix to use in the DELETE SPs>" />
     <add key="StoredProcedurePrefix" value="<the prefix for all the SPs>" />
     <add key="TablePrefix" value="<the prefix for all the tables>" />
-    <add key="AutoCreateTables" value="<true or false>" />
-    <add key="AutoCreateStoredProcedures" value="<true or false>" />
-    <add key="AutoAlterStoredProcedures" value="<true or false>" />
-    <add key="AutoAlterTables" value="<true or false>" />
     <add key="EnableLogInDatabase" value="<true or false>" />
     <add key="EnableLogInFile" value="<true or false>" />
     <add key="DefaultSchema" value="<name of your default schema>" />
-    <add key="ConstantTableConsolidation" value="<true or false>" />
+    <add key="IsReactiveModeEnabled" value="<true or false>" />
+	<add key="IsPreventiveModeEnabled" value="<true or false>" />
   </appSettings>
 ```
 ### .Net Standard 2.0 and Later / .NET Core 2.0 and Later
@@ -129,14 +127,11 @@ Please add them ALL to your project:
     "DeleteSuffix": "<the suffix to use in the DELETE SPs>",
     "StoredProcedurePrefix": "<the prefix for all the SPs>",
     "TablePrefix": "<the prefix for all the tables>",
-    "AutoCreateTables": "<true or false>",
-    "AutoCreateStoredProcedures": "<true or false>",
-    "AutoAlterStoredProcedures": "<true or false>",
-    "AutoAlterTables": "<true or false>",
     "EnableLogInDatabase": "<true or false>",
     "EnableLogInFile": "<true or false>",
     "DefaultSchema": "<name of your default schema>",
-    "ConstantTableConsolidation": "<true or false>"
+	"IsReactiveModeEnabled": "<true or false>",
+    "IsPreventiveModeEnabled": "<true or false>"
   }
 ```
 
@@ -183,15 +178,13 @@ The following table is a comprehensive list of available configurations with the
 |`InsertSuffix`               |Can be Blank.                            |Literally the suffix to use with the Insert SPs.|
 |`UpdateSuffix`               |Can be Blank.                            |Literally the suffix to use with the Update SPs.|
 |`DeleteSuffix`               |Can be Blank.                            |Literally the suffix to use with the Delete SPs.|
-|`StoredProcedurePrefix`      |Can be Blank.                            |Prefix for every SP.|
-|`AutoCreateTables`           |true or false                            |If true, OneData will create a required table inside the database if it doesn't exist.|
-|`AutoCreateStoredProcedures` |true or false                            |If true, OneData will create a required stored procedure if it doesn't exist.|
-|`AutoAlterStoredProcedures`  |true or false                            |If true, OneData will alter a required stored procedure if it's not in sync with the class/model.|
-|`AutoAlterTables`            |true or false                            |If true, OneData will alter a required table if it's not in sync with the class/model.|
+|`StoredProcedurePrefix`      |Can be Blank.                            |Prefix for every Stored Procedure.|
+|`TablePrefix`				  |Can be Blank.                            |Prefix for every Table.|
 |`EnableLogInDatabase`        |true or false                            |Choose to enable logging inside the database.|
 |`EnableLogInFile`			  |true or false                            |Choose to enable logging on disk.|
 |`DefaultSchema`              |For MySQL it's the database name.        |Type the name of your default schema/database.|
-|`ConstantTableConsolidation` |true or false.							|Heuristic approach to sync everything in your database based on your classes/models. Caution, it's a bit slow and is not recomended for production.|
+|`IsReactiveModeEnabled`      |true or false.							|OneData will react according to the problem that is detected and will fix it. No preventive actions are taken.|
+|`IsPreventiveModeEnabled`    |true or false.							|Heuristic approach to sync everything in your database based on your classes/models, preventing problems before they appear.|
 
 ### Attributes:
 Attributes in OneData are used to configure the classes/models and properties.
