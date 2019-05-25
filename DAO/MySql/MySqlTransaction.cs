@@ -35,6 +35,11 @@ namespace OneData.DAO.MySql
             return $"ALTER TABLE `{tableName.Schema}`.`{tableName.Table}` MODIFY `{columnName}` {sqlDataType} NOT NULL; \n";
         }
 
+        public string AddNotNullToColumnWithUpdateData(FullyQualifiedTableName tableName, string propertyName, string sqlDataType, Type propertyType)
+        {
+            return $"{UpdateColumnValueToDefaultWhereNull(tableName, propertyName, propertyType)}|;|{AddNotNullToColumn(tableName, propertyName, sqlDataType)}";
+        }
+
         public string AlterColumnWithConstraintValidation(string alterQuery, FullyQualifiedTableName tableName, Dictionary<string, ConstraintDefinition> constraints, ColumnDefinition columnDefinition, string propertyName, string sqlDataType)
         {
             MySqlValidation validation = new MySqlValidation();
@@ -118,9 +123,9 @@ namespace OneData.DAO.MySql
             return $"{RemoveDefaultFromColumn(tableName, $"DF_{tableName.Schema}_{tableName.Table}_{columnName}")}{AddDefaultToColumn(tableName, columnName, defaultValue)}";
         }
 
-        public string UpdateColumnValueToDefault(FullyQualifiedTableName tableName, string columnName, Type columnType)
+        public string UpdateColumnValueToDefaultWhereNull(FullyQualifiedTableName tableName, string columnName, Type columnType)
         {
-            return $"UPDATE [{tableName.Schema}].[{tableName.Table}] SET [{columnName}] = {GetDefault(columnType)}; \n";
+            return $"UPDATE `{tableName.Schema}`.`{tableName.Table}` SET `{columnName}` = {GetDefault(columnType)} WHERE `{columnName}` IS NULL; \n";
         }
 
         private object GetDefault(Type type)

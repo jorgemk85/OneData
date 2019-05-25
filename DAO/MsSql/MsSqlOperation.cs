@@ -109,7 +109,7 @@ namespace OneData.DAO.MsSql
             }
             catch (SqlException sqlException) when (sqlException.Number == ERR_STORED_PROCEDURE_NOT_FOUND)
             {
-                if (Manager.IsReactiveModeEnabled && !throwIfError)
+                if ((Manager.IsPreventiveModeEnabled || Manager.IsReactiveModeEnabled) && !throwIfError)
                 {
                     Logger.Warn($"Stored Procedure for {transactionType.ToString()} not found. Creating...");
                     ExecuteScalar(GetTransactionTextForProcedure<T>(transactionType, false), queryOptions.ConnectionToUse, false);
@@ -121,7 +121,7 @@ namespace OneData.DAO.MsSql
             }
             catch (SqlException sqlException) when (sqlException.Number == ERR_OBJECT_NOT_FOUND)
             {
-                if (Manager.IsReactiveModeEnabled && !throwIfError)
+                if ((Manager.IsPreventiveModeEnabled || Manager.IsReactiveModeEnabled) && !throwIfError)
                 {
                     Logger.Warn($"Table {Cope<T>.ModelComposition.TableName} not found. Creating...");
                     PerformFullTableCheck(new T(), queryOptions.ConnectionToUse);
@@ -138,7 +138,7 @@ namespace OneData.DAO.MsSql
                                                     sqlException.Number == ERR_NOT_A_PARAMETER_FOR_PROCEDURE ||
                                                     sqlException.Number == ERR_OPERAND_TYPE_CLASH)
             {
-                if (Manager.IsReactiveModeEnabled && !throwIfError)
+                if ((Manager.IsPreventiveModeEnabled  || Manager.IsReactiveModeEnabled) && !throwIfError)
                 {
                     Logger.Warn($"Incorrect number of arguments or is identity explicit value related to the {transactionType.ToString()} stored procedure. Modifying...");
                     PerformFullTableCheck(new T(), queryOptions.ConnectionToUse);

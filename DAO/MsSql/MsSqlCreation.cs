@@ -250,7 +250,7 @@ namespace OneData.DAO.MsSql
             StringBuilder queryBuilder = new StringBuilder();
             ITransactionable transaction = new MsSqlTransaction();
             IValidatable validation = new MsSqlValidation();
-            
+
             FullyQualifiedTableName tableName = new FullyQualifiedTableName(model.Composition.Schema, $"{Manager.TablePrefix}{model.Composition.TableName}");
 
             foreach (KeyValuePair<string, PropertyInfo> property in model.Composition.ManagedProperties)
@@ -263,7 +263,7 @@ namespace OneData.DAO.MsSql
                 {
                     queryBuilder.Append($"{transaction.AddColumn(tableName, property.Value.Name, sqlDataType)}|;|");
                     columnDefinition = new ColumnDefinition();
-                    queryBuilder.Append(validation.IsNowNullable(columnDefinition, property.Value) ? string.Empty : transaction.UpdateColumnValueToDefault(tableName, property.Value.Name, property.Value.PropertyType));
+                    queryBuilder.Append(validation.IsNowNullable(columnDefinition, property.Value) ? string.Empty : transaction.UpdateColumnValueToDefaultWhereNull(tableName, property.Value.Name, property.Value.PropertyType));
                 }
                 if (validation.IsColumnDataTypeChanged(columnDefinition, sqlDataType))
                 {
@@ -271,7 +271,7 @@ namespace OneData.DAO.MsSql
                 }
 
                 queryBuilder.Append(validation.IsNowNullable(columnDefinition, property.Value) ? transaction.RemoveNotNullFromColumn(tableName, property.Value.Name, sqlDataType) : string.Empty);
-                queryBuilder.Append(validation.IsNoLongerNullable(columnDefinition, property.Value) ? transaction.AlterColumnWithConstraintValidation(transaction.AddNotNullToColumn(tableName, property.Value.Name, sqlDataType), tableName, constraints, columnDefinition, property.Value.Name, sqlDataType) : string.Empty);
+                queryBuilder.Append(validation.IsNoLongerNullable(columnDefinition, property.Value) ? transaction.AlterColumnWithConstraintValidation(transaction.AddNotNullToColumnWithUpdateData(tableName, property.Value.Name, sqlDataType, property.Value.PropertyType), tableName, constraints, columnDefinition, property.Value.Name, sqlDataType) : string.Empty);
 
                 queryBuilder.Append(validation.IsNowUnique(constraints, $"UQ_{tableName.Schema}_{tableName.Table}_{property.Value.Name}", property.Value) ? transaction.AddUniqueToColumn(tableName, property.Value.Name) : string.Empty);
                 queryBuilder.Append(validation.IsNoLongerUnique(constraints, $"UQ_{tableName.Schema}_{tableName.Table}_{property.Value.Name}", property.Value) ? transaction.RemoveUniqueFromColumn(tableName, $"UQ_{tableName.Schema}_{tableName.Table}_{property.Value.Name}") : string.Empty);

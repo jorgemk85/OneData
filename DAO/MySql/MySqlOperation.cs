@@ -106,7 +106,7 @@ namespace OneData.DAO.MySql
             }
             catch (MySqlException mySqlException) when (mySqlException.Number == ERR_STORED_PROCEDURE_NOT_FOUND)
             {
-                if (Manager.IsReactiveModeEnabled && !throwIfError)
+                if ((Manager.IsPreventiveModeEnabled || Manager.IsReactiveModeEnabled) && !throwIfError)
                 {
                     Logger.Warn($"Stored Procedure for {transactionType.ToString()} not found. Creating...");
                     ExecuteScalar(GetTransactionTextForProcedure<T>(transactionType, false), queryOptions.ConnectionToUse, false);
@@ -118,7 +118,7 @@ namespace OneData.DAO.MySql
             }
             catch (MySqlException mySqlException) when (mySqlException.Number == ERR_TABLE_NOT_FOUND)
             {
-                if (Manager.IsReactiveModeEnabled && !throwIfError)
+                if ((Manager.IsPreventiveModeEnabled || Manager.IsReactiveModeEnabled) && !throwIfError)
                 {
                     Logger.Warn($"Table {Cope<T>.ModelComposition.TableName} not found. Creating...");
                     PerformFullTableCheck(new T(), queryOptions.ConnectionToUse);
@@ -130,7 +130,7 @@ namespace OneData.DAO.MySql
             }
             catch (MySqlException mySqlException) when (mySqlException.Number == ERR_INCORRECT_NUMBER_OF_ARGUMENTS || mySqlException.Number == ERR_UNKOWN_COLUMN || mySqlException.Number == ERR_UNKOWN_COLUMN || mySqlException.Number == ERR_NO_DEFAULT_VALUE_IN_FIELD)
             {
-                if (Manager.IsReactiveModeEnabled && !throwIfError)
+                if ((Manager.IsPreventiveModeEnabled || Manager.IsReactiveModeEnabled) && !throwIfError)
                 {
                     PerformFullTableCheck(new T(), queryOptions.ConnectionToUse);
                     ExecuteScalar(GetTransactionTextForProcedure<T>(transactionType, true), queryOptions.ConnectionToUse, false);

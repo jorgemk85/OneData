@@ -180,7 +180,7 @@ namespace OneData.DAO
 
             return builder.ToString();
         }
-
+        
         protected string GetFriendlyTransactionSuffix(TransactionTypes transactionType)
         {
             switch (transactionType)

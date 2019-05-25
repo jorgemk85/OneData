@@ -27,8 +27,9 @@ namespace OneData.Interfaces
         string RemoveDefaultFromColumn(FullyQualifiedTableName tableName, string defaultConstraintName);
 
         string RenewDefaultInColumn(FullyQualifiedTableName tableName, string columnName, object defaultValue);
-        string UpdateColumnValueToDefault(FullyQualifiedTableName tableName, string columnName, Type columnType);
+        string UpdateColumnValueToDefaultWhereNull(FullyQualifiedTableName tableName, string columnName, Type columnType);
 
         string AlterColumnWithConstraintValidation(string alterQuery, FullyQualifiedTableName tableName, Dictionary<string, ConstraintDefinition> constraints, ColumnDefinition columnDefinition, string propertyName, string sqlDataType);
+        string AddNotNullToColumnWithUpdateData(FullyQualifiedTableName tableName, string propertyName, string sqlDataType, Type propertyType);
     }
 }
