@@ -101,7 +101,7 @@ Please add them ALL to your project:
     <add key="EnableLogInFile" value="<true or false>" />
     <add key="DefaultSchema" value="<name of your default schema>" />
     <add key="IsReactiveModeEnabled" value="<true or false>" />
-	<add key="IsPreventiveModeEnabled" value="<true or false>" />
+    <add key="IsPreventiveModeEnabled" value="<true or false>" />
   </appSettings>
 ```
 ### .Net Standard 2.0 and Later / .NET Core 2.0 and Later
@@ -130,7 +130,7 @@ Please add them ALL to your project:
     "EnableLogInDatabase": "<true or false>",
     "EnableLogInFile": "<true or false>",
     "DefaultSchema": "<name of your default schema>",
-	"IsReactiveModeEnabled": "<true or false>",
+    "IsReactiveModeEnabled": "<true or false>",
     "IsPreventiveModeEnabled": "<true or false>"
   }
 ```
@@ -386,10 +386,10 @@ public class User : Cope<User>, IManageable
     [DateModified]
     public DateTime DateModified { get; set; }
 
-	public string Name { get; set; }
-	public string Lastname { get; set; }
-	public string Username { get; set; }
-	public string Password { get; set; }
+    public string Name { get; set; }
+    public string Lastname { get; set; }
+    public string Username { get; set; }
+    public string Password { get; set; }
 }
 ```
 
@@ -405,12 +405,12 @@ public class Log : Cope<Log>, IManageable
     [DateModified]
     public DateTime DateModified { get; set; }
 
-	[ForeignKey(typeof(User))]
+    [ForeignKey(typeof(User))]
     public Guid UserId { get; set; }
     public string Transaction { get; set; }
 }
 ```
-And just like that, our classes/models are related! By default, OneData configures the relationship `ON DELETE` to `NO ACTION`, but you can configure this with an overload on the attribute. Also, the `ON UPDATE` is always set to `NO ACTION` at this point.
+And just like that, our classes/models are related! By default, OneData configures the relationship `ON DELETE` and `ON UPDATE` to `NO ACTION`, but you can configure this with the constructor on the attribute.
 
 The following should be used if you need to pull data from another table (related or not) into our class/model for ease of use (note the new property `UserName` and it's attribute).
 ```c#
@@ -424,11 +424,11 @@ public class Log : Cope<Log>, IManageable
     [DateModified]
     public DateTime DateModified { get; set; }
 
-	[ForeignKey(typeof(User))]
+    [ForeignKey(typeof(User))]
     public Guid UserId { get; set; }
     public string Transaction { get; set; }
-	[ForeignData(typeof(User))]
-	public string UserName { get; set; }
+    [ForeignData(typeof(User))]
+    public string UserName { get; set; }
 }
 ```
 With this configuration, OneData will look for the `Name` property and get it's value inside our `User` class/model and get data based on the log's `UserId`.

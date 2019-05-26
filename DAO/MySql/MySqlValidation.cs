@@ -83,6 +83,16 @@ namespace OneData.DAO.MySql
             return !string.IsNullOrWhiteSpace(columnDefinition.Column_Default?.ToString()) ? defaultValueAttribute != null ? !currentDefaultValue.Equals($"{defaultValueAttribute.Value}") : false : false;
         }
 
+        public bool IsForeignKeyRulesChanged(Dictionary<string, ConstraintDefinition> constraints, string foreignKeyName, ForeignKey foreignKeyAttribute)
+        {
+            if (constraints.TryGetValue(foreignKeyName, out ConstraintDefinition constraintDefinition) && foreignKeyAttribute != null)
+            {
+                return constraintDefinition.Update_Rule != foreignKeyAttribute.OnUpdate.ToString().Replace("_", " ") || constraintDefinition.Delete_Rule != foreignKeyAttribute.OnDelete.ToString().Replace("_", " ");
+            }
+
+            return false;
+        }
+
         public bool IsNullable(PropertyInfo property)
         {
             return Nullable.GetUnderlyingType(property.PropertyType) != null || property.GetCustomAttribute<AllowNull>() != null;

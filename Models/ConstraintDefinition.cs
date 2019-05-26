@@ -14,5 +14,7 @@ namespace OneData.Models
         public string Constraint_Type { get; set; }
         public string Table_Name { get; set; }
         public string Column_Name { get; set; }
+        public string Update_Rule { get; set; }
+        public string Delete_Rule { get; set; }
     }
 }

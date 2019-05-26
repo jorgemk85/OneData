@@ -27,7 +27,7 @@ namespace OneData.DAO.MsSql
             IManageable foreignModel = (IManageable)Activator.CreateInstance(foreignAttribute.Model);
             FullyQualifiedTableName foreignTableName = new FullyQualifiedTableName(foreignModel.Composition.Schema, $"{Manager.TablePrefix}{foreignModel.Composition.TableName}");
 
-            return $"ALTER TABLE [{tableName.Schema}].[{tableName.Table}] ADD CONSTRAINT FK_{tableName.Schema}_{tableName.Table}_{property.Name} FOREIGN KEY([{property.Name}]) REFERENCES [{foreignTableName.Schema}].[{foreignTableName.Table}]([{foreignModel.Composition.PrimaryKeyProperty.Name}]); \n";
+            return $"ALTER TABLE [{tableName.Schema}].[{tableName.Table}] ADD CONSTRAINT FK_{tableName.Schema}_{tableName.Table}_{property.Name} FOREIGN KEY([{property.Name}]) REFERENCES [{foreignTableName.Schema}].[{foreignTableName.Table}]([{foreignModel.Composition.PrimaryKeyProperty.Name}]) ON DELETE {foreignAttribute.OnDelete.ToString().Replace("_", " ")} ON UPDATE {foreignAttribute.OnUpdate.ToString().Replace("_", " ")}; \n";
         }
 
         public string AddNotNullToColumn(FullyQualifiedTableName tableName, string columnName, string sqlDataType)
@@ -122,6 +122,11 @@ namespace OneData.DAO.MsSql
         public string RenewDefaultInColumn(FullyQualifiedTableName tableName, string columnName, object defaultValue)
         {
             return $"{RemoveDefaultFromColumn(tableName, $"DF_{tableName.Schema}_{tableName.Table}_{columnName}")}{AddDefaultToColumn(tableName, columnName, defaultValue)}";
+        }
+
+        public string ChangeForeignKeyRules(FullyQualifiedTableName tableName, PropertyInfo property)
+        { 
+            return $"{RemoveForeignKeyFromColumn(tableName, $"FK_{tableName.Schema}_{tableName.Table}_{property.Name}")}|;|{AddForeignKeyToColumn(tableName, property)}";
         }
 
         public string UpdateColumnValueToDefaultWhereNull(FullyQualifiedTableName tableName, string columnName, Type columnType)

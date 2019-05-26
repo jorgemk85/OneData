@@ -228,6 +228,7 @@ namespace OneData.DAO.MySql
                 {
                     queryBuilder.Append(transaction.AlterColumnWithConstraintValidation(transaction.ChangeColumnDataType(tableName, property.Value.Name, sqlDataType), tableName, constraints, columnDefinition, property.Value.Name, sqlDataType));
                 }
+                queryBuilder.Append(validation.IsForeignKeyRulesChanged(constraints, $"FK_{tableName.Schema}_{tableName.Table}_{property.Value.Name}", property.Value.GetCustomAttribute<ForeignKey>()) ? transaction.ChangeForeignKeyRules(tableName, property.Value) : string.Empty);
 
                 queryBuilder.Append(validation.IsNowNullable(columnDefinition, property.Value) ? transaction.RemoveNotNullFromColumn(tableName, property.Value.Name, sqlDataType) : string.Empty);
                 queryBuilder.Append(validation.IsNoLongerNullable(columnDefinition, property.Value) ? transaction.AlterColumnWithConstraintValidation(transaction.AddNotNullToColumnWithUpdateData(tableName, property.Value.Name, sqlDataType, property.Value.PropertyType), tableName, constraints, columnDefinition, property.Value.Name, sqlDataType) : string.Empty);

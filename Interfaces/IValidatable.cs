@@ -1,4 +1,5 @@
-﻿using OneData.Models;
+﻿using OneData.Attributes;
+using OneData.Models;
 using System.Collections.Generic;
 using System.Reflection;
 
@@ -10,6 +11,7 @@ namespace OneData.Interfaces
         bool IsColumnDataTypeChanged(ColumnDefinition columnDefinition, string sqlDataType);
         bool IsColumnRemoved(Dictionary<string, PropertyInfo> properties, string columnName);
         bool IsDefaultChanged(ColumnDefinition columnDefinition, PropertyInfo property);
+        bool IsForeignKeyRulesChanged(Dictionary<string, ConstraintDefinition> constraints, string foreignKeyName, ForeignKey foreignKeyAttribute);
 
         bool IsNullable(PropertyInfo property);
         bool IsUnique(IManageable model, string propertyName);

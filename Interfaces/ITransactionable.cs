@@ -28,6 +28,7 @@ namespace OneData.Interfaces
 
         string RenewDefaultInColumn(FullyQualifiedTableName tableName, string columnName, object defaultValue);
         string UpdateColumnValueToDefaultWhereNull(FullyQualifiedTableName tableName, string columnName, Type columnType);
+        string ChangeForeignKeyRules(FullyQualifiedTableName tableName, PropertyInfo property);
 
         string AlterColumnWithConstraintValidation(string alterQuery, FullyQualifiedTableName tableName, Dictionary<string, ConstraintDefinition> constraints, ColumnDefinition columnDefinition, string propertyName, string sqlDataType);
         string AddNotNullToColumnWithUpdateData(FullyQualifiedTableName tableName, string propertyName, string sqlDataType, Type propertyType);
