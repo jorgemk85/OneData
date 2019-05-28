@@ -9,6 +9,7 @@ So, you are looking for a VERY easy, Code-First solution to access your data ins
 ## Features
 * Very fast!
 * Reactive and Preventive modes.
+* IL to Get and Set values within properties (~300% increased performance against Reflection).
 * Ease of relational data access.
 * Automatic class/model binding.
 * In-RAM per class/model cache.
