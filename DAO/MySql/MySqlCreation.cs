@@ -17,7 +17,7 @@ namespace OneData.DAO.MySql
         {
 
             // Aqui se colocan los parametros segun las propiedades del objeto 
-            foreach (KeyValuePair<string, PropertyInfo> property in Cope<T>.ModelComposition.FilteredProperties)
+            foreach (KeyValuePair<string, OneProperty> property in Cope<T>.ModelComposition.FilteredProperties)
             {
                 // Si la propiedad actual es la primaria y es auto increment y no se debe considerar para estos parametros, entonces se salta a la sig propiedad.
                 // Esto significa que la propiedad primaria es Identity o Auto Increment y no se debe de mandar como parametro en un Insert.
@@ -100,7 +100,7 @@ namespace OneData.DAO.MySql
             queryBuilder.AppendFormat("INSERT INTO `{0}{1}` (\n", Manager.TablePrefix, Cope<T>.ModelComposition.TableName);
 
             // Seccion para especificar a que columnas se va a insertar y sus valores.
-            foreach (KeyValuePair<string, PropertyInfo> property in Cope<T>.ModelComposition.ManagedProperties)
+            foreach (KeyValuePair<string, OneProperty> property in Cope<T>.ModelComposition.ManagedProperties)
             {
                 if (property.Value.Equals(Cope<T>.ModelComposition.PrimaryKeyProperty) && Cope<T>.ModelComposition.PrimaryKeyAttribute.IsAutoIncrement)
                 {
@@ -109,7 +109,7 @@ namespace OneData.DAO.MySql
                 else
                 {
                     insertsBuilder.AppendFormat("    `{0}`,\n", property.Value.Name);
-                    if (Cope<T>.ModelComposition.AutoProperties.TryGetValue(property.Value.Name, out PropertyInfo autoProperty))
+                    if (Cope<T>.ModelComposition.AutoProperties.TryGetValue(property.Value.Name, out OneProperty autoProperty))
                     {
                         valuesBuilder.AppendFormat("    {0},\n", GetAutoPropertyValue(Cope<T>.ModelComposition.AutoPropertyAttributes[property.Value.Name].AutoPropertyType));
                     }
@@ -156,13 +156,13 @@ namespace OneData.DAO.MySql
             queryBuilder.Append("SET\n");
 
             // Se especifica el parametro que va en x columna.
-            foreach (KeyValuePair<string, PropertyInfo> property in Cope<T>.ModelComposition.ManagedProperties)
+            foreach (KeyValuePair<string, OneProperty> property in Cope<T>.ModelComposition.ManagedProperties)
             {
                 if (property.Value.Equals(Cope<T>.ModelComposition.PrimaryKeyProperty) || property.Value.Name.Equals(Cope<T>.ModelComposition.DateCreatedProperty.Name))
                 {
                     continue;
                 }
-                if (Cope<T>.ModelComposition.AutoProperties.TryGetValue(property.Value.Name, out PropertyInfo autoProperty))
+                if (Cope<T>.ModelComposition.AutoProperties.TryGetValue(property.Value.Name, out OneProperty autoProperty))
                 {
                     queryBuilder.AppendFormat("    {0} = {1},\n", property.Value.Name, GetAutoPropertyValue(Cope<T>.ModelComposition.AutoPropertyAttributes[property.Value.Name].AutoPropertyType));
                 }
@@ -211,7 +211,7 @@ namespace OneData.DAO.MySql
             ITransactionable transaction = new MySqlTransaction();
             IValidatable validation = new MySqlValidation();
 
-            foreach (KeyValuePair<string, PropertyInfo> property in model.Composition.ManagedProperties)
+            foreach (KeyValuePair<string, OneProperty> property in model.Composition.ManagedProperties)
             {
                 columnDetails.TryGetValue(property.Value.Name, out ColumnDefinition columnDefinition);
                 string sqlDataType = GetSqlDataType(property.Value.PropertyType, model.Composition.UniqueKeyProperties.ContainsKey(property.Value.Name), GetDataLengthFromProperty(model, property.Key));
@@ -227,7 +227,7 @@ namespace OneData.DAO.MySql
                 {
                     queryBuilder.Append(transaction.AlterColumnWithConstraintValidation(transaction.ChangeColumnDataType(tableName, property.Value.Name, sqlDataType), tableName, constraints, columnDefinition, property.Value.Name, sqlDataType));
                 }
-                queryBuilder.Append(validation.IsForeignKeyRulesChanged(constraints, $"FK_{tableName.Schema}_{tableName.Table}_{property.Value.Name}", property.Value.GetCustomAttribute<ForeignKey>()) ? transaction.ChangeForeignKeyRules(tableName, property.Value) : string.Empty);
+                queryBuilder.Append(validation.IsForeignKeyRulesChanged(constraints, $"FK_{tableName.Schema}_{tableName.Table}_{property.Value.Name}", property.Value.ForeignKeyAttribute) ? transaction.ChangeForeignKeyRules(tableName, property.Value) : string.Empty);
 
                 queryBuilder.Append(validation.IsNowNullable(columnDefinition, property.Value) ? transaction.RemoveNotNullFromColumn(tableName, property.Value.Name, sqlDataType) : string.Empty);
                 queryBuilder.Append(validation.IsNoLongerNullable(columnDefinition, property.Value) ? transaction.AlterColumnWithConstraintValidation(transaction.AddNotNullToColumnWithUpdateData(tableName, property.Value.Name, sqlDataType, property.Value.PropertyType), tableName, constraints, columnDefinition, property.Value.Name, sqlDataType) : string.Empty);
@@ -265,7 +265,7 @@ namespace OneData.DAO.MySql
             StringBuilder queryBuilder = new StringBuilder();
             ITransactionable transaction = new MySqlTransaction();
 
-            foreach (KeyValuePair<string, PropertyInfo> property in model.Composition.ForeignKeyProperties)
+            foreach (KeyValuePair<string, OneProperty> property in model.Composition.ForeignKeyProperties)
             {
                 if (constraints == null)
                 {
@@ -440,7 +440,7 @@ namespace OneData.DAO.MySql
             queryBuilder.Append(transaction.AddTable(tableName, model.Composition.PrimaryKeyProperty.Name, GetSqlDataType(model.Composition.PrimaryKeyProperty.PropertyType, false, 0), model.Composition.PrimaryKeyAttribute.IsAutoIncrement));
 
             // Aqui se colocan las propiedades del objeto. Una por columna por su puesto.
-            foreach (KeyValuePair<string, PropertyInfo> property in model.Composition.ManagedProperties.Where(q => q.Key != model.Composition.PrimaryKeyProperty.Name))
+            foreach (KeyValuePair<string, OneProperty> property in model.Composition.ManagedProperties.Where(q => q.Key != model.Composition.PrimaryKeyProperty.Name))
             {
                 string sqlDataType = GetSqlDataType(property.Value.PropertyType, model.Composition.UniqueKeyProperties.ContainsKey(property.Value.Name), GetDataLengthFromProperty(model, property.Key));
 

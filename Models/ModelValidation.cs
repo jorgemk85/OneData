@@ -1,4 +1,5 @@
-﻿using OneData.Attributes;
+﻿using FastMember;
+using OneData.Attributes;
 using OneData.DAO;
 using OneData.Enums;
 using OneData.Exceptions;
@@ -10,10 +11,38 @@ namespace OneData.Models
     internal sealed class ModelValidation
     {
         private readonly ModelComposition _modelComposition;
+        private readonly TypeAccessor _accessor;
 
-        public ModelValidation(ModelComposition modelComposition)
+        public ModelValidation(ModelComposition modelComposition, TypeAccessor accessor)
         {
             _modelComposition = modelComposition;
+            _accessor = accessor;
+        }
+
+        private OneProperty ConfigureOneProperty(PropertyInfo property)
+        {
+            HeaderName headerName = property.GetCustomAttribute<HeaderName>();
+            OneProperty oneProperty = new OneProperty()
+            {
+                Name = headerName == null ? property.Name : headerName.Name,
+                Accesor = _accessor,
+                PropertyName = property.Name,
+                PropertyType = property.PropertyType, 
+                ReflectedType = property.ReflectedType,
+                AllowNullAttribute = property.GetCustomAttribute<AllowNull>(),
+                DataLengthAttribute = property.GetCustomAttribute<DataLength>(),
+                AutoPropertyAttribute = property.GetCustomAttribute<AutoProperty>(),
+                DateCreatedAttibute = property.GetCustomAttribute<DateCreated>(),
+                DateModifiedAttribute = property.GetCustomAttribute<DateModified>(),
+                DefaultAttribute = property.GetCustomAttribute<Default>(),
+                ForeignDataAttribute = property.GetCustomAttribute<ForeignData>(),
+                ForeignKeyAttribute = property.GetCustomAttribute<ForeignKey>(),
+                PrimaryKeyAttribute = property.GetCustomAttribute<PrimaryKey>(),
+                UniqueAttribute = property.GetCustomAttribute<Unique>(),
+                UnmanagedPropertyAttribute = property.GetCustomAttribute<UnmanagedProperty>()
+            };
+
+            return oneProperty;
         }
 
         internal void ValidateAndConfigureClass(Type type)
@@ -46,63 +75,65 @@ namespace OneData.Models
 
         internal void ValidateAndConfigureProperties(Type type)
         {
-            foreach (PropertyInfo property in _modelComposition.Properties)
+            foreach (PropertyInfo property in type.GetProperties())
             {
-                _modelComposition.ManagedProperties.Add(property.Name, property);
-                _modelComposition.FilteredProperties.Add(property.Name, property);
+                OneProperty oneProperty = ConfigureOneProperty(property);
+
+                _modelComposition.ManagedProperties.Add(oneProperty.Name, oneProperty);
+                _modelComposition.FilteredProperties.Add(oneProperty.Name, oneProperty);
                 foreach (CustomAttributeData attribute in property.CustomAttributes)
                 {
                     switch (attribute.AttributeType.Name)
                     {
                         case nameof(UnmanagedProperty):
-                            _modelComposition.UnmanagedProperties.Add(property.Name, property);
-                            _modelComposition.ManagedProperties.Remove(property.Name);
-                            _modelComposition.FilteredProperties.Remove(property.Name);
+                            _modelComposition.UnmanagedProperties.Add(oneProperty.Name, oneProperty);
+                            _modelComposition.ManagedProperties.Remove(oneProperty.Name);
+                            _modelComposition.FilteredProperties.Remove(oneProperty.Name);
                             break;
                         case nameof(AutoProperty):
-                            _modelComposition.AutoProperties.Add(property.Name, property);
-                            _modelComposition.AutoPropertyAttributes.Add(property.Name, property.GetCustomAttribute<AutoProperty>());
-                            _modelComposition.FilteredProperties.Remove(property.Name);
+                            _modelComposition.AutoProperties.Add(oneProperty.Name, oneProperty);
+                            _modelComposition.AutoPropertyAttributes.Add(oneProperty.Name, property.GetCustomAttribute<AutoProperty>());
+                            _modelComposition.FilteredProperties.Remove(oneProperty.Name);
                             break;
                         case nameof(PrimaryKey):
-                            _modelComposition.PrimaryKeyProperty = property;
+                            _modelComposition.PrimaryKeyProperty = oneProperty;
                             _modelComposition.PrimaryKeyAttribute = property.GetCustomAttribute<PrimaryKey>();
                             break;
                         case nameof(DateCreated):
-                            _modelComposition.DateCreatedProperty = property;
-                            _modelComposition.AutoProperties.Add(property.Name, property);
-                            _modelComposition.AutoPropertyAttributes.Add(property.Name, new AutoProperty(AutoPropertyTypes.DateTime));
-                            _modelComposition.FilteredProperties.Remove(property.Name);
+                            _modelComposition.DateCreatedProperty = oneProperty;
+                            _modelComposition.AutoProperties.Add(oneProperty.Name, oneProperty);
+                            _modelComposition.AutoPropertyAttributes.Add(oneProperty.Name, new AutoProperty(AutoPropertyTypes.DateTime));
+                            _modelComposition.FilteredProperties.Remove(oneProperty.Name);
                             break;
                         case nameof(DateModified):
-                            _modelComposition.DateModifiedProperty = property;
-                            _modelComposition.AutoProperties.Add(property.Name, property);
-                            _modelComposition.AutoPropertyAttributes.Add(property.Name, new AutoProperty(AutoPropertyTypes.DateTime));
-                            _modelComposition.FilteredProperties.Remove(property.Name);
+                            _modelComposition.DateModifiedProperty = oneProperty;
+                            _modelComposition.AutoProperties.Add(oneProperty.Name, oneProperty);
+                            _modelComposition.AutoPropertyAttributes.Add(oneProperty.Name, new AutoProperty(AutoPropertyTypes.DateTime));
+                            _modelComposition.FilteredProperties.Remove(oneProperty.Name);
                             break;
                         case nameof(ForeignKey):
-                            _modelComposition.ForeignKeyProperties.Add(property.Name, property);
-                            _modelComposition.ForeignKeyAttributes.Add(property.Name, property.GetCustomAttribute<ForeignKey>());
+                            _modelComposition.ForeignKeyProperties.Add(oneProperty.Name, oneProperty);
+                            _modelComposition.ForeignKeyAttributes.Add(oneProperty.Name, property.GetCustomAttribute<ForeignKey>());
                             break;
                         case nameof(Unique):
-                            _modelComposition.UniqueKeyProperties.Add(property.Name, property);
+                            _modelComposition.UniqueKeyProperties.Add(oneProperty.Name, oneProperty);
                             break;
                         case nameof(AllowNull):
-                            _modelComposition.AllowNullProperties.Add(property.Name, property);
+                            _modelComposition.AllowNullProperties.Add(oneProperty.Name, oneProperty);
                             break;
                         case nameof(Default):
-                            _modelComposition.DefaultProperties.Add(property.Name, property);
-                            _modelComposition.DefaultAttributes.Add(property.Name, property.GetCustomAttribute<Default>());
+                            _modelComposition.DefaultProperties.Add(oneProperty.Name, oneProperty);
+                            _modelComposition.DefaultAttributes.Add(oneProperty.Name, property.GetCustomAttribute<Default>());
                             break;
                         case nameof(DataLength):
-                            _modelComposition.DataLengthProperties.Add(property.Name, property);
-                            _modelComposition.DataLengthAttributes.Add(property.Name, property.GetCustomAttribute<DataLength>());
+                            _modelComposition.DataLengthProperties.Add(oneProperty.Name, oneProperty);
+                            _modelComposition.DataLengthAttributes.Add(oneProperty.Name, property.GetCustomAttribute<DataLength>());
                             break;
                         case nameof(ForeignData):
-                            _modelComposition.ForeignDataProperties.Add(property.Name, property);
-                            _modelComposition.ForeignDataAttributes.Add(property.Name, ConfigureForeignDataAttribute(property.GetCustomAttribute<ForeignData>(), property));
-                            _modelComposition.ManagedProperties.Remove(property.Name);
-                            _modelComposition.FilteredProperties.Remove(property.Name);
+                            _modelComposition.ForeignDataProperties.Add(oneProperty.Name, oneProperty);
+                            _modelComposition.ForeignDataAttributes.Add(oneProperty.Name, ConfigureForeignDataAttribute(property.GetCustomAttribute<ForeignData>(), oneProperty));
+                            _modelComposition.ManagedProperties.Remove(oneProperty.Name);
+                            _modelComposition.FilteredProperties.Remove(oneProperty.Name);
                             break;
                         default:
                             break;
@@ -128,7 +159,7 @@ namespace OneData.Models
             }
             else
             {
-                if (!_modelComposition.PrimaryKeyProperty.PropertyType.IsValueType || Nullable.GetUnderlyingType(_modelComposition.PrimaryKeyProperty.PropertyType) != null || _modelComposition.PrimaryKeyProperty.GetCustomAttribute<AllowNull>() != null)
+                if (!_modelComposition.PrimaryKeyProperty.PropertyType.IsValueType || Nullable.GetUnderlyingType(_modelComposition.PrimaryKeyProperty.PropertyType) != null || _modelComposition.PrimaryKeyProperty.AllowNullAttribute != null)
                 {
                     throw new InvalidDataType(_modelComposition.PrimaryKeyProperty.Name, type.FullName, "not nullable struct");
                 }
@@ -157,14 +188,14 @@ namespace OneData.Models
             }
         }
 
-        private ForeignData ConfigureForeignDataAttribute(ForeignData foreignData, PropertyInfo property)
+        private ForeignData ConfigureForeignDataAttribute(ForeignData foreignData, OneProperty oneProperty)
         {
             if (foreignData.ReferenceModel == null)
             {
-                foreignData.ReferenceModel = property.ReflectedType;
+                foreignData.ReferenceModel = oneProperty.ReflectedType;
                 foreignData.ReferenceIdName = $"{foreignData.JoinModel.Name}Id";
             }
-            foreignData.PropertyName = property.Name;
+            foreignData.PropertyName = oneProperty.Name;
 
             return foreignData;
         }

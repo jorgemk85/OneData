@@ -217,7 +217,7 @@ namespace OneData.DAO
                 return;
             }
 
-            foreach (KeyValuePair<string, PropertyInfo> property in Cope<T>.ModelComposition.FilteredProperties)
+            foreach (KeyValuePair<string, OneProperty> property in Cope<T>.ModelComposition.FilteredProperties)
             {
                 if (!CheckForPrimaryKeyWithAutoIncrement<T>(property.Value.Name, considerPrimaryKey))
                 {
@@ -301,7 +301,7 @@ namespace OneData.DAO
         {
             Logger.Info($"Verifying foreign tables for type {model.GetType().ToString()} using connection {connectionToUse}.");
 
-            foreach (KeyValuePair<string, PropertyInfo> property in model.Composition.ForeignKeyProperties)
+            foreach (KeyValuePair<string, OneProperty> property in model.Composition.ForeignKeyProperties)
             {
                 IManageable foreignModel = (IManageable)Activator.CreateInstance(model.Composition.ForeignKeyAttributes[property.Value.Name].Model);
                 string schema = Manager.ConnectionType == ConnectionTypes.MSSQL ? foreignModel.Composition.Schema : ConsolidationTools.GetInitialCatalog(connectionToUse, true);
@@ -378,7 +378,7 @@ namespace OneData.DAO
         {
             using (reader)
             {
-                IEnumerable<PropertyInfo> properties = DataSerializer.GetFilteredPropertiesBasedOnList<T>(reader);
+                IEnumerable<OneProperty> properties = DataSerializer.GetFilteredPropertiesBasedOnList<T>(reader);
                 while (reader.Read())
                 {
                     result.Data.Add(reader[Cope<T>.ModelComposition.PrimaryKeyProperty.Name], DataSerializer.ConvertReaderToObjectOfType<T>(reader, properties));

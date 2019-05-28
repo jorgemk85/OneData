@@ -126,7 +126,7 @@ namespace OneData.Tools
             }
             else
             {
-                foreach (KeyValuePair<string, PropertyInfo> property in Cope<T>.ModelComposition.FilteredProperties)
+                foreach (KeyValuePair<string, OneProperty> property in Cope<T>.ModelComposition.FilteredProperties)
                 {
                     builder.Append("  <column>\n");
                     builder.Append($"      <name>{property.Value.Name}</name>\n");
@@ -161,7 +161,7 @@ namespace OneData.Tools
                 foreach (T obj in list)
                 {
                     builder.Append("  <object>\n");
-                    foreach (KeyValuePair<string, PropertyInfo> property in Cope<T>.ModelComposition.FilteredProperties)
+                    foreach (KeyValuePair<string, OneProperty> property in Cope<T>.ModelComposition.FilteredProperties)
                     {
                         if (property.Value.GetValue(obj) == null)
                         {
@@ -718,11 +718,11 @@ namespace OneData.Tools
             return newObj;
         }
 
-        internal static T ConvertReaderToObjectOfType<T>(IDataReader reader, IEnumerable<PropertyInfo> properties) where T : Cope<T>, IManageable, new()
+        internal static T ConvertReaderToObjectOfType<T>(IDataReader reader, IEnumerable<OneProperty> properties) where T : Cope<T>, IManageable, new()
         {
             T newObj = new T();
 
-            foreach (PropertyInfo property in properties)
+            foreach (OneProperty property in properties)
             {
                 property.SetValue(newObj, SimpleConverter.ConvertStringToType(reader[property.Name].ToString(), property.PropertyType));
             }
@@ -730,14 +730,14 @@ namespace OneData.Tools
             return newObj;
         }
 
-        internal static IEnumerable<PropertyInfo> GetFilteredPropertiesBasedOnList<T>(IDataReader reader) where T : Cope<T>, IManageable, new()
+        internal static IEnumerable<OneProperty> GetFilteredPropertiesBasedOnList<T>(IDataReader reader) where T : Cope<T>, IManageable, new()
         {
             List<string> columns = new List<string>();
             for (int i = 0; i < reader.FieldCount; i++)
             {
                 columns.Add(reader.GetName(i).ToLower());
             }
-            return Cope<T>.ModelComposition.Properties.Where(property => columns.Contains(property.Name.ToLower()));
+            return Cope<T>.ModelComposition.ManagedProperties.Values.Where(property => columns.Contains(property.Name.ToLower()));
         }
     }
 }

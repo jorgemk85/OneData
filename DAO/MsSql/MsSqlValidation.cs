@@ -3,7 +3,6 @@ using OneData.Interfaces;
 using OneData.Models;
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 
 namespace OneData.DAO.MsSql
 {
@@ -20,70 +19,69 @@ namespace OneData.DAO.MsSql
             return columnDefinition.Data_Type == null ? false : $"{columnDefinition.Data_Type}{columnMax}" != sqlDataType;
         }
 
-        public bool IsColumnRemoved(Dictionary<string, PropertyInfo> properties, string columnName)
+        public bool IsColumnRemoved(Dictionary<string, OneProperty> properties, string columnName)
         {
             return !properties.ContainsKey(columnName);
         }
 
-        public bool IsNowNullable(ColumnDefinition columnDefinition, PropertyInfo property)
+        public bool IsNowNullable(ColumnDefinition columnDefinition, OneProperty property)
         {
-            return (Nullable.GetUnderlyingType(property.PropertyType) != null || property.GetCustomAttribute<AllowNull>() != null) && (columnDefinition.Is_Nullable == "NO" || columnDefinition.Is_Nullable == null);
+            return (Nullable.GetUnderlyingType(property.PropertyType) != null || property.AllowNullAttribute != null) && (columnDefinition.Is_Nullable == "NO" || columnDefinition.Is_Nullable == null);
         }
 
-        public bool IsNowUnique(Dictionary<string, ConstraintDefinition> constraints, string uniqueConstraintName, PropertyInfo property)
+        public bool IsNowUnique(Dictionary<string, ConstraintDefinition> constraints, string uniqueConstraintName, OneProperty property)
         {
-            return !constraints.ContainsKey(uniqueConstraintName) && property.GetCustomAttribute<Unique>() != null;
+            return !constraints.ContainsKey(uniqueConstraintName) && property.UniqueAttribute != null;
         }
 
-        public bool IsNowDefault(ColumnDefinition columnDefinition, PropertyInfo property)
+        public bool IsNowDefault(ColumnDefinition columnDefinition, OneProperty property)
         {
-            return string.IsNullOrWhiteSpace(columnDefinition.Column_Default?.ToString()) && property.GetCustomAttribute<Default>() != null;
+            return string.IsNullOrWhiteSpace(columnDefinition.Column_Default?.ToString()) && property.DefaultAttribute != null;
         }
 
-        public bool IsNowPrimaryKey(Dictionary<string, ConstraintDefinition> constraints, string primaryKeyConstraintName, PropertyInfo property)
+        public bool IsNowPrimaryKey(Dictionary<string, ConstraintDefinition> constraints, string primaryKeyConstraintName, OneProperty property)
         {
-            return !constraints.ContainsKey(primaryKeyConstraintName) && property.GetCustomAttribute<PrimaryKey>() != null;
+            return !constraints.ContainsKey(primaryKeyConstraintName) && property.PrimaryKeyAttribute != null;
         }
 
-        public bool IsNowForeignKey(Dictionary<string, ConstraintDefinition> constraints, string foreignKeyConstraintName, PropertyInfo property)
+        public bool IsNowForeignKey(Dictionary<string, ConstraintDefinition> constraints, string foreignKeyConstraintName, OneProperty property)
         {
-            return !constraints.ContainsKey(foreignKeyConstraintName) && property.GetCustomAttribute<ForeignKey>() != null;
+            return !constraints.ContainsKey(foreignKeyConstraintName) && property.ForeignKeyAttribute != null;
         }
 
-        public bool IsNoLongerNullable(ColumnDefinition columnDefinition, PropertyInfo property)
+        public bool IsNoLongerNullable(ColumnDefinition columnDefinition, OneProperty property)
         {
-            return (Nullable.GetUnderlyingType(property.PropertyType) == null && property.GetCustomAttribute<AllowNull>() == null) && (columnDefinition.Is_Nullable == "YES" || columnDefinition.Is_Nullable == null);
+            return (Nullable.GetUnderlyingType(property.PropertyType) == null && property.AllowNullAttribute == null) && (columnDefinition.Is_Nullable == "YES" || columnDefinition.Is_Nullable == null);
         }
 
-        public bool IsNoLongerUnique(Dictionary<string, ConstraintDefinition> constraints, string uniqueConstraintName, PropertyInfo property)
+        public bool IsNoLongerUnique(Dictionary<string, ConstraintDefinition> constraints, string uniqueConstraintName, OneProperty property)
         {
-            return constraints.ContainsKey(uniqueConstraintName) && (property == null || property.GetCustomAttribute<Unique>() == null);
+            return constraints.ContainsKey(uniqueConstraintName) && (property == null || property.UniqueAttribute == null);
         }
 
-        public bool IsNoLongerDefault(ColumnDefinition columnDefinition, PropertyInfo property)
+        public bool IsNoLongerDefault(ColumnDefinition columnDefinition, OneProperty property)
         {
-            return !string.IsNullOrWhiteSpace(columnDefinition.Column_Default?.ToString()) && (property == null || property.GetCustomAttribute<Default>() == null);
+            return !string.IsNullOrWhiteSpace(columnDefinition.Column_Default?.ToString()) && (property == null || property.DefaultAttribute == null);
         }
 
-        public bool IsNoLongerPrimaryKey(Dictionary<string, ConstraintDefinition> constraints, string uniqueConstraintName, PropertyInfo property)
+        public bool IsNoLongerPrimaryKey(Dictionary<string, ConstraintDefinition> constraints, string primaryConstraintName, OneProperty property)
         {
-            return constraints.ContainsKey(uniqueConstraintName) && property.GetCustomAttribute<PrimaryKey>() == null;
+            return constraints.ContainsKey(primaryConstraintName) && property.PrimaryKeyAttribute == null;
         }
 
-        public bool IsNoLongerForeignKey(Dictionary<string, ConstraintDefinition> constraints, string foreignKeyConstraintName, PropertyInfo property)
+        public bool IsNoLongerForeignKey(Dictionary<string, ConstraintDefinition> constraints, string foreignKeyConstraintName, OneProperty property)
         {
-            return constraints.ContainsKey(foreignKeyConstraintName) && property.GetCustomAttribute<ForeignKey>() == null;
+            return constraints.ContainsKey(foreignKeyConstraintName) && property.ForeignKeyAttribute == null;
         }
 
-        public bool IsDefaultChanged(ColumnDefinition columnDefinition, PropertyInfo property)
+        public bool IsDefaultChanged(ColumnDefinition columnDefinition, OneProperty property)
         {
-            Default defaultValueAttribute = property.GetCustomAttribute<Default>();
             string currentDefaultValue = columnDefinition.Column_Default?.ToString().Replace("(", string.Empty).Replace(")", string.Empty).Replace("'", string.Empty);
 
-            return !string.IsNullOrWhiteSpace(columnDefinition.Column_Default?.ToString()) ? defaultValueAttribute != null ? !currentDefaultValue.Equals($"{defaultValueAttribute.Value}") : false : false;
+            return !string.IsNullOrWhiteSpace(columnDefinition.Column_Default?.ToString()) ? property.DefaultAttribute != null ? !currentDefaultValue.Equals($"{property.DefaultAttribute.Value}") : false : false;
         }
 
-        public bool IsForeignKeyRulesChanged(Dictionary<string, ConstraintDefinition> constraints,string foreignKeyName, ForeignKey foreignKeyAttribute)
+        public bool IsForeignKeyRulesChanged(Dictionary<string, ConstraintDefinition> constraints, string foreignKeyName, ForeignKey foreignKeyAttribute)
         {
             if (constraints.TryGetValue(foreignKeyName, out ConstraintDefinition constraintDefinition) && foreignKeyAttribute != null)
             {
@@ -93,9 +91,9 @@ namespace OneData.DAO.MsSql
             return false;
         }
 
-        public bool IsNullable(PropertyInfo property)
+        public bool IsNullable(OneProperty property)
         {
-            return Nullable.GetUnderlyingType(property.PropertyType) != null || property.GetCustomAttribute<AllowNull>() != null;
+            return Nullable.GetUnderlyingType(property.PropertyType) != null || property.AllowNullAttribute != null;
         }
 
         public bool IsUnique(IManageable model, string propertyName)

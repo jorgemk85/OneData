@@ -1,7 +1,6 @@
 ﻿using OneData.Attributes;
 using OneData.Models;
 using System.Collections.Generic;
-using System.Reflection;
 
 namespace OneData.Interfaces
 {
@@ -9,27 +8,27 @@ namespace OneData.Interfaces
     {
         bool IsNewColumn(ColumnDefinition columnDefinition);
         bool IsColumnDataTypeChanged(ColumnDefinition columnDefinition, string sqlDataType);
-        bool IsColumnRemoved(Dictionary<string, PropertyInfo> properties, string columnName);
-        bool IsDefaultChanged(ColumnDefinition columnDefinition, PropertyInfo property);
+        bool IsColumnRemoved(Dictionary<string, OneProperty> properties, string columnName);
+        bool IsDefaultChanged(ColumnDefinition columnDefinition, OneProperty property);
         bool IsForeignKeyRulesChanged(Dictionary<string, ConstraintDefinition> constraints, string foreignKeyName, ForeignKey foreignKeyAttribute);
 
-        bool IsNullable(PropertyInfo property);
+        bool IsNullable(OneProperty property);
         bool IsUnique(IManageable model, string propertyName);
         bool IsUnique(Dictionary<string, ConstraintDefinition> constraints, string uniqueConstraintName);
         bool IsDefault(IManageable model, string propertyName);
         bool IsDefault(ColumnDefinition columnDefinition);
         bool IsPrimaryKey(IManageable model, string propertyName);
 
-        bool IsNowNullable(ColumnDefinition columnDefinition, PropertyInfo property);
-        bool IsNowUnique(Dictionary<string, ConstraintDefinition> constraints, string uniqueConstraintName, PropertyInfo property);
-        bool IsNowDefault(ColumnDefinition columnDefinition, PropertyInfo property);
-        bool IsNowPrimaryKey(Dictionary<string, ConstraintDefinition> constraints, string primaryKeyConstraintName, PropertyInfo property);
-        bool IsNowForeignKey(Dictionary<string, ConstraintDefinition> constraints, string foreignKeyConstraintName, PropertyInfo property);
+        bool IsNowNullable(ColumnDefinition columnDefinition, OneProperty property);
+        bool IsNowUnique(Dictionary<string, ConstraintDefinition> constraints, string uniqueConstraintName, OneProperty property);
+        bool IsNowDefault(ColumnDefinition columnDefinition, OneProperty property);
+        bool IsNowPrimaryKey(Dictionary<string, ConstraintDefinition> constraints, string primaryKeyConstraintName, OneProperty property);
+        bool IsNowForeignKey(Dictionary<string, ConstraintDefinition> constraints, string foreignKeyConstraintName, OneProperty property);
 
-        bool IsNoLongerNullable(ColumnDefinition columnDefinition, PropertyInfo property);
-        bool IsNoLongerUnique(Dictionary<string, ConstraintDefinition> constraints, string uniqueConstraintName, PropertyInfo property);
-        bool IsNoLongerDefault(ColumnDefinition columnDefinition, PropertyInfo property);
-        bool IsNoLongerPrimaryKey(Dictionary<string, ConstraintDefinition> constraints, string uniqueConstraintName, PropertyInfo property);
-        bool IsNoLongerForeignKey(Dictionary<string, ConstraintDefinition> constraints, string foreignKeyConstraintName, PropertyInfo property);
+        bool IsNoLongerNullable(ColumnDefinition columnDefinition, OneProperty property);
+        bool IsNoLongerUnique(Dictionary<string, ConstraintDefinition> constraints, string uniqueConstraintName, OneProperty property);
+        bool IsNoLongerDefault(ColumnDefinition columnDefinition, OneProperty property);
+        bool IsNoLongerPrimaryKey(Dictionary<string, ConstraintDefinition> constraints, string uniqueConstraintName, OneProperty property);
+        bool IsNoLongerForeignKey(Dictionary<string, ConstraintDefinition> constraints, string foreignKeyConstraintName, OneProperty property);
     }
 }

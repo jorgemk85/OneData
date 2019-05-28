@@ -21,13 +21,12 @@ namespace OneData.DAO.MsSql
             return $"ALTER TABLE [{tableName.Schema}].[{tableName.Table}] ADD CONSTRAINT DF_{tableName.Schema}_{tableName.Table}_{columnName} DEFAULT {value} FOR [{columnName}]; \n";
         }
 
-        public string AddForeignKeyToColumn(FullyQualifiedTableName tableName, PropertyInfo property)
+        public string AddForeignKeyToColumn(FullyQualifiedTableName tableName, OneProperty property)
         {
-            ForeignKey foreignAttribute = property.GetCustomAttribute<ForeignKey>();
-            IManageable foreignModel = (IManageable)Activator.CreateInstance(foreignAttribute.Model);
+            IManageable foreignModel = (IManageable)Activator.CreateInstance(property.ForeignKeyAttribute.Model);
             FullyQualifiedTableName foreignTableName = new FullyQualifiedTableName(foreignModel.Composition.Schema, $"{Manager.TablePrefix}{foreignModel.Composition.TableName}");
 
-            return $"ALTER TABLE [{tableName.Schema}].[{tableName.Table}] ADD CONSTRAINT FK_{tableName.Schema}_{tableName.Table}_{property.Name} FOREIGN KEY([{property.Name}]) REFERENCES [{foreignTableName.Schema}].[{foreignTableName.Table}]([{foreignModel.Composition.PrimaryKeyProperty.Name}]) ON DELETE {foreignAttribute.OnDelete.ToString().Replace("_", " ")} ON UPDATE {foreignAttribute.OnUpdate.ToString().Replace("_", " ")}; \n";
+            return $"ALTER TABLE [{tableName.Schema}].[{tableName.Table}] ADD CONSTRAINT FK_{tableName.Schema}_{tableName.Table}_{property.Name} FOREIGN KEY([{property.Name}]) REFERENCES [{foreignTableName.Schema}].[{foreignTableName.Table}]([{foreignModel.Composition.PrimaryKeyProperty.Name}]) ON DELETE {property.ForeignKeyAttribute.OnDelete.ToString().Replace("_", " ")} ON UPDATE {property.ForeignKeyAttribute.OnUpdate.ToString().Replace("_", " ")}; \n";
         }
 
         public string AddNotNullToColumn(FullyQualifiedTableName tableName, string columnName, string sqlDataType)
@@ -124,7 +123,7 @@ namespace OneData.DAO.MsSql
             return $"{RemoveDefaultFromColumn(tableName, $"DF_{tableName.Schema}_{tableName.Table}_{columnName}")}{AddDefaultToColumn(tableName, columnName, defaultValue)}";
         }
 
-        public string ChangeForeignKeyRules(FullyQualifiedTableName tableName, PropertyInfo property)
+        public string ChangeForeignKeyRules(FullyQualifiedTableName tableName, OneProperty property)
         { 
             return $"{RemoveForeignKeyFromColumn(tableName, $"FK_{tableName.Schema}_{tableName.Table}_{property.Name}")}|;|{AddForeignKeyToColumn(tableName, property)}";
         }
