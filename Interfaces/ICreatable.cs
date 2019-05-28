@@ -12,9 +12,9 @@ namespace OneData.Interfaces
         string CreateMassiveOperationStoredProcedure<T>(bool doAlter) where T : Cope<T>, IManageable, new();
         string CreateUpdateStoredProcedure<T>(bool doAlter) where T : Cope<T>, IManageable, new();
         string CreateDeleteStoredProcedure<T>(bool doAlter) where T : Cope<T>, IManageable, new();
-        string CreateQueryForTableCreation(IManageable model);
-        string CreateQueryForTableAlteration(IManageable model, Dictionary<string, ColumnDefinition> columnDetails, Dictionary<string, ConstraintDefinition> constraints);
-        string GetCreateForeignKeysQuery(IManageable model, Dictionary<string, ConstraintDefinition> constraints = null);
+        string CreateQueryForTableCreation(IManageable model, FullyQualifiedTableName tableName);
+        string CreateQueryForTableAlteration(IManageable model, Dictionary<string, ColumnDefinition> columnDetails, Dictionary<string, ConstraintDefinition> constraints, FullyQualifiedTableName tableName);
+        string GetCreateForeignKeysQuery(IManageable model, FullyQualifiedTableName tableName, Dictionary<string, ConstraintDefinition> constraints);
         string GetSqlDataType(Type codeType, bool isUniqueKey, long dataLength);
     }
 }

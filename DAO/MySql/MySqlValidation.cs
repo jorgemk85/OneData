@@ -16,8 +16,7 @@ namespace OneData.DAO.MySql
 
         public bool IsColumnDataTypeChanged(ColumnDefinition columnDefinition, string sqlDataType)
         {
-            string columnMax = columnDefinition.Character_Maximum_Length != null ? $"({columnDefinition.Character_Maximum_Length})" : string.Empty;
-            return columnDefinition.Data_Type == null ? false : $"{columnDefinition.Data_Type}{columnMax}" != sqlDataType;
+            return columnDefinition.Column_Type == null ? false : columnDefinition.Column_Type != sqlDataType;
         }
 
         public bool IsColumnRemoved(Dictionary<string, PropertyInfo> properties, string columnName)

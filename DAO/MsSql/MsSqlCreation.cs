@@ -213,14 +213,13 @@ namespace OneData.DAO.MsSql
             return queryBuilder.ToString();
         }
 
-        public string CreateQueryForTableCreation(IManageable model)
+        public string CreateQueryForTableCreation(IManageable model, FullyQualifiedTableName tableName)
         {
             if (model.Composition.ManagedProperties.Count == 0) return string.Empty;
 
             StringBuilder queryBuilder = new StringBuilder();
             ITransactionable transaction = new MsSqlTransaction();
             IValidatable validation = new MsSqlValidation();
-            FullyQualifiedTableName tableName = new FullyQualifiedTableName(model.Composition.Schema, $"{Manager.TablePrefix}{model.Composition.TableName}");
 
             queryBuilder.Append(transaction.AddTable(tableName, model.Composition.PrimaryKeyProperty.Name, GetSqlDataType(model.Composition.PrimaryKeyProperty.PropertyType, false, 0), model.Composition.PrimaryKeyAttribute.IsAutoIncrement));
 
@@ -243,15 +242,13 @@ namespace OneData.DAO.MsSql
             return queryBuilder.ToString();
         }
 
-        public string CreateQueryForTableAlteration(IManageable model, Dictionary<string, ColumnDefinition> columnDetails, Dictionary<string, ConstraintDefinition> constraints)
+        public string CreateQueryForTableAlteration(IManageable model, Dictionary<string, ColumnDefinition> columnDetails, Dictionary<string, ConstraintDefinition> constraints, FullyQualifiedTableName tableName)
         {
             if (model.Composition.ManagedProperties.Count == 0) return string.Empty;
 
             StringBuilder queryBuilder = new StringBuilder();
             ITransactionable transaction = new MsSqlTransaction();
             IValidatable validation = new MsSqlValidation();
-
-            FullyQualifiedTableName tableName = new FullyQualifiedTableName(model.Composition.Schema, $"{Manager.TablePrefix}{model.Composition.TableName}");
 
             foreach (KeyValuePair<string, PropertyInfo> property in model.Composition.ManagedProperties)
             {
@@ -302,11 +299,10 @@ namespace OneData.DAO.MsSql
             return queryBuilder.ToString();
         }
 
-        public string GetCreateForeignKeysQuery(IManageable model, Dictionary<string, ConstraintDefinition> constraints = null)
+        public string GetCreateForeignKeysQuery(IManageable model, FullyQualifiedTableName tableName, Dictionary<string, ConstraintDefinition> constraints = null)
         {
             StringBuilder queryBuilder = new StringBuilder();
             ITransactionable transaction = new MsSqlTransaction();
-            FullyQualifiedTableName tableName = new FullyQualifiedTableName(model.Composition.Schema, $"{Manager.TablePrefix}{model.Composition.TableName}");
 
             foreach (KeyValuePair<string, PropertyInfo> property in model.Composition.ForeignKeyProperties)
             {

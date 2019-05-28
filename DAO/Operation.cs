@@ -28,14 +28,6 @@ namespace OneData.DAO
         protected ConnectionTypes _connectionType;
         protected DbCommand _command;
 
-        public Operation()
-        {
-            QueryForTableExistance = "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_CATALOG = '{0}' AND TABLE_SCHEMA = '{1}' AND TABLE_TYPE = 'BASE TABLE' AND TABLE_NAME = " + $"'{Manager.TablePrefix}" + "{2}'";
-            QueryForStoredProcedureExistance = "SELECT ROUTINE_NAME FROM INFORMATION_SCHEMA.ROUTINES WHERE ROUTINE_CATALOG = '{0}' AND ROUTINE_SCHEMA = '{1}' AND ROUTINE_NAME = '{2}'";
-            QueryForColumnDefinition = "SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_CATALOG = '{0}' AND TABLE_SCHEMA = '{1}' AND TABLE_NAME = " + $"'{Manager.TablePrefix}" + "{2}'";
-            QueryForConstraints = "SELECT tableConstraint.CONSTRAINT_CATALOG, tableConstraint.CONSTRAINT_SCHEMA, tableConstraint.CONSTRAINT_NAME, CONSTRAINT_TYPE, tableConstraint.TABLE_NAME, COLUMN_NAME, Update_Rule, Delete_Rule  FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS tableConstraint INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE keyColumnUsage ON keyColumnUsage.CONSTRAINT_NAME = tableConstraint.CONSTRAINT_NAME LEFT JOIN INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS referentialConstraints ON referentialConstraints.CONSTRAINT_NAME = tableConstraint.CONSTRAINT_NAME WHERE tableConstraint.CONSTRAINT_CATALOG = '{0}' AND tableConstraint.CONSTRAINT_SCHEMA = '{1}' AND tableConstraint.TABLE_NAME = " + $"'{Manager.TablePrefix}" + "{2}'";
-        }
-
         internal object ExecuteScalar(string transaction, string connectionToUse, bool returnDataTable)
         {
             if (string.IsNullOrWhiteSpace(transaction))
@@ -284,19 +276,20 @@ namespace OneData.DAO
             model.Composition.IsFullySynced = true;
             string schema = Manager.ConnectionType == ConnectionTypes.MSSQL ? model.Composition.Schema : ConsolidationTools.GetInitialCatalog(connectionToUse, true);
             string initialCatalog = ConsolidationTools.GetInitialCatalog(connectionToUse);
+            FullyQualifiedTableName tableName = new FullyQualifiedTableName(schema, $"{Manager.TablePrefix}{model.Composition.TableName}");
             Dictionary<string, ConstraintDefinition> constraints = GetConstraints(initialCatalog, schema, model.Composition.TableName, connectionToUse);
 
             if (DoTableExist(initialCatalog, schema, model.Composition.TableName, connectionToUse))
             {
-                ExecuteScalar(_creator.CreateQueryForTableAlteration(model, GetColumnDefinition(initialCatalog, model.Composition.Schema, model.Composition.TableName, connectionToUse), constraints), connectionToUse, false);
+                ExecuteScalar(_creator.CreateQueryForTableAlteration(model, GetColumnDefinition(initialCatalog, schema, model.Composition.TableName, connectionToUse), constraints, tableName), connectionToUse, false);
             }
             else
             {
-                ExecuteScalar(_creator.CreateQueryForTableCreation(model), connectionToUse, false);
+                ExecuteScalar(_creator.CreateQueryForTableCreation(model, tableName), connectionToUse, false);
             }
 
             VerifyForeignTables(model, connectionToUse);
-            string foreignKeyQuery = _creator.GetCreateForeignKeysQuery(model, constraints);
+            string foreignKeyQuery = _creator.GetCreateForeignKeysQuery(model, tableName, constraints);
 
             if (!string.IsNullOrWhiteSpace(foreignKeyQuery))
             {

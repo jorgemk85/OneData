@@ -203,14 +203,13 @@ namespace OneData.DAO.MySql
             return queryBuilder.ToString();
         }
 
-        public string CreateQueryForTableAlteration(IManageable model, Dictionary<string, ColumnDefinition> columnDetails, Dictionary<string, ConstraintDefinition> constraints)
+        public string CreateQueryForTableAlteration(IManageable model, Dictionary<string, ColumnDefinition> columnDetails, Dictionary<string, ConstraintDefinition> constraints, FullyQualifiedTableName tableName)
         {
             if (model.Composition.ManagedProperties.Count == 0) return string.Empty;
 
             StringBuilder queryBuilder = new StringBuilder();
             ITransactionable transaction = new MySqlTransaction();
             IValidatable validation = new MySqlValidation();
-            FullyQualifiedTableName tableName = new FullyQualifiedTableName(model.Composition.Schema, $"{Manager.TablePrefix}{model.Composition.TableName}");
 
             foreach (KeyValuePair<string, PropertyInfo> property in model.Composition.ManagedProperties)
             {
@@ -261,27 +260,22 @@ namespace OneData.DAO.MySql
             return queryBuilder.ToString();
         }
 
-        public string GetCreateForeignKeysQuery(IManageable model, Dictionary<string, ConstraintDefinition> constraints = null)
+        public string GetCreateForeignKeysQuery(IManageable model, FullyQualifiedTableName tableName, Dictionary<string, ConstraintDefinition> constraints = null)
         {
             StringBuilder queryBuilder = new StringBuilder();
-            Dictionary<string, PropertyInfo> properties;
-            ITransactionable sqlTransaction = new MySqlTransaction();
-            FullyQualifiedTableName tableName = new FullyQualifiedTableName(model.Composition.Schema, $"{Manager.TablePrefix}{model.Composition.TableName}");
+            ITransactionable transaction = new MySqlTransaction();
 
-            if (constraints == null)
+            foreach (KeyValuePair<string, PropertyInfo> property in model.Composition.ForeignKeyProperties)
             {
-                properties = model.Composition.ForeignKeyProperties;
-            }
-            else
-            {
-                properties = model.Composition.ForeignKeyProperties.Where(q => !constraints.ContainsKey(q.Value.Name)).ToDictionary(q => q.Key, q => q.Value);
-            }
-
-            if (properties.Count == 0) return string.Empty;
-
-            foreach (KeyValuePair<string, PropertyInfo> property in properties)
-            {
-                queryBuilder.Append(sqlTransaction.AddForeignKeyToColumn(tableName, property.Value));
+                if (constraints == null)
+                {
+                    queryBuilder.Append(transaction.AddForeignKeyToColumn(tableName, property.Value));
+                    continue;
+                }
+                if (!constraints.ContainsKey($"FK_{tableName.Schema}_{tableName.Table}_{property.Value.Name}"))
+                {
+                    queryBuilder.Append(transaction.AddForeignKeyToColumn(tableName, property.Value));
+                }
             }
 
             if (!string.IsNullOrWhiteSpace(queryBuilder.ToString()))
@@ -435,15 +429,13 @@ namespace OneData.DAO.MySql
             return queryBuilder.ToString();
         }
 
-        public string CreateQueryForTableCreation(IManageable model)
+        public string CreateQueryForTableCreation(IManageable model, FullyQualifiedTableName tableName)
         {
             if (model.Composition.ManagedProperties.Count == 0) return string.Empty;
 
             StringBuilder queryBuilder = new StringBuilder();
             ITransactionable transaction = new MySqlTransaction();
             IValidatable valitation = new MySqlValidation();
-            // TODO: This schema setting should be set depending on which connection is beign used.
-            FullyQualifiedTableName tableName = new FullyQualifiedTableName(model.Composition.Schema, $"{Manager.TablePrefix}{model.Composition.TableName}");
 
             queryBuilder.Append(transaction.AddTable(tableName, model.Composition.PrimaryKeyProperty.Name, GetSqlDataType(model.Composition.PrimaryKeyProperty.PropertyType, false, 0), model.Composition.PrimaryKeyAttribute.IsAutoIncrement));
 
@@ -465,6 +457,6 @@ namespace OneData.DAO.MySql
             return queryBuilder.ToString();
         }
 
-        
+
     }
 }

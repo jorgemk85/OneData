@@ -26,6 +26,29 @@ namespace OneData.DAO.MySql
         {
             _connectionType = ConnectionTypes.MySQL;
             _creator = new MySqlCreation();
+
+            QueryForTableExistance = "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_CATALOG = '{0}' AND TABLE_SCHEMA = '{1}' AND TABLE_TYPE = 'BASE TABLE' AND TABLE_NAME = " + $"'{Manager.TablePrefix}" + "{2}'";
+            QueryForStoredProcedureExistance = "SELECT ROUTINE_NAME FROM INFORMATION_SCHEMA.ROUTINES WHERE ROUTINE_CATALOG = '{0}' AND ROUTINE_SCHEMA = '{1}' AND ROUTINE_NAME = '{2}'";
+            QueryForColumnDefinition = "SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_CATALOG = '{0}' AND TABLE_SCHEMA = '{1}' AND TABLE_NAME = " + $"'{Manager.TablePrefix}" + "{2}'";
+            QueryForConstraints =
+                @"SELECT DISTINCT 
+	                tableConstraint.CONSTRAINT_CATALOG, 
+	                tableConstraint.CONSTRAINT_SCHEMA,
+	                CASE
+		                WHEN tableConstraint.CONSTRAINT_NAME = 'PRIMARY' THEN CONCAT('PK_', tableConstraint.CONSTRAINT_SCHEMA, '_', tableConstraint.TABLE_NAME,'_', COLUMN_NAME)
+		                ELSE tableConstraint.CONSTRAINT_NAME
+	                END as CONSTRAINT_NAME,
+	                CONSTRAINT_TYPE, 
+	                tableConstraint.TABLE_NAME, 
+	                COLUMN_NAME, 
+	                Update_Rule, 
+	                Delete_Rule  
+                FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS tableConstraint 
+                INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE keyColumnUsage 
+                ON keyColumnUsage.CONSTRAINT_NAME = tableConstraint.CONSTRAINT_NAME 
+                LEFT JOIN INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS referentialConstraints 
+                ON referentialConstraints.CONSTRAINT_NAME = tableConstraint.CONSTRAINT_NAME 
+                WHERE tableConstraint.CONSTRAINT_CATALOG = '{0}' AND tableConstraint.CONSTRAINT_SCHEMA = '{1}' AND tableConstraint.TABLE_NAME = " + $"'{Manager.TablePrefix}" + "{2}'";
         }
 
         public DataSet ExecuteProcedure(string tableName, string storedProcedure, QueryOptions queryOptions, Parameter[] parameters, bool logTransaction = true)

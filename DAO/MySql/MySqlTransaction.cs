@@ -25,7 +25,7 @@ namespace OneData.DAO.MySql
         {
             ForeignKey foreignAttribute = property.GetCustomAttribute<ForeignKey>();
             IManageable foreignModel = (IManageable)Activator.CreateInstance(foreignAttribute.Model);
-            FullyQualifiedTableName foreignTableName = new FullyQualifiedTableName(foreignModel.Composition.Schema, $"{Manager.TablePrefix}{foreignModel.Composition.TableName}");
+            FullyQualifiedTableName foreignTableName = new FullyQualifiedTableName(tableName.Schema, $"{Manager.TablePrefix}{foreignModel.Composition.TableName}");
 
             return $"ALTER TABLE `{tableName.Schema}`.`{tableName.Table}` ADD CONSTRAINT FK_{tableName.Schema}_{tableName.Table}_{property.Name} FOREIGN KEY(`{property.Name}`) REFERENCES `{foreignTableName.Schema}`.`{foreignTableName.Table}`(`{foreignModel.Composition.PrimaryKeyProperty.Name}`) ON DELETE {foreignAttribute.OnDelete.ToString().Replace("_", " ")} ON UPDATE {foreignAttribute.OnUpdate.ToString().Replace("_", " ")}; \n";
         }
