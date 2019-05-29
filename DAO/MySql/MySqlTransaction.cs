@@ -1,9 +1,7 @@
-﻿using OneData.Attributes;
-using OneData.Interfaces;
+﻿using OneData.Interfaces;
 using OneData.Models;
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 using System.Text;
 
 namespace OneData.DAO.MySql

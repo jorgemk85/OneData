@@ -67,7 +67,7 @@ namespace OneData.DAO
             }
             else
             {
-                resultado = hasCache == true ? SelectInCache(expression, dataCache) : operation.ExecuteProcedure(queryOptions, TransactionTypes.Select, true, null, expression);
+                resultado = hasCache == true ? SelectInCache(expression, dataCache, queryOptions) : operation.ExecuteProcedure(queryOptions, TransactionTypes.Select, true, null, expression);
 
                 if (hasCache && dataCache.IsPartialCache && resultado.Data.Count == 0)
                 {
@@ -84,11 +84,6 @@ namespace OneData.DAO
                 {
                     dataCache.Cache = resultado;
                     dataCache.LastCacheUpdate = DateTime.Now.Ticks;
-                }
-
-                if (resultado.IsFromCache)
-                {
-                    resultado.Data = GetDataBasedFromCacheOnQueryOptions(ref dataCache, queryOptions);
                 }
             }
         }
@@ -157,7 +152,7 @@ namespace OneData.DAO
             {
                 if (hasCache && !dataCache.IsPartialCache)
                 {
-                    resultado = new Result<T>(GetDataBasedFromCacheOnQueryOptions(ref dataCache, queryOptions), true, true);
+                    resultado = SelectInCache(null, dataCache, queryOptions);
                 }
                 else
                 {
@@ -172,28 +167,29 @@ namespace OneData.DAO
             }
         }
 
-        private Dictionary<dynamic, T> GetDataBasedFromCacheOnQueryOptions<T>(ref DataCache<T> dataCache, QueryOptions queryOptions) where T : Cope<T>, IManageable, new()
+        private Result<T> SelectInCache<T>(Expression<Func<T, bool>> expression, DataCache<T> dataCache, QueryOptions queryOptions) where T : Cope<T>, IManageable, new()
         {
+            IQueryable<T> queryableList = dataCache.Cache.Data.Values.AsQueryable();
+
+            if (expression != null)
+            {
+                queryableList = queryableList.Where(expression);
+            }
+
+            Dictionary<dynamic, T> resultList = null;
+
             if (queryOptions.Offset > 0 && queryOptions.MaximumResults > 0)
             {
-                return new Dictionary<dynamic, T>(dataCache.Cache.Data.Values.OrderByDescending(obj => Cope<T>.ModelComposition.DateModifiedProperty.GetValue(obj)).Skip(queryOptions.Offset).Take(queryOptions.MaximumResults).ToDictionary<dynamic, T>());
+                resultList = queryableList.OrderByDescending(obj => Cope<T>.ModelComposition.DateModifiedProperty.GetValue(obj)).Skip(queryOptions.Offset).Take(queryOptions.MaximumResults).ToDictionary(Cope<T>.ModelComposition.PrimaryKeyProperty.Name, Cope<T>.ModelComposition.PrimaryKeyProperty.PropertyType);
             }
             else if (queryOptions.Offset > 0)
             {
-                return new Dictionary<dynamic, T>(dataCache.Cache.Data.Values.OrderByDescending(obj => Cope<T>.ModelComposition.DateModifiedProperty.GetValue(obj)).Skip(queryOptions.Offset).ToDictionary<dynamic, T>());
+                resultList = queryableList.OrderByDescending(obj => Cope<T>.ModelComposition.DateModifiedProperty.GetValue(obj)).Skip(queryOptions.Offset).ToDictionary(Cope<T>.ModelComposition.PrimaryKeyProperty.Name, Cope<T>.ModelComposition.PrimaryKeyProperty.PropertyType);
             }
             else if (queryOptions.MaximumResults > 0)
             {
-                return new Dictionary<dynamic, T>(dataCache.Cache.Data.Values.OrderByDescending(obj => Cope<T>.ModelComposition.DateModifiedProperty.GetValue(obj)).Take(queryOptions.MaximumResults).ToDictionary<dynamic, T>());
+                resultList = queryableList.OrderByDescending(obj => Cope<T>.ModelComposition.DateModifiedProperty.GetValue(obj)).Take(queryOptions.MaximumResults).ToDictionary(Cope<T>.ModelComposition.PrimaryKeyProperty.Name, Cope<T>.ModelComposition.PrimaryKeyProperty.PropertyType);
             }
-
-            return dataCache.Cache.Data;
-        }
-
-        private Result<T> SelectInCache<T>(Expression<Func<T, bool>> expression, DataCache<T> dataCache) where T : Cope<T>, IManageable, new()
-        {
-            IQueryable<T> queryableList = dataCache.Cache.Data.Values.AsQueryable();
-            Dictionary<dynamic, T> resultList = queryableList.Where(expression).ToDictionary(Cope<T>.ModelComposition.PrimaryKeyProperty.Name, Cope<T>.ModelComposition.PrimaryKeyProperty.PropertyType);
 
             return new Result<T>(resultList, true, true);
         }

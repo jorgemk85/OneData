@@ -92,12 +92,12 @@ namespace OneData.Models
                             break;
                         case nameof(AutoProperty):
                             _modelComposition.AutoProperties.Add(oneProperty.Name, oneProperty);
-                            _modelComposition.AutoPropertyAttributes.Add(oneProperty.Name, property.GetCustomAttribute<AutoProperty>());
+                            _modelComposition.AutoPropertyAttributes.Add(oneProperty.Name, oneProperty.AutoPropertyAttribute);
                             _modelComposition.FilteredProperties.Remove(oneProperty.Name);
                             break;
                         case nameof(PrimaryKey):
                             _modelComposition.PrimaryKeyProperty = oneProperty;
-                            _modelComposition.PrimaryKeyAttribute = property.GetCustomAttribute<PrimaryKey>();
+                            _modelComposition.PrimaryKeyAttribute = oneProperty.PrimaryKeyAttribute;
                             break;
                         case nameof(DateCreated):
                             _modelComposition.DateCreatedProperty = oneProperty;
@@ -113,7 +113,7 @@ namespace OneData.Models
                             break;
                         case nameof(ForeignKey):
                             _modelComposition.ForeignKeyProperties.Add(oneProperty.Name, oneProperty);
-                            _modelComposition.ForeignKeyAttributes.Add(oneProperty.Name, property.GetCustomAttribute<ForeignKey>());
+                            _modelComposition.ForeignKeyAttributes.Add(oneProperty.Name, oneProperty.ForeignKeyAttribute);
                             break;
                         case nameof(Unique):
                             _modelComposition.UniqueKeyProperties.Add(oneProperty.Name, oneProperty);
@@ -123,15 +123,15 @@ namespace OneData.Models
                             break;
                         case nameof(Default):
                             _modelComposition.DefaultProperties.Add(oneProperty.Name, oneProperty);
-                            _modelComposition.DefaultAttributes.Add(oneProperty.Name, property.GetCustomAttribute<Default>());
+                            _modelComposition.DefaultAttributes.Add(oneProperty.Name, oneProperty.DefaultAttribute);
                             break;
                         case nameof(DataLength):
                             _modelComposition.DataLengthProperties.Add(oneProperty.Name, oneProperty);
-                            _modelComposition.DataLengthAttributes.Add(oneProperty.Name, property.GetCustomAttribute<DataLength>());
+                            _modelComposition.DataLengthAttributes.Add(oneProperty.Name, oneProperty.DataLengthAttribute);
                             break;
                         case nameof(ForeignData):
                             _modelComposition.ForeignDataProperties.Add(oneProperty.Name, oneProperty);
-                            _modelComposition.ForeignDataAttributes.Add(oneProperty.Name, ConfigureForeignDataAttribute(property.GetCustomAttribute<ForeignData>(), oneProperty));
+                            _modelComposition.ForeignDataAttributes.Add(oneProperty.Name, ConfigureForeignDataAttribute(oneProperty));
                             _modelComposition.ManagedProperties.Remove(oneProperty.Name);
                             _modelComposition.FilteredProperties.Remove(oneProperty.Name);
                             break;
@@ -188,16 +188,16 @@ namespace OneData.Models
             }
         }
 
-        private ForeignData ConfigureForeignDataAttribute(ForeignData foreignData, OneProperty oneProperty)
+        private ForeignData ConfigureForeignDataAttribute(OneProperty oneProperty)
         {
-            if (foreignData.ReferenceModel == null)
+            if (oneProperty.ForeignDataAttribute.ReferenceModel == null)
             {
-                foreignData.ReferenceModel = oneProperty.ReflectedType;
-                foreignData.ReferenceIdName = $"{foreignData.JoinModel.Name}Id";
+                oneProperty.ForeignDataAttribute.ReferenceModel = oneProperty.ReflectedType;
+                oneProperty.ForeignDataAttribute.ReferenceIdName = $"{oneProperty.ForeignDataAttribute.JoinModel.Name}Id";
             }
-            foreignData.PropertyName = oneProperty.Name;
+            oneProperty.ForeignDataAttribute.PropertyName = oneProperty.Name;
 
-            return foreignData;
+            return oneProperty.ForeignDataAttribute;
         }
     }
 }

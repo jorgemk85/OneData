@@ -1,12 +1,12 @@
-﻿using OneData.Enums;
+﻿using Microsoft.Extensions.Configuration;
+using OneData.DAO;
+using OneData.Enums;
 using OneData.Exceptions;
-using Microsoft.Extensions.Configuration;
+using System;
 using System.Configuration;
+using System.Data.Common;
 using System.IO;
 using System.Reflection;
-using System.Data.Common;
-using System;
-using OneData.DAO;
 
 namespace OneData.Tools
 {

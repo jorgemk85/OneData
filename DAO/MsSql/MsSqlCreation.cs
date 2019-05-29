@@ -6,7 +6,6 @@ using OneData.Tools;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 
 namespace OneData.DAO.MsSql
@@ -67,15 +66,6 @@ namespace OneData.DAO.MsSql
             {
                 return 0;
             }
-        }
-
-        private void SetParametersForQueryOptions<T>(StringBuilder queryBuilder) where T : Cope<T>, IManageable, new()
-        {
-            foreach (PropertyInfo property in typeof(QueryOptions).GetProperties().Where(options => options.GetCustomAttribute(typeof(NotParameter)) == null).OrderBy(option => option.Name))
-            {
-                queryBuilder.AppendFormat("    IN _{0} {1},\n", property.Name, GetSqlDataType(property.PropertyType, Cope<T>.ModelComposition.UniqueKeyProperties.ContainsKey(property.Name), GetDataLengthFromProperty<T>(property.Name)));
-            }
-            queryBuilder.Remove(queryBuilder.Length - 2, 2);
         }
 
         public string CreateInsertStoredProcedure<T>(bool doAlter) where T : Cope<T>, IManageable, new()
