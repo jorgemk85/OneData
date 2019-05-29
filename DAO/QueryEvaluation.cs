@@ -186,6 +186,11 @@ namespace OneData.DAO
                 resultList = queryableList.OrderByDescending(obj => Cope<T>.ModelComposition.DateModifiedProperty.GetValue(obj)).Take(queryOptions.MaximumResults).ToDictionary(Cope<T>.ModelComposition.PrimaryKeyProperty.Name, Cope<T>.ModelComposition.PrimaryKeyProperty.PropertyType);
             }
 
+            if (resultList == null)
+            {
+                resultList = dataCache.Cache.Data;
+            }
+
             return new Result<T>(resultList, true, true);
         }
 
