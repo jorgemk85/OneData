@@ -4,9 +4,9 @@
     <TargetFrameworks>net461;netstandard2.0</TargetFrameworks>
     <LangVersion>7.2</LangVersion>
     <Authors>Jorge Marcos Kawas</Authors>
-    <AssemblyVersion>0.1.60.7</AssemblyVersion>
-    <FileVersion>0.1.60.7</FileVersion>
-    <Version>0.1.60.7-alpha</Version>
+    <AssemblyVersion>0.1.61.14</AssemblyVersion>
+    <FileVersion>0.1.61.14</FileVersion>
+    <Version>0.1.61.14-alpha</Version>
     <AssemblyName>OneData</AssemblyName>
     <RootNamespace>OneData</RootNamespace>
     <PackageLicenseUrl>https://github.com/jorgemk85/OneData/blob/development/LICENSE</PackageLicenseUrl>
@@ -19,11 +19,7 @@
     <PackageTags>orm dataaccess utility database access serialization deserialization</PackageTags>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-    <PackageReleaseNotes>Setting and Getting values from a property now uses FastMember with IL support. By doign this, OneData now manipulates values with objects about 300% faster than using Reflection.
-
-Implemented a new class called OneProperty which purpose is to better cache each property.
-
-HeaderName is fully operational. Now if you set the HeadeName attribute in a property, OneData will detect this and use the provided name in the attribute instead of the name of the property.</PackageReleaseNotes>
+    <PackageReleaseNotes>Fixes and optimizations for internal cache.</PackageReleaseNotes>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net461|AnyCPU'">
