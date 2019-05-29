@@ -75,11 +75,6 @@ namespace OneData.DAO
                     AlterCache(resultado, ref dataCache);
                 }
 
-                if (!resultado.IsFromCache && hasCache)
-                {
-                    AlterCache(resultado, ref dataCache);
-                }
-
                 if (!hasCache && resultado.IsSuccessful)
                 {
                     dataCache.Cache = resultado;
@@ -196,14 +191,12 @@ namespace OneData.DAO
 
         private void UpdateInCache<T>(T obj, ref DataCache<T> dataCache) where T : Cope<T>, IManageable, new()
         {
-            // TODO: En vez de especificar cada propiedad automatica, es mejor barrer la coleccion de propiedades automaticas y asignar el valor que corresponda.
             Cope<T>.ModelComposition.DateModifiedProperty.SetValue(obj, DateTime.Now);
             dataCache.Cache.Data[Cope<T>.ModelComposition.PrimaryKeyProperty.GetValue(obj)] = obj;
         }
 
         private void InsertInCache<T>(T obj, ref DataCache<T> dataCache) where T : Cope<T>, IManageable, new()
         {
-            // TODO: En vez de especificar cada propiedad automatica, es mejor barrer la coleccion de propiedades automaticas y asignar el valor que corresponda.
             Cope<T>.ModelComposition.DateCreatedProperty.SetValue(obj, DateTime.Now);
             Cope<T>.ModelComposition.DateModifiedProperty.SetValue(obj, DateTime.Now);
             dataCache.Cache.Data.Add(Cope<T>.ModelComposition.PrimaryKeyProperty.GetValue(obj), obj);
@@ -219,7 +212,6 @@ namespace OneData.DAO
 
         private void UpdateMassiveInCache<T>(IEnumerable<T> list, ref DataCache<T> dataCache) where T : Cope<T>, IManageable, new()
         {
-            // TODO: Analizar si se puede optimizar este procedimiento de actualizacion de informacion
             foreach (T obj in list)
             {
                 dataCache.Cache.Data[Cope<T>.ModelComposition.PrimaryKeyProperty.GetValue(obj)] = obj;
@@ -228,7 +220,6 @@ namespace OneData.DAO
 
         private void DeleteMassiveInCache<T>(IEnumerable<T> list, ref DataCache<T> dataCache) where T : Cope<T>, IManageable, new()
         {
-            // TODO: Analizar si se puede optimizar este procedimiento de eliminacion de informacion
             foreach (T obj in list)
             {
                 dataCache.Cache.Data.Remove(Cope<T>.ModelComposition.PrimaryKeyProperty.GetValue(obj));
@@ -239,23 +230,9 @@ namespace OneData.DAO
         {
             foreach (KeyValuePair<dynamic, T> item in resultado.Data)
             {
-                AlterCache(item, ref dataCache);
-            }
-            dataCache.LastCacheUpdate = DateTime.Now.Ticks;
-        }
-
-        public void AlterCache<T>(KeyValuePair<dynamic, T> item, ref DataCache<T> dataCache)
-        {
-            if (dataCache.Cache.Data.ContainsKey(item.Key))
-            {
-                // SI existe la fila: la actualiza.
                 dataCache.Cache.Data[item.Key] = item.Value;
             }
-            else
-            {
-                // NO existe la fila: la agrega.
-                dataCache.Cache.Data.Add(item.Key, item.Value);
-            }
+            dataCache.LastCacheUpdate = DateTime.Now.Ticks;
         }
 
         private void DeleteInCache<T>(T obj, ref DataCache<T> dataCache) where T : Cope<T>, IManageable, new()
