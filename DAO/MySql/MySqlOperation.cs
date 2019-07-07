@@ -143,8 +143,9 @@ namespace OneData.DAO.MySql
             {
                 if ((Manager.IsPreventiveModeEnabled || Manager.IsReactiveModeEnabled) && !throwIfError)
                 {
-                    Logger.Warn($"Table {Cope<T>.ModelComposition.TableName} not found. Creating...");
+                    Logger.Warn($"Table {Cope<T>.ModelComposition.TableName} not found in database. This might be because of the quer or something stored inside a stored procedure... Creating and altering stored proecedures...");
                     PerformFullTableCheck(new T(), queryOptions.ConnectionToUse);
+                    ExecuteScalar(GetTransactionTextForProcedure<T>(transactionType, true), queryOptions.ConnectionToUse, false);
                     throwIfError = true;
                     goto Start;
                 }

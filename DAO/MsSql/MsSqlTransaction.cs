@@ -140,6 +140,10 @@ namespace OneData.DAO.MsSql
                 {
                     value = "''";
                 }
+                if (value is DateTime)
+                {
+                    value = $"'{value}'";
+                }
                 return value;
             }
             return 0;

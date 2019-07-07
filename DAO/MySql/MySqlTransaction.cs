@@ -139,6 +139,10 @@ namespace OneData.DAO.MySql
                 {
                     value = "''";
                 }
+                if (value is DateTime)
+                {
+                    value = $"'{value}'";
+                }
                 return value;
             }
             return 0;
