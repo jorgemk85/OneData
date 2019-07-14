@@ -325,7 +325,7 @@ namespace OneData.DAO.MsSql
                     foreignModel = (IManageable)Activator.CreateInstance(foreignAttribute.JoinModel);
                     foreignReferenceModel = (IManageable)Activator.CreateInstance(foreignAttribute.ReferenceModel);
                     foreignTableFullyQualifiedName = $"{Manager.TablePrefix}{foreignModel.Composition.TableName}";
-                    fromBuilder.Append($" INNER JOIN [{foreignTableFullyQualifiedName}] ON [{Manager.TablePrefix}{foreignReferenceModel.Composition.TableName}].[{foreignAttribute.ReferenceIdName}] = [{foreignTableFullyQualifiedName}].[{foreignModel.Composition.PrimaryKeyProperty.Name}]");
+                    fromBuilder.Append($" {foreignAttribute.JoinClauseType.ToString()} JOIN [{foreignTableFullyQualifiedName}] ON [{Manager.TablePrefix}{foreignReferenceModel.Composition.TableName}].[{foreignAttribute.ReferenceIdName}] = [{foreignTableFullyQualifiedName}].[{foreignModel.Composition.PrimaryKeyProperty.Name}]");
                 }
             }
 

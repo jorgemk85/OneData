@@ -121,7 +121,7 @@ namespace OneData.DAO
                 default:
                     ArgumentException argumentException = new ArgumentException("El tipo de transaccion no es valido para generar un nuevo procedimiento almacenado.");
                     Logger.Error(argumentException);
-                    throw argumentException;
+                    return string.Empty;
             }
         }
 

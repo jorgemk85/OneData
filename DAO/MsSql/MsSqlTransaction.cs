@@ -122,7 +122,7 @@ namespace OneData.DAO.MsSql
         }
 
         public string ChangeForeignKeyRules(FullyQualifiedTableName tableName, OneProperty property)
-        { 
+        {
             return $"{RemoveForeignKeyFromColumn(tableName, $"FK_{tableName.Schema}_{tableName.Table}_{property.Name}")}|;|{AddForeignKeyToColumn(tableName, property)}";
         }
 
@@ -133,7 +133,7 @@ namespace OneData.DAO.MsSql
 
         private object GetDefault(Type type)
         {
-            if (type.IsValueType)
+            if (type.IsValueType && type != typeof(bool))
             {
                 object value = Activator.CreateInstance(type);
                 if (string.IsNullOrWhiteSpace(value.ToString()))

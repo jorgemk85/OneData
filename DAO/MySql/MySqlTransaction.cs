@@ -132,7 +132,7 @@ namespace OneData.DAO.MySql
 
         private object GetDefault(Type type)
         {
-            if (type.IsValueType)
+            if (type.IsValueType && type != typeof(bool))
             {
                 object value = Activator.CreateInstance(type);
                 if (string.IsNullOrWhiteSpace(value.ToString()))

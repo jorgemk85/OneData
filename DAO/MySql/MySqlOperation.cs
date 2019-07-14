@@ -21,6 +21,7 @@ namespace OneData.DAO.MySql
         const int ERR_INCORRECT_NUMBER_OF_ARGUMENTS = 1318;
         const int ERR_UNKOWN_COLUMN = 1054;
         const int ERR_NO_DEFAULT_VALUE_IN_FIELD = 1364;
+        const int ERR_INCORRECT_VALUE = 1366;
 
         public MySqlOperation() : base()
         {
@@ -152,7 +153,7 @@ namespace OneData.DAO.MySql
                 Logger.Error(mySqlException);
                 throw;
             }
-            catch (MySqlException mySqlException) when (mySqlException.Number == ERR_INCORRECT_NUMBER_OF_ARGUMENTS || mySqlException.Number == ERR_UNKOWN_COLUMN || mySqlException.Number == ERR_UNKOWN_COLUMN || mySqlException.Number == ERR_NO_DEFAULT_VALUE_IN_FIELD)
+            catch (MySqlException mySqlException) when (mySqlException.Number == ERR_INCORRECT_NUMBER_OF_ARGUMENTS || mySqlException.Number == ERR_UNKOWN_COLUMN || mySqlException.Number == ERR_UNKOWN_COLUMN || mySqlException.Number == ERR_NO_DEFAULT_VALUE_IN_FIELD || mySqlException.Number == ERR_INCORRECT_VALUE)
             {
                 if ((Manager.IsPreventiveModeEnabled || Manager.IsReactiveModeEnabled) && !throwIfError)
                 {
@@ -331,7 +332,7 @@ namespace OneData.DAO.MySql
                     foreignModel = (IManageable)Activator.CreateInstance(foreignAttribute.JoinModel);
                     foreignReferenceModel = (IManageable)Activator.CreateInstance(foreignAttribute.ReferenceModel);
                     foreignTableFullyQualifiedName = $"{Manager.TablePrefix}{foreignModel.Composition.TableName}";
-                    fromBuilder.Append($" INNER JOIN `{foreignTableFullyQualifiedName}` ON `{Manager.TablePrefix}{foreignReferenceModel.Composition.TableName}`.`{foreignAttribute.ReferenceIdName}` = `{foreignTableFullyQualifiedName}`.`{foreignModel.Composition.PrimaryKeyProperty.Name}`");
+                    fromBuilder.Append($" {foreignAttribute.JoinClauseType.ToString()} JOIN `{foreignTableFullyQualifiedName}` ON `{Manager.TablePrefix}{foreignReferenceModel.Composition.TableName}`.`{foreignAttribute.ReferenceIdName}` = `{foreignTableFullyQualifiedName}`.`{foreignModel.Composition.PrimaryKeyProperty.Name}`");
                 }
             }
 

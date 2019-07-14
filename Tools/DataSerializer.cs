@@ -737,7 +737,9 @@ namespace OneData.Tools
             {
                 columns.Add(reader.GetName(i).ToLower());
             }
-            return Cope<T>.ModelComposition.ManagedProperties.Values.Where(property => columns.Contains(property.Name.ToLower()));
+            List<OneProperty> filteredProperties = Cope<T>.ModelComposition.ManagedProperties.Values.Where(property => columns.Contains(property.Name.ToLower())).ToList();
+            filteredProperties.AddRange(Cope<T>.ModelComposition.ForeignDataProperties.Values.Where(property => columns.Contains(property.Name.ToLower())));
+            return filteredProperties;
         }
     }
 }
