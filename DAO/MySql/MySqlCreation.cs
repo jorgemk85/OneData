@@ -154,7 +154,7 @@ namespace OneData.DAO.MySql
                 }
                 if (Cope<T>.ModelComposition.AutoProperties.TryGetValue(property.Value.Name, out OneProperty autoProperty))
                 {
-                    queryBuilder.AppendFormat("    {0} = {1},\n", property.Value.Name, GetAutoPropertyValue(Cope<T>.ModelComposition.AutoPropertyAttributes[property.Value.Name].AutoPropertyType));
+                    queryBuilder.AppendFormat("    `{0}` = {1},\n", property.Value.Name, GetAutoPropertyValue(Cope<T>.ModelComposition.AutoPropertyAttributes[property.Value.Name].AutoPropertyType));
                 }
                 else
                 {

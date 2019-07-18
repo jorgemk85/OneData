@@ -103,7 +103,7 @@ namespace OneData.DAO.MsSql
                 }
                 else
                 {
-                    insertsBuilder.AppendFormat("    {0},\n", property.Value.Name);
+                    insertsBuilder.AppendFormat("    [{0}],\n", property.Value.Name);
                     if (Cope<T>.ModelComposition.AutoProperties.TryGetValue(property.Value.Name, out OneProperty autoProperty))
                     {
                         valuesBuilder.AppendFormat("    {0},\n", GetAutoPropertyValue(Cope<T>.ModelComposition.AutoPropertyAttributes[property.Value.Name].AutoPropertyType));
@@ -161,11 +161,11 @@ namespace OneData.DAO.MsSql
                 }
                 if (Cope<T>.ModelComposition.AutoProperties.TryGetValue(property.Value.Name, out OneProperty autoProperty))
                 {
-                    queryBuilder.AppendFormat("    {0} = {1},\n", property.Value.Name, GetAutoPropertyValue(Cope<T>.ModelComposition.AutoPropertyAttributes[property.Value.Name].AutoPropertyType));
+                    queryBuilder.AppendFormat("    [{0}] = {1},\n", property.Value.Name, GetAutoPropertyValue(Cope<T>.ModelComposition.AutoPropertyAttributes[property.Value.Name].AutoPropertyType));
                 }
                 else
                 {
-                    queryBuilder.AppendFormat("    {0} = ISNULL(@_{0}, {0}),\n", property.Value.Name);
+                    queryBuilder.AppendFormat("    [{0}] = ISNULL(@_{0}, [{0}]),\n", property.Value.Name);
                 }
             }
             queryBuilder.Remove(queryBuilder.Length - 2, 2);
@@ -195,7 +195,7 @@ namespace OneData.DAO.MsSql
             queryBuilder.Append("AS\n");
             queryBuilder.Append("BEGIN\n");
             queryBuilder.AppendFormat("DELETE FROM {0}.{1}{2}\n", Cope<T>.ModelComposition.Schema, Manager.TablePrefix, Cope<T>.ModelComposition.TableName);
-            queryBuilder.AppendFormat($"WHERE {Cope<T>.ModelComposition.PrimaryKeyProperty.Name} = @_{Cope<T>.ModelComposition.PrimaryKeyProperty.Name};\n");
+            queryBuilder.AppendFormat($"WHERE [{Cope<T>.ModelComposition.PrimaryKeyProperty.Name}] = @_{Cope<T>.ModelComposition.PrimaryKeyProperty.Name};\n");
             queryBuilder.Append("END");
 
             Logger.Info("Created a new query for Delete Stored Procedure:");

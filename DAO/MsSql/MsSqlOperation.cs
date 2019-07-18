@@ -143,7 +143,7 @@ namespace OneData.DAO.MsSql
                                                     sqlException.Number == ERR_NOT_A_PARAMETER_FOR_PROCEDURE ||
                                                     sqlException.Number == ERR_OPERAND_TYPE_CLASH)
             {
-                if ((Manager.IsPreventiveModeEnabled  || Manager.IsReactiveModeEnabled) && !throwIfError)
+                if ((Manager.IsPreventiveModeEnabled || Manager.IsReactiveModeEnabled) && !throwIfError)
                 {
                     Logger.Warn($"Incorrect number of arguments or is identity explicit value related to the {transactionType.ToString()} stored procedure. Modifying...");
                     PerformFullTableCheck(new T(), queryOptions.ConnectionToUse);
@@ -179,7 +179,6 @@ namespace OneData.DAO.MsSql
                 if (connection.State != ConnectionState.Open) throw new BadConnectionStateException();
                 _command = connection.CreateCommand();
                 _command.CommandType = CommandType.Text;
-
                 _command.CommandText = $"{GetSelectQuerySection<T>()} {GetFromQuerySection<T>()} ORDER BY [{Cope<T>.ModelComposition.DateModifiedProperty.Name}] DESC {offsetQuery} {limitQuery}";
                 FillDictionaryWithReader(_command.ExecuteReader(), ref result);
             }
@@ -293,16 +292,19 @@ namespace OneData.DAO.MsSql
             StringBuilder selectBuilder = new StringBuilder();
             IManageable foreignObject;
             string foreignTableFullyQualifiedName;
-            string fullyQualifiedTableName = $"{Manager.TablePrefix}{Cope<T>.ModelComposition.TableName}";
+            string foreignJoinModelAlias;
 
-            selectBuilder.Append($"SELECT [{fullyQualifiedTableName}].*");
+            selectBuilder.Append($"SELECT [{Manager.TablePrefix}{Cope<T>.ModelComposition.TableName}].*");
             if (Cope<T>.ModelComposition.ForeignDataAttributes.Count > 0)
             {
                 foreach (ForeignData foreignAttribute in Cope<T>.ModelComposition.ForeignDataAttributes.Values)
                 {
                     foreignObject = (IManageable)Activator.CreateInstance(foreignAttribute.JoinModel);
                     foreignTableFullyQualifiedName = $"{Manager.TablePrefix}{foreignObject.Composition.TableName}";
-                    selectBuilder.Append($",[{foreignTableFullyQualifiedName}].[{foreignAttribute.ColumnName}] as [{foreignAttribute.PropertyName}]");
+
+                    foreignJoinModelAlias = string.IsNullOrWhiteSpace(foreignAttribute.JoinModelTableAlias) ? foreignTableFullyQualifiedName : foreignAttribute.JoinModelTableAlias;
+
+                    selectBuilder.Append($",[{foreignJoinModelAlias}].[{foreignAttribute.ColumnName}] AS [{foreignAttribute.PropertyName}]");
                 }
             }
 
@@ -315,9 +317,10 @@ namespace OneData.DAO.MsSql
             IManageable foreignModel;
             IManageable foreignReferenceModel;
             string foreignTableFullyQualifiedName;
-            string fullyQualifiedTableName = $"{Manager.TablePrefix}{Cope<T>.ModelComposition.TableName}";
+            string foreignJoinModelAlias;
+            string foreignReferenceModelAlias;
 
-            fromBuilder.Append($" FROM [{fullyQualifiedTableName}]");
+            fromBuilder.Append($" FROM [{Manager.TablePrefix}{Cope<T>.ModelComposition.TableName}]");
             if (Cope<T>.ModelComposition.ForeignDataAttributes.Count > 0)
             {
                 foreach (ForeignData foreignAttribute in Cope<T>.ModelComposition.ForeignDataAttributes.Values.GroupBy(x => x.JoinModel).Select(y => y.First()))
@@ -325,7 +328,11 @@ namespace OneData.DAO.MsSql
                     foreignModel = (IManageable)Activator.CreateInstance(foreignAttribute.JoinModel);
                     foreignReferenceModel = (IManageable)Activator.CreateInstance(foreignAttribute.ReferenceModel);
                     foreignTableFullyQualifiedName = $"{Manager.TablePrefix}{foreignModel.Composition.TableName}";
-                    fromBuilder.Append($" {foreignAttribute.JoinClauseType.ToString()} JOIN [{foreignTableFullyQualifiedName}] ON [{Manager.TablePrefix}{foreignReferenceModel.Composition.TableName}].[{foreignAttribute.ReferenceIdName}] = [{foreignTableFullyQualifiedName}].[{foreignModel.Composition.PrimaryKeyProperty.Name}]");
+
+                    foreignJoinModelAlias = string.IsNullOrWhiteSpace(foreignAttribute.JoinModelTableAlias) ? foreignTableFullyQualifiedName : foreignAttribute.JoinModelTableAlias;
+                    foreignReferenceModelAlias = string.IsNullOrWhiteSpace(foreignAttribute.ReferenceModelTableAlias) ? $"{Manager.TablePrefix}{foreignReferenceModel.Composition.TableName}" : foreignAttribute.ReferenceModelTableAlias;
+
+                    fromBuilder.Append($" {foreignAttribute.JoinClauseType.ToString()} JOIN [{foreignTableFullyQualifiedName}] AS [{foreignJoinModelAlias}] ON [{foreignReferenceModelAlias}].[{foreignAttribute.ReferenceIdName}] = [{foreignJoinModelAlias}].[{foreignModel.Composition.PrimaryKeyProperty.Name}]");
                 }
             }
 

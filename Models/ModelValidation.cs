@@ -27,7 +27,7 @@ namespace OneData.Models
                 Name = headerName == null ? property.Name : headerName.Name,
                 Accesor = _accessor,
                 PropertyName = property.Name,
-                PropertyType = property.PropertyType, 
+                PropertyType = property.PropertyType,
                 ReflectedType = property.ReflectedType,
                 AllowNullAttribute = property.GetCustomAttribute<AllowNull>(),
                 DataLengthAttribute = property.GetCustomAttribute<DataLength>(),
@@ -195,6 +195,7 @@ namespace OneData.Models
                 oneProperty.ForeignDataAttribute.ReferenceModel = oneProperty.ReflectedType;
                 oneProperty.ForeignDataAttribute.ReferenceIdName = $"{oneProperty.ForeignDataAttribute.JoinModel.Name}Id";
             }
+
             oneProperty.ForeignDataAttribute.PropertyName = oneProperty.Name;
 
             return oneProperty.ForeignDataAttribute;

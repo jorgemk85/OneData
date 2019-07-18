@@ -300,16 +300,19 @@ namespace OneData.DAO.MySql
             StringBuilder selectBuilder = new StringBuilder();
             IManageable foreignObject;
             string foreignTableFullyQualifiedName;
-            string fullyQualifiedTableName = $"{Manager.TablePrefix}{Cope<T>.ModelComposition.TableName}";
+            string foreignJoinModelAlias;
 
-            selectBuilder.Append($"SELECT `{fullyQualifiedTableName}`.*");
+            selectBuilder.Append($"SELECT `{Manager.TablePrefix}{Cope<T>.ModelComposition.TableName}`.*");
             if (Cope<T>.ModelComposition.ForeignDataAttributes.Count > 0)
             {
                 foreach (ForeignData foreignAttribute in Cope<T>.ModelComposition.ForeignDataAttributes.Values)
                 {
                     foreignObject = (IManageable)Activator.CreateInstance(foreignAttribute.JoinModel);
                     foreignTableFullyQualifiedName = $"{Manager.TablePrefix}{foreignObject.Composition.TableName}";
-                    selectBuilder.Append($",`{foreignTableFullyQualifiedName}`.`{foreignAttribute.ColumnName}` as `{foreignAttribute.PropertyName}`");
+
+                    foreignJoinModelAlias = string.IsNullOrWhiteSpace(foreignAttribute.JoinModelTableAlias) ? foreignTableFullyQualifiedName : foreignAttribute.JoinModelTableAlias;
+
+                    selectBuilder.Append($",`{foreignJoinModelAlias}`.`{foreignAttribute.ColumnName}` as `{foreignAttribute.PropertyName}`");
                 }
             }
 
@@ -322,9 +325,10 @@ namespace OneData.DAO.MySql
             IManageable foreignModel;
             IManageable foreignReferenceModel;
             string foreignTableFullyQualifiedName;
-            string fullyQualifiedTableName = $"{Manager.TablePrefix}{Cope<T>.ModelComposition.TableName}";
+            string foreignJoinModelAlias;
+            string foreignReferenceModelAlias;
 
-            fromBuilder.Append($" FROM `{fullyQualifiedTableName}`");
+            fromBuilder.Append($" FROM `{Manager.TablePrefix}{Cope<T>.ModelComposition.TableName}`");
             if (Cope<T>.ModelComposition.ForeignDataAttributes.Count > 0)
             {
                 foreach (ForeignData foreignAttribute in Cope<T>.ModelComposition.ForeignDataAttributes.Values.GroupBy(x => x.JoinModel).Select(y => y.First()))
@@ -332,7 +336,11 @@ namespace OneData.DAO.MySql
                     foreignModel = (IManageable)Activator.CreateInstance(foreignAttribute.JoinModel);
                     foreignReferenceModel = (IManageable)Activator.CreateInstance(foreignAttribute.ReferenceModel);
                     foreignTableFullyQualifiedName = $"{Manager.TablePrefix}{foreignModel.Composition.TableName}";
-                    fromBuilder.Append($" {foreignAttribute.JoinClauseType.ToString()} JOIN `{foreignTableFullyQualifiedName}` ON `{Manager.TablePrefix}{foreignReferenceModel.Composition.TableName}`.`{foreignAttribute.ReferenceIdName}` = `{foreignTableFullyQualifiedName}`.`{foreignModel.Composition.PrimaryKeyProperty.Name}`");
+
+                    foreignJoinModelAlias = string.IsNullOrWhiteSpace(foreignAttribute.JoinModelTableAlias) ? foreignTableFullyQualifiedName : foreignAttribute.JoinModelTableAlias;
+                    foreignReferenceModelAlias = string.IsNullOrWhiteSpace(foreignAttribute.ReferenceModelTableAlias) ? $"{Manager.TablePrefix}{foreignReferenceModel.Composition.TableName}" : foreignAttribute.ReferenceModelTableAlias;
+
+                    fromBuilder.Append($" {foreignAttribute.JoinClauseType.ToString()} JOIN `{foreignTableFullyQualifiedName}` AS `{foreignJoinModelAlias}` ON `{foreignReferenceModelAlias}`.`{foreignAttribute.ReferenceIdName}` = `{foreignJoinModelAlias}`.`{foreignModel.Composition.PrimaryKeyProperty.Name}`");
                 }
             }
 

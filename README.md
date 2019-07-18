@@ -495,7 +495,7 @@ This method's last parameter corresponds to `QueryOptions` object, which can be 
 ### Can I ask for a new feature?
 > Yes! Please! Go ahead and submit your idea using the proper issue template in OneData's GitHub page.
 ### Do you have any demos?
-> We have a demo project, you can find it [here](https://github.com/jorgemk85/OneData.Demo).
+> We have a demo project, you can find it [here](https://github.com/jorgemk85/OneData.Demo). Please make sure to use the latest OneData's NuGet package.
 
 
 ## Contributing

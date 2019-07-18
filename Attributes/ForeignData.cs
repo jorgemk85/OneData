@@ -7,11 +7,33 @@ namespace OneData.Attributes
     public class ForeignData : Attribute
     {
         public Type JoinModel { get; set; }
+        public string JoinModelTableAlias { get; set; }
         public Type ReferenceModel { get; set; }
+        public string ReferenceModelTableAlias { get; set; }
         public string ReferenceIdName { get; set; }
         public string ColumnName { get; set; }
         public JoinClauseTypes JoinClauseType { get; set; }
         internal string PropertyName { get; set; }
+
+        /// <summary>
+        /// Constructor flexible con todas las especificaciones disponibles para configuracion.
+        /// </summary>
+        /// <param name="joinModel">El tipo del modelo que representa la union a realizar. Debe implementar IManageable.</param>
+        /// <param name="joinModelTableAlias">Alias de la tabla donde se realiza la union.</param>
+        /// <param name="referenceModel">El tipo del modelo que representa la referencia que se hara dentro de la union. Regularmente es la misma clase que declara la propiedad. Debe implementar IManageable</param>
+        /// <param name="referenceModelTableAlias">Alias de la tabla de referencia.</param>
+        /// <param name="referenceIdName">Nombre de la propiedad o columna que contiene el valor Id a localizar para la extraccion de informacion en la union.</param>
+        /// <param name="columnName">Nombre de la propiedad o columna de donde se extrae la informacion.</param>
+        public ForeignData(Type joinModel, string joinModelTableAlias, Type referenceModel, string referenceModelTableAlias, string referenceIdName, string columnName, JoinClauseTypes joinClauseType = JoinClauseTypes.INNER)
+        {
+            JoinModel = joinModel;
+            ReferenceModel = referenceModel;
+            ReferenceIdName = referenceIdName;
+            ColumnName = columnName;
+            JoinClauseType = joinClauseType;
+            JoinModelTableAlias = joinModelTableAlias;
+            ReferenceModelTableAlias = referenceModelTableAlias;
+        }
 
         /// <summary>
         /// Constructor flexible con todas las especificaciones disponibles para configuracion.
@@ -57,3 +79,4 @@ namespace OneData.Attributes
         }
     }
 }
+
