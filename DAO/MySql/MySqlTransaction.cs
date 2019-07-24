@@ -139,7 +139,7 @@ namespace OneData.DAO.MySql
                 {
                     value = "''";
                 }
-                if (value is DateTime)
+                if (value is DateTime || value is Guid)
                 {
                     value = $"'{value}'";
                 }

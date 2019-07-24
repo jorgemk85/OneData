@@ -43,7 +43,7 @@ namespace OneData.Tools
         internal static string ConvertExpressionToSQL<T>(Expression<Func<T, bool>> expression) where T : Cope<T>, IManageable, new()
         {
             StringBuilder builder = new StringBuilder();
-            string qualifiedTableName = Manager.ConnectionType == ConnectionTypes.MySQL ? $"`{Manager.TablePrefix}{Cope<T>.ModelComposition.TableName}`" : $"[{Manager.TablePrefix}{Cope<T>.ModelComposition.TableName}]";
+            string qualifiedTableName = Manager.ConnectionType == ConnectionTypes.MySQL ? $"`{Manager.TablePrefix}{Cope<T>.ModelComposition.TableName}`" : $"[{Cope<T>.ModelComposition.Schema}].[{Manager.TablePrefix}{Cope<T>.ModelComposition.TableName}]";
 
             try
             {
@@ -164,6 +164,7 @@ namespace OneData.Tools
         {
             object result = null;
             bool checkAnsciiType = true;
+            bool isMsSQL = Manager.ConnectionType == ConnectionTypes.MSSQL ? true : false;
 
             if (body is ConstantExpression)
             {
@@ -181,11 +182,11 @@ namespace OneData.Tools
                         checkAnsciiType = false;
                         if (string.IsNullOrWhiteSpace(tableName))
                         {
-                            result = ((MemberExpression)body).Member.Name;
+                            result = isMsSQL == true ? $"[{((MemberExpression)body).Member.Name}]" : $"`{((MemberExpression)body).Member.Name}`";
                         }
                         else
                         {
-                            result = $"{tableName}.{((MemberExpression)body).Member.Name}";
+                            result = isMsSQL == true ? $"{tableName}.[{((MemberExpression)body).Member.Name}]" : $"{tableName}.`{((MemberExpression)body).Member.Name}`";
                         }
                     }
                     else
@@ -207,6 +208,7 @@ namespace OneData.Tools
                 if (result is bool)
                 {
                     checkAnsciiType = false;
+                    result = (bool)result == true ? 1 : 0;
                 }
             }
 

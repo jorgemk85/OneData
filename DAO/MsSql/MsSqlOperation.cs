@@ -292,19 +292,23 @@ namespace OneData.DAO.MsSql
             StringBuilder selectBuilder = new StringBuilder();
             IManageable foreignObject;
             string foreignTableFullyQualifiedName;
-            string foreignJoinModelAlias;
 
-            selectBuilder.Append($"SELECT [{Manager.TablePrefix}{Cope<T>.ModelComposition.TableName}].*");
+            selectBuilder.Append($"SELECT [{Cope<T>.ModelComposition.Schema}].[{Manager.TablePrefix}{Cope<T>.ModelComposition.TableName}].*");
             if (Cope<T>.ModelComposition.ForeignDataAttributes.Count > 0)
             {
                 foreach (ForeignData foreignAttribute in Cope<T>.ModelComposition.ForeignDataAttributes.Values)
                 {
                     foreignObject = (IManageable)Activator.CreateInstance(foreignAttribute.JoinModel);
-                    foreignTableFullyQualifiedName = $"{Manager.TablePrefix}{foreignObject.Composition.TableName}";
+                    foreignTableFullyQualifiedName = $"[{foreignObject.Composition.Schema}].[{Manager.TablePrefix}{foreignObject.Composition.TableName}]";
 
-                    foreignJoinModelAlias = string.IsNullOrWhiteSpace(foreignAttribute.JoinModelTableAlias) ? foreignTableFullyQualifiedName : foreignAttribute.JoinModelTableAlias;
-
-                    selectBuilder.Append($",[{foreignJoinModelAlias}].[{foreignAttribute.ColumnName}] AS [{foreignAttribute.PropertyName}]");
+                    if (!string.IsNullOrWhiteSpace(foreignAttribute.JoinModelTableAlias))
+                    {
+                        selectBuilder.Append($",{foreignAttribute.JoinModelTableAlias}.[{foreignAttribute.ColumnName}] AS [{foreignAttribute.PropertyName}]");
+                    }
+                    else
+                    {
+                        selectBuilder.Append($",{foreignTableFullyQualifiedName}.[{foreignAttribute.ColumnName}] AS [{foreignAttribute.PropertyName}]");
+                    }
                 }
             }
 
@@ -320,19 +324,39 @@ namespace OneData.DAO.MsSql
             string foreignJoinModelAlias;
             string foreignReferenceModelAlias;
 
-            fromBuilder.Append($" FROM [{Manager.TablePrefix}{Cope<T>.ModelComposition.TableName}]");
+            fromBuilder.Append($" FROM [{Cope<T>.ModelComposition.Schema}].[{Manager.TablePrefix}{Cope<T>.ModelComposition.TableName}]");
             if (Cope<T>.ModelComposition.ForeignDataAttributes.Count > 0)
             {
                 foreach (ForeignData foreignAttribute in Cope<T>.ModelComposition.ForeignDataAttributes.Values.GroupBy(x => x.JoinModel).Select(y => y.First()))
                 {
                     foreignModel = (IManageable)Activator.CreateInstance(foreignAttribute.JoinModel);
                     foreignReferenceModel = (IManageable)Activator.CreateInstance(foreignAttribute.ReferenceModel);
-                    foreignTableFullyQualifiedName = $"{Manager.TablePrefix}{foreignModel.Composition.TableName}";
+                    foreignTableFullyQualifiedName = $"[{foreignModel.Composition.Schema}].[{Manager.TablePrefix}{foreignModel.Composition.TableName}]";
 
                     foreignJoinModelAlias = string.IsNullOrWhiteSpace(foreignAttribute.JoinModelTableAlias) ? foreignTableFullyQualifiedName : foreignAttribute.JoinModelTableAlias;
-                    foreignReferenceModelAlias = string.IsNullOrWhiteSpace(foreignAttribute.ReferenceModelTableAlias) ? $"{Manager.TablePrefix}{foreignReferenceModel.Composition.TableName}" : foreignAttribute.ReferenceModelTableAlias;
+                    foreignReferenceModelAlias = string.IsNullOrWhiteSpace(foreignAttribute.ReferenceModelTableAlias) ? $"[{foreignReferenceModel.Composition.Schema}].[{Manager.TablePrefix}{foreignReferenceModel.Composition.TableName}]" : foreignAttribute.ReferenceModelTableAlias;
 
-                    fromBuilder.Append($" {foreignAttribute.JoinClauseType.ToString()} JOIN [{foreignTableFullyQualifiedName}] AS [{foreignJoinModelAlias}] ON [{foreignReferenceModelAlias}].[{foreignAttribute.ReferenceIdName}] = [{foreignJoinModelAlias}].[{foreignModel.Composition.PrimaryKeyProperty.Name}]");
+                    if (foreignTableFullyQualifiedName != foreignJoinModelAlias)
+                    {
+                        fromBuilder.Append($" {foreignAttribute.JoinClauseType.ToString()} JOIN {foreignTableFullyQualifiedName} AS {foreignJoinModelAlias} ON");
+                    }
+                    else
+                    {
+                        fromBuilder.Append($" {foreignAttribute.JoinClauseType.ToString()} JOIN {foreignTableFullyQualifiedName} ON");
+                    }
+                    fromBuilder.Append($" {foreignReferenceModelAlias}.[{foreignAttribute.ReferenceIdName}] = {foreignJoinModelAlias}.[{foreignModel.Composition.PrimaryKeyProperty.Name}]");
+
+                    //if (foreignReferenceModelAlias != $"{Manager.TablePrefix}{foreignReferenceModel.Composition.TableName}")
+                    //{
+                    //    fromBuilder.Append($"{foreignReferenceModelAlias}.[{foreignAttribute.ReferenceIdName}] = {foreignJoinModelAlias}.[{foreignModel.Composition.PrimaryKeyProperty.Name}]");
+                    //}
+                    //else
+                    //{
+                    //    fromBuilder.Append($"{foreignReferenceModelAlias}.[{foreignAttribute.ReferenceIdName}] = {foreignJoinModelAlias}.[{foreignModel.Composition.PrimaryKeyProperty.Name}]");
+                    //}
+
+
+
                 }
             }
 

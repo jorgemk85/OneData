@@ -216,8 +216,8 @@ namespace OneData.DAO
                 var getter = getterLambda.Compile();
                 value = getter();
             }
-
-            return new NameValueObject(member.Member.Name, value);
+            bool isMsSQL = Manager.ConnectionType == ConnectionTypes.MSSQL ? true : false;
+            return new NameValueObject(isMsSQL == true ? $"[{member.Member.Name}]" : $"`{member.Member.Name}`", value);
         }
 
         private static string GetSqlTranslationFromMethodName(MethodCallExpression method, object value)

@@ -36,6 +36,10 @@ namespace OneData.DAO
 
             try
             {
+                if (transaction == "SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_CATALOG = 'GarsaProject' AND TABLE_SCHEMA = 'Projects' AND TABLE_NAME = 'TB_ResourceTypes'")
+                {
+                    Logger.Info($"Starting execution for transaction using connection {connectionToUse}");
+                }
                 Logger.Info($"Starting execution for transaction using connection {connectionToUse}");
                 using (DbConnection connection = _connectionType == ConnectionTypes.MySQL ? (DbConnection)Connection.OpenMySqlConnection(connectionToUse) : (DbConnection)Connection.OpenMsSqlConnection(connectionToUse))
                 {
