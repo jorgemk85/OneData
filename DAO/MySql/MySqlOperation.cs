@@ -94,7 +94,7 @@ namespace OneData.DAO.MySql
                 Logger.Info($"Starting {transactionType.ToString()} execution for object {typeof(T)} using connection {queryOptions.ConnectionToUse}");
                 if (Manager.IsPreventiveModeEnabled)
                 {
-                    PerformFullTableCheck(new T(), queryOptions.ConnectionToUse);
+                    PerformFullModelCheck(new T(), queryOptions.ConnectionToUse);
                 }
 
                 switch (transactionType)
@@ -133,7 +133,7 @@ namespace OneData.DAO.MySql
                 if ((Manager.IsPreventiveModeEnabled || Manager.IsReactiveModeEnabled) && !throwIfError)
                 {
                     Logger.Warn($"Stored Procedure for {transactionType.ToString()} not found. Creating...");
-                    ExecuteScalar(GetTransactionTextForProcedure<T>(transactionType, false), queryOptions.ConnectionToUse, false);
+                    ExecuteScalar(GetTransactionTextForProcedure(new T(), transactionType, false), queryOptions.ConnectionToUse, false);
                     throwIfError = true;
                     goto Start;
                 }
@@ -145,8 +145,7 @@ namespace OneData.DAO.MySql
                 if ((Manager.IsPreventiveModeEnabled || Manager.IsReactiveModeEnabled) && !throwIfError)
                 {
                     Logger.Warn($"Table {Cope<T>.ModelComposition.TableName} not found in database. This might be because of the quer or something stored inside a stored procedure... Creating and altering stored proecedures...");
-                    PerformFullTableCheck(new T(), queryOptions.ConnectionToUse);
-                    ExecuteScalar(GetTransactionTextForProcedure<T>(transactionType, true), queryOptions.ConnectionToUse, false);
+                    PerformFullModelCheck(new T(), queryOptions.ConnectionToUse);
                     throwIfError = true;
                     goto Start;
                 }
@@ -157,8 +156,7 @@ namespace OneData.DAO.MySql
             {
                 if ((Manager.IsPreventiveModeEnabled || Manager.IsReactiveModeEnabled) && !throwIfError)
                 {
-                    PerformFullTableCheck(new T(), queryOptions.ConnectionToUse);
-                    ExecuteScalar(GetTransactionTextForProcedure<T>(transactionType, true), queryOptions.ConnectionToUse, false);
+                    PerformFullModelCheck(new T(), queryOptions.ConnectionToUse);
                     throwIfError = true;
                     goto Start;
                 }

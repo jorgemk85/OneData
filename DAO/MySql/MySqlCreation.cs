@@ -12,41 +12,26 @@ namespace OneData.DAO.MySql
 {
     internal class MySqlCreation : ICreatable
     {
-        public void SetStoredProceduresParameters<T>(StringBuilder queryBuilder, bool setDefaultNull, bool considerPrimary) where T : Cope<T>, IManageable, new()
+        public void SetStoredProceduresParameters(IManageable model, StringBuilder queryBuilder, bool setDefaultNull, bool considerPrimary)
         {
-
             // Aqui se colocan los parametros segun las propiedades del objeto 
-            foreach (KeyValuePair<string, OneProperty> property in Cope<T>.ModelComposition.FilteredProperties)
+            foreach (KeyValuePair<string, OneProperty> property in model.Composition.FilteredProperties)
             {
                 // Si la propiedad actual es la primaria y es auto increment y no se debe considerar para estos parametros, entonces se salta a la sig propiedad.
                 // Esto significa que la propiedad primaria es Identity o Auto Increment y no se debe de mandar como parametro en un Insert.
-                if (property.Value.Equals(Cope<T>.ModelComposition.PrimaryKeyProperty) && Cope<T>.ModelComposition.PrimaryKeyAttribute.IsAutoIncrement && !considerPrimary)
+                if (property.Value.Equals(model.Composition.PrimaryKeyProperty) && model.Composition.PrimaryKeyAttribute.IsAutoIncrement && !considerPrimary)
                 {
                     continue;
                 }
 
                 if (setDefaultNull)
                 {
-                    queryBuilder.AppendFormat("    IN `_{0}` {1} = null,\n", property.Value.Name, GetSqlDataType(property.Value.PropertyType, Cope<T>.ModelComposition.UniqueKeyProperties.ContainsKey(property.Value.Name), GetDataLengthFromProperty<T>(property.Key)));
+                    queryBuilder.AppendFormat("    IN `_{0}` {1} = null,\n", property.Value.Name, GetSqlDataType(property.Value.PropertyType, model.Composition.UniqueKeyProperties.ContainsKey(property.Value.Name), GetDataLengthFromProperty(model, property.Key)));
                 }
                 else
                 {
-                    queryBuilder.AppendFormat("    IN `_{0}` {1},\n", property.Value.Name, GetSqlDataType(property.Value.PropertyType, Cope<T>.ModelComposition.UniqueKeyProperties.ContainsKey(property.Value.Name), GetDataLengthFromProperty<T>(property.Key)));
+                    queryBuilder.AppendFormat("    IN `_{0}` {1},\n", property.Value.Name, GetSqlDataType(property.Value.PropertyType, model.Composition.UniqueKeyProperties.ContainsKey(property.Value.Name), GetDataLengthFromProperty(model, property.Key)));
                 }
-            }
-        }
-
-        private long GetDataLengthFromProperty<T>(string propertyName) where T : Cope<T>, IManageable, new()
-        {
-            Cope<T>.ModelComposition.DataLengthAttributes.TryGetValue(propertyName, out DataLength dataLengthAttribute);
-
-            if (dataLengthAttribute != null)
-            {
-                return dataLengthAttribute.Length;
-            }
-            else
-            {
-                return 0;
             }
         }
 
@@ -64,44 +49,42 @@ namespace OneData.DAO.MySql
             }
         }
 
-        public string CreateInsertStoredProcedure<T>(bool doAlter) where T : Cope<T>, IManageable, new()
+        public string CreateInsertStoredProcedure(IManageable model, bool doAlter)
         {
             StringBuilder queryBuilder = new StringBuilder();
             StringBuilder insertsBuilder = new StringBuilder();
             StringBuilder valuesBuilder = new StringBuilder();
 
-            T obj = new T();
-
-            if (Cope<T>.ModelComposition.ManagedProperties.Count == 0) return string.Empty;
+            if (model.Composition.ManagedProperties.Count == 0) return string.Empty;
 
             if (doAlter)
             {
-                queryBuilder.AppendFormat("DROP PROCEDURE `{0}{1}{2}`;\n", Manager.StoredProcedurePrefix, Cope<T>.ModelComposition.TableName, Manager.InsertSuffix);
+                queryBuilder.AppendFormat("DROP PROCEDURE `{0}{1}{2}`;\n", Manager.StoredProcedurePrefix, model.Composition.TableName, Manager.InsertSuffix);
             }
 
-            queryBuilder.AppendFormat("CREATE PROCEDURE `{0}{1}{2}` (\n", Manager.StoredProcedurePrefix, Cope<T>.ModelComposition.TableName, Manager.InsertSuffix);
+            queryBuilder.AppendFormat("CREATE PROCEDURE `{0}{1}{2}` (\n", Manager.StoredProcedurePrefix, model.Composition.TableName, Manager.InsertSuffix);
 
             // Aqui se colocan los parametros segun las propiedades del objeto
-            SetStoredProceduresParameters<T>(queryBuilder, false, false);
+            SetStoredProceduresParameters(model, queryBuilder, false, false);
 
             queryBuilder.Remove(queryBuilder.Length - 2, 2);
             queryBuilder.Append(")\nBEGIN\n");
             queryBuilder.Append("SET @@sql_mode:=TRADITIONAL;\n");
-            queryBuilder.AppendFormat("INSERT INTO `{0}{1}` (\n", Manager.TablePrefix, Cope<T>.ModelComposition.TableName);
+            queryBuilder.AppendFormat("INSERT INTO `{0}{1}` (\n", Manager.TablePrefix, model.Composition.TableName);
 
             // Seccion para especificar a que columnas se va a insertar y sus valores.
-            foreach (KeyValuePair<string, OneProperty> property in Cope<T>.ModelComposition.ManagedProperties)
+            foreach (KeyValuePair<string, OneProperty> property in model.Composition.ManagedProperties)
             {
-                if (property.Value.Equals(Cope<T>.ModelComposition.PrimaryKeyProperty) && Cope<T>.ModelComposition.PrimaryKeyAttribute.IsAutoIncrement)
+                if (property.Value.Equals(model.Composition.PrimaryKeyProperty) && model.Composition.PrimaryKeyAttribute.IsAutoIncrement)
                 {
                     continue;
                 }
                 else
                 {
                     insertsBuilder.AppendFormat("    `{0}`,\n", property.Value.Name);
-                    if (Cope<T>.ModelComposition.AutoProperties.TryGetValue(property.Value.Name, out OneProperty autoProperty))
+                    if (model.Composition.AutoProperties.TryGetValue(property.Value.Name, out OneProperty autoProperty))
                     {
-                        valuesBuilder.AppendFormat("    {0},\n", GetAutoPropertyValue(Cope<T>.ModelComposition.AutoPropertyAttributes[property.Value.Name].AutoPropertyType));
+                        valuesBuilder.AppendFormat("    {0},\n", GetAutoPropertyValue(model.Composition.AutoPropertyAttributes[property.Value.Name].AutoPropertyType));
                     }
                     else
                     {
@@ -121,40 +104,38 @@ namespace OneData.DAO.MySql
             return queryBuilder.ToString();
         }
 
-        public string CreateUpdateStoredProcedure<T>(bool doAlter) where T : Cope<T>, IManageable, new()
+        public string CreateUpdateStoredProcedure(IManageable model, bool doAlter)
         {
             StringBuilder queryBuilder = new StringBuilder();
 
-            T obj = new T();
-
-            if (Cope<T>.ModelComposition.ManagedProperties.Count == 0) return string.Empty;
+            if (model.Composition.ManagedProperties.Count == 0) return string.Empty;
 
             if (doAlter)
             {
-                queryBuilder.AppendFormat("DROP PROCEDURE `{0}{1}{2}`;\n", Manager.StoredProcedurePrefix, Cope<T>.ModelComposition.TableName, Manager.UpdateSuffix);
+                queryBuilder.AppendFormat("DROP PROCEDURE `{0}{1}{2}`;\n", Manager.StoredProcedurePrefix, model.Composition.TableName, Manager.UpdateSuffix);
             }
 
-            queryBuilder.AppendFormat("CREATE PROCEDURE `{0}{1}{2}` (\n", Manager.StoredProcedurePrefix, Cope<T>.ModelComposition.TableName, Manager.UpdateSuffix);
+            queryBuilder.AppendFormat("CREATE PROCEDURE `{0}{1}{2}` (\n", Manager.StoredProcedurePrefix, model.Composition.TableName, Manager.UpdateSuffix);
 
             // Aqui se colocan los parametros segun las propiedades del objeto
-            SetStoredProceduresParameters<T>(queryBuilder, false, true);
+            SetStoredProceduresParameters(model, queryBuilder, false, true);
 
             queryBuilder.Remove(queryBuilder.Length - 2, 2);
             queryBuilder.Append(")\nBEGIN\n");
             queryBuilder.Append("SET @@sql_mode:=TRADITIONAL;\n");
-            queryBuilder.AppendFormat("UPDATE `{0}{1}`\n", Manager.TablePrefix, Cope<T>.ModelComposition.TableName);
+            queryBuilder.AppendFormat("UPDATE `{0}{1}`\n", Manager.TablePrefix, model.Composition.TableName);
             queryBuilder.Append("SET\n");
 
             // Se especifica el parametro que va en x columna.
-            foreach (KeyValuePair<string, OneProperty> property in Cope<T>.ModelComposition.ManagedProperties)
+            foreach (KeyValuePair<string, OneProperty> property in model.Composition.ManagedProperties)
             {
-                if (property.Value.Equals(Cope<T>.ModelComposition.PrimaryKeyProperty) || property.Value.Name.Equals(Cope<T>.ModelComposition.DateCreatedProperty.Name))
+                if (property.Value.Equals(model.Composition.PrimaryKeyProperty) || property.Value.Name.Equals(model.Composition.DateCreatedProperty.Name))
                 {
                     continue;
                 }
-                if (Cope<T>.ModelComposition.AutoProperties.TryGetValue(property.Value.Name, out OneProperty autoProperty))
+                if (model.Composition.AutoProperties.TryGetValue(property.Value.Name, out OneProperty autoProperty))
                 {
-                    queryBuilder.AppendFormat("    `{0}` = {1},\n", property.Value.Name, GetAutoPropertyValue(Cope<T>.ModelComposition.AutoPropertyAttributes[property.Value.Name].AutoPropertyType));
+                    queryBuilder.AppendFormat("    `{0}` = {1},\n", property.Value.Name, GetAutoPropertyValue(model.Composition.AutoPropertyAttributes[property.Value.Name].AutoPropertyType));
                 }
                 else
                 {
@@ -162,7 +143,7 @@ namespace OneData.DAO.MySql
                 }
             }
             queryBuilder.Remove(queryBuilder.Length - 2, 2);
-            queryBuilder.Append($"WHERE `{Cope<T>.ModelComposition.PrimaryKeyProperty.Name}` = `_{Cope<T>.ModelComposition.PrimaryKeyProperty.Name}`;\n");
+            queryBuilder.Append($"WHERE `{model.Composition.PrimaryKeyProperty.Name}` = `_{model.Composition.PrimaryKeyProperty.Name}`;\n");
             queryBuilder.Append("END");
 
             Logger.Info("(MySql) Created a new query for Update Stored Procedure:");
@@ -170,22 +151,21 @@ namespace OneData.DAO.MySql
             return queryBuilder.ToString();
         }
 
-        public string CreateDeleteStoredProcedure<T>(bool doAlter) where T : Cope<T>, IManageable, new()
+        public string CreateDeleteStoredProcedure(IManageable model, bool doAlter)
         {
             StringBuilder queryBuilder = new StringBuilder();
-            T obj = new T();
 
             if (doAlter)
             {
-                queryBuilder.AppendFormat("DROP PROCEDURE `{0}{1}{2}`;\n", Manager.StoredProcedurePrefix, Cope<T>.ModelComposition.TableName, Manager.DeleteSuffix);
+                queryBuilder.AppendFormat("DROP PROCEDURE `{0}{1}{2}`;\n", Manager.StoredProcedurePrefix, model.Composition.TableName, Manager.DeleteSuffix);
             }
 
-            queryBuilder.AppendFormat("CREATE PROCEDURE `{0}{1}{2}` (\n", Manager.StoredProcedurePrefix, Cope<T>.ModelComposition.TableName, Manager.DeleteSuffix);
+            queryBuilder.AppendFormat("CREATE PROCEDURE `{0}{1}{2}` (\n", Manager.StoredProcedurePrefix, model.Composition.TableName, Manager.DeleteSuffix);
 
-            queryBuilder.Append($"    IN `_{Cope<T>.ModelComposition.PrimaryKeyProperty.Name}` {GetSqlDataType(Cope<T>.ModelComposition.PrimaryKeyProperty.PropertyType, Cope<T>.ModelComposition.UniqueKeyProperties.ContainsKey(Cope<T>.ModelComposition.PrimaryKeyProperty.Name), 0)})\n");
+            queryBuilder.Append($"    IN `_{model.Composition.PrimaryKeyProperty.Name}` {GetSqlDataType(model.Composition.PrimaryKeyProperty.PropertyType, model.Composition.UniqueKeyProperties.ContainsKey(model.Composition.PrimaryKeyProperty.Name), 0)})\n");
             queryBuilder.Append("BEGIN\n");
-            queryBuilder.AppendFormat("DELETE FROM `{0}{1}`\n", Manager.TablePrefix, Cope<T>.ModelComposition.TableName);
-            queryBuilder.Append($"WHERE `{Cope<T>.ModelComposition.PrimaryKeyProperty.Name}` = `_{Cope<T>.ModelComposition.PrimaryKeyProperty.Name}`;\n");
+            queryBuilder.AppendFormat("DELETE FROM `{0}{1}`\n", Manager.TablePrefix, model.Composition.TableName);
+            queryBuilder.Append($"WHERE `{model.Composition.PrimaryKeyProperty.Name}` = `_{model.Composition.PrimaryKeyProperty.Name}`;\n");
             queryBuilder.Append("END");
 
             Logger.Info("(MySql) Created a new query for Delete Stored Procedure:");
@@ -352,7 +332,6 @@ namespace OneData.DAO.MySql
             }
         }
 
-
         public static string GetAutoPropertyValue(AutoPropertyTypes type)
         {
             switch (type)
@@ -366,13 +345,11 @@ namespace OneData.DAO.MySql
             }
         }
 
-        public string CreateMassiveOperationStoredProcedure<T>(bool doAlter) where T : Cope<T>, IManageable, new()
+        public string CreateMassiveOperationStoredProcedure(IManageable model, bool doAlter)
         {
             StringBuilder queryBuilder = new StringBuilder();
 
-            T obj = new T();
-
-            if (Cope<T>.ModelComposition.ManagedProperties.Count == 0) return string.Empty;
+            if (model.Composition.ManagedProperties.Count == 0) return string.Empty;
 
             if (doAlter)
             {

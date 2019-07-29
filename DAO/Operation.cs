@@ -105,23 +105,23 @@ namespace OneData.DAO
             }
         }
 
-        protected string GetTransactionTextForProcedure<T>(TransactionTypes transactionType, bool doAlter) where T : Cope<T>, IManageable, new()
+        protected string GetTransactionTextForProcedure(IManageable model, TransactionTypes transactionType, bool doAlter)
         {
-            Logger.Info($"Getting {transactionType.ToString()} transaction for type {typeof(T)}. DoAlter = {doAlter}");
+            Logger.Info($"Getting {transactionType.ToString()} transaction for type {model.GetType()}. DoAlter = {doAlter}");
             switch (transactionType)
             {
                 case TransactionTypes.Delete:
-                    return _creator.CreateDeleteStoredProcedure<T>(doAlter);
+                    return _creator.CreateDeleteStoredProcedure(model, doAlter);
                 case TransactionTypes.DeleteMassive:
-                    return _creator.CreateMassiveOperationStoredProcedure<T>(doAlter);
+                    return _creator.CreateMassiveOperationStoredProcedure(model, doAlter);
                 case TransactionTypes.Insert:
-                    return _creator.CreateInsertStoredProcedure<T>(doAlter);
+                    return _creator.CreateInsertStoredProcedure(model, doAlter);
                 case TransactionTypes.InsertMassive:
-                    return _creator.CreateMassiveOperationStoredProcedure<T>(doAlter);
+                    return _creator.CreateMassiveOperationStoredProcedure(model, doAlter);
                 case TransactionTypes.Update:
-                    return _creator.CreateUpdateStoredProcedure<T>(doAlter);
+                    return _creator.CreateUpdateStoredProcedure(model, doAlter);
                 case TransactionTypes.UpdateMassive:
-                    return _creator.CreateMassiveOperationStoredProcedure<T>(doAlter);
+                    return _creator.CreateMassiveOperationStoredProcedure(model, doAlter);
                 default:
                     ArgumentException argumentException = new ArgumentException("El tipo de transaccion no es valido para generar un nuevo procedimiento almacenado.");
                     Logger.Error(argumentException);
@@ -150,12 +150,12 @@ namespace OneData.DAO
             string schema = Manager.ConnectionType == ConnectionTypes.MSSQL ? Cope<T>.ModelComposition.Schema : ConsolidationTools.GetInitialCatalog(queryOptions.ConnectionToUse, true);
             if (!DoStoredProcedureExist(ConsolidationTools.GetInitialCatalog(queryOptions.ConnectionToUse), schema, $"{Manager.StoredProcedurePrefix}massive_operation", queryOptions.ConnectionToUse))
             {
-                ExecuteScalar(GetTransactionTextForProcedure<T>(transactionType, false), queryOptions.ConnectionToUse, false);
+                ExecuteScalar(GetTransactionTextForProcedure(new T(), transactionType, false), queryOptions.ConnectionToUse, false);
             }
 
             if (!DoStoredProcedureExist(ConsolidationTools.GetInitialCatalog(queryOptions.ConnectionToUse), schema, $"{Manager.StoredProcedurePrefix}{Cope<T>.ModelComposition.TableName}{GetFriendlyTransactionSuffix(singleTransactionType)}", queryOptions.ConnectionToUse))
             {
-                ExecuteScalar(GetTransactionTextForProcedure<T>(singleTransactionType, false), queryOptions.ConnectionToUse, false);
+                ExecuteScalar(GetTransactionTextForProcedure(new T(), singleTransactionType, false), queryOptions.ConnectionToUse, false);
             }
         }
 
@@ -175,7 +175,7 @@ namespace OneData.DAO
 
             return builder.ToString();
         }
-        
+
         protected string GetFriendlyTransactionSuffix(TransactionTypes transactionType)
         {
             switch (transactionType)
@@ -267,7 +267,7 @@ namespace OneData.DAO
             _command.Parameters.Add(CreateDbParameter("_procedureName", parameters.ProcedureName));
         }
 
-        protected void PerformFullTableCheck(IManageable model, string connectionToUse)
+        protected void PerformFullModelCheck(IManageable model, string connectionToUse)
         {
             if (model.Composition.IsFullySynced)
             {
@@ -284,11 +284,23 @@ namespace OneData.DAO
 
             if (DoTableExist(initialCatalog, schema, model.Composition.TableName, connectionToUse))
             {
-                ExecuteScalar(_creator.CreateQueryForTableAlteration(model, GetColumnDefinition(initialCatalog, schema, model.Composition.TableName, connectionToUse), constraints, tableName), connectionToUse, false);
+                string alterQuery = _creator.CreateQueryForTableAlteration(model, GetColumnDefinition(initialCatalog, schema, model.Composition.TableName, connectionToUse), constraints, tableName);
+                if (!string.IsNullOrWhiteSpace(alterQuery))
+                {
+                    ExecuteScalar(alterQuery, connectionToUse, false);
+                    foreach (TransactionTypes transactionType in Enum.GetValues(typeof(TransactionTypes)).Cast<TransactionTypes>())
+                    {
+                        ExecuteScalar(GetTransactionTextForProcedure(model, transactionType, true), connectionToUse, false);
+                    }
+                }
             }
             else
             {
-                ExecuteScalar(_creator.CreateQueryForTableCreation(model, tableName), connectionToUse, false);
+                string createQuery = _creator.CreateQueryForTableCreation(model, tableName);
+                if (!string.IsNullOrWhiteSpace(createQuery))
+                {
+                    ExecuteScalar(createQuery, connectionToUse, false);
+                }
             }
 
             VerifyForeignTables(model, connectionToUse);
@@ -298,6 +310,8 @@ namespace OneData.DAO
             {
                 ExecuteScalar(foreignKeyQuery, connectionToUse, false);
             }
+
+            // Validacion de Procedimientos Almacenados
         }
 
         private void VerifyForeignTables(IManageable model, string connectionToUse)
@@ -308,7 +322,7 @@ namespace OneData.DAO
             {
                 IManageable foreignModel = (IManageable)Activator.CreateInstance(model.Composition.ForeignKeyAttributes[property.Value.Name].Model);
                 string schema = Manager.ConnectionType == ConnectionTypes.MSSQL ? foreignModel.Composition.Schema : ConsolidationTools.GetInitialCatalog(connectionToUse, true);
-                PerformFullTableCheck(foreignModel, connectionToUse);
+                PerformFullModelCheck(foreignModel, connectionToUse);
             }
         }
 
