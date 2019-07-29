@@ -147,6 +147,7 @@ namespace OneData.DAO.MsSql
                 {
                     Logger.Warn($"Incorrect number of arguments or is identity explicit value related to the {transactionType.ToString()} stored procedure. Modifying...");
                     PerformFullModelCheck(new T(), queryOptions.ConnectionToUse);
+                    ExecuteScalar(GetTransactionTextForProcedure(new T(), transactionType, true), queryOptions.ConnectionToUse, false);
                     throwIfError = true;
                     goto Start;
                 }

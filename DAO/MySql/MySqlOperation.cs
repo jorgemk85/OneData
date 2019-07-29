@@ -157,6 +157,7 @@ namespace OneData.DAO.MySql
                 if ((Manager.IsPreventiveModeEnabled || Manager.IsReactiveModeEnabled) && !throwIfError)
                 {
                     PerformFullModelCheck(new T(), queryOptions.ConnectionToUse);
+                    ExecuteScalar(GetTransactionTextForProcedure(new T(), transactionType, true), queryOptions.ConnectionToUse, false);
                     throwIfError = true;
                     goto Start;
                 }
