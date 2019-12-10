@@ -5,6 +5,7 @@ using OneData.Interfaces;
 using OneData.Models;
 using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Linq.Expressions;
 using System.Text;
 
@@ -40,7 +41,7 @@ namespace OneData.Tools
             return parameters.ToArray();
         }
 
-        internal static string ConvertExpressionToSQL<T>(Expression<Func<T, bool>> expression) where T : Cope<T>, IManageable, new()
+        internal static string ConvertExpressionToSQL<T>(Expression<Func<T, bool>> expression, ref DbCommand command) where T : Cope<T>, IManageable, new()
         {
             StringBuilder builder = new StringBuilder();
             string qualifiedTableName = Manager.ConnectionType == ConnectionTypes.MySQL ? $"`{Manager.TablePrefix}{Cope<T>.ModelComposition.TableName}`" : $"[{Cope<T>.ModelComposition.Schema}].[{Manager.TablePrefix}{Cope<T>.ModelComposition.TableName}]";
@@ -50,53 +51,53 @@ namespace OneData.Tools
                 if (expression.Body.NodeType == ExpressionType.Call)
                 {
                     MethodCallExpression body = (MethodCallExpression)expression.Body;
-                    BuildQueryFromMethodCallExpressionBody(body, ref builder, qualifiedTableName);
+                    BuildQueryFromMethodCallExpressionBody(body, ref builder, qualifiedTableName, ref command);
                 }
                 else
                 {
                     BinaryExpression body = (BinaryExpression)expression.Body;
-                    BuildQueryFromBinaryExpressionBody(body, ref builder, qualifiedTableName);
+                    BuildQueryFromBinaryExpressionBody(body, ref builder, qualifiedTableName, ref command);
                 }
             }
-            catch
+            catch (Exception ex)
             {
-                throw new NotSupportedException($"La instruccion '{expression.ToString()}' no es comprendida por el analizador de consultas. Intente colocar una expresion diferente.");
+                throw new NotSupportedException($"La instruccion '{expression.ToString()}' no es comprendida por el analizador de consultas. Intente colocar una expresion diferente.", ex);
             }
 
             return builder.ToString();
         }
 
-        private static void BuildQueryFromMethodCallExpressionBody(MethodCallExpression body, ref StringBuilder builder, string qualifiedTableName)
+        private static void BuildQueryFromMethodCallExpressionBody(MethodCallExpression body, ref StringBuilder builder, string qualifiedTableName, ref DbCommand command)
         {
-            builder.Append(QueryCreation.GetStringFromNodeType(body, qualifiedTableName));
+            builder.Append(QueryCreation.GetStringFromNodeType(body, qualifiedTableName, ref command));
         }
 
-        private static void BuildQueryFromBinaryExpressionBody(BinaryExpression body, ref StringBuilder builder, string tableName)
+        private static void BuildQueryFromBinaryExpressionBody(BinaryExpression body, ref StringBuilder builder, string tableName, ref DbCommand command)
         {
             string logicalString = string.Empty;
             if (GetNodeGroup(body) == NodeGroupTypes.Comparison)
             {
-                builder.Append(QueryCreation.GetStringFromNodeType(body, tableName));
+                builder.Append(QueryCreation.GetStringFromNodeType(body, tableName, ref command));
                 return;
             }
             else
             {
-                logicalString = QueryCreation.GetStringFromNodeType(body, tableName);
+                logicalString = QueryCreation.GetStringFromNodeType(body, tableName, ref command);
             }
 
             if (GetNodeGroup(body.Left) == NodeGroupTypes.Comparison)
             {
-                builder.Append(QueryCreation.GetStringFromNodeType(body.Left, tableName));
+                builder.Append(QueryCreation.GetStringFromNodeType(body.Left, tableName, ref command));
             }
             else
             {
                 if (body.Left.NodeType == ExpressionType.Call)
                 {
-                    BuildQueryFromMethodCallExpressionBody((MethodCallExpression)body.Left, ref builder, tableName);
+                    BuildQueryFromMethodCallExpressionBody((MethodCallExpression)body.Left, ref builder, tableName, ref command);
                 }
                 else
                 {
-                    BuildQueryFromBinaryExpressionBody((BinaryExpression)body.Left, ref builder, tableName);
+                    BuildQueryFromBinaryExpressionBody((BinaryExpression)body.Left, ref builder, tableName, ref command);
                 }
             }
 
@@ -107,17 +108,17 @@ namespace OneData.Tools
 
             if (GetNodeGroup(body.Right) == NodeGroupTypes.Comparison)
             {
-                builder.Append(QueryCreation.GetStringFromNodeType(body.Right, tableName));
+                builder.Append(QueryCreation.GetStringFromNodeType(body.Right, tableName, ref command));
             }
             else
             {
                 if (body.Right.NodeType == ExpressionType.Call)
                 {
-                    BuildQueryFromMethodCallExpressionBody((MethodCallExpression)body.Right, ref builder, tableName);
+                    BuildQueryFromMethodCallExpressionBody((MethodCallExpression)body.Right, ref builder, tableName, ref command);
                 }
                 else
                 {
-                    BuildQueryFromBinaryExpressionBody((BinaryExpression)body.Right, ref builder, tableName);
+                    BuildQueryFromBinaryExpressionBody((BinaryExpression)body.Right, ref builder, tableName, ref command);
                 }
             }
         }
@@ -151,13 +152,13 @@ namespace OneData.Tools
 
         private static Parameter GetNewParameter(BinaryExpression body)
         {
-            NameValueObject pair = GetPairFromComparison(body, "");
+            BinaryObjectRepresentation pair = GetPairFromComparison(body, "");
             return new Parameter(pair.Name.ToString(), pair.Value);
         }
 
-        internal static NameValueObject GetPairFromComparison(BinaryExpression body, string tableName)
+        internal static BinaryObjectRepresentation GetPairFromComparison(BinaryExpression body, string tableName)
         {
-            return new NameValueObject(GetExpressionValue(body.Left, tableName), GetExpressionValue(body.Right, tableName));
+            return new BinaryObjectRepresentation(GetExpressionValue(body.Left, tableName), GetExpressionValue(body.Right, tableName));
         }
 
         private static object GetExpressionValue(Expression body, string tableName)
@@ -212,12 +213,12 @@ namespace OneData.Tools
                 }
             }
 
-            if (checkAnsciiType && result != null)
-            {
-                // Si el tipo del resultado tiene seleccionado internamente que es un formato de un string, entonces agrega dos comillas simples 
-                // alrededor del mismo.
-                AppendSingleQuotes(ref result);
-            }
+            //if (checkAnsciiType && result != null)
+            //{
+            //    // Si el tipo del resultado tiene seleccionado internamente que es un formato de un string, entonces agrega dos comillas simples 
+            //    // alrededor del mismo.
+            //    AppendSingleQuotes(ref result);
+            //}
 
             if (result == null)
             {

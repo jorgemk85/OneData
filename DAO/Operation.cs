@@ -25,6 +25,7 @@ namespace OneData.DAO
 
         protected ICreatable _creator;
         protected ConnectionTypes _connectionType;
+
         protected DbCommand _command;
 
         internal object ExecuteScalar(string transaction, string connectionToUse, bool returnDataTable)

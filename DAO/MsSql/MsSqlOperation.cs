@@ -280,7 +280,7 @@ namespace OneData.DAO.MsSql
 
                 _command = connection.CreateCommand();
                 _command.CommandType = CommandType.Text;
-                _command.CommandText = $"{GetSelectQuerySection<T>()} {GetFromQuerySection<T>()} WHERE {ExpressionTools.ConvertExpressionToSQL(expression)} ORDER BY {Cope<T>.ModelComposition.DateModifiedProperty.Name} DESC {offsetQuery} {limitQuery}";
+                _command.CommandText = $"{GetSelectQuerySection<T>()} {GetFromQuerySection<T>()} WHERE {ExpressionTools.ConvertExpressionToSQL(expression, ref _command)} ORDER BY {Cope<T>.ModelComposition.DateModifiedProperty.Name} DESC {offsetQuery} {limitQuery}";
                 FillDictionaryWithReader(_command.ExecuteReader(), ref result);
             }
             return result;

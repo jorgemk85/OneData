@@ -287,7 +287,7 @@ namespace OneData.DAO.MySql
 
                 _command = connection.CreateCommand();
                 _command.CommandType = CommandType.Text;
-                _command.CommandText = $"{GetSelectQuerySection<T>()} {GetFromQuerySection<T>()} WHERE {ExpressionTools.ConvertExpressionToSQL(expression)} ORDER BY {Cope<T>.ModelComposition.DateModifiedProperty.Name} DESC {limitQuery} {offsetQuery}";
+                _command.CommandText = $"{GetSelectQuerySection<T>()} {GetFromQuerySection<T>()} WHERE {ExpressionTools.ConvertExpressionToSQL(expression, ref _command)} ORDER BY {Cope<T>.ModelComposition.DateModifiedProperty.Name} DESC {limitQuery} {offsetQuery}";
 
                 FillDictionaryWithReader(_command.ExecuteReader(), ref result);
             }

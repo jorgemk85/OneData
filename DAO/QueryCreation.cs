@@ -1,24 +1,43 @@
-﻿using OneData.Enums;
+﻿using MySql.Data.MySqlClient;
+using OneData.Enums;
 using OneData.Models;
 using OneData.Tools;
 using System;
+using System.Data.Common;
+using System.Data.SqlClient;
 using System.Linq.Expressions;
 
 namespace OneData.DAO
 {
     public class QueryCreation
     {
-        public static string GetStringFromNodeType(Expression body, string tableName)
+        public static string GetStringFromNodeType(Expression body, string tableName, ref DbCommand command)
         {
-            NameValueObject pair = null;
+            BinaryObjectRepresentation binaryRepresentation = null;
 
             if (ExpressionTools.GetNodeGroup(body) == NodeGroupTypes.Comparison)
             {
-                pair = ExpressionTools.GetPairFromComparison((BinaryExpression)body, tableName);
+                binaryRepresentation = ExpressionTools.GetPairFromComparison((BinaryExpression)body, tableName);
             }
             else if (ExpressionTools.GetNodeGroup(body) == NodeGroupTypes.Method)
             {
-                pair = GetPairFromMethod(body, tableName);
+                binaryRepresentation = GetPairFromMethod(body, tableName);
+            }
+
+            if (binaryRepresentation != null)
+            {
+                switch (Manager.ConnectionType)
+                {
+                    case ConnectionTypes.MySQL:
+                        ((MySqlCommand)command).Parameters.AddWithValue(binaryRepresentation.ParameterName, binaryRepresentation.Value);
+                        break;
+                    case ConnectionTypes.MSSQL:
+                        ((SqlCommand)command).Parameters.AddWithValue(binaryRepresentation.ParameterName, binaryRepresentation.Value);
+                        break;
+                    default:
+                        break;
+                }
+
             }
 
             switch (body.NodeType)
@@ -36,7 +55,7 @@ namespace OneData.DAO
                 case ExpressionType.ArrayIndex:
                     break;
                 case ExpressionType.Call:
-                    return $"{tableName}.{pair.Name} {GetSqlTranslationFromMethodName((MethodCallExpression)body, pair.Value)}";
+                    return $"{tableName}.{binaryRepresentation.Name} {GetSqlTranslationFromMethodName((MethodCallExpression)body, binaryRepresentation.ParameterName)}";
                 case ExpressionType.Coalesce:
                     break;
                 case ExpressionType.Conditional:
@@ -50,13 +69,13 @@ namespace OneData.DAO
                 case ExpressionType.Divide:
                     break;
                 case ExpressionType.Equal:
-                    return string.Format("{0} {1}", pair.Name, pair.Value == null ? "is null" : $" = {pair.Value}");
+                    return string.Format("{0} {1}", binaryRepresentation.Name, binaryRepresentation.Value == null ? "is null" : $" = {binaryRepresentation.ParameterName}");
                 case ExpressionType.ExclusiveOr:
                     break;
                 case ExpressionType.GreaterThan:
-                    return string.Format("{0} > {1}", pair.Name, pair.Value ?? "null");
+                    return string.Format("{0} > {1}", binaryRepresentation.Name, binaryRepresentation.ParameterName ?? "null");
                 case ExpressionType.GreaterThanOrEqual:
-                    return string.Format("{0} >= {1}", pair.Name, pair.Value ?? "null");
+                    return string.Format("{0} >= {1}", binaryRepresentation.Name, binaryRepresentation.ParameterName ?? "null");
                 case ExpressionType.Invoke:
                     break;
                 case ExpressionType.Lambda:
@@ -64,9 +83,9 @@ namespace OneData.DAO
                 case ExpressionType.LeftShift:
                     break;
                 case ExpressionType.LessThan:
-                    return string.Format("{0} < {1}", pair.Name, pair.Value ?? "null");
+                    return string.Format("{0} < {1}", binaryRepresentation.Name, binaryRepresentation.ParameterName ?? "null");
                 case ExpressionType.LessThanOrEqual:
-                    return string.Format("{0} <= {1}", pair.Name, pair.Value ?? "null");
+                    return string.Format("{0} <= {1}", binaryRepresentation.Name, binaryRepresentation.ParameterName ?? "null");
                 case ExpressionType.ListInit:
                     break;
                 case ExpressionType.MemberAccess:
@@ -94,7 +113,7 @@ namespace OneData.DAO
                 case ExpressionType.Not:
                     break;
                 case ExpressionType.NotEqual:
-                    return string.Format("{0} {1}", pair.Name, pair.Value == null ? "is not null" : $" != {pair.Value }");
+                    return string.Format("{0} {1}", binaryRepresentation.Name, binaryRepresentation.Value == null ? "is not null" : $" != {binaryRepresentation.ParameterName }");
                 case ExpressionType.Or:
                     break;
                 case ExpressionType.OrElse:
@@ -200,7 +219,7 @@ namespace OneData.DAO
             return string.Empty;
         }
 
-        private static NameValueObject GetPairFromMethod(Expression body, string tableName)
+        private static BinaryObjectRepresentation GetPairFromMethod(Expression body, string tableName)
         {
             MemberExpression member = (MemberExpression)((MethodCallExpression)body).Object;
             MethodCallExpression method = (MethodCallExpression)body;
@@ -217,7 +236,7 @@ namespace OneData.DAO
                 value = getter();
             }
             bool isMsSQL = Manager.ConnectionType == ConnectionTypes.MSSQL ? true : false;
-            return new NameValueObject(isMsSQL == true ? $"[{member.Member.Name}]" : $"`{member.Member.Name}`", value);
+            return new BinaryObjectRepresentation(isMsSQL == true ? $"[{member.Member.Name}]" : $"`{member.Member.Name}`", value);
         }
 
         private static string GetSqlTranslationFromMethodName(MethodCallExpression method, object value)
