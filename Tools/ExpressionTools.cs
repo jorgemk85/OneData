@@ -164,7 +164,6 @@ namespace OneData.Tools
         private static object GetExpressionValue(Expression body, string tableName)
         {
             object result = null;
-            bool checkAnsciiType = true;
             bool isMsSQL = Manager.ConnectionType == ConnectionTypes.MSSQL ? true : false;
 
             if (body is ConstantExpression)
@@ -180,7 +179,6 @@ namespace OneData.Tools
                     {
                         // Si contiene un valor en Expression es por que  hace referencia a una propiedad interna y por ello
                         // no debe obtener el valor contenido (ya que no existe), sino solo el nombre de la misma.
-                        checkAnsciiType = false;
                         if (string.IsNullOrWhiteSpace(tableName))
                         {
                             result = isMsSQL == true ? $"[{((MemberExpression)body).Member.Name}]" : $"`{((MemberExpression)body).Member.Name}`";
@@ -208,17 +206,9 @@ namespace OneData.Tools
                 result = Expression.Lambda(body).Compile().DynamicInvoke();
                 if (result is bool)
                 {
-                    checkAnsciiType = false;
                     result = (bool)result == true ? 1 : 0;
                 }
             }
-
-            //if (checkAnsciiType && result != null)
-            //{
-            //    // Si el tipo del resultado tiene seleccionado internamente que es un formato de un string, entonces agrega dos comillas simples 
-            //    // alrededor del mismo.
-            //    AppendSingleQuotes(ref result);
-            //}
 
             if (result == null)
             {

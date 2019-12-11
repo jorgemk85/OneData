@@ -14,6 +14,7 @@ namespace OneData.DAO
         public static string GetStringFromNodeType(Expression body, string tableName, ref DbCommand command)
         {
             BinaryObjectRepresentation binaryRepresentation = null;
+            string stringFromNode = string.Empty;
 
             if (ExpressionTools.GetNodeGroup(body) == NodeGroupTypes.Comparison)
             {
@@ -22,22 +23,6 @@ namespace OneData.DAO
             else if (ExpressionTools.GetNodeGroup(body) == NodeGroupTypes.Method)
             {
                 binaryRepresentation = GetPairFromMethod(body, tableName);
-            }
-
-            if (binaryRepresentation != null)
-            {
-                switch (Manager.ConnectionType)
-                {
-                    case ConnectionTypes.MySQL:
-                        ((MySqlCommand)command).Parameters.AddWithValue(binaryRepresentation.ParameterName, binaryRepresentation.Value);
-                        break;
-                    case ConnectionTypes.MSSQL:
-                        ((SqlCommand)command).Parameters.AddWithValue(binaryRepresentation.ParameterName, binaryRepresentation.Value);
-                        break;
-                    default:
-                        break;
-                }
-
             }
 
             switch (body.NodeType)
@@ -49,13 +34,16 @@ namespace OneData.DAO
                 case ExpressionType.And:
                     break;
                 case ExpressionType.AndAlso:
-                    return " AND ";
+                    stringFromNode = " AND ";
+                    break;
                 case ExpressionType.ArrayLength:
                     break;
                 case ExpressionType.ArrayIndex:
                     break;
                 case ExpressionType.Call:
-                    return $"{tableName}.{binaryRepresentation.Name} {GetSqlTranslationFromMethodName((MethodCallExpression)body, binaryRepresentation.ParameterName)}";
+                    stringFromNode = $"{tableName}.{binaryRepresentation.Name} LIKE {binaryRepresentation.ParameterName}";
+                    binaryRepresentation.Value = GetSqlTranslationFromMethodName(((MethodCallExpression)body).Method.Name, binaryRepresentation.Value);
+                    break;
                 case ExpressionType.Coalesce:
                     break;
                 case ExpressionType.Conditional:
@@ -69,13 +57,16 @@ namespace OneData.DAO
                 case ExpressionType.Divide:
                     break;
                 case ExpressionType.Equal:
-                    return string.Format("{0} {1}", binaryRepresentation.Name, binaryRepresentation.Value == null ? "is null" : $" = {binaryRepresentation.ParameterName}");
+                    stringFromNode = string.Format("{0} {1}", binaryRepresentation.Name, binaryRepresentation.Value == null ? "is null" : $" = {binaryRepresentation.ParameterName}");
+                    break;
                 case ExpressionType.ExclusiveOr:
                     break;
                 case ExpressionType.GreaterThan:
-                    return string.Format("{0} > {1}", binaryRepresentation.Name, binaryRepresentation.ParameterName ?? "null");
+                    stringFromNode = string.Format("{0} > {1}", binaryRepresentation.Name, binaryRepresentation.ParameterName ?? "null");
+                    break;
                 case ExpressionType.GreaterThanOrEqual:
-                    return string.Format("{0} >= {1}", binaryRepresentation.Name, binaryRepresentation.ParameterName ?? "null");
+                    stringFromNode = string.Format("{0} >= {1}", binaryRepresentation.Name, binaryRepresentation.ParameterName ?? "null");
+                    break;
                 case ExpressionType.Invoke:
                     break;
                 case ExpressionType.Lambda:
@@ -83,9 +74,11 @@ namespace OneData.DAO
                 case ExpressionType.LeftShift:
                     break;
                 case ExpressionType.LessThan:
-                    return string.Format("{0} < {1}", binaryRepresentation.Name, binaryRepresentation.ParameterName ?? "null");
+                    stringFromNode = string.Format("{0} < {1}", binaryRepresentation.Name, binaryRepresentation.ParameterName ?? "null");
+                    break;
                 case ExpressionType.LessThanOrEqual:
-                    return string.Format("{0} <= {1}", binaryRepresentation.Name, binaryRepresentation.ParameterName ?? "null");
+                    stringFromNode = string.Format("{0} <= {1}", binaryRepresentation.Name, binaryRepresentation.ParameterName ?? "null");
+                    break;
                 case ExpressionType.ListInit:
                     break;
                 case ExpressionType.MemberAccess:
@@ -113,11 +106,13 @@ namespace OneData.DAO
                 case ExpressionType.Not:
                     break;
                 case ExpressionType.NotEqual:
-                    return string.Format("{0} {1}", binaryRepresentation.Name, binaryRepresentation.Value == null ? "is not null" : $" != {binaryRepresentation.ParameterName }");
+                    stringFromNode = string.Format("{0} {1}", binaryRepresentation.Name, binaryRepresentation.Value == null ? "is not null" : $" != {binaryRepresentation.ParameterName }");
+                    break;
                 case ExpressionType.Or:
                     break;
                 case ExpressionType.OrElse:
-                    return " OR ";
+                    stringFromNode = " OR ";
+                    break;
                 case ExpressionType.Parameter:
                     break;
                 case ExpressionType.Power:
@@ -216,7 +211,22 @@ namespace OneData.DAO
                     break;
             }
 
-            return string.Empty;
+            if (binaryRepresentation != null)
+            {
+                switch (Manager.ConnectionType)
+                {
+                    case ConnectionTypes.MySQL:
+                        ((MySqlCommand)command).Parameters.AddWithValue(binaryRepresentation.ParameterName, binaryRepresentation.Value);
+                        break;
+                    case ConnectionTypes.MSSQL:
+                        ((SqlCommand)command).Parameters.AddWithValue(binaryRepresentation.ParameterName, binaryRepresentation.Value);
+                        break;
+                    default:
+                        break;
+                }
+            }
+
+            return stringFromNode;
         }
 
         private static BinaryObjectRepresentation GetPairFromMethod(Expression body, string tableName)
@@ -239,18 +249,18 @@ namespace OneData.DAO
             return new BinaryObjectRepresentation(isMsSQL == true ? $"[{member.Member.Name}]" : $"`{member.Member.Name}`", value);
         }
 
-        private static string GetSqlTranslationFromMethodName(MethodCallExpression method, object value)
+        private static string GetSqlTranslationFromMethodName(string name, object value)
         {
-            switch (method.Method.Name)
+            switch (name)
             {
                 case "Contains":
-                    return $"like '%{value}%'";
+                    return $"%{value}%";
                 case "StartsWith":
-                    return $"like '{value}%'";
+                    return $"{value}%";
                 case "EndsWith":
-                    return $"like '%{value}'";
+                    return $"%{value}";
                 default:
-                    throw new NotSupportedException($"El metodo '{method.Method.Name}' no es comprendido por el analizador de consultas. Intente colocar una expresion diferente.");
+                    throw new NotSupportedException($"El metodo '{name}' no es comprendido por el analizador de consultas. Intente colocar una expresion diferente.");
             }
         }
     }
