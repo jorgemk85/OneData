@@ -4,9 +4,9 @@
     <TargetFrameworks>net461;netstandard2.0</TargetFrameworks>
     <LangVersion>7.2</LangVersion>
     <Authors>Jorge Marcos Kawas</Authors>
-    <AssemblyVersion>0.1.67.02</AssemblyVersion>
-    <FileVersion>0.1.67.02</FileVersion>
-    <Version>0.1.67.02-alpha</Version>
+    <AssemblyVersion>0.1.70.14</AssemblyVersion>
+    <FileVersion>0.1.70.14</FileVersion>
+    <Version>0.1.70.14-alpha</Version>
     <AssemblyName>OneData</AssemblyName>
     <RootNamespace>OneData</RootNamespace>
     <PackageLicenseUrl>https://github.com/jorgemk85/OneData/blob/development/LICENSE</PackageLicenseUrl>
@@ -19,7 +19,7 @@
     <PackageTags>orm dataaccess utility database access serialization deserialization</PackageTags>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-    <PackageReleaseNotes>Fixed a bug that prevented OneData from altering a stored procedure when it was not updated to match the table structure.</PackageReleaseNotes>
+    <PackageReleaseNotes>Fixed a bug that returned no data when using a "LIKE" statement.</PackageReleaseNotes>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net461|AnyCPU'">
