@@ -166,48 +166,22 @@ namespace OneData.Tools
             object result = null;
             bool isMsSQL = Manager.ConnectionType == ConnectionTypes.MSSQL ? true : false;
 
-            if (body is ConstantExpression)
+            switch (body)
             {
-                result = ((ConstantExpression)body).Value;
-            }
-
-            if (body is MemberExpression)
-            {
-                if (((MemberExpression)body).Expression != null)
-                {
-                    if (((MemberExpression)body).Expression.NodeType == ExpressionType.Parameter)
-                    {
-                        // Si contiene un valor en Expression es por que  hace referencia a una propiedad interna y por ello
-                        // no debe obtener el valor contenido (ya que no existe), sino solo el nombre de la misma.
-                        if (string.IsNullOrWhiteSpace(tableName))
-                        {
-                            result = isMsSQL == true ? $"[{((MemberExpression)body).Member.Name}]" : $"`{((MemberExpression)body).Member.Name}`";
-                        }
-                        else
-                        {
-                            result = isMsSQL == true ? $"{tableName}.[{((MemberExpression)body).Member.Name}]" : $"{tableName}.`{((MemberExpression)body).Member.Name}`";
-                        }
-                    }
-                    else
-                    {
-                        // Caso contrario, significa que tiene que traer el valor contenido en la variable o propiedad.
-                        result = Expression.Lambda(body).Compile().DynamicInvoke();
-                    }
-                }
-                else
-                {
-                    // Caso contrario, significa que tiene que traer el valor contenido en la variable o propiedad.
-                    result = Expression.Lambda(body).Compile().DynamicInvoke();
-                }
-            }
-
-            if (body is UnaryExpression || body is MethodCallExpression)
-            {
-                result = Expression.Lambda(body).Compile().DynamicInvoke();
-                if (result is bool)
-                {
-                    result = (bool)result == true ? 1 : 0;
-                }
+                case ConstantExpression constantExpression:
+                    result = GetResultFromConstantExpression(constantExpression, tableName);
+                    break;
+                case MemberExpression memberExpression:
+                    result = GetResultFromMemberExpression(memberExpression, tableName);
+                    break;
+                case MethodCallExpression methodCallExpression:
+                    result = GetResultFromMethodCallExpression(methodCallExpression, tableName);
+                    break;
+                case UnaryExpression unaryExpression:
+                    result = GetResultFromUnaryExpression(unaryExpression, tableName);
+                    break;
+                default:
+                    break;
             }
 
             if (result == null)
@@ -216,6 +190,74 @@ namespace OneData.Tools
             }
 
             return result;
+        }
+
+        private static object GetResultFromUnaryExpression(UnaryExpression unaryExpression, string tableName)
+        {
+            switch (unaryExpression.Operand)
+            {
+                case MemberExpression memberExpression:
+                    if (memberExpression.Expression.NodeType == ExpressionType.Parameter)
+                    {
+                        return GetMemberExpressionName(memberExpression, tableName);
+                    }
+                    break;
+                default:
+                    break;
+            }
+
+            object result = Expression.Lambda(unaryExpression).Compile().DynamicInvoke();
+            if (result is bool)
+            {
+                result = (bool)result == true ? 1 : 0;
+            }
+
+            return result;
+        }
+
+        private static object GetResultFromMethodCallExpression(MethodCallExpression methodCallExpression, string tableName)
+        {
+            object result = Expression.Lambda(methodCallExpression).Compile().DynamicInvoke();
+            if (result is bool)
+            {
+                result = (bool)result == true ? 1 : 0;
+            }
+
+            return result;
+        }
+
+        private static object GetResultFromMemberExpression(MemberExpression memberExpression, string tableName)
+        {
+            if (memberExpression.Expression != null)
+            {
+                if (memberExpression.Expression.NodeType == ExpressionType.Parameter)
+                {
+                    return GetMemberExpressionName(memberExpression, tableName);
+                }
+            }
+
+            return Expression.Lambda(memberExpression).Compile().DynamicInvoke();
+        }
+
+        private static object GetResultFromConstantExpression(ConstantExpression constantExpression, string tableName)
+        {
+            return constantExpression.Value;
+        }
+
+        private static string GetMemberExpressionName(MemberExpression body, string tableName)
+        {
+            bool isMsSQL = Manager.ConnectionType == ConnectionTypes.MSSQL ? true : false;
+
+            // Si contiene un valor en Expression es por que  hace referencia a una propiedad interna y por ello
+            // no debe obtener el valor contenido (ya que no existe), sino solo el nombre de la misma.
+            if (string.IsNullOrWhiteSpace(tableName))
+            {
+                return isMsSQL == true ? $"[{body.Member.Name}]" : $"`{body.Member.Name}`";
+            }
+            else
+            {
+                return isMsSQL == true ? $"{tableName}.[{((MemberExpression)body).Member.Name}]" : $"{tableName}.`{((MemberExpression)body).Member.Name}`";
+            }
         }
 
         private static void AppendSingleQuotes(ref object result)
