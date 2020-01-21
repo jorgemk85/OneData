@@ -1,10 +1,8 @@
 ﻿using OneData.DAO;
 using OneData.Enums;
-using OneData.Exceptions;
 using OneData.Interfaces;
 using OneData.Models;
 using System;
-using System.Collections.Generic;
 using System.Data.Common;
 using System.Linq.Expressions;
 using System.Text;
@@ -13,77 +11,29 @@ namespace OneData.Tools
 {
     public class ExpressionTools
     {
-        internal static TRequired GetExpressionBodyType<TParameter, TResult, TRequired>(Expression<Func<TParameter, TResult>> expression, Expression<Func<TParameter, TRequired>> expressionType, bool throwErrorIfFalse = true) where TRequired : class
-        {
-            TRequired currentExpressionType = expression.Body as TRequired;
-
-            if (currentExpressionType == null && throwErrorIfFalse)
-            {
-                throw new NotMatchingExpressionTypeException(expression.Body.GetType().FullName, expressionType.ToString());
-            }
-
-            return currentExpressionType;
-        }
-
-        internal static Parameter[] ConvertExpressionToParameters<T>(Expression<Func<T, bool>> expression)
-        {
-            List<Parameter> parameters = new List<Parameter>();
-
-            try
-            {
-                SetParametersFromExpressionBody((BinaryExpression)expression.Body, ref parameters);
-            }
-            catch
-            {
-                throw new NotSupportedException($"La instruccion '{expression.ToString()}' no es comprendida por el analizador de consultas. Intente colocar una expresion diferente.");
-            }
-
-            return parameters.ToArray();
-        }
-
         internal static string ConvertExpressionToSQL<T>(Expression<Func<T, bool>> expression, ref DbCommand command) where T : Cope<T>, IManageable, new()
         {
-            StringBuilder builder = new StringBuilder();
-            string qualifiedTableName = Manager.ConnectionType == ConnectionTypes.MySQL ? $"`{Manager.TablePrefix}{Cope<T>.ModelComposition.TableName}`" : $"[{Cope<T>.ModelComposition.Schema}].[{Manager.TablePrefix}{Cope<T>.ModelComposition.TableName}]";
-
             try
             {
-                if (expression.Body.NodeType == ExpressionType.Call)
-                {
-                    MethodCallExpression body = (MethodCallExpression)expression.Body;
-                    BuildQueryFromMethodCallExpressionBody(body, ref builder, qualifiedTableName, ref command);
-                }
-                else
-                {
-                    BinaryExpression body = (BinaryExpression)expression.Body;
-                    BuildQueryFromBinaryExpressionBody(body, ref builder, qualifiedTableName, ref command);
-                }
+                StringBuilder builder = new StringBuilder();
+                string qualifiedTableName = Manager.ConnectionType == ConnectionTypes.MySQL ? $"`{Manager.TablePrefix}{Cope<T>.ModelComposition.TableName}`" : $"[{Cope<T>.ModelComposition.Schema}].[{Manager.TablePrefix}{Cope<T>.ModelComposition.TableName}]";
+                BinaryExpression body = (BinaryExpression)expression.Body;
+
+                BuildQueryFromBinaryExpressionBody(body, ref builder, qualifiedTableName, ref command);
+
+                return builder.ToString();
             }
             catch (Exception ex)
             {
                 throw new NotSupportedException($"La instruccion '{expression.ToString()}' no es comprendida por el analizador de consultas. Intente colocar una expresion diferente.", ex);
             }
-
-            return builder.ToString();
-        }
-
-        private static void BuildQueryFromMethodCallExpressionBody(MethodCallExpression body, ref StringBuilder builder, string qualifiedTableName, ref DbCommand command)
-        {
-            builder.Append(QueryCreation.GetStringFromNodeType(body, qualifiedTableName, ref command));
         }
 
         private static void BuildQueryFromBinaryExpressionBody(BinaryExpression body, ref StringBuilder builder, string tableName, ref DbCommand command)
         {
-            string logicalString = string.Empty;
-            if (GetNodeGroup(body) == NodeGroupTypes.Comparison)
-            {
-                builder.Append(QueryCreation.GetStringFromNodeType(body, tableName, ref command));
-                return;
-            }
-            else
-            {
-                logicalString = QueryCreation.GetStringFromNodeType(body, tableName, ref command);
-            }
+            string logicalString = QueryCreation.GetLogicalStringFromNodeTypeOperation(body);
+
+            builder.Append("(");
 
             if (GetNodeGroup(body.Left) == NodeGroupTypes.Comparison)
             {
@@ -91,14 +41,7 @@ namespace OneData.Tools
             }
             else
             {
-                if (body.Left.NodeType == ExpressionType.Call)
-                {
-                    BuildQueryFromMethodCallExpressionBody((MethodCallExpression)body.Left, ref builder, tableName, ref command);
-                }
-                else
-                {
-                    BuildQueryFromBinaryExpressionBody((BinaryExpression)body.Left, ref builder, tableName, ref command);
-                }
+                BuildQueryFromBinaryExpressionBody((BinaryExpression)body.Left, ref builder, tableName, ref command);
             }
 
             if (!string.IsNullOrWhiteSpace(logicalString))
@@ -112,48 +55,10 @@ namespace OneData.Tools
             }
             else
             {
-                if (body.Right.NodeType == ExpressionType.Call)
-                {
-                    BuildQueryFromMethodCallExpressionBody((MethodCallExpression)body.Right, ref builder, tableName, ref command);
-                }
-                else
-                {
-                    BuildQueryFromBinaryExpressionBody((BinaryExpression)body.Right, ref builder, tableName, ref command);
-                }
-            }
-        }
-
-        private static void SetParametersFromExpressionBody(BinaryExpression body, ref List<Parameter> parameters)
-        {
-            if (GetNodeGroup(body) == NodeGroupTypes.Comparison)
-            {
-                parameters.Add(GetNewParameter(body));
-                return;
+                BuildQueryFromBinaryExpressionBody((BinaryExpression)body.Right, ref builder, tableName, ref command);
             }
 
-            if (GetNodeGroup(body.Left) == NodeGroupTypes.Comparison)
-            {
-                parameters.Add(GetNewParameter((BinaryExpression)body.Left));
-            }
-            else
-            {
-                SetParametersFromExpressionBody((BinaryExpression)body.Left, ref parameters);
-            }
-
-            if (GetNodeGroup(body.Right) == NodeGroupTypes.Comparison)
-            {
-                parameters.Add(GetNewParameter((BinaryExpression)body.Right));
-            }
-            else
-            {
-                SetParametersFromExpressionBody((BinaryExpression)body.Right, ref parameters);
-            }
-        }
-
-        private static Parameter GetNewParameter(BinaryExpression body)
-        {
-            BinaryObjectRepresentation pair = GetPairFromComparison(body, "");
-            return new Parameter(pair.Name.ToString(), pair.Value);
+            builder.Append(")");
         }
 
         internal static BinaryObjectRepresentation GetPairFromComparison(BinaryExpression body, string tableName)
@@ -163,7 +68,7 @@ namespace OneData.Tools
 
         private static object GetExpressionValue(Expression body, string tableName)
         {
-            object result = null;
+            object result = new object();
             bool isMsSQL = Manager.ConnectionType == ConnectionTypes.MSSQL ? true : false;
 
             switch (body)
@@ -184,7 +89,7 @@ namespace OneData.Tools
                     break;
             }
 
-            if (result == null)
+            if (result == new object())
             {
                 throw new NotSupportedException($"La instruccion '{body.ToString()}' no es comprendida por el analizador de consultas. Intente colocar una expresion diferente.");
             }
@@ -244,7 +149,7 @@ namespace OneData.Tools
             return constantExpression.Value;
         }
 
-        private static string GetMemberExpressionName(MemberExpression body, string tableName)
+        private static string GetMemberExpressionName(MemberExpression memberExpression, string tableName)
         {
             bool isMsSQL = Manager.ConnectionType == ConnectionTypes.MSSQL ? true : false;
 
@@ -252,19 +157,11 @@ namespace OneData.Tools
             // no debe obtener el valor contenido (ya que no existe), sino solo el nombre de la misma.
             if (string.IsNullOrWhiteSpace(tableName))
             {
-                return isMsSQL == true ? $"[{body.Member.Name}]" : $"`{body.Member.Name}`";
+                return isMsSQL == true ? $"[{memberExpression.Member.Name}]" : $"`{memberExpression.Member.Name}`";
             }
             else
             {
-                return isMsSQL == true ? $"{tableName}.[{((MemberExpression)body).Member.Name}]" : $"{tableName}.`{((MemberExpression)body).Member.Name}`";
-            }
-        }
-
-        private static void AppendSingleQuotes(ref object result)
-        {
-            if (result.GetType().IsAnsiClass)
-            {
-                result = $"'{result}'";
+                return isMsSQL == true ? $"{tableName}.[{memberExpression.Member.Name}]" : $"{tableName}.`{memberExpression.Member.Name}`";
             }
         }
 

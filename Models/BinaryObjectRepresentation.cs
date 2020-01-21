@@ -1,4 +1,6 @@
-﻿namespace OneData.Models
+﻿using System;
+
+namespace OneData.Models
 {
     public class BinaryObjectRepresentation
     {
@@ -8,9 +10,11 @@
 
         public BinaryObjectRepresentation(object name, object value)
         {
+            Random random = new Random();
+
             Name = name;
             Value = value;
-            ParameterName = $"@{name.ToString().Replace("[", "").Replace("]", "").Replace(".", "")}";
+            ParameterName = $"@{name.ToString().Replace("[", "").Replace("]", "").Replace(".", "")}{random.Next(1000, 9999)}";
         }
     }
 }

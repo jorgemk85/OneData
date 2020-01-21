@@ -7,6 +7,7 @@ using OneData.Models.QueryBuilder;
 using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
+using System.Threading.Tasks;
 
 namespace OneData.Models
 {
@@ -54,15 +55,10 @@ namespace OneData.Models
             return Manager<T>.SelectAll(queryOptions).Data.ToList();
         }
 
-        /// <summary>
-        /// Obtiene un listado de los objetos de tipo <typeparamref name="T"/> almacenados en la base de datos o en el cache segun los parametros indicados.
-        /// Este metodo usa la conexion predeterminada a la base de datos.
-        /// </summary>
-        /// <returns>Regresa el resultado que incluye la coleccion obtenida por la consulta.</returns>
-        [Obsolete("Este metodo no debe utilizarse. Por favor utilice el Select con expresion lambda.", true)]
-        public static Result<T> Select(params Parameter[] parameters)
+        public static async Task<List<T>> SelectAllAsync(QueryOptions queryOptions)
         {
-            return null;
+            Result<T> result = await Manager<T>.SelectAllAsync(queryOptions);
+            return result.Data.ToList();
         }
 
         /// <summary>
@@ -73,6 +69,17 @@ namespace OneData.Models
         public static T Select(Expression<Func<T, bool>> expression)
         {
             return Manager<T>.Select(expression, new QueryOptions() { MaximumResults = 1 }).Data.ToObject();
+        }
+
+        /// <summary>
+        /// Obtiene un objeto de tipo <typeparamref name="T"/> almacenados en la base de datos o en el cache segun los parametros indicados via una expresion.
+        /// Este metodo usa la conexion predeterminada a la base de datos.
+        /// </summary>
+        /// <returns>Regresa el resultado que incluye la coleccion obtenida por la consulta.</returns>
+        public static async Task<T> SelectAsync(Expression<Func<T, bool>> expression)
+        {
+            Result<T> result = await Manager<T>.SelectAsync(expression, new QueryOptions() { MaximumResults = 1 });
+            return result.Data.ToObject();
         }
 
         /// <summary>
@@ -95,6 +102,12 @@ namespace OneData.Models
             return Manager<T>.Select(expression, null).Data.ToList();
         }
 
+        public static async Task<List<T>> SelectListAsync(Expression<Func<T, bool>> expression)
+        {
+            Result<T> result = await Manager<T>.SelectAsync(expression, null);
+            return result.Data.ToList();
+        }
+
         /// <summary>
         /// Obtiene un listado de los objetos de tipo <typeparamref name="T"/> almacenados en la base de datos o en el cache segun los parametros indicados via una expresion.
         /// Este metodo usa la conexion predeterminada a la base de datos.
@@ -103,6 +116,12 @@ namespace OneData.Models
         public static List<T> SelectList(Expression<Func<T, bool>> expression, QueryOptions queryOptions)
         {
             return Manager<T>.Select(expression, queryOptions).Data.ToList();
+        }
+
+        public static async Task<List<T>> SelectListAsync(Expression<Func<T, bool>> expression, QueryOptions queryOptions)
+        {
+            Result<T> result = await Manager<T>.SelectAsync(expression, queryOptions);
+            return result.Data.ToList();
         }
 
         public static SelectStatement<T> Select(params Expression<Func<T, dynamic>>[] parameters)

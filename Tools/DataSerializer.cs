@@ -631,18 +631,6 @@ namespace OneData.Tools
             return dataTable;
         }
 
-        public static Dictionary<TKey, T> ConvertIEnumerableToDictionaryOfType<TKey, T>(IEnumerable<T> list, Expression<Func<T, TKey>> keyProperty)
-        {
-            var newDictionary = new Dictionary<TKey, T>();
-            if (list != null)
-            {
-                MemberExpression expressionRequired = null;
-                var body = ExpressionTools.GetExpressionBodyType(keyProperty, t => expressionRequired);
-                LoopIEnumerableToDictionaryOfType(list, body.Member.Name, ref newDictionary);
-            }
-            return newDictionary;
-        }
-
         public static Dictionary<TKey, T> ConvertIEnumerableToDictionaryOfType<TKey, T>(IEnumerable<T> list, string keyPropertyName)
         {
             var newDictionary = new Dictionary<TKey, T>();

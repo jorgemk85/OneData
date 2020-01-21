@@ -43,11 +43,6 @@ namespace OneData.Extensions
             return DataSerializer.ConvertIEnumerableToDictionaryOfType<TKey, T>(list, keyPropertyName);
         }
 
-        public static Dictionary<TKey, T> ToDictionary<TKey, T>(this IEnumerable<T> list, Expression<Func<T, TKey>> keyProperty)
-        {
-            return DataSerializer.ConvertIEnumerableToDictionaryOfType(list, keyProperty);
-        }
-
         public static Dictionary<TKey, T> ToDictionary<TKey, T>(this IEnumerable<T> list) where T : Cope<T>, IManageable, new()
         {
             return DataSerializer.ConvertIEnumerableToDictionaryOfType<TKey, T>(list);

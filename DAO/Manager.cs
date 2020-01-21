@@ -128,18 +128,30 @@ namespace OneData.DAO
 
         private static void VerifyQueryOptions(ref QueryOptions queryOptions)
         {
+            char openingCharacter = Manager.ConnectionType == ConnectionTypes.MSSQL ? '[' : '`';
+            char closingCharacter = Manager.ConnectionType == ConnectionTypes.MSSQL ? ']' : '`';
+
             if (queryOptions == null)
             {
-                queryOptions = new QueryOptions();
-                queryOptions.MaximumResults = -1;
-                queryOptions.Offset = 0;
-                queryOptions.ConnectionToUse = Manager.DefaultConnection;
+                queryOptions = new QueryOptions
+                {
+                    MaximumResults = -1,
+                    Offset = 0,
+                    ConnectionToUse = Manager.DefaultConnection,
+                    OrderBy = $"{openingCharacter}{Cope<T>.ModelComposition.Schema}{closingCharacter}.{openingCharacter}{Manager.TablePrefix}{Cope<T>.ModelComposition.TableName}{closingCharacter}.{openingCharacter}{Cope<T>.ModelComposition.DateModifiedProperty.Name}{closingCharacter}",
+                    SortOrder = SortOrderTypes.ASC
+                };
             }
             else
             {
-                queryOptions.MaximumResults = queryOptions.MaximumResults < -1 ? -1 : queryOptions.MaximumResults;
-                queryOptions.Offset = queryOptions.MaximumResults < 0 ? 0 : queryOptions.Offset;
+                queryOptions.MaximumResults = queryOptions.MaximumResults <= 0 ? -1 : queryOptions.MaximumResults;
+                queryOptions.Offset = queryOptions.Offset < 0 ? 0 : queryOptions.Offset;
                 queryOptions.ConnectionToUse = string.IsNullOrWhiteSpace(queryOptions.ConnectionToUse) ? Manager.DefaultConnection : queryOptions.ConnectionToUse;
+                queryOptions.OrderBy = string.IsNullOrWhiteSpace(queryOptions.OrderBy) ? $"{openingCharacter}{Cope<T>.ModelComposition.Schema}{closingCharacter}.{openingCharacter}{Manager.TablePrefix}{Cope<T>.ModelComposition.TableName}{closingCharacter}.{openingCharacter}{Cope<T>.ModelComposition.DateModifiedProperty.Name}{closingCharacter}" : queryOptions.OrderBy;
+                if (!queryOptions.OrderBy.StartsWith($"{openingCharacter}{Cope<T>.ModelComposition.Schema}{closingCharacter}"))
+                {
+                    queryOptions.OrderBy = $"{openingCharacter}{Cope<T>.ModelComposition.Schema}{closingCharacter}.{openingCharacter}{Manager.TablePrefix}{Cope<T>.ModelComposition.TableName}{closingCharacter}.{openingCharacter}{queryOptions.OrderBy}{closingCharacter}";
+                }
             }
         }
 

@@ -178,7 +178,7 @@ namespace OneData.DAO.MsSql
                 if (connection.State != ConnectionState.Open) throw new BadConnectionStateException();
                 _command = connection.CreateCommand();
                 _command.CommandType = CommandType.Text;
-                _command.CommandText = $"{GetSelectQuerySection<T>()} {GetFromQuerySection<T>()} ORDER BY [{Cope<T>.ModelComposition.DateModifiedProperty.Name}] DESC {offsetQuery} {limitQuery}";
+                _command.CommandText = $"{GetSelectQuerySection<T>()} {GetFromQuerySection<T>()} ORDER BY {queryOptions.OrderBy} {queryOptions.SortOrder.ToString()} {offsetQuery} {limitQuery}";
                 FillDictionaryWithReader(_command.ExecuteReader(), ref result);
             }
             return result;
@@ -280,7 +280,7 @@ namespace OneData.DAO.MsSql
 
                 _command = connection.CreateCommand();
                 _command.CommandType = CommandType.Text;
-                _command.CommandText = $"{GetSelectQuerySection<T>()} {GetFromQuerySection<T>()} WHERE {ExpressionTools.ConvertExpressionToSQL(expression, ref _command)} ORDER BY {Cope<T>.ModelComposition.DateModifiedProperty.Name} DESC {offsetQuery} {limitQuery}";
+                _command.CommandText = $"{GetSelectQuerySection<T>()} {GetFromQuerySection<T>()} WHERE {ExpressionTools.ConvertExpressionToSQL(expression, ref _command)} ORDER BY {queryOptions.OrderBy} {queryOptions.SortOrder.ToString()} {offsetQuery} {limitQuery}";
                 FillDictionaryWithReader(_command.ExecuteReader(), ref result);
             }
             return result;
@@ -344,18 +344,6 @@ namespace OneData.DAO.MsSql
                         fromBuilder.Append($" {foreignAttribute.JoinClauseType.ToString()} JOIN {foreignTableFullyQualifiedName} ON");
                     }
                     fromBuilder.Append($" {foreignReferenceModelAlias}.[{foreignAttribute.ReferenceIdName}] = {foreignJoinModelAlias}.[{foreignModel.Composition.PrimaryKeyProperty.Name}]");
-
-                    //if (foreignReferenceModelAlias != $"{Manager.TablePrefix}{foreignReferenceModel.Composition.TableName}")
-                    //{
-                    //    fromBuilder.Append($"{foreignReferenceModelAlias}.[{foreignAttribute.ReferenceIdName}] = {foreignJoinModelAlias}.[{foreignModel.Composition.PrimaryKeyProperty.Name}]");
-                    //}
-                    //else
-                    //{
-                    //    fromBuilder.Append($"{foreignReferenceModelAlias}.[{foreignAttribute.ReferenceIdName}] = {foreignJoinModelAlias}.[{foreignModel.Composition.PrimaryKeyProperty.Name}]");
-                    //}
-
-
-
                 }
             }
 
