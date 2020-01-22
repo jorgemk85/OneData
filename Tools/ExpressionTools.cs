@@ -25,15 +25,26 @@ namespace OneData.Tools
             }
             catch (Exception ex)
             {
-                throw new NotSupportedException($"La instruccion '{expression.ToString()}' no es comprendida por el analizador de consultas. Intente colocar una expresion diferente.", ex);
+                throw ex;
             }
         }
 
         private static void BuildQueryFromBinaryExpressionBody(BinaryExpression body, ref StringBuilder builder, string tableName, ref DbCommand command)
         {
-            string logicalString = QueryCreation.GetLogicalStringFromNodeTypeOperation(body);
+            string logicalString = string.Empty;
 
             builder.Append("(");
+
+            if (GetNodeGroup(body) == NodeGroupTypes.Comparison)
+            {
+                builder.Append(QueryCreation.GetStringFromNodeType(body, tableName, ref command));
+                builder.Append(")");
+                return;
+            }
+            else
+            {
+                logicalString = QueryCreation.GetLogicalStringFromNodeTypeOperation(body);
+            }
 
             if (GetNodeGroup(body.Left) == NodeGroupTypes.Comparison)
             {
@@ -41,7 +52,14 @@ namespace OneData.Tools
             }
             else
             {
-                BuildQueryFromBinaryExpressionBody((BinaryExpression)body.Left, ref builder, tableName, ref command);
+                if (body.Left.NodeType == ExpressionType.Call)
+                {
+                    builder.Append(QueryCreation.GetStringFromNodeType(body, tableName, ref command));
+                }
+                else
+                {
+                    BuildQueryFromBinaryExpressionBody((BinaryExpression)body.Left, ref builder, tableName, ref command);
+                }
             }
 
             if (!string.IsNullOrWhiteSpace(logicalString))
@@ -55,9 +73,15 @@ namespace OneData.Tools
             }
             else
             {
-                BuildQueryFromBinaryExpressionBody((BinaryExpression)body.Right, ref builder, tableName, ref command);
+                if (body.Right.NodeType == ExpressionType.Call)
+                {
+                    builder.Append(QueryCreation.GetStringFromNodeType(body, tableName, ref command));
+                }
+                else
+                {
+                    BuildQueryFromBinaryExpressionBody((BinaryExpression)body.Right, ref builder, tableName, ref command);
+                }
             }
-
             builder.Append(")");
         }
 
