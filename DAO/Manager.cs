@@ -139,7 +139,7 @@ namespace OneData.DAO
                     Offset = 0,
                     ConnectionToUse = Manager.DefaultConnection,
                     OrderBy = $"{openingCharacter}{Cope<T>.ModelComposition.Schema}{closingCharacter}.{openingCharacter}{Manager.TablePrefix}{Cope<T>.ModelComposition.TableName}{closingCharacter}.{openingCharacter}{Cope<T>.ModelComposition.DateModifiedProperty.Name}{closingCharacter}",
-                    SortOrder = SortOrderTypes.ASC
+                    SortOrder = SortOrderTypes.DESC
                 };
             }
             else

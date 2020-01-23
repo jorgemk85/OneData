@@ -198,8 +198,17 @@ namespace OneData.DAO
 
         public static string GetStringFromNodeType(Expression body, string tableName, ref DbCommand command)
         {
-            BinaryObjectRepresentation binaryRepresentation = ExpressionTools.GetPairFromComparison((BinaryExpression)body, tableName);
+            BinaryObjectRepresentation binaryRepresentation = null;
             string stringFromNode = string.Empty;
+
+            if (ExpressionTools.GetNodeGroup(body) == NodeGroupTypes.Comparison)
+            {
+                binaryRepresentation = ExpressionTools.GetPairFromComparison((BinaryExpression)body, tableName);
+            }
+            else if (ExpressionTools.GetNodeGroup(body) == NodeGroupTypes.Method)
+            {
+                binaryRepresentation = GetPairFromMethod(body, tableName);
+            }
 
             switch (body.NodeType)
             {
@@ -403,25 +412,25 @@ namespace OneData.DAO
             return stringFromNode;
         }
 
-        //private static BinaryObjectRepresentation GetPairFromMethod(Expression body, string tableName)
-        //{
-        //    MemberExpression member = (MemberExpression)((MethodCallExpression)body).Object;
-        //    MethodCallExpression method = (MethodCallExpression)body;
-        //    object value = null;
-        //    if (method.Arguments[0] is ConstantExpression)
-        //    {
-        //        value = ((ConstantExpression)method.Arguments[0]).Value;
-        //    }
-        //    else if (method.Arguments[0] is MemberExpression)
-        //    {
-        //        var objectMember = Expression.Convert(method.Arguments[0], typeof(object));
-        //        var getterLambda = Expression.Lambda<Func<object>>(objectMember);
-        //        var getter = getterLambda.Compile();
-        //        value = getter();
-        //    }
-        //    bool isMsSQL = Manager.ConnectionType == ConnectionTypes.MSSQL ? true : false;
-        //    return new BinaryObjectRepresentation(isMsSQL == true ? $"[{member.Member.Name}]" : $"`{member.Member.Name}`", value);
-        //}
+        private static BinaryObjectRepresentation GetPairFromMethod(Expression body, string tableName)
+        {
+            MemberExpression member = (MemberExpression)((MethodCallExpression)body).Object;
+            MethodCallExpression method = (MethodCallExpression)body;
+            object value = null;
+            if (method.Arguments[0] is ConstantExpression)
+            {
+                value = ((ConstantExpression)method.Arguments[0]).Value;
+            }
+            else if (method.Arguments[0] is MemberExpression)
+            {
+                var objectMember = Expression.Convert(method.Arguments[0], typeof(object));
+                var getterLambda = Expression.Lambda<Func<object>>(objectMember);
+                var getter = getterLambda.Compile();
+                value = getter();
+            }
+            bool isMsSQL = Manager.ConnectionType == ConnectionTypes.MSSQL ? true : false;
+            return new BinaryObjectRepresentation(isMsSQL == true ? $"[{member.Member.Name}]" : $"`{member.Member.Name}`", value);
+        }
 
         private static string GetSqlTranslationFromMethodName(string name, object value)
         {

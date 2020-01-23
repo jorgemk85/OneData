@@ -54,7 +54,7 @@ namespace OneData.Tools
             {
                 if (body.Left.NodeType == ExpressionType.Call)
                 {
-                    builder.Append(QueryCreation.GetStringFromNodeType(body, tableName, ref command));
+                    builder.Append(QueryCreation.GetStringFromNodeType((MethodCallExpression)body.Left, tableName, ref command));
                 }
                 else
                 {
@@ -75,7 +75,7 @@ namespace OneData.Tools
             {
                 if (body.Right.NodeType == ExpressionType.Call)
                 {
-                    builder.Append(QueryCreation.GetStringFromNodeType(body, tableName, ref command));
+                    builder.Append(QueryCreation.GetStringFromNodeType((MethodCallExpression)body.Right, tableName, ref command));
                 }
                 else
                 {
