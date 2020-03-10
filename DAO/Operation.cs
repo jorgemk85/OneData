@@ -37,10 +37,6 @@ namespace OneData.DAO
 
             try
             {
-                if (transaction == "SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_CATALOG = 'GarsaProject' AND TABLE_SCHEMA = 'Projects' AND TABLE_NAME = 'TB_ResourceTypes'")
-                {
-                    Logger.Info($"Starting execution for transaction using connection {connectionToUse}");
-                }
                 Logger.Info($"Starting execution for transaction using connection {connectionToUse}");
                 using (DbConnection connection = _connectionType == ConnectionTypes.MySQL ? (DbConnection)Connection.OpenMySqlConnection(connectionToUse) : (DbConnection)Connection.OpenMsSqlConnection(connectionToUse))
                 {
@@ -291,7 +287,15 @@ namespace OneData.DAO
                     ExecuteScalar(alterQuery, connectionToUse, false);
                     foreach (TransactionTypes transactionType in Enum.GetValues(typeof(TransactionTypes)).Cast<TransactionTypes>())
                     {
-                        ExecuteScalar(GetTransactionTextForProcedure(model, transactionType, true), connectionToUse, false);
+                        try
+                        {
+                            ExecuteScalar(GetTransactionTextForProcedure(model, transactionType, true), connectionToUse, false);
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.Info(ex.Message);
+                        }
+
                     }
                 }
             }

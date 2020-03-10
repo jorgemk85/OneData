@@ -17,9 +17,16 @@ namespace OneData.Tools
             {
                 StringBuilder builder = new StringBuilder();
                 string qualifiedTableName = Manager.ConnectionType == ConnectionTypes.MySQL ? $"`{Manager.TablePrefix}{Cope<T>.ModelComposition.TableName}`" : $"[{Cope<T>.ModelComposition.Schema}].[{Manager.TablePrefix}{Cope<T>.ModelComposition.TableName}]";
-                BinaryExpression body = (BinaryExpression)expression.Body;
 
-                BuildQueryFromBinaryExpressionBody(body, ref builder, qualifiedTableName, ref command);
+                switch (expression.Body)
+                {
+                    case BinaryExpression binaryExpression:
+                        BuildQueryFromBinaryExpressionBody(binaryExpression, ref builder, qualifiedTableName, ref command);
+                        break;
+                    default:
+                        builder.Append(QueryCreation.GetStringFromNodeType(expression.Body, qualifiedTableName, ref command));
+                        break;
+                }
 
                 return builder.ToString();
             }
