@@ -5,7 +5,7 @@ using System;
 namespace OneData.Models
 {
     [DataTable("logs")]
-    public class Log : Cope<Log>, IManageable
+    public class Log : IManageable
     {
         [PrimaryKey]
         public Guid Id { get; set; }
@@ -18,5 +18,10 @@ namespace OneData.Models
         public string TablaAfectada { get; set; }
         [DataLength(2550)]
         public string Parametros { get; set; }
+
+        private static ModelComposition _composition = new ModelComposition(typeof(Log));
+        [UnmanagedProperty]
+        public ModelComposition Composition { get { return _composition; } }
+
     }
 }

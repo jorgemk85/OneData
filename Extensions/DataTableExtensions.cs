@@ -25,12 +25,12 @@ namespace OneData.Extensions
             return DataSerializer.ConvertDataTableToDictionary<TKey, T>(dataTable, keyName);
         }
 
-        public static Dictionary<TKey, T> ToDictionary<TKey, T>(this DataTable dataTable) where T : Cope<T>, IManageable, new()
+        public static Dictionary<TKey, T> ToDictionary<TKey, T>(this DataTable dataTable) where T : IManageable, new()
         {
             return DataSerializer.ConvertDataTableToDictionaryOfType<TKey, T>(dataTable);
         }
 
-        public static Dictionary<dynamic, T> ToDictionary<T>(this DataTable dataTable, string keyName, Type keyType) where T : Cope<T>, IManageable, new()
+        public static Dictionary<dynamic, T> ToDictionary<T>(this DataTable dataTable, string keyName, Type keyType) where T : IManageable, new()
         {
             return DataSerializer.ConvertDataTableToDictionaryOfType<T>(dataTable, keyName, keyType);
         }
@@ -50,7 +50,7 @@ namespace OneData.Extensions
             return DataSerializer.ConvertDataTableToHashtable(dataTable, keyName);
         }
 
-        public static Hashtable ToHashtable<T>(this DataTable dataTable) where T : Cope<T>, IManageable, new()
+        public static Hashtable ToHashtable<T>(this DataTable dataTable) where T : IManageable, new()
         {
             return DataSerializer.ConvertDataTableToHashtableOfType<T>(dataTable);
         }

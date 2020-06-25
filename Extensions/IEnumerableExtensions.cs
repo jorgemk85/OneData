@@ -43,7 +43,7 @@ namespace OneData.Extensions
             return DataSerializer.ConvertIEnumerableToDictionaryOfType<TKey, T>(list, keyPropertyName);
         }
 
-        public static Dictionary<TKey, T> ToDictionary<TKey, T>(this IEnumerable<T> list) where T : Cope<T>, IManageable, new()
+        public static Dictionary<TKey, T> ToDictionary<TKey, T>(this IEnumerable<T> list) where T : IManageable, new()
         {
             return DataSerializer.ConvertIEnumerableToDictionaryOfType<TKey, T>(list);
         }
@@ -52,7 +52,7 @@ namespace OneData.Extensions
         /// Inserta una coleccion de objetos de forma masiva y en una sola llamada en la base de datos. 
         /// Este metodo usa la conexion predeterminada a la base de datos.
         /// </summary>
-        public static void InsertMassive<T>(this IEnumerable<T> list) where T : Cope<T>, IManageable, new()
+        public static void InsertMassive<T>(this IEnumerable<T> list) where T : IManageable, new()
         {
             if (list.Any())
             {
@@ -64,7 +64,7 @@ namespace OneData.Extensions
         /// Actualiza una coleccion de objetos de forma masiva y en una sola llamada en la base de datos.
         /// Este metodo usa la conexion predeterminada a la base de datos.
         /// </summary>
-        public static void UpdateMassive<T>(this IEnumerable<T> list) where T : Cope<T>, IManageable, new()
+        public static void UpdateMassive<T>(this IEnumerable<T> list) where T : IManageable, new()
         {
             if (list.Any())
             {
@@ -76,7 +76,7 @@ namespace OneData.Extensions
         /// Borra una coleccion de objetos de forma masiva y en una sola llamada en la base de datos.
         /// Este metodo usa la conexion predeterminada a la base de datos.
         /// </summary>
-        public static void DeleteMassive<T>(this IEnumerable<T> list) where T : Cope<T>, IManageable, new()
+        public static void DeleteMassive<T>(this IEnumerable<T> list) where T : IManageable, new()
         {
             if (list.Any())
             {

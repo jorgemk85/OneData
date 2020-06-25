@@ -28,7 +28,6 @@ namespace OneData.DAO
         public static string TablePrefix { get; internal set; }
         public static bool IsReactiveModeEnabled { get; internal set; }
         public static bool IsPreventiveModeEnabled { get; internal set; }
-        public static IManageable Identity { get; set; }
 
         static Manager()
         {
@@ -104,7 +103,7 @@ namespace OneData.DAO
     /// Clase sellada donde se procesan las consultas a la base de datos y se administra el cache.
     /// </summary>
     /// <typeparam name="T">Tipo de clase que representa este objeto. El tipo tiene que implementar IManageable para poder operar.</typeparam>
-    public sealed class Manager<T> where T : Cope<T>, IManageable, new()
+    public sealed class Manager<T> where T : IManageable, new()
     {
         static DataCache<T> dataCache = new DataCache<T>();
 
@@ -123,7 +122,7 @@ namespace OneData.DAO
 
         static Manager()
         {
-            dataCache.Initialize(Cope<T>.ModelComposition.IsCacheEnabled);
+            dataCache.Initialize(new T().Composition.IsCacheEnabled);
         }
 
         private static void VerifyQueryOptions(ref QueryOptions queryOptions)
@@ -138,7 +137,7 @@ namespace OneData.DAO
                     MaximumResults = -1,
                     Offset = 0,
                     ConnectionToUse = Manager.DefaultConnection,
-                    OrderBy = $"{openingCharacter}{Cope<T>.ModelComposition.Schema}{closingCharacter}.{openingCharacter}{Manager.TablePrefix}{Cope<T>.ModelComposition.TableName}{closingCharacter}.{openingCharacter}{Cope<T>.ModelComposition.DateModifiedProperty.Name}{closingCharacter}",
+                    OrderBy = $"{openingCharacter}{new T().Composition.Schema}{closingCharacter}.{openingCharacter}{Manager.TablePrefix}{new T().Composition.TableName}{closingCharacter}.{openingCharacter}{new T().Composition.DateModifiedProperty.Name}{closingCharacter}",
                     SortOrder = SortOrderTypes.DESC
                 };
             }
@@ -147,10 +146,10 @@ namespace OneData.DAO
                 queryOptions.MaximumResults = queryOptions.MaximumResults <= 0 ? -1 : queryOptions.MaximumResults;
                 queryOptions.Offset = queryOptions.Offset < 0 ? 0 : queryOptions.Offset;
                 queryOptions.ConnectionToUse = string.IsNullOrWhiteSpace(queryOptions.ConnectionToUse) ? Manager.DefaultConnection : queryOptions.ConnectionToUse;
-                queryOptions.OrderBy = string.IsNullOrWhiteSpace(queryOptions.OrderBy) ? $"{openingCharacter}{Cope<T>.ModelComposition.Schema}{closingCharacter}.{openingCharacter}{Manager.TablePrefix}{Cope<T>.ModelComposition.TableName}{closingCharacter}.{openingCharacter}{Cope<T>.ModelComposition.DateModifiedProperty.Name}{closingCharacter}" : queryOptions.OrderBy;
-                if (!queryOptions.OrderBy.StartsWith($"{openingCharacter}{Cope<T>.ModelComposition.Schema}{closingCharacter}"))
+                queryOptions.OrderBy = string.IsNullOrWhiteSpace(queryOptions.OrderBy) ? $"{openingCharacter}{new T().Composition.Schema}{closingCharacter}.{openingCharacter}{Manager.TablePrefix}{new T().Composition.TableName}{closingCharacter}.{openingCharacter}{new T().Composition.DateModifiedProperty.Name}{closingCharacter}" : queryOptions.OrderBy;
+                if (!queryOptions.OrderBy.StartsWith($"{openingCharacter}{new T().Composition.Schema}{closingCharacter}"))
                 {
-                    queryOptions.OrderBy = $"{openingCharacter}{Cope<T>.ModelComposition.Schema}{closingCharacter}.{openingCharacter}{Manager.TablePrefix}{Cope<T>.ModelComposition.TableName}{closingCharacter}.{openingCharacter}{queryOptions.OrderBy}{closingCharacter}";
+                    queryOptions.OrderBy = $"{openingCharacter}{new T().Composition.Schema}{closingCharacter}.{openingCharacter}{Manager.TablePrefix}{new T().Composition.TableName}{closingCharacter}.{openingCharacter}{queryOptions.OrderBy}{closingCharacter}";
                 }
             }
         }
@@ -350,23 +349,23 @@ namespace OneData.DAO
 
             QueryEvaluation queryEvaluation = new QueryEvaluation(Manager.ConnectionType);
 
-            if (Cope<T>.ModelComposition.IsCacheEnabled)
+            if (new T().Composition.IsCacheEnabled)
             {
                 ResetCacheIfExpired();
             }
 
             Result<T> result = queryEvaluation.Evaluate<T>(obj, expression, transactionType, ref dataCache, queryOptions);
-            CallOnExecutedEventHandlers(Cope<T>.ModelComposition.TableName, transactionType, result);
+            CallOnExecutedEventHandlers(new T().Composition.TableName, transactionType, result);
 
             return result;
         }
 
         private static void ResetCacheIfExpired()
         {
-            if (DateTime.Now.Ticks > dataCache.LastCacheUpdate + Cope<T>.ModelComposition.CacheExpiration)
+            if (DateTime.Now.Ticks > dataCache.LastCacheUpdate + new T().Composition.CacheExpiration)
             {
                 // Elimina el cache ya que esta EXPIRADO y de debe de refrescar.
-                dataCache.Reset(Cope<T>.ModelComposition.IsCacheEnabled);
+                dataCache.Reset(new T().Composition.IsCacheEnabled);
             }
         }
 

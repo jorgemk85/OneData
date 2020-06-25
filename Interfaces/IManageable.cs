@@ -1,9 +1,10 @@
-﻿using OneData.Models;
+﻿using OneData.Attributes;
+using OneData.Models;
 
 namespace OneData.Interfaces
 {
     public interface IManageable
     {
-        ModelComposition Composition { get; }       
+        ModelComposition Composition { get; }
     }
 }

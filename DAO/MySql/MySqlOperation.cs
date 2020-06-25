@@ -83,7 +83,7 @@ namespace OneData.DAO.MySql
             return dataSet;
         }
 
-        public Result<T> ExecuteProcedure<T>(QueryOptions queryOptions, TransactionTypes transactionType, bool logTransaction, object obj, Expression<Func<T, bool>> expression) where T : Cope<T>, IManageable, new()
+        public Result<T> ExecuteProcedure<T>(QueryOptions queryOptions, TransactionTypes transactionType, bool logTransaction, object obj, Expression<Func<T, bool>> expression) where T : IManageable, new()
         {
             Result<T> result = null;
             bool throwIfError = false;
@@ -144,7 +144,7 @@ namespace OneData.DAO.MySql
             {
                 if ((Manager.IsPreventiveModeEnabled || Manager.IsReactiveModeEnabled) && !throwIfError)
                 {
-                    Logger.Warn($"Table {Cope<T>.ModelComposition.TableName} not found in database. This might be because of the quer or something stored inside a stored procedure... Creating and altering stored proecedures...");
+                    Logger.Warn($"Table {new T().Composition.TableName} not found in database. This might be because of the quer or something stored inside a stored procedure... Creating and altering stored proecedures...");
                     PerformFullModelCheck(new T(), queryOptions.ConnectionToUse);
                     throwIfError = true;
                     goto Start;
@@ -170,12 +170,12 @@ namespace OneData.DAO.MySql
                 throw;
             }
 
-            if (logTransaction) LogTransaction(Cope<T>.ModelComposition.TableName, transactionType, queryOptions);
+            if (logTransaction) LogTransaction(new T().Composition.TableName, transactionType, queryOptions);
 
             return result;
         }
 
-        private Result<T> ExecuteSelectAll<T>(T obj, QueryOptions queryOptions, TransactionTypes transactionType) where T : Cope<T>, IManageable, new()
+        private Result<T> ExecuteSelectAll<T>(T obj, QueryOptions queryOptions, TransactionTypes transactionType) where T : IManageable, new()
         {
             Result<T> result = new Result<T>(new Dictionary<dynamic, T>(), false, true);
 
@@ -194,7 +194,7 @@ namespace OneData.DAO.MySql
             return result;
         }
 
-        private Result<T> ExecuteProcedure<T>(T obj, QueryOptions queryOptions, TransactionTypes transactionType) where T : Cope<T>, IManageable, new()
+        private Result<T> ExecuteProcedure<T>(T obj, QueryOptions queryOptions, TransactionTypes transactionType) where T : IManageable, new()
         {
             Result<T> result = new Result<T>(new Dictionary<dynamic, T>(), false, true);
 
@@ -203,7 +203,7 @@ namespace OneData.DAO.MySql
                 if (connection.State != ConnectionState.Open) throw new BadConnectionStateException();
                 _command = connection.CreateCommand();
                 _command.CommandType = CommandType.StoredProcedure;
-                _command.CommandText = string.Format("{0}{1}{2}", Manager.StoredProcedurePrefix, Cope<T>.ModelComposition.TableName, GetFriendlyTransactionSuffix(transactionType));
+                _command.CommandText = string.Format("{0}{1}{2}", Manager.StoredProcedurePrefix, new T().Composition.TableName, GetFriendlyTransactionSuffix(transactionType));
 
                 switch (transactionType)
                 {
@@ -226,7 +226,7 @@ namespace OneData.DAO.MySql
             return result;
         }
 
-        private Result<T> ExecuteMassiveOperation<T>(IEnumerable<T> list, QueryOptions queryOptions, TransactionTypes transactionType) where T : Cope<T>, IManageable, new()
+        private Result<T> ExecuteMassiveOperation<T>(IEnumerable<T> list, QueryOptions queryOptions, TransactionTypes transactionType) where T : IManageable, new()
         {
             bool throwIfError = false;
 
@@ -275,7 +275,7 @@ namespace OneData.DAO.MySql
             return new Result<T>(new Dictionary<dynamic, T>(), false, true);
         }
 
-        private Result<T> ExecuteSelect<T>(Expression<Func<T, bool>> expression, QueryOptions queryOptions, TransactionTypes transactionType) where T : Cope<T>, IManageable, new()
+        private Result<T> ExecuteSelect<T>(Expression<Func<T, bool>> expression, QueryOptions queryOptions, TransactionTypes transactionType) where T : IManageable, new()
         {
             Result<T> result = new Result<T>(new Dictionary<dynamic, T>(), false, true);
 
@@ -294,17 +294,17 @@ namespace OneData.DAO.MySql
             return result;
         }
 
-        private string GetSelectQuerySection<T>() where T : Cope<T>, IManageable, new()
+        private string GetSelectQuerySection<T>() where T : IManageable, new()
         {
             StringBuilder selectBuilder = new StringBuilder();
             IManageable foreignObject;
             string foreignTableFullyQualifiedName;
             string foreignJoinModelAlias;
 
-            selectBuilder.Append($"SELECT `{Manager.TablePrefix}{Cope<T>.ModelComposition.TableName}`.*");
-            if (Cope<T>.ModelComposition.ForeignDataAttributes.Count > 0)
+            selectBuilder.Append($"SELECT `{Manager.TablePrefix}{new T().Composition.TableName}`.*");
+            if (new T().Composition.ForeignDataAttributes.Count > 0)
             {
-                foreach (ForeignData foreignAttribute in Cope<T>.ModelComposition.ForeignDataAttributes.Values)
+                foreach (ForeignData foreignAttribute in new T().Composition.ForeignDataAttributes.Values)
                 {
                     foreignObject = (IManageable)Activator.CreateInstance(foreignAttribute.JoinModel);
                     foreignTableFullyQualifiedName = $"{Manager.TablePrefix}{foreignObject.Composition.TableName}";
@@ -318,7 +318,7 @@ namespace OneData.DAO.MySql
             return selectBuilder.ToString();
         }
 
-        private string GetFromQuerySection<T>() where T : Cope<T>, IManageable, new()
+        private string GetFromQuerySection<T>() where T : IManageable, new()
         {
             StringBuilder fromBuilder = new StringBuilder();
             IManageable foreignModel;
@@ -327,10 +327,10 @@ namespace OneData.DAO.MySql
             string foreignJoinModelAlias;
             string foreignReferenceModelAlias;
 
-            fromBuilder.Append($" FROM `{Manager.TablePrefix}{Cope<T>.ModelComposition.TableName}`");
-            if (Cope<T>.ModelComposition.ForeignDataAttributes.Count > 0)
+            fromBuilder.Append($" FROM `{Manager.TablePrefix}{new T().Composition.TableName}`");
+            if (new T().Composition.ForeignDataAttributes.Count > 0)
             {
-                foreach (ForeignData foreignAttribute in Cope<T>.ModelComposition.ForeignDataAttributes.Values.GroupBy(x => x.JoinModel).Select(y => y.First()))
+                foreach (ForeignData foreignAttribute in new T().Composition.ForeignDataAttributes.Values.GroupBy(x => x.JoinModel).Select(y => y.First()))
                 {
                     foreignModel = (IManageable)Activator.CreateInstance(foreignAttribute.JoinModel);
                     foreignReferenceModel = (IManageable)Activator.CreateInstance(foreignAttribute.ReferenceModel);
