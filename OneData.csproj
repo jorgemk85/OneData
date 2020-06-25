@@ -4,9 +4,9 @@
     <TargetFramework>netstandard2.1</TargetFramework>
     <LangVersion>8.0</LangVersion>
     <Authors>Jorge Marcos Kawas</Authors>
-    <AssemblyVersion>0.1.73.09</AssemblyVersion>
-    <FileVersion>0.1.73.09</FileVersion>
-    <Version>0.1.73.09-alpha</Version>
+    <AssemblyVersion>0.2.0.13</AssemblyVersion>
+    <FileVersion>0.2.0.13</FileVersion>
+    <Version>0.2.0.13-alpha</Version>
     <AssemblyName>OneData</AssemblyName>
     <RootNamespace>OneData</RootNamespace>
     <PackageLicenseUrl>https://github.com/jorgemk85/OneData/blob/development/LICENSE</PackageLicenseUrl>
@@ -14,12 +14,20 @@
     <RepositoryUrl>https://github.com/jorgemk85/OneData</RepositoryUrl>
     <RepositoryType>Git</RepositoryType>
     <PackageIconUrl>https://img.icons8.com/cotton/64/000000/cloud-database.png</PackageIconUrl>
-    <Copyright>JMK 2019</Copyright>
+    <Copyright>JMK 2020</Copyright>
     <Description>A fast and easy ORM focused on the reduction of development times and ease of work.</Description>
     <PackageTags>orm dataaccess utility database access serialization deserialization</PackageTags>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-    <PackageReleaseNotes>Fixed bug related to query building using methods.</PackageReleaseNotes>
+    <PackageReleaseNotes>Removed Cope&lt;T&gt; class to enable personalized inheritance.
+
+With this, came the following breaking changes which is why the development was moved to a new branch:
+
+- Class no longer need to inherit from Cope.
+- Each class MUST implement the property Composition. For performance reasons, it's recommended to use a private static backing field for this property. The backing field should be initialized with the following code "new ModelComposition(typeof(T))" where T is your current class.
+- Select statements have also been affected. To perform a select, instead of using the class name as before, you will need to instantiate an objecto of the desired type and then you will be presented with Select extensions.
+
+More related changes and optimizations will come within this branch.</PackageReleaseNotes>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net461|AnyCPU'">
