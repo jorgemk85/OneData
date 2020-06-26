@@ -11,16 +11,22 @@ namespace OneData.Tools
 {
     public class ExpressionTools
     {
-        internal static string ConvertExpressionToSQL<T>(Expression<Func<T, bool>> expression, ref DbCommand command) where T : IManageable, new()
+        internal static string ConvertExpressionToSQL<T>(Expression<Func<T, bool>> expression, ref DbCommand command) where T : Cope<T>, IManageable, new()
         {
             try
             {
-                T managleable = new T();
                 StringBuilder builder = new StringBuilder();
-                string qualifiedTableName = Manager.ConnectionType == ConnectionTypes.MySQL ? $"`{Manager.TablePrefix}{new T().Composition.TableName}`" : $"[{new T().Composition.Schema}].[{Manager.TablePrefix}{new T().Composition.TableName}]";
-                BinaryExpression body = (BinaryExpression)expression.Body;
+                string qualifiedTableName = Manager.ConnectionType == ConnectionTypes.MySQL ? $"`{Manager.TablePrefix}{Cope<T>.ModelComposition.TableName}`" : $"[{Cope<T>.ModelComposition.Schema}].[{Manager.TablePrefix}{Cope<T>.ModelComposition.TableName}]";
 
-                BuildQueryFromBinaryExpressionBody(body, ref builder, qualifiedTableName, ref command);
+                switch (expression.Body)
+                {
+                    case BinaryExpression binaryExpression:
+                        BuildQueryFromBinaryExpressionBody(binaryExpression, ref builder, qualifiedTableName, ref command);
+                        break;
+                    default:
+                        builder.Append(QueryCreation.GetStringFromNodeType(expression.Body, qualifiedTableName, ref command));
+                        break;
+                }
 
                 return builder.ToString();
             }
