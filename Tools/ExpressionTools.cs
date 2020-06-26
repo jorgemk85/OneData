@@ -11,12 +11,12 @@ namespace OneData.Tools
 {
     public class ExpressionTools
     {
-        internal static string ConvertExpressionToSQL<T>(Expression<Func<T, bool>> expression, ref DbCommand command) where T : Cope<T>, IManageable, new()
+        internal static string ConvertExpressionToSQL<T>(Expression<Func<T, bool>> expression, ref DbCommand command) where T : IManageable, new()
         {
             try
             {
                 StringBuilder builder = new StringBuilder();
-                string qualifiedTableName = Manager.ConnectionType == ConnectionTypes.MySQL ? $"`{Manager.TablePrefix}{Cope<T>.ModelComposition.TableName}`" : $"[{Cope<T>.ModelComposition.Schema}].[{Manager.TablePrefix}{Cope<T>.ModelComposition.TableName}]";
+                string qualifiedTableName = Manager.ConnectionType == ConnectionTypes.MySQL ? $"`{Manager.TablePrefix}{new T().Composition.TableName}`" : $"[{new T().Composition.Schema}].[{Manager.TablePrefix}{new T().Composition.TableName}]";
 
                 switch (expression.Body)
                 {
