@@ -150,7 +150,7 @@ using OneData.Interfaces;
 using OneData.Models;
 
 [DataTable("logs")]
-public class Log : Cope<Log>, IManageable
+public class Log : IManageable
 {
     [PrimaryKey]
     public Guid Id { get; set; }
@@ -158,12 +158,17 @@ public class Log : Cope<Log>, IManageable
     public DateTime DateCreated { get; set; }
     [DateModified]
     public DateTime DateModified { get; set; }
+
+    public ModelComposition GetComposition()
+    {
+        return Manager<Log>.Composition;
+    }
 }
 ```
 
 The attributes `DataTable`, `PrimaryKey`, `DateCreated` and `DateModified` will be explained with detail later in this document. For now, know that they are used to indicate which property is used for what specific purpose. The name of your properties is completely up to you.
 
-Please note the Generic class `Cope<T>` which NEEDS sent the class you are working on. As the example shows, `Log` is the class name and the generic class is `Cope<Log>`. This is very important to setup properly since the compiler MIGHT not show a compilation error (it varies from class to class).
+Please note the IManageable implemented method `GetComposition` which NEEDS to return Manager<`YOUR CLASS TYPE`>.Composition. As the example shows, `Log` is the class name and return for GetComposition is `Manager<Log>.Composition`. This is very important to setup properly since the compiler MIGHT not show a compilation error (it varies from class to class) but would fail during runtime.
   
 Well done! You now have an up and running a complete relational data management solution inside your project.
 ## Usage
@@ -231,7 +236,7 @@ In section **Setup**, we stablished a class/model called `Log`, which only have 
 This is our new `Log` class/model (note the new properties `UserId` and Transaction).
 ```c#
 [DataTable("logs")]
-public class Log : Cope<Log>, IManageable
+public class Log : IManageable
 {
     [PrimaryKey]
     public Guid Id { get; set; }
@@ -242,6 +247,11 @@ public class Log : Cope<Log>, IManageable
 
     public Guid UserId { get; set; }
     public string Transaction { get; set; }
+
+    public ModelComposition GetComposition()
+    {
+        return Manager<Log>.Composition;
+    }
 }
 ```
 Literally, the next time your program runs and tries to access this object in the database, OneData will make the changes it detected inside your class/model without prompting anything and as transparent as it should be.
@@ -315,6 +325,36 @@ Selecting data from the database is NOT performed using stored procedures as wit
 
 OneData uses lambda expressions to work with queries, making it very readable and of course, *refactor friendly* along the way.
 
+You can use the provided `Manager<T>.Select` methods explained below to perform your queries, but OneData includes a helper class called `Extend<T>` that would result in extending your `IManageable` classes to ease your query code. You just need to inherit from it as shown in the following class:
+
+```c#
+using OneData.Attributes;
+using OneData.Interfaces;
+using OneData.Models;
+
+[DataTable("users")]
+public class User : Extend<User>, IManageable
+{
+    [PrimaryKey]
+    public Guid Id { get; set; }
+    [DateCreated]
+    public DateTime DateCreated { get; set; }
+    [DateModified]
+    public DateTime DateModified { get; set; }
+
+    public string Name { get; set; }
+    public string Lastname { get; set; }
+    public string Username { get; set; }
+    public string Password { get; set; }
+
+    public ModelComposition GetComposition()
+    {
+        return Manager<User>.Composition;
+    }
+}
+```
+Now you will be able to perform the following queries using the Extensions:
+
 Returns a list of logs found in the database that match the provided `userId`.
 ```c#
 private List<Log> GimmeAllTheLogsFromUserId(Guid userId)
@@ -378,7 +418,7 @@ using OneData.Interfaces;
 using OneData.Models;
 
 [DataTable("users")]
-public class User : Cope<User>, IManageable
+public class User : IManageable
 {
     [PrimaryKey]
     public Guid Id { get; set; }
@@ -391,13 +431,18 @@ public class User : Cope<User>, IManageable
     public string Lastname { get; set; }
     public string Username { get; set; }
     public string Password { get; set; }
+
+    public ModelComposition GetComposition()
+    {
+        return Manager<User>.Composition;
+    }
 }
 ```
 
 To achieve a relationship between Users and Logs, we just need to configure it in the `Log` class/model (note the new attribute on `UserId` property):
 ```c#
 [DataTable("logs")]
-public class Log : Cope<Log>, IManageable
+public class Log : IManageable
 {
     [PrimaryKey]
     public Guid Id { get; set; }
@@ -409,6 +454,11 @@ public class Log : Cope<Log>, IManageable
     [ForeignKey(typeof(User))]
     public Guid UserId { get; set; }
     public string Transaction { get; set; }
+
+    public ModelComposition GetComposition()
+    {
+        return Manager<Log>.Composition;
+    }
 }
 ```
 And just like that, our classes/models are related! By default, OneData configures the relationship `ON DELETE` and `ON UPDATE` to `NO ACTION`, but you can configure this with the constructor on the attribute.
@@ -416,7 +466,7 @@ And just like that, our classes/models are related! By default, OneData configur
 The following should be used if you need to pull data from another table (related or not) into our class/model for ease of use (note the new property `UserName` and it's attribute).
 ```c#
 [DataTable("logs")]
-public class Log : Cope<Log>, IManageable
+public class Log : IManageable
 {
     [PrimaryKey]
     public Guid Id { get; set; }
@@ -430,6 +480,11 @@ public class Log : Cope<Log>, IManageable
     public string Transaction { get; set; }
     [ForeignData(typeof(User))]
     public string UserName { get; set; }
+
+    public ModelComposition GetComposition()
+    {
+        return Manager<Log>.Composition;
+    }
 }
 ```
 With this configuration, OneData will look for the `Name` property and get it's value inside our `User` class/model and get data based on the log's `UserId`.
