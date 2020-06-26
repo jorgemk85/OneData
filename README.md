@@ -146,8 +146,8 @@ But... Which one's should I setup? Well, every class you will need to connect / 
 Here's an example with the minimum required setup for the library to understand your class:
 ```c#
 using OneData.Attributes;
+using OneData.DAO;
 using OneData.Interfaces;
-using OneData.Models;
 
 [DataTable("logs")]
 public class Log : IManageable
@@ -329,8 +329,8 @@ You can use the provided `Manager<T>.Select` methods explained below to perform 
 
 ```c#
 using OneData.Attributes;
+using OneData.DAO;
 using OneData.Interfaces;
-using OneData.Models;
 
 [DataTable("users")]
 public class User : Extend<User>, IManageable
@@ -414,8 +414,8 @@ We will talk a little about relationships between classes/models inside OneData.
 First, let's create a new class/model called `User`:
 ```c#
 using OneData.Attributes;
+using OneData.DAO;
 using OneData.Interfaces;
-using OneData.Models;
 
 [DataTable("users")]
 public class User : IManageable
