@@ -5,6 +5,6 @@ namespace OneData.Interfaces
 {
     public interface IManageable
     {
-        ModelComposition Composition { get; }
+        ModelComposition GetComposition();
     }
 }

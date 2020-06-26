@@ -121,12 +121,12 @@ namespace OneData.Tools
             if (transactionType == TransactionTypes.DeleteMassive)
             {
                 builder.Append("  <column>\n");
-                builder.Append($"      <name>{new T().Composition.PrimaryKeyProperty.Name}</name>\n");
+                builder.Append($"      <name>{Manager<T>.Composition.PrimaryKeyProperty.Name}</name>\n");
                 builder.Append("  </column>\n");
             }
             else
             {
-                foreach (KeyValuePair<string, OneProperty> property in new T().Composition.FilteredProperties)
+                foreach (KeyValuePair<string, OneProperty> property in Manager<T>.Composition.FilteredProperties)
                 {
                     builder.Append("  <column>\n");
                     builder.Append($"      <name>{property.Value.Name}</name>\n");
@@ -145,13 +145,13 @@ namespace OneData.Tools
                 {
                     builder.Append("  <object>\n");
                     // Si es Numero o Boolean no agrega comillas sencillas, de lo contrario se las pone.
-                    if (long.TryParse(new T().Composition.PrimaryKeyProperty.GetValue(obj).ToString(), out long n) || new T().Composition.PrimaryKeyProperty.GetValue(obj) is bool)
+                    if (long.TryParse(Manager<T>.Composition.PrimaryKeyProperty.GetValue(obj).ToString(), out long n) || Manager<T>.Composition.PrimaryKeyProperty.GetValue(obj) is bool)
                     {
-                        builder.Append($"     <{new T().Composition.PrimaryKeyProperty.Name}>{new T().Composition.PrimaryKeyProperty.GetValue(obj)}</{new T().Composition.PrimaryKeyProperty.Name}>\n");
+                        builder.Append($"     <{Manager<T>.Composition.PrimaryKeyProperty.Name}>{Manager<T>.Composition.PrimaryKeyProperty.GetValue(obj)}</{Manager<T>.Composition.PrimaryKeyProperty.Name}>\n");
                     }
                     else
                     {
-                        builder.Append($"     <{new T().Composition.PrimaryKeyProperty.Name}>'{new T().Composition.PrimaryKeyProperty.GetValue(obj)}'</{new T().Composition.PrimaryKeyProperty.Name}>\n");
+                        builder.Append($"     <{Manager<T>.Composition.PrimaryKeyProperty.Name}>'{Manager<T>.Composition.PrimaryKeyProperty.GetValue(obj)}'</{Manager<T>.Composition.PrimaryKeyProperty.Name}>\n");
                     }
                     builder.Append("  </object>\n");
                 }
@@ -161,7 +161,7 @@ namespace OneData.Tools
                 foreach (T obj in list)
                 {
                     builder.Append("  <object>\n");
-                    foreach (KeyValuePair<string, OneProperty> property in new T().Composition.FilteredProperties)
+                    foreach (KeyValuePair<string, OneProperty> property in Manager<T>.Composition.FilteredProperties)
                     {
                         if (property.Value.GetValue(obj) == null)
                         {
@@ -197,13 +197,13 @@ namespace OneData.Tools
             switch (transactionType)
             {
                 case TransactionTypes.InsertMassive:
-                    massiveOperationParameter.ProcedureName = Manager.ConnectionType == ConnectionTypes.MySQL ? $"`{Manager.StoredProcedurePrefix}{new T().Composition.TableName}{Manager.InsertSuffix}`" : $"[{Manager.StoredProcedurePrefix}{new T().Composition.TableName}{Manager.InsertSuffix}]";
+                    massiveOperationParameter.ProcedureName = Manager.ConnectionType == ConnectionTypes.MySQL ? $"`{Manager.StoredProcedurePrefix}{Manager<T>.Composition.TableName}{Manager.InsertSuffix}`" : $"[{Manager.StoredProcedurePrefix}{Manager<T>.Composition.TableName}{Manager.InsertSuffix}]";
                     break;
                 case TransactionTypes.UpdateMassive:
-                    massiveOperationParameter.ProcedureName = Manager.ConnectionType == ConnectionTypes.MySQL ? $"`{Manager.StoredProcedurePrefix}{new T().Composition.TableName}{Manager.UpdateSuffix}`" : $"[{Manager.StoredProcedurePrefix}{new T().Composition.TableName}{Manager.UpdateSuffix}]";
+                    massiveOperationParameter.ProcedureName = Manager.ConnectionType == ConnectionTypes.MySQL ? $"`{Manager.StoredProcedurePrefix}{Manager<T>.Composition.TableName}{Manager.UpdateSuffix}`" : $"[{Manager.StoredProcedurePrefix}{Manager<T>.Composition.TableName}{Manager.UpdateSuffix}]";
                     break;
                 case TransactionTypes.DeleteMassive:
-                    massiveOperationParameter.ProcedureName = Manager.ConnectionType == ConnectionTypes.MySQL ? $"`{Manager.StoredProcedurePrefix}{new T().Composition.TableName}{Manager.DeleteSuffix}`" : $"[{Manager.StoredProcedurePrefix}{new T().Composition.TableName}{Manager.DeleteSuffix}]";
+                    massiveOperationParameter.ProcedureName = Manager.ConnectionType == ConnectionTypes.MySQL ? $"`{Manager.StoredProcedurePrefix}{Manager<T>.Composition.TableName}{Manager.DeleteSuffix}`" : $"[{Manager.StoredProcedurePrefix}{Manager<T>.Composition.TableName}{Manager.DeleteSuffix}]";
                     break;
                 default:
                     throw new NotSupportedException($"El tipo de transaccion {transactionType.ToString()} no puede ser utilizado con la funcion {nameof(GenerateCompatibleMassiveOperationXML)}.");
@@ -340,7 +340,7 @@ namespace OneData.Tools
             Dictionary<dynamic, T> newDictionary = new Dictionary<dynamic, T>();
             if (queryable != null)
             {
-                PropertyInfo primaryProperty = typeof(T).GetProperty(new T().Composition.PrimaryKeyProperty.Name);
+                PropertyInfo primaryProperty = typeof(T).GetProperty(Manager<T>.Composition.PrimaryKeyProperty.Name);
                 foreach (T item in queryable)
                 {
                     dynamic key = primaryProperty.GetValue(item);
@@ -448,7 +448,7 @@ namespace OneData.Tools
                             property.SetValue(newObject, SimpleConverter.ConvertStringToType(row[property.Name].ToString(), property.PropertyType));
                         }
                     }
-                    newHashTable.Add(new T().Composition.PrimaryKeyProperty.GetValue(newObject), newObject);
+                    newHashTable.Add(Manager<T>.Composition.PrimaryKeyProperty.GetValue(newObject), newObject);
                 }
             }
 
@@ -563,7 +563,7 @@ namespace OneData.Tools
                             property.SetValue(newObject, SimpleConverter.ConvertStringToType(row[property.Name].ToString(), property.PropertyType));
                         }
                     }
-                    newDictionary.Add((TKey)new T().Composition.PrimaryKeyProperty.GetValue(newObject), newObject);
+                    newDictionary.Add((TKey)Manager<T>.Composition.PrimaryKeyProperty.GetValue(newObject), newObject);
                 }
             }
 
@@ -577,7 +577,7 @@ namespace OneData.Tools
             {
                 foreach (T newObject in list)
                 {
-                    newDictionary.Add((TKey)new T().Composition.PrimaryKeyProperty.GetValue(newObject), newObject);
+                    newDictionary.Add((TKey)Manager<T>.Composition.PrimaryKeyProperty.GetValue(newObject), newObject);
                 }
             }
 
@@ -689,7 +689,7 @@ namespace OneData.Tools
         {
             T newObj = new T();
 
-            new T().Composition.PrimaryKeyProperty.SetValue(newObj, null);
+            Manager<T>.Composition.PrimaryKeyProperty.SetValue(newObj, null);
 
             foreach (Parameter data in parameters)
             {
@@ -725,8 +725,8 @@ namespace OneData.Tools
             {
                 columns.Add(reader.GetName(i).ToLower());
             }
-            List<OneProperty> filteredProperties = new T().Composition.ManagedProperties.Values.Where(property => columns.Contains(property.Name.ToLower())).ToList();
-            filteredProperties.AddRange(new T().Composition.ForeignDataProperties.Values.Where(property => columns.Contains(property.Name.ToLower())));
+            List<OneProperty> filteredProperties = Manager<T>.Composition.ManagedProperties.Values.Where(property => columns.Contains(property.Name.ToLower())).ToList();
+            filteredProperties.AddRange(Manager<T>.Composition.ForeignDataProperties.Values.Where(property => columns.Contains(property.Name.ToLower())));
             return filteredProperties;
         }
     }

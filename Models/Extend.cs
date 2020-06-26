@@ -14,11 +14,6 @@ namespace OneData.Models
     [Serializable]
     public abstract class Extend<T> where T : IManageable, new()
     {
-        [JsonIgnore]
-        private static ModelComposition _composition = new ModelComposition(typeof(T));
-        [UnmanagedProperty, JsonIgnore]
-        public ModelComposition Composition { get { return _composition; } }
-
         /// <summary>
         /// Obtiene un listado completo de los objetos de tipo <typeparamref name="T"/> almacenados en la base de datos o en el cache.
         /// Este metodo usa la conexion predeterminada a la base de datos.

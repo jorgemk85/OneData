@@ -144,7 +144,7 @@ namespace OneData.DAO.MySql
             {
                 if ((Manager.IsPreventiveModeEnabled || Manager.IsReactiveModeEnabled) && !throwIfError)
                 {
-                    Logger.Warn($"Table {new T().Composition.TableName} not found in database. This might be because of the quer or something stored inside a stored procedure... Creating and altering stored proecedures...");
+                    Logger.Warn($"Table {Manager<T>.Composition.TableName} not found in database. This might be because of the quer or something stored inside a stored procedure... Creating and altering stored proecedures...");
                     PerformFullModelCheck(new T(), queryOptions.ConnectionToUse);
                     throwIfError = true;
                     goto Start;
@@ -170,7 +170,7 @@ namespace OneData.DAO.MySql
                 throw;
             }
 
-            if (logTransaction) LogTransaction(new T().Composition.TableName, transactionType, queryOptions);
+            if (logTransaction) LogTransaction(Manager<T>.Composition.TableName, transactionType, queryOptions);
 
             return result;
         }
@@ -203,7 +203,7 @@ namespace OneData.DAO.MySql
                 if (connection.State != ConnectionState.Open) throw new BadConnectionStateException();
                 _command = connection.CreateCommand();
                 _command.CommandType = CommandType.StoredProcedure;
-                _command.CommandText = string.Format("{0}{1}{2}", Manager.StoredProcedurePrefix, new T().Composition.TableName, GetFriendlyTransactionSuffix(transactionType));
+                _command.CommandText = string.Format("{0}{1}{2}", Manager.StoredProcedurePrefix, Manager<T>.Composition.TableName, GetFriendlyTransactionSuffix(transactionType));
 
                 switch (transactionType)
                 {
@@ -301,13 +301,13 @@ namespace OneData.DAO.MySql
             string foreignTableFullyQualifiedName;
             string foreignJoinModelAlias;
 
-            selectBuilder.Append($"SELECT `{Manager.TablePrefix}{new T().Composition.TableName}`.*");
-            if (new T().Composition.ForeignDataAttributes.Count > 0)
+            selectBuilder.Append($"SELECT `{Manager.TablePrefix}{Manager<T>.Composition.TableName}`.*");
+            if (Manager<T>.Composition.ForeignDataAttributes.Count > 0)
             {
-                foreach (ForeignData foreignAttribute in new T().Composition.ForeignDataAttributes.Values)
+                foreach (ForeignData foreignAttribute in Manager<T>.Composition.ForeignDataAttributes.Values)
                 {
                     foreignObject = (IManageable)Activator.CreateInstance(foreignAttribute.JoinModel);
-                    foreignTableFullyQualifiedName = $"{Manager.TablePrefix}{foreignObject.Composition.TableName}";
+                    foreignTableFullyQualifiedName = $"{Manager.TablePrefix}{foreignObject.GetComposition().TableName}";
 
                     foreignJoinModelAlias = string.IsNullOrWhiteSpace(foreignAttribute.JoinModelTableAlias) ? foreignTableFullyQualifiedName : foreignAttribute.JoinModelTableAlias;
 
@@ -327,19 +327,19 @@ namespace OneData.DAO.MySql
             string foreignJoinModelAlias;
             string foreignReferenceModelAlias;
 
-            fromBuilder.Append($" FROM `{Manager.TablePrefix}{new T().Composition.TableName}`");
-            if (new T().Composition.ForeignDataAttributes.Count > 0)
+            fromBuilder.Append($" FROM `{Manager.TablePrefix}{Manager<T>.Composition.TableName}`");
+            if (Manager<T>.Composition.ForeignDataAttributes.Count > 0)
             {
-                foreach (ForeignData foreignAttribute in new T().Composition.ForeignDataAttributes.Values.GroupBy(x => x.JoinModel).Select(y => y.First()))
+                foreach (ForeignData foreignAttribute in Manager<T>.Composition.ForeignDataAttributes.Values.GroupBy(x => x.JoinModel).Select(y => y.First()))
                 {
                     foreignModel = (IManageable)Activator.CreateInstance(foreignAttribute.JoinModel);
                     foreignReferenceModel = (IManageable)Activator.CreateInstance(foreignAttribute.ReferenceModel);
-                    foreignTableFullyQualifiedName = $"{Manager.TablePrefix}{foreignModel.Composition.TableName}";
+                    foreignTableFullyQualifiedName = $"{Manager.TablePrefix}{foreignModel.GetComposition().TableName}";
 
                     foreignJoinModelAlias = string.IsNullOrWhiteSpace(foreignAttribute.JoinModelTableAlias) ? foreignTableFullyQualifiedName : foreignAttribute.JoinModelTableAlias;
-                    foreignReferenceModelAlias = string.IsNullOrWhiteSpace(foreignAttribute.ReferenceModelTableAlias) ? $"{Manager.TablePrefix}{foreignReferenceModel.Composition.TableName}" : foreignAttribute.ReferenceModelTableAlias;
+                    foreignReferenceModelAlias = string.IsNullOrWhiteSpace(foreignAttribute.ReferenceModelTableAlias) ? $"{Manager.TablePrefix}{foreignReferenceModel.GetComposition().TableName}" : foreignAttribute.ReferenceModelTableAlias;
 
-                    fromBuilder.Append($" {foreignAttribute.JoinClauseType.ToString()} JOIN `{foreignTableFullyQualifiedName}` AS `{foreignJoinModelAlias}` ON `{foreignReferenceModelAlias}`.`{foreignAttribute.ReferenceIdName}` = `{foreignJoinModelAlias}`.`{foreignModel.Composition.PrimaryKeyProperty.Name}`");
+                    fromBuilder.Append($" {foreignAttribute.JoinClauseType.ToString()} JOIN `{foreignTableFullyQualifiedName}` AS `{foreignJoinModelAlias}` ON `{foreignReferenceModelAlias}`.`{foreignAttribute.ReferenceIdName}` = `{foreignJoinModelAlias}`.`{foreignModel.GetComposition().PrimaryKeyProperty.Name}`");
                 }
             }
 

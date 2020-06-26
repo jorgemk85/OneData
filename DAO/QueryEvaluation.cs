@@ -175,15 +175,15 @@ namespace OneData.DAO
 
             if (queryOptions.Offset > 0 && queryOptions.MaximumResults > 0)
             {
-                resultList = queryableList.OrderByDescending(obj => new T().Composition.DateModifiedProperty.GetValue(obj)).Skip(queryOptions.Offset).Take(queryOptions.MaximumResults).ToDictionary(new T().Composition.PrimaryKeyProperty.Name, new T().Composition.PrimaryKeyProperty.PropertyType);
+                resultList = queryableList.OrderByDescending(obj => Manager<T>.Composition.DateModifiedProperty.GetValue(obj)).Skip(queryOptions.Offset).Take(queryOptions.MaximumResults).ToDictionary(Manager<T>.Composition.PrimaryKeyProperty.Name, Manager<T>.Composition.PrimaryKeyProperty.PropertyType);
             }
             else if (queryOptions.Offset > 0)
             {
-                resultList = queryableList.OrderByDescending(obj => new T().Composition.DateModifiedProperty.GetValue(obj)).Skip(queryOptions.Offset).ToDictionary(new T().Composition.PrimaryKeyProperty.Name, new T().Composition.PrimaryKeyProperty.PropertyType);
+                resultList = queryableList.OrderByDescending(obj => Manager<T>.Composition.DateModifiedProperty.GetValue(obj)).Skip(queryOptions.Offset).ToDictionary(Manager<T>.Composition.PrimaryKeyProperty.Name, Manager<T>.Composition.PrimaryKeyProperty.PropertyType);
             }
             else if (queryOptions.MaximumResults > 0)
             {
-                resultList = queryableList.OrderByDescending(obj => new T().Composition.DateModifiedProperty.GetValue(obj)).Take(queryOptions.MaximumResults).ToDictionary(new T().Composition.PrimaryKeyProperty.Name, new T().Composition.PrimaryKeyProperty.PropertyType);
+                resultList = queryableList.OrderByDescending(obj => Manager<T>.Composition.DateModifiedProperty.GetValue(obj)).Take(queryOptions.MaximumResults).ToDictionary(Manager<T>.Composition.PrimaryKeyProperty.Name, Manager<T>.Composition.PrimaryKeyProperty.PropertyType);
             }
 
             if (resultList == null)
@@ -196,22 +196,22 @@ namespace OneData.DAO
 
         private void UpdateInCache<T>(T obj, ref DataCache<T> dataCache) where T : IManageable, new()
         {
-            new T().Composition.DateModifiedProperty.SetValue(obj, DateTime.Now);
-            dataCache.Cache.Data[new T().Composition.PrimaryKeyProperty.GetValue(obj)] = obj;
+            Manager<T>.Composition.DateModifiedProperty.SetValue(obj, DateTime.Now);
+            dataCache.Cache.Data[Manager<T>.Composition.PrimaryKeyProperty.GetValue(obj)] = obj;
         }
 
         private void InsertInCache<T>(T obj, ref DataCache<T> dataCache) where T : IManageable, new()
         {
-            new T().Composition.DateCreatedProperty.SetValue(obj, DateTime.Now);
-            new T().Composition.DateModifiedProperty.SetValue(obj, DateTime.Now);
-            dataCache.Cache.Data.Add(new T().Composition.PrimaryKeyProperty.GetValue(obj), obj);
+            Manager<T>.Composition.DateCreatedProperty.SetValue(obj, DateTime.Now);
+            Manager<T>.Composition.DateModifiedProperty.SetValue(obj, DateTime.Now);
+            dataCache.Cache.Data.Add(Manager<T>.Composition.PrimaryKeyProperty.GetValue(obj), obj);
         }
 
         private void InsertMassiveInCache<T>(IEnumerable<T> list, ref DataCache<T> dataCache) where T : IManageable, new()
         {
             foreach (T obj in list)
             {
-                dataCache.Cache.Data.Add(new T().Composition.PrimaryKeyProperty.GetValue(obj), obj);
+                dataCache.Cache.Data.Add(Manager<T>.Composition.PrimaryKeyProperty.GetValue(obj), obj);
             }
         }
 
@@ -219,7 +219,7 @@ namespace OneData.DAO
         {
             foreach (T obj in list)
             {
-                dataCache.Cache.Data[new T().Composition.PrimaryKeyProperty.GetValue(obj)] = obj;
+                dataCache.Cache.Data[Manager<T>.Composition.PrimaryKeyProperty.GetValue(obj)] = obj;
             }
         }
 
@@ -227,7 +227,7 @@ namespace OneData.DAO
         {
             foreach (T obj in list)
             {
-                dataCache.Cache.Data.Remove(new T().Composition.PrimaryKeyProperty.GetValue(obj));
+                dataCache.Cache.Data.Remove(Manager<T>.Composition.PrimaryKeyProperty.GetValue(obj));
             }
         }
 

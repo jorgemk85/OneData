@@ -97,7 +97,7 @@ namespace OneData.DAO.MySql
 
         public bool IsUnique(IManageable model, string propertyName)
         {
-            return model.Composition.UniqueKeyProperties.ContainsKey(propertyName);
+            return model.GetComposition().UniqueKeyProperties.ContainsKey(propertyName);
         }
 
         public bool IsUnique(Dictionary<string, ConstraintDefinition> constraints, string uniqueConstraintName)
@@ -107,7 +107,7 @@ namespace OneData.DAO.MySql
 
         public bool IsDefault(IManageable model, string propertyName)
         {
-            return model.Composition.DefaultProperties.ContainsKey(propertyName);
+            return model.GetComposition().DefaultProperties.ContainsKey(propertyName);
         }
 
         public bool IsDefault(ColumnDefinition columnDefinition)
@@ -117,7 +117,7 @@ namespace OneData.DAO.MySql
 
         public bool IsPrimaryKey(IManageable model, string propertyName)
         {
-            return model.Composition.PrimaryKeyProperty.Name.Equals(propertyName);
+            return model.GetComposition().PrimaryKeyProperty.Name.Equals(propertyName);
         }
     }
 }

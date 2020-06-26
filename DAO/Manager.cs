@@ -105,6 +105,7 @@ namespace OneData.DAO
     /// <typeparam name="T">Tipo de clase que representa este objeto. El tipo tiene que implementar IManageable para poder operar.</typeparam>
     public sealed class Manager<T> where T : IManageable, new()
     {
+        public static ModelComposition Composition { get; } = new ModelComposition(typeof(T));
         static DataCache<T> dataCache = new DataCache<T>();
 
         #region Events
@@ -122,7 +123,7 @@ namespace OneData.DAO
 
         static Manager()
         {
-            dataCache.Initialize(new T().Composition.IsCacheEnabled);
+            dataCache.Initialize(Manager<T>.Composition.IsCacheEnabled);
         }
 
         private static void VerifyQueryOptions(ref QueryOptions queryOptions)
@@ -137,7 +138,7 @@ namespace OneData.DAO
                     MaximumResults = -1,
                     Offset = 0,
                     ConnectionToUse = Manager.DefaultConnection,
-                    OrderBy = $"{openingCharacter}{new T().Composition.Schema}{closingCharacter}.{openingCharacter}{Manager.TablePrefix}{new T().Composition.TableName}{closingCharacter}.{openingCharacter}{new T().Composition.DateModifiedProperty.Name}{closingCharacter}",
+                    OrderBy = $"{openingCharacter}{Manager<T>.Composition.Schema}{closingCharacter}.{openingCharacter}{Manager.TablePrefix}{Manager<T>.Composition.TableName}{closingCharacter}.{openingCharacter}{Manager<T>.Composition.DateModifiedProperty.Name}{closingCharacter}",
                     SortOrder = SortOrderTypes.DESC
                 };
             }
@@ -146,10 +147,10 @@ namespace OneData.DAO
                 queryOptions.MaximumResults = queryOptions.MaximumResults <= 0 ? -1 : queryOptions.MaximumResults;
                 queryOptions.Offset = queryOptions.Offset < 0 ? 0 : queryOptions.Offset;
                 queryOptions.ConnectionToUse = string.IsNullOrWhiteSpace(queryOptions.ConnectionToUse) ? Manager.DefaultConnection : queryOptions.ConnectionToUse;
-                queryOptions.OrderBy = string.IsNullOrWhiteSpace(queryOptions.OrderBy) ? $"{openingCharacter}{new T().Composition.Schema}{closingCharacter}.{openingCharacter}{Manager.TablePrefix}{new T().Composition.TableName}{closingCharacter}.{openingCharacter}{new T().Composition.DateModifiedProperty.Name}{closingCharacter}" : queryOptions.OrderBy;
-                if (!queryOptions.OrderBy.StartsWith($"{openingCharacter}{new T().Composition.Schema}{closingCharacter}"))
+                queryOptions.OrderBy = string.IsNullOrWhiteSpace(queryOptions.OrderBy) ? $"{openingCharacter}{Manager<T>.Composition.Schema}{closingCharacter}.{openingCharacter}{Manager.TablePrefix}{Manager<T>.Composition.TableName}{closingCharacter}.{openingCharacter}{Manager<T>.Composition.DateModifiedProperty.Name}{closingCharacter}" : queryOptions.OrderBy;
+                if (!queryOptions.OrderBy.StartsWith($"{openingCharacter}{Manager<T>.Composition.Schema}{closingCharacter}"))
                 {
-                    queryOptions.OrderBy = $"{openingCharacter}{new T().Composition.Schema}{closingCharacter}.{openingCharacter}{Manager.TablePrefix}{new T().Composition.TableName}{closingCharacter}.{openingCharacter}{queryOptions.OrderBy}{closingCharacter}";
+                    queryOptions.OrderBy = $"{openingCharacter}{Manager<T>.Composition.Schema}{closingCharacter}.{openingCharacter}{Manager.TablePrefix}{Manager<T>.Composition.TableName}{closingCharacter}.{openingCharacter}{queryOptions.OrderBy}{closingCharacter}";
                 }
             }
         }
@@ -349,23 +350,23 @@ namespace OneData.DAO
 
             QueryEvaluation queryEvaluation = new QueryEvaluation(Manager.ConnectionType);
 
-            if (new T().Composition.IsCacheEnabled)
+            if (Manager<T>.Composition.IsCacheEnabled)
             {
                 ResetCacheIfExpired();
             }
 
             Result<T> result = queryEvaluation.Evaluate<T>(obj, expression, transactionType, ref dataCache, queryOptions);
-            CallOnExecutedEventHandlers(new T().Composition.TableName, transactionType, result);
+            CallOnExecutedEventHandlers(Manager<T>.Composition.TableName, transactionType, result);
 
             return result;
         }
 
         private static void ResetCacheIfExpired()
         {
-            if (DateTime.Now.Ticks > dataCache.LastCacheUpdate + new T().Composition.CacheExpiration)
+            if (DateTime.Now.Ticks > dataCache.LastCacheUpdate + Manager<T>.Composition.CacheExpiration)
             {
                 // Elimina el cache ya que esta EXPIRADO y de debe de refrescar.
-                dataCache.Reset(new T().Composition.IsCacheEnabled);
+                dataCache.Reset(Manager<T>.Composition.IsCacheEnabled);
             }
         }
 

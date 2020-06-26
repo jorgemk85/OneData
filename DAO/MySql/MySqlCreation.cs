@@ -15,29 +15,29 @@ namespace OneData.DAO.MySql
         public void SetStoredProceduresParameters(IManageable model, StringBuilder queryBuilder, bool setDefaultNull, bool considerPrimary)
         {
             // Aqui se colocan los parametros segun las propiedades del objeto 
-            foreach (KeyValuePair<string, OneProperty> property in model.Composition.FilteredProperties)
+            foreach (KeyValuePair<string, OneProperty> property in model.GetComposition().FilteredProperties)
             {
                 // Si la propiedad actual es la primaria y es auto increment y no se debe considerar para estos parametros, entonces se salta a la sig propiedad.
                 // Esto significa que la propiedad primaria es Identity o Auto Increment y no se debe de mandar como parametro en un Insert.
-                if (property.Value.Equals(model.Composition.PrimaryKeyProperty) && model.Composition.PrimaryKeyAttribute.IsAutoIncrement && !considerPrimary)
+                if (property.Value.Equals(model.GetComposition().PrimaryKeyProperty) && model.GetComposition().PrimaryKeyAttribute.IsAutoIncrement && !considerPrimary)
                 {
                     continue;
                 }
 
                 if (setDefaultNull)
                 {
-                    queryBuilder.AppendFormat("    IN `_{0}` {1} = null,\n", property.Value.Name, GetSqlDataType(property.Value.PropertyType, model.Composition.UniqueKeyProperties.ContainsKey(property.Value.Name), GetDataLengthFromProperty(model, property.Key)));
+                    queryBuilder.AppendFormat("    IN `_{0}` {1} = null,\n", property.Value.Name, GetSqlDataType(property.Value.PropertyType, model.GetComposition().UniqueKeyProperties.ContainsKey(property.Value.Name), GetDataLengthFromProperty(model, property.Key)));
                 }
                 else
                 {
-                    queryBuilder.AppendFormat("    IN `_{0}` {1},\n", property.Value.Name, GetSqlDataType(property.Value.PropertyType, model.Composition.UniqueKeyProperties.ContainsKey(property.Value.Name), GetDataLengthFromProperty(model, property.Key)));
+                    queryBuilder.AppendFormat("    IN `_{0}` {1},\n", property.Value.Name, GetSqlDataType(property.Value.PropertyType, model.GetComposition().UniqueKeyProperties.ContainsKey(property.Value.Name), GetDataLengthFromProperty(model, property.Key)));
                 }
             }
         }
 
         private long GetDataLengthFromProperty(IManageable model, string propertyName)
         {
-            model.Composition.DataLengthAttributes.TryGetValue(propertyName, out DataLength dataLengthAttribute);
+            model.GetComposition().DataLengthAttributes.TryGetValue(propertyName, out DataLength dataLengthAttribute);
 
             if (dataLengthAttribute != null)
             {
@@ -55,14 +55,14 @@ namespace OneData.DAO.MySql
             StringBuilder insertsBuilder = new StringBuilder();
             StringBuilder valuesBuilder = new StringBuilder();
 
-            if (model.Composition.ManagedProperties.Count == 0) return string.Empty;
+            if (model.GetComposition().ManagedProperties.Count == 0) return string.Empty;
 
             if (doAlter)
             {
-                queryBuilder.AppendFormat("DROP PROCEDURE `{0}{1}{2}`;\n", Manager.StoredProcedurePrefix, model.Composition.TableName, Manager.InsertSuffix);
+                queryBuilder.AppendFormat("DROP PROCEDURE `{0}{1}{2}`;\n", Manager.StoredProcedurePrefix, model.GetComposition().TableName, Manager.InsertSuffix);
             }
 
-            queryBuilder.AppendFormat("CREATE PROCEDURE `{0}{1}{2}` (\n", Manager.StoredProcedurePrefix, model.Composition.TableName, Manager.InsertSuffix);
+            queryBuilder.AppendFormat("CREATE PROCEDURE `{0}{1}{2}` (\n", Manager.StoredProcedurePrefix, model.GetComposition().TableName, Manager.InsertSuffix);
 
             // Aqui se colocan los parametros segun las propiedades del objeto
             SetStoredProceduresParameters(model, queryBuilder, false, false);
@@ -70,21 +70,21 @@ namespace OneData.DAO.MySql
             queryBuilder.Remove(queryBuilder.Length - 2, 2);
             queryBuilder.Append(")\nBEGIN\n");
             queryBuilder.Append("SET @@sql_mode:=TRADITIONAL;\n");
-            queryBuilder.AppendFormat("INSERT INTO `{0}{1}` (\n", Manager.TablePrefix, model.Composition.TableName);
+            queryBuilder.AppendFormat("INSERT INTO `{0}{1}` (\n", Manager.TablePrefix, model.GetComposition().TableName);
 
             // Seccion para especificar a que columnas se va a insertar y sus valores.
-            foreach (KeyValuePair<string, OneProperty> property in model.Composition.ManagedProperties)
+            foreach (KeyValuePair<string, OneProperty> property in model.GetComposition().ManagedProperties)
             {
-                if (property.Value.Equals(model.Composition.PrimaryKeyProperty) && model.Composition.PrimaryKeyAttribute.IsAutoIncrement)
+                if (property.Value.Equals(model.GetComposition().PrimaryKeyProperty) && model.GetComposition().PrimaryKeyAttribute.IsAutoIncrement)
                 {
                     continue;
                 }
                 else
                 {
                     insertsBuilder.AppendFormat("    `{0}`,\n", property.Value.Name);
-                    if (model.Composition.AutoProperties.TryGetValue(property.Value.Name, out OneProperty autoProperty))
+                    if (model.GetComposition().AutoProperties.TryGetValue(property.Value.Name, out OneProperty autoProperty))
                     {
-                        valuesBuilder.AppendFormat("    {0},\n", GetAutoPropertyValue(model.Composition.AutoPropertyAttributes[property.Value.Name].AutoPropertyType));
+                        valuesBuilder.AppendFormat("    {0},\n", GetAutoPropertyValue(model.GetComposition().AutoPropertyAttributes[property.Value.Name].AutoPropertyType));
                     }
                     else
                     {
@@ -108,14 +108,14 @@ namespace OneData.DAO.MySql
         {
             StringBuilder queryBuilder = new StringBuilder();
 
-            if (model.Composition.ManagedProperties.Count == 0) return string.Empty;
+            if (model.GetComposition().ManagedProperties.Count == 0) return string.Empty;
 
             if (doAlter)
             {
-                queryBuilder.AppendFormat("DROP PROCEDURE `{0}{1}{2}`;\n", Manager.StoredProcedurePrefix, model.Composition.TableName, Manager.UpdateSuffix);
+                queryBuilder.AppendFormat("DROP PROCEDURE `{0}{1}{2}`;\n", Manager.StoredProcedurePrefix, model.GetComposition().TableName, Manager.UpdateSuffix);
             }
 
-            queryBuilder.AppendFormat("CREATE PROCEDURE `{0}{1}{2}` (\n", Manager.StoredProcedurePrefix, model.Composition.TableName, Manager.UpdateSuffix);
+            queryBuilder.AppendFormat("CREATE PROCEDURE `{0}{1}{2}` (\n", Manager.StoredProcedurePrefix, model.GetComposition().TableName, Manager.UpdateSuffix);
 
             // Aqui se colocan los parametros segun las propiedades del objeto
             SetStoredProceduresParameters(model, queryBuilder, false, true);
@@ -123,19 +123,19 @@ namespace OneData.DAO.MySql
             queryBuilder.Remove(queryBuilder.Length - 2, 2);
             queryBuilder.Append(")\nBEGIN\n");
             queryBuilder.Append("SET @@sql_mode:=TRADITIONAL;\n");
-            queryBuilder.AppendFormat("UPDATE `{0}{1}`\n", Manager.TablePrefix, model.Composition.TableName);
+            queryBuilder.AppendFormat("UPDATE `{0}{1}`\n", Manager.TablePrefix, model.GetComposition().TableName);
             queryBuilder.Append("SET\n");
 
             // Se especifica el parametro que va en x columna.
-            foreach (KeyValuePair<string, OneProperty> property in model.Composition.ManagedProperties)
+            foreach (KeyValuePair<string, OneProperty> property in model.GetComposition().ManagedProperties)
             {
-                if (property.Value.Equals(model.Composition.PrimaryKeyProperty) || property.Value.Name.Equals(model.Composition.DateCreatedProperty.Name))
+                if (property.Value.Equals(model.GetComposition().PrimaryKeyProperty) || property.Value.Name.Equals(model.GetComposition().DateCreatedProperty.Name))
                 {
                     continue;
                 }
-                if (model.Composition.AutoProperties.TryGetValue(property.Value.Name, out OneProperty autoProperty))
+                if (model.GetComposition().AutoProperties.TryGetValue(property.Value.Name, out OneProperty autoProperty))
                 {
-                    queryBuilder.AppendFormat("    `{0}` = {1},\n", property.Value.Name, GetAutoPropertyValue(model.Composition.AutoPropertyAttributes[property.Value.Name].AutoPropertyType));
+                    queryBuilder.AppendFormat("    `{0}` = {1},\n", property.Value.Name, GetAutoPropertyValue(model.GetComposition().AutoPropertyAttributes[property.Value.Name].AutoPropertyType));
                 }
                 else
                 {
@@ -143,7 +143,7 @@ namespace OneData.DAO.MySql
                 }
             }
             queryBuilder.Remove(queryBuilder.Length - 2, 2);
-            queryBuilder.Append($"WHERE `{model.Composition.PrimaryKeyProperty.Name}` = `_{model.Composition.PrimaryKeyProperty.Name}`;\n");
+            queryBuilder.Append($"WHERE `{model.GetComposition().PrimaryKeyProperty.Name}` = `_{model.GetComposition().PrimaryKeyProperty.Name}`;\n");
             queryBuilder.Append("END");
 
             Logger.Info("(MySql) Created a new query for Update Stored Procedure:");
@@ -157,15 +157,15 @@ namespace OneData.DAO.MySql
 
             if (doAlter)
             {
-                queryBuilder.AppendFormat("DROP PROCEDURE `{0}{1}{2}`;\n", Manager.StoredProcedurePrefix, model.Composition.TableName, Manager.DeleteSuffix);
+                queryBuilder.AppendFormat("DROP PROCEDURE `{0}{1}{2}`;\n", Manager.StoredProcedurePrefix, model.GetComposition().TableName, Manager.DeleteSuffix);
             }
 
-            queryBuilder.AppendFormat("CREATE PROCEDURE `{0}{1}{2}` (\n", Manager.StoredProcedurePrefix, model.Composition.TableName, Manager.DeleteSuffix);
+            queryBuilder.AppendFormat("CREATE PROCEDURE `{0}{1}{2}` (\n", Manager.StoredProcedurePrefix, model.GetComposition().TableName, Manager.DeleteSuffix);
 
-            queryBuilder.Append($"    IN `_{model.Composition.PrimaryKeyProperty.Name}` {GetSqlDataType(model.Composition.PrimaryKeyProperty.PropertyType, model.Composition.UniqueKeyProperties.ContainsKey(model.Composition.PrimaryKeyProperty.Name), 0)})\n");
+            queryBuilder.Append($"    IN `_{model.GetComposition().PrimaryKeyProperty.Name}` {GetSqlDataType(model.GetComposition().PrimaryKeyProperty.PropertyType, model.GetComposition().UniqueKeyProperties.ContainsKey(model.GetComposition().PrimaryKeyProperty.Name), 0)})\n");
             queryBuilder.Append("BEGIN\n");
-            queryBuilder.AppendFormat("DELETE FROM `{0}{1}`\n", Manager.TablePrefix, model.Composition.TableName);
-            queryBuilder.Append($"WHERE `{model.Composition.PrimaryKeyProperty.Name}` = `_{model.Composition.PrimaryKeyProperty.Name}`;\n");
+            queryBuilder.AppendFormat("DELETE FROM `{0}{1}`\n", Manager.TablePrefix, model.GetComposition().TableName);
+            queryBuilder.Append($"WHERE `{model.GetComposition().PrimaryKeyProperty.Name}` = `_{model.GetComposition().PrimaryKeyProperty.Name}`;\n");
             queryBuilder.Append("END");
 
             Logger.Info("(MySql) Created a new query for Delete Stored Procedure:");
@@ -175,17 +175,17 @@ namespace OneData.DAO.MySql
 
         public string CreateQueryForTableAlteration(IManageable model, Dictionary<string, ColumnDefinition> columnDetails, Dictionary<string, ConstraintDefinition> constraints, FullyQualifiedTableName tableName)
         {
-            if (model.Composition.ManagedProperties.Count == 0) return string.Empty;
+            if (model.GetComposition().ManagedProperties.Count == 0) return string.Empty;
 
             StringBuilder queryBuilder = new StringBuilder();
             ITransactionable transaction = new MySqlTransaction();
             IValidatable validation = new MySqlValidation();
 
-            foreach (KeyValuePair<string, OneProperty> property in model.Composition.ManagedProperties)
+            foreach (KeyValuePair<string, OneProperty> property in model.GetComposition().ManagedProperties)
             {
                 columnDetails.TryGetValue(property.Value.Name, out ColumnDefinition columnDefinition);
-                string sqlDataType = GetSqlDataType(property.Value.PropertyType, model.Composition.UniqueKeyProperties.ContainsKey(property.Value.Name), GetDataLengthFromProperty(model, property.Key));
-                model.Composition.DefaultAttributes.TryGetValue(property.Key, out Default defaultAttribute);
+                string sqlDataType = GetSqlDataType(property.Value.PropertyType, model.GetComposition().UniqueKeyProperties.ContainsKey(property.Value.Name), GetDataLengthFromProperty(model, property.Key));
+                model.GetComposition().DefaultAttributes.TryGetValue(property.Key, out Default defaultAttribute);
 
                 if (validation.IsNewColumn(columnDefinition))
                 {
@@ -215,7 +215,7 @@ namespace OneData.DAO.MySql
                 queryBuilder.Append(validation.IsNoLongerForeignKey(constraints, $"FK_{tableName.Schema}_{tableName.Table}_{property.Value.Name}", property.Value) ? transaction.RemoveForeignKeyFromColumn(tableName, $"FK_{tableName.Schema}_{tableName.Table}_{property.Value.Name}") : string.Empty);
             }
 
-            foreach (KeyValuePair<string, ColumnDefinition> columnDefinition in columnDetails.Where(q => !model.Composition.ManagedProperties.Keys.Contains(q.Key)))
+            foreach (KeyValuePair<string, ColumnDefinition> columnDefinition in columnDetails.Where(q => !model.GetComposition().ManagedProperties.Keys.Contains(q.Key)))
             {
                 queryBuilder.Append(validation.IsNoLongerDefault(columnDefinition.Value, null) ? $"{transaction.RemoveDefaultFromColumn(tableName, $"DF_{tableName.Schema}_{tableName.Table}_{columnDefinition.Key}")}|;|" : string.Empty);
                 queryBuilder.Append(validation.IsNoLongerUnique(constraints, $"UQ_{tableName.Schema}_{tableName.Table}_{columnDefinition.Key}", null) ? transaction.RemoveUniqueFromColumn(tableName, $"UQ_{tableName.Schema}_{tableName.Table}_{columnDefinition.Key}") : string.Empty);
@@ -235,7 +235,7 @@ namespace OneData.DAO.MySql
             StringBuilder queryBuilder = new StringBuilder();
             ITransactionable transaction = new MySqlTransaction();
 
-            foreach (KeyValuePair<string, OneProperty> property in model.Composition.ForeignKeyProperties)
+            foreach (KeyValuePair<string, OneProperty> property in model.GetComposition().ForeignKeyProperties)
             {
                 if (constraints == null)
                 {
@@ -349,7 +349,7 @@ namespace OneData.DAO.MySql
         {
             StringBuilder queryBuilder = new StringBuilder();
 
-            if (model.Composition.ManagedProperties.Count == 0) return string.Empty;
+            if (model.GetComposition().ManagedProperties.Count == 0) return string.Empty;
 
             if (doAlter)
             {
@@ -398,23 +398,23 @@ namespace OneData.DAO.MySql
 
         public string CreateQueryForTableCreation(IManageable model, FullyQualifiedTableName tableName)
         {
-            if (model.Composition.ManagedProperties.Count == 0) return string.Empty;
+            if (model.GetComposition().ManagedProperties.Count == 0) return string.Empty;
 
             StringBuilder queryBuilder = new StringBuilder();
             ITransactionable transaction = new MySqlTransaction();
             IValidatable valitation = new MySqlValidation();
 
-            queryBuilder.Append(transaction.AddTable(tableName, model.Composition.PrimaryKeyProperty.Name, GetSqlDataType(model.Composition.PrimaryKeyProperty.PropertyType, false, 0), model.Composition.PrimaryKeyAttribute.IsAutoIncrement));
+            queryBuilder.Append(transaction.AddTable(tableName, model.GetComposition().PrimaryKeyProperty.Name, GetSqlDataType(model.GetComposition().PrimaryKeyProperty.PropertyType, false, 0), model.GetComposition().PrimaryKeyAttribute.IsAutoIncrement));
 
             // Aqui se colocan las propiedades del objeto. Una por columna por su puesto.
-            foreach (KeyValuePair<string, OneProperty> property in model.Composition.ManagedProperties.Where(q => q.Key != model.Composition.PrimaryKeyProperty.Name))
+            foreach (KeyValuePair<string, OneProperty> property in model.GetComposition().ManagedProperties.Where(q => q.Key != model.GetComposition().PrimaryKeyProperty.Name))
             {
-                string sqlDataType = GetSqlDataType(property.Value.PropertyType, model.Composition.UniqueKeyProperties.ContainsKey(property.Value.Name), GetDataLengthFromProperty(model, property.Key));
+                string sqlDataType = GetSqlDataType(property.Value.PropertyType, model.GetComposition().UniqueKeyProperties.ContainsKey(property.Value.Name), GetDataLengthFromProperty(model, property.Key));
 
                 queryBuilder.Append(transaction.AddColumn(tableName, property.Value.Name, sqlDataType));
                 queryBuilder.Append(!valitation.IsNullable(property.Value) ? transaction.AddNotNullToColumn(tableName, property.Value.Name, sqlDataType) : string.Empty);
                 queryBuilder.Append(valitation.IsUnique(model, property.Value.Name) ? transaction.AddUniqueToColumn(tableName, property.Value.Name) : string.Empty);
-                queryBuilder.Append(valitation.IsDefault(model, property.Value.Name) ? transaction.AddDefaultToColumn(tableName, property.Value.Name, model.Composition.DefaultAttributes[property.Value.Name].Value) : string.Empty);
+                queryBuilder.Append(valitation.IsDefault(model, property.Value.Name) ? transaction.AddDefaultToColumn(tableName, property.Value.Name, model.GetComposition().DefaultAttributes[property.Value.Name].Value) : string.Empty);
             }
             if (!string.IsNullOrWhiteSpace(queryBuilder.ToString()))
             {

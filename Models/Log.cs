@@ -1,4 +1,5 @@
 ﻿using OneData.Attributes;
+using OneData.DAO;
 using OneData.Interfaces;
 using System;
 
@@ -19,9 +20,9 @@ namespace OneData.Models
         [DataLength(2550)]
         public string Parametros { get; set; }
 
-        private static ModelComposition _composition = new ModelComposition(typeof(Log));
-        [UnmanagedProperty]
-        public ModelComposition Composition { get { return _composition; } }
-
+        public ModelComposition GetComposition()
+        {
+            return Manager<Log>.Composition;
+        }
     }
 }

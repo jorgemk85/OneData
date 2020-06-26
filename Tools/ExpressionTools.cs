@@ -16,7 +16,7 @@ namespace OneData.Tools
             try
             {
                 StringBuilder builder = new StringBuilder();
-                string qualifiedTableName = Manager.ConnectionType == ConnectionTypes.MySQL ? $"`{Manager.TablePrefix}{new T().Composition.TableName}`" : $"[{new T().Composition.Schema}].[{Manager.TablePrefix}{new T().Composition.TableName}]";
+                string qualifiedTableName = Manager.ConnectionType == ConnectionTypes.MySQL ? $"`{Manager.TablePrefix}{Manager<T>.Composition.TableName}`" : $"[{Manager<T>.Composition.Schema}].[{Manager.TablePrefix}{Manager<T>.Composition.TableName}]";
 
                 switch (expression.Body)
                 {

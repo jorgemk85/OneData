@@ -144,13 +144,13 @@ namespace OneData.DAO
                     throw new NotSupportedException($"El tipo de transaccion {transactionType.ToString()} no puede ser utilizado con esta funcion.");
             }
 
-            string schema = Manager.ConnectionType == ConnectionTypes.MSSQL ? new T().Composition.Schema : ConsolidationTools.GetInitialCatalog(queryOptions.ConnectionToUse, true);
+            string schema = Manager.ConnectionType == ConnectionTypes.MSSQL ? Manager<T>.Composition.Schema : ConsolidationTools.GetInitialCatalog(queryOptions.ConnectionToUse, true);
             if (!DoStoredProcedureExist(ConsolidationTools.GetInitialCatalog(queryOptions.ConnectionToUse), schema, $"{Manager.StoredProcedurePrefix}massive_operation", queryOptions.ConnectionToUse))
             {
                 ExecuteScalar(GetTransactionTextForProcedure(new T(), transactionType, false), queryOptions.ConnectionToUse, false);
             }
 
-            if (!DoStoredProcedureExist(ConsolidationTools.GetInitialCatalog(queryOptions.ConnectionToUse), schema, $"{Manager.StoredProcedurePrefix}{new T().Composition.TableName}{GetFriendlyTransactionSuffix(singleTransactionType)}", queryOptions.ConnectionToUse))
+            if (!DoStoredProcedureExist(ConsolidationTools.GetInitialCatalog(queryOptions.ConnectionToUse), schema, $"{Manager.StoredProcedurePrefix}{Manager<T>.Composition.TableName}{GetFriendlyTransactionSuffix(singleTransactionType)}", queryOptions.ConnectionToUse))
             {
                 ExecuteScalar(GetTransactionTextForProcedure(new T(), singleTransactionType, false), queryOptions.ConnectionToUse, false);
             }
@@ -213,11 +213,11 @@ namespace OneData.DAO
 
             if (transactionType == TransactionTypes.Delete)
             {
-                _command.Parameters.Add(CreateDbParameter(string.Format("_{0}", new T().Composition.PrimaryKeyProperty.Name), new T().Composition.PrimaryKeyProperty.GetValue(obj)));
+                _command.Parameters.Add(CreateDbParameter(string.Format("_{0}", Manager<T>.Composition.PrimaryKeyProperty.Name), Manager<T>.Composition.PrimaryKeyProperty.GetValue(obj)));
                 return;
             }
 
-            foreach (KeyValuePair<string, OneProperty> property in new T().Composition.FilteredProperties)
+            foreach (KeyValuePair<string, OneProperty> property in Manager<T>.Composition.FilteredProperties)
             {
                 if (!CheckForPrimaryKeyWithAutoIncrement<T>(property.Value.Name, considerPrimaryKey))
                 {
@@ -229,9 +229,9 @@ namespace OneData.DAO
         private bool CheckForPrimaryKeyWithAutoIncrement<T>(string propertyName, bool considerPrimaryKey) where T : IManageable, new()
         {
             // Si la llave es primaria y es identity (autoincrement) entonces no la debe agregar como parametro.
-            if (propertyName.Equals(new T().Composition.PrimaryKeyProperty.Name))
+            if (propertyName.Equals(Manager<T>.Composition.PrimaryKeyProperty.Name))
             {
-                if (new T().Composition.PrimaryKeyAttribute.IsAutoIncrement && !considerPrimaryKey)
+                if (Manager<T>.Composition.PrimaryKeyAttribute.IsAutoIncrement && !considerPrimaryKey)
                 {
                     return true;
                 }
@@ -244,7 +244,7 @@ namespace OneData.DAO
         {
             if (propertyValue == null && transactionType.Equals(TransactionTypes.Insert))
             {
-                if (new T().Composition.DefaultAttributes.TryGetValue(propertyName, out Default defaultAttribute))
+                if (Manager<T>.Composition.DefaultAttributes.TryGetValue(propertyName, out Default defaultAttribute))
                 {
                     propertyValue = defaultAttribute.Value;
                 }
@@ -266,22 +266,22 @@ namespace OneData.DAO
 
         protected void PerformFullModelCheck(IManageable model, string connectionToUse)
         {
-            if (model.Composition.IsFullySynced)
+            if (model.GetComposition().IsFullySynced)
             {
-                Logger.Info($"Table {model.Composition.TableName} has already been validated with it's current state.");
+                Logger.Info($"Table {model.GetComposition().TableName} has already been validated with it's current state.");
                 return;
             }
 
-            Logger.Info($"Processing table {model.Composition.TableName} using connection {connectionToUse}.");
-            model.Composition.IsFullySynced = true;
-            string schema = Manager.ConnectionType == ConnectionTypes.MSSQL ? model.Composition.Schema : ConsolidationTools.GetInitialCatalog(connectionToUse, true);
+            Logger.Info($"Processing table {model.GetComposition().TableName} using connection {connectionToUse}.");
+            model.GetComposition().IsFullySynced = true;
+            string schema = Manager.ConnectionType == ConnectionTypes.MSSQL ? model.GetComposition().Schema : ConsolidationTools.GetInitialCatalog(connectionToUse, true);
             string initialCatalog = ConsolidationTools.GetInitialCatalog(connectionToUse);
-            FullyQualifiedTableName tableName = new FullyQualifiedTableName(schema, $"{Manager.TablePrefix}{model.Composition.TableName}");
-            Dictionary<string, ConstraintDefinition> constraints = GetConstraints(initialCatalog, schema, model.Composition.TableName, connectionToUse);
+            FullyQualifiedTableName tableName = new FullyQualifiedTableName(schema, $"{Manager.TablePrefix}{model.GetComposition().TableName}");
+            Dictionary<string, ConstraintDefinition> constraints = GetConstraints(initialCatalog, schema, model.GetComposition().TableName, connectionToUse);
 
-            if (DoTableExist(initialCatalog, schema, model.Composition.TableName, connectionToUse))
+            if (DoTableExist(initialCatalog, schema, model.GetComposition().TableName, connectionToUse))
             {
-                string alterQuery = _creator.CreateQueryForTableAlteration(model, GetColumnDefinition(initialCatalog, schema, model.Composition.TableName, connectionToUse), constraints, tableName);
+                string alterQuery = _creator.CreateQueryForTableAlteration(model, GetColumnDefinition(initialCatalog, schema, model.GetComposition().TableName, connectionToUse), constraints, tableName);
                 if (!string.IsNullOrWhiteSpace(alterQuery))
                 {
                     ExecuteScalar(alterQuery, connectionToUse, false);
@@ -323,10 +323,10 @@ namespace OneData.DAO
         {
             Logger.Info($"Verifying foreign tables for type {model.GetType().ToString()} using connection {connectionToUse}.");
 
-            foreach (KeyValuePair<string, OneProperty> property in model.Composition.ForeignKeyProperties)
+            foreach (KeyValuePair<string, OneProperty> property in model.GetComposition().ForeignKeyProperties)
             {
-                IManageable foreignModel = (IManageable)Activator.CreateInstance(model.Composition.ForeignKeyAttributes[property.Value.Name].Model);
-                string schema = Manager.ConnectionType == ConnectionTypes.MSSQL ? foreignModel.Composition.Schema : ConsolidationTools.GetInitialCatalog(connectionToUse, true);
+                IManageable foreignModel = (IManageable)Activator.CreateInstance(model.GetComposition().ForeignKeyAttributes[property.Value.Name].Model);
+                string schema = Manager.ConnectionType == ConnectionTypes.MSSQL ? foreignModel.GetComposition().Schema : ConsolidationTools.GetInitialCatalog(connectionToUse, true);
                 PerformFullModelCheck(foreignModel, connectionToUse);
             }
         }
@@ -386,7 +386,7 @@ namespace OneData.DAO
                 Parametros = GetStringParameters()
             };
 
-            Logger.Info($"Created new log object for affected table {new Log().Composition.TableName}, transaction used {newLog.Transaccion}, with the following parameters: {newLog.Parametros}");
+            Logger.Info($"Created new log object for affected table {Manager<Log>.Composition.TableName}, transaction used {newLog.Transaccion}, with the following parameters: {newLog.Parametros}");
 
             return newLog;
         }
@@ -398,7 +398,7 @@ namespace OneData.DAO
                 IEnumerable<OneProperty> properties = DataSerializer.GetFilteredPropertiesBasedOnList<T>(reader);
                 while (reader.Read())
                 {
-                    result.Data.Add(reader[new T().Composition.PrimaryKeyProperty.Name], DataSerializer.ConvertReaderToObjectOfType<T>(reader, properties));
+                    result.Data.Add(reader[Manager<T>.Composition.PrimaryKeyProperty.Name], DataSerializer.ConvertReaderToObjectOfType<T>(reader, properties));
                 }
             }
         }
