@@ -112,7 +112,7 @@ namespace OneData.Tools
             }
         }
 
-        internal static MassiveOperationParameter GenerateCompatibleMassiveOperationXML<T>(IEnumerable<T> list, TransactionTypes transactionType) where T : Cope<T>, IManageable, new()
+        internal static MassiveOperationParameter GenerateCompatibleMassiveOperationXML<T>(IEnumerable<T> list, TransactionTypes transactionType) where T : IManageable, new()
         {
             MassiveOperationParameter massiveOperationParameter = new MassiveOperationParameter();
             StringBuilder builder = new StringBuilder();
@@ -121,12 +121,12 @@ namespace OneData.Tools
             if (transactionType == TransactionTypes.DeleteMassive)
             {
                 builder.Append("  <column>\n");
-                builder.Append($"      <name>{Cope<T>.ModelComposition.PrimaryKeyProperty.Name}</name>\n");
+                builder.Append($"      <name>{new T().Composition.PrimaryKeyProperty.Name}</name>\n");
                 builder.Append("  </column>\n");
             }
             else
             {
-                foreach (KeyValuePair<string, OneProperty> property in Cope<T>.ModelComposition.FilteredProperties)
+                foreach (KeyValuePair<string, OneProperty> property in new T().Composition.FilteredProperties)
                 {
                     builder.Append("  <column>\n");
                     builder.Append($"      <name>{property.Value.Name}</name>\n");
@@ -145,13 +145,13 @@ namespace OneData.Tools
                 {
                     builder.Append("  <object>\n");
                     // Si es Numero o Boolean no agrega comillas sencillas, de lo contrario se las pone.
-                    if (long.TryParse(Cope<T>.ModelComposition.PrimaryKeyProperty.GetValue(obj).ToString(), out long n) || Cope<T>.ModelComposition.PrimaryKeyProperty.GetValue(obj) is bool)
+                    if (long.TryParse(new T().Composition.PrimaryKeyProperty.GetValue(obj).ToString(), out long n) || new T().Composition.PrimaryKeyProperty.GetValue(obj) is bool)
                     {
-                        builder.Append($"     <{Cope<T>.ModelComposition.PrimaryKeyProperty.Name}>{Cope<T>.ModelComposition.PrimaryKeyProperty.GetValue(obj)}</{Cope<T>.ModelComposition.PrimaryKeyProperty.Name}>\n");
+                        builder.Append($"     <{new T().Composition.PrimaryKeyProperty.Name}>{new T().Composition.PrimaryKeyProperty.GetValue(obj)}</{new T().Composition.PrimaryKeyProperty.Name}>\n");
                     }
                     else
                     {
-                        builder.Append($"     <{Cope<T>.ModelComposition.PrimaryKeyProperty.Name}>'{Cope<T>.ModelComposition.PrimaryKeyProperty.GetValue(obj)}'</{Cope<T>.ModelComposition.PrimaryKeyProperty.Name}>\n");
+                        builder.Append($"     <{new T().Composition.PrimaryKeyProperty.Name}>'{new T().Composition.PrimaryKeyProperty.GetValue(obj)}'</{new T().Composition.PrimaryKeyProperty.Name}>\n");
                     }
                     builder.Append("  </object>\n");
                 }
@@ -161,7 +161,7 @@ namespace OneData.Tools
                 foreach (T obj in list)
                 {
                     builder.Append("  <object>\n");
-                    foreach (KeyValuePair<string, OneProperty> property in Cope<T>.ModelComposition.FilteredProperties)
+                    foreach (KeyValuePair<string, OneProperty> property in new T().Composition.FilteredProperties)
                     {
                         if (property.Value.GetValue(obj) == null)
                         {
@@ -197,13 +197,13 @@ namespace OneData.Tools
             switch (transactionType)
             {
                 case TransactionTypes.InsertMassive:
-                    massiveOperationParameter.ProcedureName = Manager.ConnectionType == ConnectionTypes.MySQL ? $"`{Manager.StoredProcedurePrefix}{Cope<T>.ModelComposition.TableName}{Manager.InsertSuffix}`" : $"[{Manager.StoredProcedurePrefix}{Cope<T>.ModelComposition.TableName}{Manager.InsertSuffix}]";
+                    massiveOperationParameter.ProcedureName = Manager.ConnectionType == ConnectionTypes.MySQL ? $"`{Manager.StoredProcedurePrefix}{new T().Composition.TableName}{Manager.InsertSuffix}`" : $"[{Manager.StoredProcedurePrefix}{new T().Composition.TableName}{Manager.InsertSuffix}]";
                     break;
                 case TransactionTypes.UpdateMassive:
-                    massiveOperationParameter.ProcedureName = Manager.ConnectionType == ConnectionTypes.MySQL ? $"`{Manager.StoredProcedurePrefix}{Cope<T>.ModelComposition.TableName}{Manager.UpdateSuffix}`" : $"[{Manager.StoredProcedurePrefix}{Cope<T>.ModelComposition.TableName}{Manager.UpdateSuffix}]";
+                    massiveOperationParameter.ProcedureName = Manager.ConnectionType == ConnectionTypes.MySQL ? $"`{Manager.StoredProcedurePrefix}{new T().Composition.TableName}{Manager.UpdateSuffix}`" : $"[{Manager.StoredProcedurePrefix}{new T().Composition.TableName}{Manager.UpdateSuffix}]";
                     break;
                 case TransactionTypes.DeleteMassive:
-                    massiveOperationParameter.ProcedureName = Manager.ConnectionType == ConnectionTypes.MySQL ? $"`{Manager.StoredProcedurePrefix}{Cope<T>.ModelComposition.TableName}{Manager.DeleteSuffix}`" : $"[{Manager.StoredProcedurePrefix}{Cope<T>.ModelComposition.TableName}{Manager.DeleteSuffix}]";
+                    massiveOperationParameter.ProcedureName = Manager.ConnectionType == ConnectionTypes.MySQL ? $"`{Manager.StoredProcedurePrefix}{new T().Composition.TableName}{Manager.DeleteSuffix}`" : $"[{Manager.StoredProcedurePrefix}{new T().Composition.TableName}{Manager.DeleteSuffix}]";
                     break;
                 default:
                     throw new NotSupportedException($"El tipo de transaccion {transactionType.ToString()} no puede ser utilizado con la funcion {nameof(GenerateCompatibleMassiveOperationXML)}.");
@@ -335,12 +335,12 @@ namespace OneData.Tools
             return newDictionary;
         }
 
-        public static Dictionary<dynamic, T> ConvertQueryableToDictionaryOfType<T>(IQueryable queryable, string keyName, Type keyType) where T : Cope<T>, IManageable, new()
+        public static Dictionary<dynamic, T> ConvertQueryableToDictionaryOfType<T>(IQueryable queryable, string keyName, Type keyType) where T : IManageable, new()
         {
             Dictionary<dynamic, T> newDictionary = new Dictionary<dynamic, T>();
             if (queryable != null)
             {
-                PropertyInfo primaryProperty = typeof(T).GetProperty(Cope<T>.ModelComposition.PrimaryKeyProperty.Name);
+                PropertyInfo primaryProperty = typeof(T).GetProperty(new T().Composition.PrimaryKeyProperty.Name);
                 foreach (T item in queryable)
                 {
                     dynamic key = primaryProperty.GetValue(item);
@@ -432,7 +432,7 @@ namespace OneData.Tools
             return newHashTable;
         }
 
-        public static Hashtable ConvertDataTableToHashtableOfType<T>(System.Data.DataTable dataTable) where T : Cope<T>, IManageable, new()
+        public static Hashtable ConvertDataTableToHashtableOfType<T>(System.Data.DataTable dataTable) where T : IManageable, new()
         {
             Hashtable newHashTable = new Hashtable();
             if (dataTable != null)
@@ -448,7 +448,7 @@ namespace OneData.Tools
                             property.SetValue(newObject, SimpleConverter.ConvertStringToType(row[property.Name].ToString(), property.PropertyType));
                         }
                     }
-                    newHashTable.Add(Cope<T>.ModelComposition.PrimaryKeyProperty.GetValue(newObject), newObject);
+                    newHashTable.Add(new T().Composition.PrimaryKeyProperty.GetValue(newObject), newObject);
                 }
             }
 
@@ -546,7 +546,7 @@ namespace OneData.Tools
         /// <typeparam name="T">Tipo referencia para serializar.</typeparam>
         /// <param name="dataTable">El contenido a convertir.</param>
         /// <returns>Regresa un nuevo Diccionario del tipo <typeparamref name="T"/> ya con los objetos incorporados.</returns>
-        public static Dictionary<TKey, T> ConvertDataTableToDictionaryOfType<TKey, T>(System.Data.DataTable dataTable) where T : Cope<T>, IManageable, new()
+        public static Dictionary<TKey, T> ConvertDataTableToDictionaryOfType<TKey, T>(System.Data.DataTable dataTable) where T : IManageable, new()
         {
             Dictionary<TKey, T> newDictionary = new Dictionary<TKey, T>();
             if (dataTable != null)
@@ -563,21 +563,21 @@ namespace OneData.Tools
                             property.SetValue(newObject, SimpleConverter.ConvertStringToType(row[property.Name].ToString(), property.PropertyType));
                         }
                     }
-                    newDictionary.Add((TKey)Cope<T>.ModelComposition.PrimaryKeyProperty.GetValue(newObject), newObject);
+                    newDictionary.Add((TKey)new T().Composition.PrimaryKeyProperty.GetValue(newObject), newObject);
                 }
             }
 
             return newDictionary;
         }
 
-        public static Dictionary<TKey, T> ConvertIEnumerableToDictionaryOfType<TKey, T>(IEnumerable<T> list) where T : Cope<T>, IManageable, new()
+        public static Dictionary<TKey, T> ConvertIEnumerableToDictionaryOfType<TKey, T>(IEnumerable<T> list) where T : IManageable, new()
         {
             Dictionary<TKey, T> newDictionary = new Dictionary<TKey, T>();
             if (list != null)
             {
                 foreach (T newObject in list)
                 {
-                    newDictionary.Add((TKey)Cope<T>.ModelComposition.PrimaryKeyProperty.GetValue(newObject), newObject);
+                    newDictionary.Add((TKey)new T().Composition.PrimaryKeyProperty.GetValue(newObject), newObject);
                 }
             }
 
@@ -602,7 +602,7 @@ namespace OneData.Tools
         /// <typeparam name="TKey">El tipo de la llave del tipo <typeparamref name="T"/> referencia para convertir.</typeparam>
         /// <param name="list">El contenido a convertir.</param>
         /// <returns>Regresa un nuevo System.Data.DataTable ya con los objetos incorporados como columnas y filas.</returns>
-        public static System.Data.DataTable ConvertIEnumerableToDataTableOfType<T>(IEnumerable<T> list) where T : Cope<T>, IManageable, new()
+        public static System.Data.DataTable ConvertIEnumerableToDataTableOfType<T>(IEnumerable<T> list) where T : IManageable, new()
         {
             System.Data.DataTable dataTable = ConvertIEnumerableToDataTable(list);
             dataTable.PrimaryKey = new DataColumn[] { dataTable.Columns["Id"] };
@@ -685,11 +685,11 @@ namespace OneData.Tools
         /// <typeparam name="T">Tipo referencia para el nuevo Objeto.</typeparam>
         /// <param name="parameters">Array del objeto Parameter que contiene la informacion a colocar.</param>
         /// <returns>Regresa un nuevo objeto del tipo <typeparamref name="T"/> ya con las propiedades correspondientes alimentadas.</returns>
-        internal static T SetParametersInObject<T>(Parameter[] parameters) where T : Cope<T>, IManageable, new()
+        internal static T SetParametersInObject<T>(Parameter[] parameters) where T : IManageable, new()
         {
             T newObj = new T();
 
-            Cope<T>.ModelComposition.PrimaryKeyProperty.SetValue(newObj, null);
+            new T().Composition.PrimaryKeyProperty.SetValue(newObj, null);
 
             foreach (Parameter data in parameters)
             {
@@ -706,7 +706,7 @@ namespace OneData.Tools
             return newObj;
         }
 
-        internal static T ConvertReaderToObjectOfType<T>(IDataReader reader, IEnumerable<OneProperty> properties) where T : Cope<T>, IManageable, new()
+        internal static T ConvertReaderToObjectOfType<T>(IDataReader reader, IEnumerable<OneProperty> properties) where T : IManageable, new()
         {
             T newObj = new T();
 
@@ -718,15 +718,15 @@ namespace OneData.Tools
             return newObj;
         }
 
-        internal static IEnumerable<OneProperty> GetFilteredPropertiesBasedOnList<T>(IDataReader reader) where T : Cope<T>, IManageable, new()
+        internal static IEnumerable<OneProperty> GetFilteredPropertiesBasedOnList<T>(IDataReader reader) where T : IManageable, new()
         {
             List<string> columns = new List<string>();
             for (int i = 0; i < reader.FieldCount; i++)
             {
                 columns.Add(reader.GetName(i).ToLower());
             }
-            List<OneProperty> filteredProperties = Cope<T>.ModelComposition.ManagedProperties.Values.Where(property => columns.Contains(property.Name.ToLower())).ToList();
-            filteredProperties.AddRange(Cope<T>.ModelComposition.ForeignDataProperties.Values.Where(property => columns.Contains(property.Name.ToLower())));
+            List<OneProperty> filteredProperties = new T().Composition.ManagedProperties.Values.Where(property => columns.Contains(property.Name.ToLower())).ToList();
+            filteredProperties.AddRange(new T().Composition.ForeignDataProperties.Values.Where(property => columns.Contains(property.Name.ToLower())));
             return filteredProperties;
         }
     }

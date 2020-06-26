@@ -11,7 +11,7 @@ namespace OneData.Extensions
 {
     public static class IQueryableExtensions
     {
-        public static Dictionary<dynamic, T> ToDictionary<T>(this IQueryable<T> queryable, string keyName, Type keyType) where T : Cope<T>, IManageable, new()
+        public static Dictionary<dynamic, T> ToDictionary<T>(this IQueryable<T> queryable, string keyName, Type keyType) where T : IManageable, new()
         {
             return DataSerializer.ConvertQueryableToDictionaryOfType<T>(queryable, keyName, keyType);
         }

@@ -21,7 +21,7 @@ namespace OneData.DAO
             operation = Operation.GetOperationBasedOnConnectionType(connectionType);
         }
 
-        public Result<T> Evaluate<T>(object obj, Expression<Func<T, bool>> expression, TransactionTypes transactionType, ref DataCache<T> dataCache, QueryOptions queryOptions) where T : Cope<T>, IManageable, new()
+        public Result<T> Evaluate<T>(object obj, Expression<Func<T, bool>> expression, TransactionTypes transactionType, ref DataCache<T> dataCache, QueryOptions queryOptions) where T : IManageable, new()
         {
             Result<T> resultado = null;
             bool hasCache = dataCache.Cache == null ? false : true;
@@ -59,7 +59,7 @@ namespace OneData.DAO
             return resultado;
         }
 
-        private void EvaluateSelectQuery<T>(Expression<Func<T, bool>> expression, out Result<T> resultado, bool hasCache, ref DataCache<T> dataCache, QueryOptions queryOptions) where T : Cope<T>, IManageable, new()
+        private void EvaluateSelectQuery<T>(Expression<Func<T, bool>> expression, out Result<T> resultado, bool hasCache, ref DataCache<T> dataCache, QueryOptions queryOptions) where T : IManageable, new()
         {
             if (!dataCache.IsEnabled)
             {
@@ -83,7 +83,7 @@ namespace OneData.DAO
             }
         }
 
-        private void EvaluateInsert<T>(T obj, out Result<T> resultado, bool hasCache, ref DataCache<T> dataCache, QueryOptions queryOptions) where T : Cope<T>, IManageable, new()
+        private void EvaluateInsert<T>(T obj, out Result<T> resultado, bool hasCache, ref DataCache<T> dataCache, QueryOptions queryOptions) where T : IManageable, new()
         {
             resultado = operation.ExecuteProcedure<T>(queryOptions, TransactionTypes.Insert, true, obj, null);
             if (hasCache && resultado.IsSuccessful)
@@ -92,7 +92,7 @@ namespace OneData.DAO
             }
         }
 
-        private void EvaluateInsertMassive<T>(IEnumerable<T> list, out Result<T> resultado, bool hasCache, ref DataCache<T> dataCache, QueryOptions queryOptions) where T : Cope<T>, IManageable, new()
+        private void EvaluateInsertMassive<T>(IEnumerable<T> list, out Result<T> resultado, bool hasCache, ref DataCache<T> dataCache, QueryOptions queryOptions) where T : IManageable, new()
         {
             resultado = operation.ExecuteProcedure<T>(queryOptions, TransactionTypes.InsertMassive, true, list, null);
             if (hasCache && resultado.IsSuccessful)
@@ -101,7 +101,7 @@ namespace OneData.DAO
             }
         }
 
-        private void EvaluateUpdateMassive<T>(IEnumerable<T> list, out Result<T> resultado, bool hasCache, ref DataCache<T> dataCache, QueryOptions queryOptions) where T : Cope<T>, IManageable, new()
+        private void EvaluateUpdateMassive<T>(IEnumerable<T> list, out Result<T> resultado, bool hasCache, ref DataCache<T> dataCache, QueryOptions queryOptions) where T : IManageable, new()
         {
             resultado = operation.ExecuteProcedure<T>(queryOptions, TransactionTypes.UpdateMassive, true, list, null);
             if (hasCache && resultado.IsSuccessful)
@@ -110,7 +110,7 @@ namespace OneData.DAO
             }
         }
 
-        private void EvaluateDeleteMassive<T>(IEnumerable<T> list, out Result<T> resultado, bool hasCache, ref DataCache<T> dataCache, QueryOptions queryOptions) where T : Cope<T>, IManageable, new()
+        private void EvaluateDeleteMassive<T>(IEnumerable<T> list, out Result<T> resultado, bool hasCache, ref DataCache<T> dataCache, QueryOptions queryOptions) where T : IManageable, new()
         {
             resultado = operation.ExecuteProcedure<T>(queryOptions, TransactionTypes.DeleteMassive, true, list, null);
             if (hasCache && resultado.IsSuccessful)
@@ -119,7 +119,7 @@ namespace OneData.DAO
             }
         }
 
-        private void EvaluateUpdate<T>(T obj, out Result<T> resultado, bool hasCache, ref DataCache<T> dataCache, QueryOptions queryOptions) where T : Cope<T>, IManageable, new()
+        private void EvaluateUpdate<T>(T obj, out Result<T> resultado, bool hasCache, ref DataCache<T> dataCache, QueryOptions queryOptions) where T : IManageable, new()
         {
             resultado = operation.ExecuteProcedure<T>(queryOptions, TransactionTypes.Update, true, obj, null);
             if (hasCache && resultado.IsSuccessful)
@@ -128,7 +128,7 @@ namespace OneData.DAO
             }
         }
 
-        private void EvaluateDelete<T>(T obj, out Result<T> resultado, bool hasCache, ref DataCache<T> dataCache, QueryOptions queryOptions) where T : Cope<T>, IManageable, new()
+        private void EvaluateDelete<T>(T obj, out Result<T> resultado, bool hasCache, ref DataCache<T> dataCache, QueryOptions queryOptions) where T : IManageable, new()
         {
             resultado = operation.ExecuteProcedure<T>(queryOptions, TransactionTypes.Delete, true, obj, null);
             if (hasCache && resultado.IsSuccessful)
@@ -137,7 +137,7 @@ namespace OneData.DAO
             }
         }
 
-        private void EvaluateSelectAll<T>(T obj, out Result<T> resultado, bool hasCache, ref DataCache<T> dataCache, QueryOptions queryOptions) where T : Cope<T>, IManageable, new()
+        private void EvaluateSelectAll<T>(T obj, out Result<T> resultado, bool hasCache, ref DataCache<T> dataCache, QueryOptions queryOptions) where T : IManageable, new()
         {
             if (!dataCache.IsEnabled)
             {
@@ -162,7 +162,7 @@ namespace OneData.DAO
             }
         }
 
-        private Result<T> SelectInCache<T>(Expression<Func<T, bool>> expression, DataCache<T> dataCache, QueryOptions queryOptions) where T : Cope<T>, IManageable, new()
+        private Result<T> SelectInCache<T>(Expression<Func<T, bool>> expression, DataCache<T> dataCache, QueryOptions queryOptions) where T : IManageable, new()
         {
             IQueryable<T> queryableList = dataCache.Cache.Data.Values.AsQueryable();
 
@@ -175,15 +175,15 @@ namespace OneData.DAO
 
             if (queryOptions.Offset > 0 && queryOptions.MaximumResults > 0)
             {
-                resultList = queryableList.OrderByDescending(obj => Cope<T>.ModelComposition.DateModifiedProperty.GetValue(obj)).Skip(queryOptions.Offset).Take(queryOptions.MaximumResults).ToDictionary(Cope<T>.ModelComposition.PrimaryKeyProperty.Name, Cope<T>.ModelComposition.PrimaryKeyProperty.PropertyType);
+                resultList = queryableList.OrderByDescending(obj => new T().Composition.DateModifiedProperty.GetValue(obj)).Skip(queryOptions.Offset).Take(queryOptions.MaximumResults).ToDictionary(new T().Composition.PrimaryKeyProperty.Name, new T().Composition.PrimaryKeyProperty.PropertyType);
             }
             else if (queryOptions.Offset > 0)
             {
-                resultList = queryableList.OrderByDescending(obj => Cope<T>.ModelComposition.DateModifiedProperty.GetValue(obj)).Skip(queryOptions.Offset).ToDictionary(Cope<T>.ModelComposition.PrimaryKeyProperty.Name, Cope<T>.ModelComposition.PrimaryKeyProperty.PropertyType);
+                resultList = queryableList.OrderByDescending(obj => new T().Composition.DateModifiedProperty.GetValue(obj)).Skip(queryOptions.Offset).ToDictionary(new T().Composition.PrimaryKeyProperty.Name, new T().Composition.PrimaryKeyProperty.PropertyType);
             }
             else if (queryOptions.MaximumResults > 0)
             {
-                resultList = queryableList.OrderByDescending(obj => Cope<T>.ModelComposition.DateModifiedProperty.GetValue(obj)).Take(queryOptions.MaximumResults).ToDictionary(Cope<T>.ModelComposition.PrimaryKeyProperty.Name, Cope<T>.ModelComposition.PrimaryKeyProperty.PropertyType);
+                resultList = queryableList.OrderByDescending(obj => new T().Composition.DateModifiedProperty.GetValue(obj)).Take(queryOptions.MaximumResults).ToDictionary(new T().Composition.PrimaryKeyProperty.Name, new T().Composition.PrimaryKeyProperty.PropertyType);
             }
 
             if (resultList == null)
@@ -194,40 +194,40 @@ namespace OneData.DAO
             return new Result<T>(resultList, true, true);
         }
 
-        private void UpdateInCache<T>(T obj, ref DataCache<T> dataCache) where T : Cope<T>, IManageable, new()
+        private void UpdateInCache<T>(T obj, ref DataCache<T> dataCache) where T : IManageable, new()
         {
-            Cope<T>.ModelComposition.DateModifiedProperty.SetValue(obj, DateTime.Now);
-            dataCache.Cache.Data[Cope<T>.ModelComposition.PrimaryKeyProperty.GetValue(obj)] = obj;
+            new T().Composition.DateModifiedProperty.SetValue(obj, DateTime.Now);
+            dataCache.Cache.Data[new T().Composition.PrimaryKeyProperty.GetValue(obj)] = obj;
         }
 
-        private void InsertInCache<T>(T obj, ref DataCache<T> dataCache) where T : Cope<T>, IManageable, new()
+        private void InsertInCache<T>(T obj, ref DataCache<T> dataCache) where T : IManageable, new()
         {
-            Cope<T>.ModelComposition.DateCreatedProperty.SetValue(obj, DateTime.Now);
-            Cope<T>.ModelComposition.DateModifiedProperty.SetValue(obj, DateTime.Now);
-            dataCache.Cache.Data.Add(Cope<T>.ModelComposition.PrimaryKeyProperty.GetValue(obj), obj);
+            new T().Composition.DateCreatedProperty.SetValue(obj, DateTime.Now);
+            new T().Composition.DateModifiedProperty.SetValue(obj, DateTime.Now);
+            dataCache.Cache.Data.Add(new T().Composition.PrimaryKeyProperty.GetValue(obj), obj);
         }
 
-        private void InsertMassiveInCache<T>(IEnumerable<T> list, ref DataCache<T> dataCache) where T : Cope<T>, IManageable, new()
+        private void InsertMassiveInCache<T>(IEnumerable<T> list, ref DataCache<T> dataCache) where T : IManageable, new()
         {
             foreach (T obj in list)
             {
-                dataCache.Cache.Data.Add(Cope<T>.ModelComposition.PrimaryKeyProperty.GetValue(obj), obj);
+                dataCache.Cache.Data.Add(new T().Composition.PrimaryKeyProperty.GetValue(obj), obj);
             }
         }
 
-        private void UpdateMassiveInCache<T>(IEnumerable<T> list, ref DataCache<T> dataCache) where T : Cope<T>, IManageable, new()
+        private void UpdateMassiveInCache<T>(IEnumerable<T> list, ref DataCache<T> dataCache) where T : IManageable, new()
         {
             foreach (T obj in list)
             {
-                dataCache.Cache.Data[Cope<T>.ModelComposition.PrimaryKeyProperty.GetValue(obj)] = obj;
+                dataCache.Cache.Data[new T().Composition.PrimaryKeyProperty.GetValue(obj)] = obj;
             }
         }
 
-        private void DeleteMassiveInCache<T>(IEnumerable<T> list, ref DataCache<T> dataCache) where T : Cope<T>, IManageable, new()
+        private void DeleteMassiveInCache<T>(IEnumerable<T> list, ref DataCache<T> dataCache) where T : IManageable, new()
         {
             foreach (T obj in list)
             {
-                dataCache.Cache.Data.Remove(Cope<T>.ModelComposition.PrimaryKeyProperty.GetValue(obj));
+                dataCache.Cache.Data.Remove(new T().Composition.PrimaryKeyProperty.GetValue(obj));
             }
         }
 
@@ -240,7 +240,7 @@ namespace OneData.DAO
             dataCache.LastCacheUpdate = DateTime.Now.Ticks;
         }
 
-        private void DeleteInCache<T>(T obj, ref DataCache<T> dataCache) where T : Cope<T>, IManageable, new()
+        private void DeleteInCache<T>(T obj, ref DataCache<T> dataCache) where T : IManageable, new()
         {
             dataCache.Cache.Data.Remove(obj);
         }

@@ -12,7 +12,7 @@ namespace OneData.Tools
 {
     public class ConsolidationTools
     {
-#if NETSTANDARD2_0
+#if NETSTANDARD2_0 || NETSTANDARD2_1
         private static IConfiguration _configuration;
 
         static ConsolidationTools()
@@ -132,7 +132,7 @@ namespace OneData.Tools
                     
             }
 #endif
-#if NETSTANDARD2_0
+#if NETSTANDARD2_0 || NETSTANDARD2_1
             switch (type)
             {
                 case ConfigurationTypes.ConnectionString:

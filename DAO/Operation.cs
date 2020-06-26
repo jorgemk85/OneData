@@ -130,7 +130,7 @@ namespace OneData.DAO
             }
         }
 
-        protected void PerformStoredProcedureValidation<T>(TransactionTypes transactionType, QueryOptions queryOptions) where T : Cope<T>, IManageable, new()
+        protected void PerformStoredProcedureValidation<T>(TransactionTypes transactionType, QueryOptions queryOptions) where T : IManageable, new()
         {
             TransactionTypes singleTransactionType;
             switch (transactionType)
@@ -148,13 +148,13 @@ namespace OneData.DAO
                     throw new NotSupportedException($"El tipo de transaccion {transactionType.ToString()} no puede ser utilizado con esta funcion.");
             }
 
-            string schema = Manager.ConnectionType == ConnectionTypes.MSSQL ? Cope<T>.ModelComposition.Schema : ConsolidationTools.GetInitialCatalog(queryOptions.ConnectionToUse, true);
+            string schema = Manager.ConnectionType == ConnectionTypes.MSSQL ? new T().Composition.Schema : ConsolidationTools.GetInitialCatalog(queryOptions.ConnectionToUse, true);
             if (!DoStoredProcedureExist(ConsolidationTools.GetInitialCatalog(queryOptions.ConnectionToUse), schema, $"{Manager.StoredProcedurePrefix}massive_operation", queryOptions.ConnectionToUse))
             {
                 ExecuteScalar(GetTransactionTextForProcedure(new T(), transactionType, false), queryOptions.ConnectionToUse, false);
             }
 
-            if (!DoStoredProcedureExist(ConsolidationTools.GetInitialCatalog(queryOptions.ConnectionToUse), schema, $"{Manager.StoredProcedurePrefix}{Cope<T>.ModelComposition.TableName}{GetFriendlyTransactionSuffix(singleTransactionType)}", queryOptions.ConnectionToUse))
+            if (!DoStoredProcedureExist(ConsolidationTools.GetInitialCatalog(queryOptions.ConnectionToUse), schema, $"{Manager.StoredProcedurePrefix}{new T().Composition.TableName}{GetFriendlyTransactionSuffix(singleTransactionType)}", queryOptions.ConnectionToUse))
             {
                 ExecuteScalar(GetTransactionTextForProcedure(new T(), singleTransactionType, false), queryOptions.ConnectionToUse, false);
             }
@@ -211,17 +211,17 @@ namespace OneData.DAO
             }
         }
 
-        protected void SetParameters<T>(T obj, TransactionTypes transactionType, bool considerPrimaryKey, QueryOptions queryOptions) where T : Cope<T>, IManageable, new()
+        protected void SetParameters<T>(T obj, TransactionTypes transactionType, bool considerPrimaryKey, QueryOptions queryOptions) where T : IManageable, new()
         {
             Logger.Info($"Setting parameters in command based on type {typeof(T)} for transaction type {transactionType.ToString()}.");
 
             if (transactionType == TransactionTypes.Delete)
             {
-                _command.Parameters.Add(CreateDbParameter(string.Format("_{0}", Cope<T>.ModelComposition.PrimaryKeyProperty.Name), Cope<T>.ModelComposition.PrimaryKeyProperty.GetValue(obj)));
+                _command.Parameters.Add(CreateDbParameter(string.Format("_{0}", new T().Composition.PrimaryKeyProperty.Name), new T().Composition.PrimaryKeyProperty.GetValue(obj)));
                 return;
             }
 
-            foreach (KeyValuePair<string, OneProperty> property in Cope<T>.ModelComposition.FilteredProperties)
+            foreach (KeyValuePair<string, OneProperty> property in new T().Composition.FilteredProperties)
             {
                 if (!CheckForPrimaryKeyWithAutoIncrement<T>(property.Value.Name, considerPrimaryKey))
                 {
@@ -230,12 +230,12 @@ namespace OneData.DAO
             }
         }
 
-        private bool CheckForPrimaryKeyWithAutoIncrement<T>(string propertyName, bool considerPrimaryKey) where T : Cope<T>, IManageable, new()
+        private bool CheckForPrimaryKeyWithAutoIncrement<T>(string propertyName, bool considerPrimaryKey) where T : IManageable, new()
         {
             // Si la llave es primaria y es identity (autoincrement) entonces no la debe agregar como parametro.
-            if (propertyName.Equals(Cope<T>.ModelComposition.PrimaryKeyProperty.Name))
+            if (propertyName.Equals(new T().Composition.PrimaryKeyProperty.Name))
             {
-                if (Cope<T>.ModelComposition.PrimaryKeyAttribute.IsAutoIncrement && !considerPrimaryKey)
+                if (new T().Composition.PrimaryKeyAttribute.IsAutoIncrement && !considerPrimaryKey)
                 {
                     return true;
                 }
@@ -244,11 +244,11 @@ namespace OneData.DAO
             return false;
         }
 
-        private object CheckAndApplyDefaultValue<T>(string propertyName, object propertyValue, TransactionTypes transactionType) where T : Cope<T>, IManageable, new()
+        private object CheckAndApplyDefaultValue<T>(string propertyName, object propertyValue, TransactionTypes transactionType) where T : IManageable, new()
         {
             if (propertyValue == null && transactionType.Equals(TransactionTypes.Insert))
             {
-                if (Cope<T>.ModelComposition.DefaultAttributes.TryGetValue(propertyName, out Default defaultAttribute))
+                if (new T().Composition.DefaultAttributes.TryGetValue(propertyName, out Default defaultAttribute))
                 {
                     propertyValue = defaultAttribute.Value;
                 }
@@ -257,7 +257,7 @@ namespace OneData.DAO
             return propertyValue;
         }
 
-        protected void SetMassiveOperationParameters<T>(IEnumerable<T> obj, TransactionTypes transactionType, QueryOptions queryOptions) where T : Cope<T>, IManageable, new()
+        protected void SetMassiveOperationParameters<T>(IEnumerable<T> obj, TransactionTypes transactionType, QueryOptions queryOptions) where T : IManageable, new()
         {
             Logger.Info($"Setting parameters in command based massive operation transaction type {transactionType.ToString()}.");
 
@@ -373,11 +373,6 @@ namespace OneData.DAO
         {
             dynamic identityId = 0;
 
-            if (Manager.Identity != null)
-            {
-                identityId = Manager.Identity.Composition.PrimaryKeyProperty.GetValue(Manager.Identity);
-            }
-
             Log newLog = new Log
             {
                 Id = Guid.NewGuid(),
@@ -387,19 +382,19 @@ namespace OneData.DAO
                 Parametros = GetStringParameters()
             };
 
-            Logger.Info($"Created new log object for affected table {Cope<Log>.ModelComposition.TableName}, transaction used {newLog.Transaccion}, with the following parameters: {newLog.Parametros}");
+            Logger.Info($"Created new log object for affected table {new Log().Composition.TableName}, transaction used {newLog.Transaccion}, with the following parameters: {newLog.Parametros}");
 
             return newLog;
         }
 
-        protected void FillDictionaryWithReader<T>(IDataReader reader, ref Result<T> result) where T : Cope<T>, IManageable, new()
+        protected void FillDictionaryWithReader<T>(IDataReader reader, ref Result<T> result) where T : IManageable, new()
         {
             using (reader)
             {
                 IEnumerable<OneProperty> properties = DataSerializer.GetFilteredPropertiesBasedOnList<T>(reader);
                 while (reader.Read())
                 {
-                    result.Data.Add(reader[Cope<T>.ModelComposition.PrimaryKeyProperty.Name], DataSerializer.ConvertReaderToObjectOfType<T>(reader, properties));
+                    result.Data.Add(reader[new T().Composition.PrimaryKeyProperty.Name], DataSerializer.ConvertReaderToObjectOfType<T>(reader, properties));
                 }
             }
         }
