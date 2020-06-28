@@ -712,7 +712,14 @@ namespace OneData.Tools
 
             foreach (OneProperty property in properties)
             {
-                property.SetValue(newObj, SimpleConverter.ConvertStringToType(reader[property.Name].ToString(), property.PropertyType));
+                if (reader[property.Name].GetType() != typeof(DBNull))
+                {
+                    property.SetValue(newObj, SimpleConverter.ConvertStringToType(reader[property.Name].ToString(), property.PropertyType));
+                }
+                else
+                {
+                    property.SetValue(newObj, null);
+                }
             }
 
             return newObj;

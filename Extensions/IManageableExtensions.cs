@@ -24,14 +24,10 @@ namespace OneData.Extensions
         /// Actualiza el objeto en la base de datos y en su supuesto, tambien en el cache.
         /// Este metodo usa la conexion predeterminada a la base de datos.
         /// </summary>
-        /// <param name="doValidation">Indica si se desea realizar la validacion de nulos.</param>
-        public static void Update<T>(this T obj, bool doValidation = false) where T : IManageable, new()
+        /// <param name="updateNulls">Indica si se desea actualizar nulos o ser ignorados durante la consulta.</param>
+        public static void Update<T>(this T obj, bool updateNulls = false) where T : IManageable, new()
         {
-            if (doValidation)
-            {
-                obj.Validate();
-            }
-            Manager<T>.Update(obj, null);
+            Manager<T>.Update(obj, new QueryOptions() { UpdateNulls = updateNulls });
         }
 
         /// <summary>

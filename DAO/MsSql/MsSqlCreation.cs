@@ -130,6 +130,8 @@ namespace OneData.DAO.MsSql
             // Aqui se colocan los parametros segun las propiedades del objeto
             SetStoredProceduresParameters(model, queryBuilder, false, true);
 
+            // Este parametro es para identificar si se desea actualizar los valores a nulo durante el update o se deben de ignorar los nulos
+            queryBuilder.Append("    @_UpdateNulls bit,\n");
             queryBuilder.Remove(queryBuilder.Length - 2, 2);
             queryBuilder.Append("\nAS\n");
             queryBuilder.Append("BEGIN\n");
@@ -143,17 +145,18 @@ namespace OneData.DAO.MsSql
                 {
                     continue;
                 }
-                if (model.GetComposition().AutoProperties.TryGetValue(property.Value.Name, out OneProperty autoProperty))
+
+                if (model.GetComposition().AutoProperties.TryGetValue(property.Value.Name, out _))
                 {
                     queryBuilder.AppendFormat("    [{0}] = {1},\n", property.Value.Name, GetAutoPropertyValue(model.GetComposition().AutoPropertyAttributes[property.Value.Name].AutoPropertyType));
                 }
                 else
                 {
-                    queryBuilder.AppendFormat("    [{0}] = ISNULL(@_{0}, [{0}]),\n", property.Value.Name);
+                    queryBuilder.AppendFormat("    [{0}] = CASE WHEN @_UpdateNulls = 0 THEN ISNULL(@_{0}, [{0}]) ELSE @_{0} END,\n", property.Value.Name);
                 }
             }
             queryBuilder.Remove(queryBuilder.Length - 2, 2);
-            queryBuilder.AppendFormat($"WHERE {model.GetComposition().PrimaryKeyProperty.Name} = @_{model.GetComposition().PrimaryKeyProperty.Name};\n");
+            queryBuilder.AppendFormat($"\nWHERE\n    {model.GetComposition().PrimaryKeyProperty.Name} = @_{model.GetComposition().PrimaryKeyProperty.Name};\n");
             queryBuilder.Append("END");
 
             Logger.Info("Created a new query for Update Stored Procedure:");

@@ -217,6 +217,11 @@ namespace OneData.DAO
                 return;
             }
 
+            if (transactionType == TransactionTypes.Update)
+            {
+                _command.Parameters.Add(CreateDbParameter("_UpdateNulls", queryOptions.UpdateNulls));
+            }
+
             foreach (KeyValuePair<string, OneProperty> property in Manager<T>.Composition.FilteredProperties)
             {
                 if (!CheckForPrimaryKeyWithAutoIncrement<T>(property.Value.Name, considerPrimaryKey))

@@ -299,6 +299,12 @@ OneData uses the value inside the property identified as `PrimaryKey` to find th
 
 **The Update stored procedure uses IFNULL(), so if you want to send partial information, you should send your object with every property set to null except those you really need to update, and of course your `PrimaryKey` value should be set.**
 
+In case that you need to set a value to `null` during an update, please use `QueryOptions` and set the property `UpdateNulls` to `true` or in the case that you are using the extension like in this example, set the parameter `updateNulls` to `true`;
+
+```c#
+myUpdatedLog.Update(true);
+```
+
 When you wish to update a set of information contained in a `IEnumerable<T>`, say, a `List<T>`, you can simply do the following:
 ```c#
 myLogCollection.UpdateMassive();

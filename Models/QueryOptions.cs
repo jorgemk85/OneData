@@ -10,5 +10,6 @@ namespace OneData.Models
         public int Offset { get; set; }
         public string OrderBy { get; set; }
         public SortOrderTypes SortOrder { get; set; }
+        public bool UpdateNulls { get; set; }
     }
 }
